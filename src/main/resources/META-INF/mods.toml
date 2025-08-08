@@ -7,9 +7,10 @@ license = "Insert License Here"
 modId = "extendedae_plus"
 version = "${version}"
 displayName = "ExtendedAE Plus"
-authors = "Me!"
+authors = "ExtendedAE Plus Team"
 description = '''
-This is an example description! Tell everyone what your mod is about!
+ExtendedAE Plus is an enhancement mod for ExtendedAE that increases the pattern provider slots from 36 to 108.
+This allows for much more efficient automation setups with ExtendedAE's pattern providers.
 '''
 #logoFile = ""
 
@@ -25,4 +26,11 @@ modId = "minecraft"
 mandatory = true
 versionRange = "[1.20.1,)"
 ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.extendedae_plus]]
+modId = "expatternprovider"
+mandatory = true
+versionRange = "[1.4.2,)"
+ordering = "AFTER"
 side = "BOTH"
