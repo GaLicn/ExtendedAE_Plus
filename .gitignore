@@ -1,0 +1,122 @@
+# Gradle
+.gradle/
+build/
+out/
+classes/
+
+# Eclipse
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.metadata
+bin/
+*.launch
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Minecraft
+run/
+logs/
+crash-reports/
+saves/
+screenshots/
+*.log
+
+# Forge
+*.jar
+*.zip
+*.tar.gz
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE specific files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build outputs
+build/
+out/
+classes/
+*.jar
+*.zip
+
+# Reference source code (should not be tracked)
+ExtendedAE-1.20-1.4.2-forge/
+GTLCore/
+
+# Gradle wrapper (optional - some prefer to commit this)
+# gradle/wrapper/gradle-wrapper.jar
+# gradle/wrapper/gradle-wrapper.properties
+
+# Local configuration
+gradle.properties.local
+local.properties
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Logs
+*.log
+logs/
+
+# Runtime files
+run/
+crash-reports/
+saves/
+screenshots/
+
+# Temporary files
+temp/
+tmp/
+
+# Allow dependencies in libs
+!libs/
+!libs/*.jar
+!libs/**/*.jar
