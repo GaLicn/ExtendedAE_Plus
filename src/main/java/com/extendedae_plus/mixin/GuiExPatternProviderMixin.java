@@ -54,10 +54,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             int currentPage = getCurrentPage();
             int maxPage = getMaxPage();
 
-            // 获取ae通用界面样式
-            int color = screenStyle.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
-            guiGraphics.drawString(font, Component.literal("第 " + (currentPage + 1) + "/" + maxPage + " 页"),
-                    leftPos + imageWidth / 2 - 30, topPos + 5, color, false);
+                               // 获取ae通用界面样式
+                   int color = screenStyle.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+                   // 调整页码显示位置：在"样板"文字的右边
+                   guiGraphics.drawString(font, Component.literal("第 " + (currentPage + 1) + "/" + maxPage + " 页"),
+                           leftPos + 8 + 50, topPos + 30, color, false);
         }
     }
 
@@ -80,11 +81,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             fieldMaxPage.setAccessible(true);
             Integer maxPage = (Integer) fieldMaxPage.get(menu1);
 
-            // 更新按钮可见性
-            if (nextPage != null && prevPage != null) {
-                this.nextPage.setVisibility(page + 1 < maxPage);
-                this.prevPage.setVisibility(page - 1 >= 0);
-            }
+                               // 更新按钮可见性 - 始终显示，支持循环翻页
+                   if (nextPage != null && prevPage != null) {
+                       this.nextPage.setVisibility(true);
+                       this.prevPage.setVisibility(true);
+                   }
             
             // 调整槽位位置
             this.adjustSlotPositions(page);
@@ -189,34 +190,33 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
         if (maxSlots > SLOTS_PER_PAGE) {
             // 前进后退按钮
-            this.prevPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                if (currentPage > 0) {
-                    // 发送网络包更新页码
-                    // 这里简化处理，直接调用setPage方法
-                    try {
-                        ContainerExPatternProvider menu1 = this.getMenu();
-                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                        setPageMethod.invoke(menu1, currentPage - 1);
-                    } catch (Exception e) {
-                        // 忽略反射错误
-                    }
-                }
-            }, Icon.ARROW_LEFT);
+                               this.prevPage = new ActionEPPButton((b) -> {
+                       int currentPage = getCurrentPage();
+                       int maxPage = getMaxPage();
+                       // 循环翻页：第一页向前翻到最后一页
+                       int newPage = (currentPage - 1 + maxPage) % maxPage;
+                       try {
+                           ContainerExPatternProvider menu1 = this.getMenu();
+                           java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                           setPageMethod.invoke(menu1, newPage);
+                       } catch (Exception e) {
+                           // 忽略反射错误
+                       }
+                   }, Icon.ARROW_LEFT);
 
-            this.nextPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                int maxPage = getMaxPage();
-                if (currentPage + 1 < maxPage) {
-                    try {
-                        ContainerExPatternProvider menu1 = this.getMenu();
-                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                        setPageMethod.invoke(menu1, currentPage + 1);
-                    } catch (Exception e) {
-                        // 忽略反射错误
-                    }
-                }
-            }, Icon.ARROW_RIGHT);
+                               this.nextPage = new ActionEPPButton((b) -> {
+                       int currentPage = getCurrentPage();
+                       int maxPage = getMaxPage();
+                       // 循环翻页：最后一页向后翻到第一页
+                       int newPage = (currentPage + 1) % maxPage;
+                       try {
+                           ContainerExPatternProvider menu1 = this.getMenu();
+                           java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                           setPageMethod.invoke(menu1, newPage);
+                       } catch (Exception e) {
+                           // 忽略反射错误
+                       }
+                   }, Icon.ARROW_RIGHT);
 
             this.addToLeftToolbar(this.nextPage);
             this.addToLeftToolbar(this.prevPage);
