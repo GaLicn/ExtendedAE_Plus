@@ -5,10 +5,12 @@
   "minVersion": "0.8",
   "client": [
     "GuiExPatternProviderMixin",
-    "SlotGridLayoutMixin"
+    "SlotGridLayoutMixin",
+    "GuiExPatternTerminalMixin"
   ],
   "mixins": [
-    "ContainerExPatternProviderMixin"
+    "ContainerExPatternProviderMixin",
+    "ContainerExPatternTerminalMixin"
   ],
   "injectors": {
     "defaultRequire": 1
