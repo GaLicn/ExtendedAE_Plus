@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.reflect.Field;
 import java.util.List;
 
-@Mixin(value = ContainerExPatternProvider.class, priority = 1001)
+@Mixin(value = ContainerExPatternProvider.class, priority = 3000)
 public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu {
 
     @GuiSync(11451)
@@ -28,6 +28,9 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     public int maxPage = 0;
 
+    @Unique
+    private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
+
     public ContainerExPatternProviderMixin(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host) {
         super(menuType, id, playerInventory, host);
     }
@@ -35,28 +38,28 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     public void showPage() {
         List<Slot> slots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
+        int totalSlots = slots.size();
+        
+        // 如果总槽位数不超过36个，不需要翻页
+        if (totalSlots <= SLOTS_PER_PAGE) {
+            for (Slot s : slots) {
+                ((AppEngSlot) s).setActive(true);
+            }
+            return;
+        }
+
         int slot_id = 0;
 
         for (Slot s : slots) {
-            int page_id = slot_id / 36;
+            int page_id = slot_id / SLOTS_PER_PAGE;
 
-            if (page_id > 0 && page_id == this.page) {
-                // 使用反射修改槽位位置
-                try {
-                    Field xField = Slot.class.getDeclaredField("x");
-                    Field yField = Slot.class.getDeclaredField("y");
-                    xField.setAccessible(true);
-                    yField.setAccessible(true);
-                    
-                    Slot baseSlot = slots.get(slot_id % 36);
-                    xField.set(s, xField.get(baseSlot));
-                    yField.set(s, yField.get(baseSlot));
-                } catch (Exception e) {
-                    // 忽略反射错误
-                }
+            if (page_id == this.page) {
+                // 当前页的槽位激活
+                ((AppEngSlot) s).setActive(true);
+            } else {
+                // 其他页的槽位隐藏
+                ((AppEngSlot) s).setActive(false);
             }
-
-            ((AppEngSlot) s).setActive(page_id == this.page);
             ++slot_id;
         }
     }
@@ -64,7 +67,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     public void init(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        this.maxPage = (maxSlots + 36 - 1) / 36;
+        this.maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
     }
 
     @Unique

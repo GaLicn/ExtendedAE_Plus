@@ -15,6 +15,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 @Mixin(GuiExPatternProvider.class)
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> {
@@ -32,6 +34,9 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Unique
     private VerticalButtonBar rightToolbar;
 
+    @Unique
+    private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
+
     public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
@@ -41,7 +46,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        if (maxSlots > 36) {
+        // 只有当槽位数超过每页显示数量时才显示翻页信息
+        if (maxSlots > SLOTS_PER_PAGE) {
             Font fontRenderer = Minecraft.getInstance().font;
 
             // 获取当前页码
@@ -78,6 +84,69 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             if (nextPage != null && prevPage != null) {
                 this.nextPage.setVisibility(page + 1 < maxPage);
                 this.prevPage.setVisibility(page - 1 >= 0);
+            }
+            
+            // 调整槽位位置
+            this.adjustSlotPositions(page);
+        } catch (Exception e) {
+            // 忽略反射错误
+        }
+    }
+    
+    @Unique
+    private void adjustSlotPositions(int currentPage) {
+        try {
+            List<Slot> slots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN);
+            int totalSlots = slots.size();
+            
+            if (totalSlots <= SLOTS_PER_PAGE) {
+                return; // 不需要翻页
+            }
+            
+            int slot_id = 0;
+            for (Slot s : slots) {
+                int page_id = slot_id / SLOTS_PER_PAGE;
+                
+                if (page_id == currentPage) {
+                    // 当前页的槽位需要调整位置
+                    int slotInPage = slot_id % SLOTS_PER_PAGE;
+                    int row = slotInPage / 9;  // 0-3
+                    int col = slotInPage % 9;  // 0-8
+                    
+                    // 计算目标位置（始终在前4行）
+                    int x = 8 + col * 18;
+                    int y = 42 + row * 18;
+                    
+                    // 使用反射设置槽位位置，支持混淆环境
+                    Field xField = null;
+                    Field yField = null;
+                    
+                    // 尝试不同的字段名（开发环境和生产环境可能不同）
+                    String[] xFieldNames = {"x", "field_75262_c"};
+                    String[] yFieldNames = {"y", "field_75263_d"};
+                    
+                    for (String fieldName : xFieldNames) {
+                        try {
+                            xField = Slot.class.getDeclaredField(fieldName);
+                            xField.setAccessible(true);
+                            break;
+                        } catch (NoSuchFieldException ignored) {}
+                    }
+                    
+                    for (String fieldName : yFieldNames) {
+                        try {
+                            yField = Slot.class.getDeclaredField(fieldName);
+                            yField.setAccessible(true);
+                            break;
+                        } catch (NoSuchFieldException ignored) {}
+                    }
+                    
+                    if (xField != null && yField != null) {
+                        xField.set(s, x);
+                        yField.set(s, y);
+                    }
+                }
+                ++slot_id;
             }
         } catch (Exception e) {
             // 忽略反射错误
@@ -116,37 +185,41 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.screenStyle = style;
         this.rightToolbar = new VerticalButtonBar();
 
-        // 前进后退按钮
-        this.prevPage = new ActionEPPButton((b) -> {
-            int currentPage = getCurrentPage();
-            if (currentPage > 0) {
-                // 发送网络包更新页码
-                // 这里简化处理，直接调用setPage方法
-                try {
-                    ContainerExPatternProvider menu1 = this.getMenu();
-                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                    setPageMethod.invoke(menu1, currentPage - 1);
-                } catch (Exception e) {
-                    // 忽略反射错误
+        // 只有当槽位数超过每页显示数量时才添加翻页按钮
+        int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
+        if (maxSlots > SLOTS_PER_PAGE) {
+            // 前进后退按钮
+            this.prevPage = new ActionEPPButton((b) -> {
+                int currentPage = getCurrentPage();
+                if (currentPage > 0) {
+                    // 发送网络包更新页码
+                    // 这里简化处理，直接调用setPage方法
+                    try {
+                        ContainerExPatternProvider menu1 = this.getMenu();
+                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                        setPageMethod.invoke(menu1, currentPage - 1);
+                    } catch (Exception e) {
+                        // 忽略反射错误
+                    }
                 }
-            }
-        }, Icon.ARROW_LEFT);
+            }, Icon.ARROW_LEFT);
 
-        this.nextPage = new ActionEPPButton((b) -> {
-            int currentPage = getCurrentPage();
-            int maxPage = getMaxPage();
-            if (currentPage + 1 < maxPage) {
-                try {
-                    ContainerExPatternProvider menu1 = this.getMenu();
-                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                    setPageMethod.invoke(menu1, currentPage + 1);
-                } catch (Exception e) {
-                    // 忽略反射错误
+            this.nextPage = new ActionEPPButton((b) -> {
+                int currentPage = getCurrentPage();
+                int maxPage = getMaxPage();
+                if (currentPage + 1 < maxPage) {
+                    try {
+                        ContainerExPatternProvider menu1 = this.getMenu();
+                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                        setPageMethod.invoke(menu1, currentPage + 1);
+                    } catch (Exception e) {
+                        // 忽略反射错误
+                    }
                 }
-            }
-        }, Icon.ARROW_RIGHT);
+            }, Icon.ARROW_RIGHT);
 
-        this.addToLeftToolbar(this.nextPage);
-        this.addToLeftToolbar(this.prevPage);
+            this.addToLeftToolbar(this.nextPage);
+            this.addToLeftToolbar(this.prevPage);
+        }
     }
 } 
