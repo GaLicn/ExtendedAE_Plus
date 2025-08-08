@@ -86,7 +86,7 @@ classes/
 *.zip
 
 # Reference source code (should not be tracked)
-ExtendedAE-1.20-1.4.2-forge/
+# ExtendedAE-1.20-1.4.2-forge/
 GTLCore/
 
 # Gradle wrapper (optional - some prefer to commit this)
