@@ -1,48 +1,61 @@
 # ExtendedAE Plus
 
-ExtendedAE Plus 是一个针对 ExtendedAE 模组的增强模组，通过 Mixin 技术将扩展样板供应器（Extended Pattern Provider）的样板槽数从原来的 36 个增加到 108 个。
+一个为ExtendedAE模组添加额外功能的Minecraft模组。
 
 ## 功能特性
 
-- **增加样板槽数**: 将 ExtendedAE 的扩展样板供应器的样板槽数从 36 个增加到 108 个
-- **完全兼容**: 与 ExtendedAE 1.4.2 版本完全兼容
-- **无需配置**: 安装后自动生效，无需额外配置
+### 1. 扩展样板供应器分页功能
+- **自动分页**：当样板槽位超过36个时，自动启用分页功能
+- **循环翻页**：支持从第一页向前翻到最后一页，从最后一页向后翻到第一页
+- **智能定位**：确保所有样板槽位都正确显示在前4行中
+- **页码显示**：显示当前页码和总页数
 
-## 安装要求
+### 2. 扩展样板管理终端隐藏功能
+- **隐藏样板槽位**：添加了一个切换按钮，可以隐藏所有样板供应器的样板槽位
+- **只显示名称**：隐藏模式下只显示样板供应器的名称，不显示其内部的样板
+- **实时切换**：点击按钮即可实时切换显示模式
+- **状态同步**：按钮状态与隐藏模式保持同步
 
-- Minecraft 1.20.1+
-- Forge 47+
-- ExtendedAE 1.4.2+
-- Applied Energistics 2
+## 安装说明
 
-## 安装方法
-
-1. 确保已安装 ExtendedAE 模组
-2. 将 ExtendedAE Plus 的 jar 文件放入 mods 文件夹
+1. 确保已安装ExtendedAE模组
+2. 将此模组的JAR文件放入mods文件夹
 3. 启动游戏
+
+## 兼容性
+
+- **Minecraft版本**：1.20.1
+- **Forge版本**：NeoForge
+- **依赖模组**：ExtendedAE 1.4.2+
+
+## 使用方法
+
+### 扩展样板供应器
+1. 放置扩展样板供应器
+2. 当槽位超过36个时，会自动显示翻页按钮
+3. 使用左右箭头按钮进行翻页
+4. 页码信息显示在界面右上角
+
+### 扩展样板管理终端
+1. 打开扩展样板管理终端
+2. 在左侧工具栏中找到隐藏按钮（眼睛图标）
+3. 点击按钮切换显示模式：
+   - **显示模式**：显示所有样板供应器的名称和样板槽位
+   - **隐藏模式**：只显示样板供应器的名称，隐藏所有样板槽位
 
 ## 技术实现
 
-本模组使用 Mixin 技术来修改 ExtendedAE 中的 `PartExPatternProvider` 类，具体修改了 `createLogic()` 方法中传递给 `PatternProviderLogic` 构造函数的槽位数量参数。
+- 使用Mixin技术修改ExtendedAE的GUI和容器
+- 通过反射访问私有字段和方法
+- 支持混淆环境下的稳定运行
+- 使用@GuiSync进行客户端-服务器数据同步
 
-### 修改的代码位置
+## 开发信息
 
-```java
-// 原始代码
-protected PatternProviderLogic createLogic() {
-    return new PatternProviderLogic(this.getMainNode(), this, 36);
-}
-
-// 修改后的效果
-protected PatternProviderLogic createLogic() {
-    return new PatternProviderLogic(this.getMainNode(), this, 108);
-}
-```
+- **开发环境**：Minecraft 1.20.1 + NeoForge
+- **构建工具**：Gradle + Architectury Loom
+- **主要技术**：Mixin、反射、GUI修改
 
 ## 许可证
 
-本项目采用开源许可证，具体许可证信息请查看 LICENSE 文件。
-
-## 问题反馈
-
-如果您在使用过程中遇到任何问题，请通过 GitHub Issues 进行反馈。 
+本项目遵循与原ExtendedAE模组相同的许可证。 
