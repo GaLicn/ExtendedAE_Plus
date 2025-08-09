@@ -37,9 +37,24 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
             this.showSlots = !this.showSlots; // 开关状态
             System.out.println("ExtendedAE Plus: 切换后showSlots: " + this.showSlots);
             
-            // 通过反射调用refreshList方法 - 在GuiExPatternTerminal中
+            // 通过反射调用refreshList方法 - 先尝试当前类，失败后尝试父类
             try {
-                java.lang.reflect.Method refreshMethod = this.getClass().getDeclaredMethod("refreshList");
+                java.lang.reflect.Method refreshMethod = null;
+                try {
+                    // 先尝试在当前类中查找
+                    refreshMethod = this.getClass().getDeclaredMethod("refreshList");
+                    System.out.println("ExtendedAE Plus: 在当前类中找到refreshList方法: " + this.getClass().getSimpleName());
+                } catch (NoSuchMethodException e1) {
+                    // 如果当前类没有，尝试在父类中查找
+                    try {
+                        refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
+                        System.out.println("ExtendedAE Plus: 在父类中找到refreshList方法: " + this.getClass().getSuperclass().getSimpleName());
+                    } catch (NoSuchMethodException e2) {
+                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到refreshList方法");
+                        throw e2;
+                    }
+                }
+                
                 refreshMethod.setAccessible(true);
                 refreshMethod.invoke(this);
                 System.out.println("ExtendedAE Plus: refreshList调用成功");
@@ -82,8 +97,22 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
         // 在refreshList结束后，根据showSlots状态过滤SlotsRow
         if (!this.showSlots) {
             try {
-                // 通过反射访问rows字段 - 在GuiExPatternTerminal中
-                java.lang.reflect.Field rowsField = this.getClass().getDeclaredField("rows");
+                // 通过反射访问rows字段 - 先尝试当前类，失败后尝试父类
+                java.lang.reflect.Field rowsField = null;
+                try {
+                    // 先尝试在当前类中查找
+                    rowsField = this.getClass().getDeclaredField("rows");
+                    System.out.println("ExtendedAE Plus: 在当前类中找到rows字段: " + this.getClass().getSimpleName());
+                } catch (NoSuchFieldException e1) {
+                    // 如果当前类没有，尝试在父类中查找
+                    try {
+                        rowsField = this.getClass().getSuperclass().getDeclaredField("rows");
+                        System.out.println("ExtendedAE Plus: 在父类中找到rows字段: " + this.getClass().getSuperclass().getSimpleName());
+                    } catch (NoSuchFieldException e2) {
+                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到rows字段");
+                        throw e2;
+                    }
+                }
                 rowsField.setAccessible(true);
                 java.util.ArrayList<?> rows = (java.util.ArrayList<?>) rowsField.get(this);
                 
@@ -106,7 +135,22 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 
                 // 强制刷新滚动条
                 try {
-                    java.lang.reflect.Method resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
+                    java.lang.reflect.Method resetScrollbarMethod = null;
+                    try {
+                        // 先尝试在当前类中查找
+                        resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
+                        System.out.println("ExtendedAE Plus: 在当前类中找到resetScrollbar方法: " + this.getClass().getSimpleName());
+                    } catch (NoSuchMethodException e1) {
+                        // 如果当前类没有，尝试在父类中查找
+                        try {
+                            resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
+                            System.out.println("ExtendedAE Plus: 在父类中找到resetScrollbar方法: " + this.getClass().getSuperclass().getSimpleName());
+                        } catch (NoSuchMethodException e2) {
+                            System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到resetScrollbar方法");
+                            throw e2;
+                        }
+                    }
+                    
                     resetScrollbarMethod.setAccessible(true);
                     resetScrollbarMethod.invoke(this);
                     System.out.println("ExtendedAE Plus: 滚动条已重置");
