@@ -1,0 +1,17 @@
+{
+  "gui.expatternprovider.toggle_slots": "Toggle Slots",
+  "gui.expatternprovider.hide_slots": "Hide Slots",
+  "gui.expatternprovider.show_slots": "Show Slots",
+  "gui.expatternprovider.clear_selection": "Clear Selection",
+  "gui.extendedae_plus.pattern_provider.select": "Select Pattern Provider",
+  "gui.extendedae_plus.pattern_provider.selected": "Pattern Provider Selected",
+  "gui.extendedae_plus.pattern_provider.unselected": "Click to select this pattern provider",
+  "message.extendedae_plus.no_provider_selected": "Please select a pattern provider first",
+  "message.extendedae_plus.invalid_pattern": "Please hold a valid encoded pattern",
+  "message.extendedae_plus.upload_success": "Pattern uploaded successfully",
+  "message.extendedae_plus.upload_failed": "Failed to upload pattern - no empty slots",
+  "message.extendedae_plus.uploading_pattern": "Uploading pattern...",
+  "gui.extendedae_plus.group_header.choice": "Toggle Group Choice",
+  "gui.extendedae_plus.group_header.choiceable": "Group is choiceable",
+  "gui.extendedae_plus.group_header.not_choiceable": "Group is not choiceable"
+}

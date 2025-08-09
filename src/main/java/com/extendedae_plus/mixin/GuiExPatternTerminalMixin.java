@@ -24,9 +24,36 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
 
     @Unique
     private boolean showSlots = true; // 默认显示槽位
+    
+    @Unique
+    private long currentlychooicepatterprovider = -1; // 当前选择的样板供应器ID
 
     public GuiExPatternTerminalMixin(ContainerExPatternTerminal menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
+    }
+    
+    /**
+     * 获取当前选择的样板供应器ID
+     */
+    @Unique
+    public long getCurrentlyChoicePatternProvider() {
+        return currentlychooicepatterprovider;
+    }
+    
+    /**
+     * 设置当前选择的样板供应器ID
+     */
+    @Unique
+    public void setCurrentlyChoicePatternProvider(long id) {
+        this.currentlychooicepatterprovider = id;
+    }
+    
+    /**
+     * 重置当前选择的样板供应器ID
+     */
+    @Unique
+    public void resetCurrentlyChoicePatternProvider() {
+        this.currentlychooicepatterprovider = -1;
     }
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
