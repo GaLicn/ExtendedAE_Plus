@@ -118,20 +118,82 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 
                 System.out.println("ExtendedAE Plus: 找到rows字段，当前行数: " + rows.size());
                 
-                // 移除所有SlotsRow，只保留GroupHeaderRow
-                int removedCount = 0;
-                for (int i = rows.size() - 1; i >= 0; i--) {
+                // 通过反射访问highlightBtns字段
+                java.lang.reflect.Field highlightBtnsField = null;
+                try {
+                    // 先尝试在当前类中查找
+                    highlightBtnsField = this.getClass().getDeclaredField("highlightBtns");
+                    System.out.println("ExtendedAE Plus: 在当前类中找到highlightBtns字段: " + this.getClass().getSimpleName());
+                } catch (NoSuchFieldException e1) {
+                    // 如果当前类没有，尝试在父类中查找
+                    try {
+                        highlightBtnsField = this.getClass().getSuperclass().getDeclaredField("highlightBtns");
+                        System.out.println("ExtendedAE Plus: 在父类中找到highlightBtns字段: " + this.getClass().getSuperclass().getSimpleName());
+                    } catch (NoSuchFieldException e2) {
+                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到highlightBtns字段");
+                        throw e2;
+                    }
+                }
+                highlightBtnsField.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                java.util.HashMap<Integer, Object> highlightBtns = (java.util.HashMap<Integer, Object>) highlightBtnsField.get(this);
+                
+                System.out.println("ExtendedAE Plus: 找到highlightBtns字段，当前按钮数: " + highlightBtns.size());
+                
+                // 创建新的索引映射
+                java.util.HashMap<Integer, Object> newHighlightBtns = new java.util.HashMap<>();
+                int newIndex = 0;
+                
+                // 移除所有SlotsRow，只保留GroupHeaderRow，同时重新映射高亮按钮索引
+                for (int i = 0; i < rows.size(); i++) {
                     Object row = rows.get(i);
                     String className = row.getClass().getSimpleName();
                     System.out.println("ExtendedAE Plus: 检查行 " + i + "，类型: " + className);
-                    if (className.equals("SlotsRow")) {
-                        rows.remove(i);
-                        removedCount++;
+                    
+                    if (className.equals("GroupHeaderRow")) {
+                        // 保留GroupHeaderRow，并重新映射对应的高亮按钮
+                        @SuppressWarnings("unchecked")
+                        java.util.ArrayList<Object> typedRows = (java.util.ArrayList<Object>) rows;
+                        typedRows.set(newIndex, row);
+                        
+                        // 查找原来在这个位置的高亮按钮
+                        // 原始代码中，高亮按钮的索引是在添加GroupHeaderRow之后、添加第一个SlotsRow之前设置的
+                        // 所以按钮的索引指向的是第一个SlotsRow的位置
+                        // 我们需要查找索引为 i+1 的按钮（第一个SlotsRow的位置）
+                        if (highlightBtns.containsKey(i + 1)) {
+                            Object button = highlightBtns.get(i + 1);
+                            newHighlightBtns.put(newIndex, button);
+                            System.out.println("ExtendedAE Plus: 重新映射高亮按钮，从索引 " + (i + 1) + " 到 " + newIndex);
+                        }
+                        
+                        newIndex++;
+                    } else if (className.equals("SlotsRow")) {
                         System.out.println("ExtendedAE Plus: 移除行 " + i);
+                        // 不保留SlotsRow，也不增加newIndex
                     }
                 }
                 
-                System.out.println("ExtendedAE Plus: 已隐藏 " + removedCount + " 个槽位行，剩余行数: " + rows.size());
+                // 打印所有原始的高亮按钮索引，帮助调试
+                System.out.println("ExtendedAE Plus: 原始高亮按钮索引:");
+                for (java.util.Map.Entry<Integer, Object> entry : highlightBtns.entrySet()) {
+                    System.out.println("ExtendedAE Plus: 索引 " + entry.getKey() + " -> 按钮对象: " + entry.getValue().getClass().getSimpleName());
+                }
+                
+                // 移除多余的行
+                while (rows.size() > newIndex) {
+                    rows.remove(rows.size() - 1);
+                }
+                
+                // 更新highlightBtns
+                highlightBtns.clear();
+                highlightBtns.putAll(newHighlightBtns);
+                
+                System.out.println("ExtendedAE Plus: 已隐藏槽位行，剩余行数: " + rows.size() + "，重新映射的高亮按钮数: " + newHighlightBtns.size());
+                
+                // 打印所有重新映射的按钮索引
+                for (java.util.Map.Entry<Integer, Object> entry : newHighlightBtns.entrySet()) {
+                    System.out.println("ExtendedAE Plus: 高亮按钮映射 - 索引 " + entry.getKey() + " -> 按钮对象: " + entry.getValue().getClass().getSimpleName());
+                }
                 
                 // 强制刷新滚动条
                 try {
@@ -158,11 +220,11 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                     System.out.println("ExtendedAE Plus: 重置滚动条失败: " + e.getMessage());
                 }
             } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 访问rows字段失败: " + e.getMessage());
+                System.out.println("ExtendedAE Plus: 访问字段失败: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
             System.out.println("ExtendedAE Plus: showSlots为true，不隐藏槽位行");
         }
     }
-} 
+}
