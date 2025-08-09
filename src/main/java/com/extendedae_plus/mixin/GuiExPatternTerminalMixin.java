@@ -4,17 +4,23 @@ import appeng.client.gui.Icon;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.IconButton;
+import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.client.gui.GuiWirelessExPAT;
 import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import appeng.api.crafting.PatternDetailsHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(GuiExPatternTerminal.class)
 public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerExPatternTerminal> {
@@ -27,6 +33,15 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
     
     @Unique
     private long currentlychooicepatterprovider = -1; // 当前选择的样板供应器ID
+    
+    @Unique
+    private static final String UPLOAD_SUCCESS_MESSAGE = "✅ ExtendedAE Plus: 样板快速上传成功！";
+    
+    @Unique
+    private static final String UPLOAD_FAILED_MESSAGE = "❌ ExtendedAE Plus: 样板上传失败，请检查供应器状态";
+    
+    @Unique
+    private static final String NO_PROVIDER_MESSAGE = "ExtendedAE Plus: 请先选择一个样板供应器（点击GroupHeader旁的按钮）";
 
     public GuiExPatternTerminalMixin(ContainerExPatternTerminal menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -46,6 +61,96 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
     @Unique
     public void setCurrentlyChoicePatternProvider(long id) {
         this.currentlychooicepatterprovider = id;
+    }
+    
+    /**
+     * 拦截鼠标点击事件，实现Shift+左键快速上传样板功能
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        // 检查是否是左键点击 + Shift键
+        if (button == 0 && hasShiftDown()) {
+            // 获取点击的槽位
+            Slot hoveredSlot = this.getSlotUnderMouse();
+            if (hoveredSlot != null && hoveredSlot.container == this.minecraft.player.getInventory()) {
+                // 点击的是玩家背包槽位
+                ItemStack clickedItem = hoveredSlot.getItem();
+                
+                // 检查是否是有效的编码样板
+                if (!clickedItem.isEmpty() && PatternDetailsHelper.isEncodedPattern(clickedItem)) {
+                    // 检查是否选择了样板供应器
+                    if (currentlychooicepatterprovider != -1) {
+                        // 执行快速上传
+                        this.quickUploadPattern(hoveredSlot.getSlotIndex());
+                        
+                        // 取消默认的点击行为
+                        cir.setReturnValue(true);
+                    } else {
+                        // 显示提示消息：请先选择一个样板供应器
+                        if (this.minecraft.player != null) {
+                            this.minecraft.player.displayClientMessage(
+                                Component.literal("ExtendedAE Plus: 请先选择一个样板供应器（点击GroupHeader旁的按钮）"), 
+                                true
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * 快速上传样板到当前选择的供应器
+     */
+    @Unique
+    private void quickUploadPattern(int playerSlotIndex) {
+        if (this.minecraft.player != null) {
+            // 获取要上传的物品
+            ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
+            
+            if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
+                // 显示正在上传的消息
+                this.minecraft.player.displayClientMessage(
+                    Component.literal("ExtendedAE Plus: 正在上传样板 " + itemToUpload.getDisplayName().getString() + " 到供应器..."), 
+                    true
+                );
+                
+                // 在单机游戏中，直接在客户端线程中执行服务器端逻辑
+                // 因为单机游戏的客户端和服务器运行在同一个进程中
+                this.minecraft.execute(() -> {
+                    // 获取服务器端的玩家实例
+                    if (this.minecraft.getSingleplayerServer() != null) {
+                        var serverPlayer = this.minecraft.getSingleplayerServer().getPlayerList()
+                            .getPlayer(this.minecraft.player.getUUID());
+                        
+                        if (serverPlayer != null) {
+                            // 直接调用服务器端上传逻辑
+                            boolean success = ExtendedAEPatternUploadUtil.uploadPatternToProvider(
+                                serverPlayer, 
+                                playerSlotIndex, 
+                                currentlychooicepatterprovider
+                            );
+                            
+                            // 显示结果消息
+                            String message = success ? 
+                                "✅ ExtendedAE Plus: 样板上传成功！" : 
+                                "❌ ExtendedAE Plus: 样板上传失败，请检查供应器状态";
+                            
+                            this.minecraft.player.displayClientMessage(
+                                Component.literal(message), 
+                                true
+                            );
+                        }
+                    }
+                });
+                
+            } else {
+                this.minecraft.player.displayClientMessage(
+                    Component.literal("❌ ExtendedAE Plus: 无效的样板物品"), 
+                    true
+                );
+            }
+        }
     }
     
     /**
