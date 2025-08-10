@@ -80,6 +80,22 @@ public class PatternProviderUIHelper {
     }
 
     /**
+     * ExtendedAE风格的样板复制倍增
+     * 提供更好的错误处理和恢复机制
+     * 
+     * @param multiplier 倍数（必须大于0）
+     * @return 缩放操作结果，如果当前没有打开样板供应器界面则返回null
+     */
+    public static PatternProviderDataUtil.PatternScalingResult duplicateCurrentPatternAmountsExtendedAEStyle(double multiplier) {
+        PatternProviderLogic patternProvider = getCurrentPatternProvider();
+        if (patternProvider == null) {
+            return null;
+        }
+        
+        return PatternProviderDataUtil.duplicatePatternAmountsExtendedAEStyle(patternProvider, multiplier);
+    }
+
+    /**
      * 在当前样板供应器中执行样板数量倍除
      * 
      * @param divisor 除数（必须大于0）

@@ -10,7 +10,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Arrays;
 
 /**
@@ -505,6 +507,7 @@ public class PatternProviderDataUtil {
 
     /**
      * 对样板供应器中的所有样板进行输入输出数量倍增
+     * ExtendedAE风格的样板倍增实现
      * 
      * @param patternProvider 样板供应器逻辑
      * @param multiplier 倍数（必须大于0）
@@ -514,11 +517,27 @@ public class PatternProviderDataUtil {
         if (multiplier <= 0) {
             throw new IllegalArgumentException("倍数必须大于0");
         }
-        return scalePatternAmounts(patternProvider, multiplier, true);
+        return scalePatternAmountsExtendedAEStyle(patternProvider, multiplier, true);
+    }
+
+    /**
+     * ExtendedAE风格的样板复制倍增
+     * 支持更精确的样板处理和错误恢复
+     * 
+     * @param patternProvider 样板供应器逻辑
+     * @param multiplier 倍数
+     * @return 缩放操作结果
+     */
+    public static PatternScalingResult duplicatePatternAmountsExtendedAEStyle(PatternProviderLogic patternProvider, double multiplier) {
+        if (multiplier <= 0) {
+            throw new IllegalArgumentException("倍数必须大于0");
+        }
+        return scalePatternAmountsExtendedAEStyle(patternProvider, multiplier, true);
     }
 
     /**
      * 对样板供应器中的所有样板进行输入输出数量倍除
+     * ExtendedAE风格的样板除法实现
      * 
      * @param patternProvider 样板供应器逻辑
      * @param divisor 除数（必须大于0）
@@ -528,11 +547,131 @@ public class PatternProviderDataUtil {
         if (divisor <= 0) {
             throw new IllegalArgumentException("除数必须大于0");
         }
-        return scalePatternAmounts(patternProvider, 1.0 / divisor, false);
+        return scalePatternAmountsExtendedAEStyle(patternProvider, 1.0 / divisor, false);
     }
 
     /**
-     * 内部方法：执行样板数量缩放
+     * ExtendedAE风格的样板数量缩放实现
+     * 提供更好的错误处理和样板兼容性
+     */
+    private static PatternScalingResult scalePatternAmountsExtendedAEStyle(PatternProviderLogic patternProvider, double scaleFactor, boolean isMultiply) {
+        List<String> errors = new ArrayList<>();
+        int totalPatterns = 0;
+        int scaledPatterns = 0;
+        int failedPatterns = 0;
+
+        if (patternProvider == null) {
+            errors.add("样板供应器为null");
+            return new PatternScalingResult(0, 0, 0, errors);
+        }
+
+        InternalInventory patternInventory = patternProvider.getPatternInv();
+        if (patternInventory == null) {
+            errors.add("无法访问样板库存");
+            return new PatternScalingResult(0, 0, 0, errors);
+        }
+
+        // 获取Level对象 - ExtendedAE风格的安全获取
+        Level level = getPatternProviderLevel(patternProvider);
+        if (level == null) {
+            errors.add("无法获取Level对象，请确保样板供应器在有效的世界中");
+            return new PatternScalingResult(0, 0, 0, errors);
+        }
+
+        // 备份原始样板，以便在出错时恢复
+        Map<Integer, ItemStack> originalPatterns = new HashMap<>();
+        
+        // 第一阶段：验证所有样板并创建备份
+        for (int i = 0; i < patternInventory.size(); i++) {
+            ItemStack patternStack = patternInventory.getStackInSlot(i);
+            if (patternStack.isEmpty()) {
+                continue;
+            }
+
+            totalPatterns++;
+            originalPatterns.put(i, patternStack.copy());
+
+            try {
+                // 验证样板是否可以被解码
+                IPatternDetails originalPattern = PatternDetailsHelper.decodePattern(patternStack, level);
+                if (originalPattern == null) {
+                    errors.add("槽位 " + i + ": 无法解码样板");
+                    failedPatterns++;
+                    continue;
+                }
+
+                // ExtendedAE风格：检查样板类型兼容性
+                if (!isPatternScalable(originalPattern)) {
+                    // 合成样板跳过，不计入失败数
+                    continue;
+                }
+
+                // 如果是除法操作，预先验证可行性
+                if (scaleFactor < 1.0) {
+                    if (!canScalePatternExtendedAEStyle(originalPattern, scaleFactor)) {
+                        errors.add("槽位 " + i + ": 样板数量无法按指定比例缩放");
+                        failedPatterns++;
+                        continue;
+                    }
+                }
+
+            } catch (Exception e) {
+                errors.add("槽位 " + i + ": 样板验证失败 - " + e.getMessage());
+                failedPatterns++;
+            }
+        }
+
+        // 第二阶段：执行实际的样板缩放
+        for (int i = 0; i < patternInventory.size(); i++) {
+            ItemStack patternStack = patternInventory.getStackInSlot(i);
+            if (patternStack.isEmpty() || !originalPatterns.containsKey(i)) {
+                continue;
+            }
+
+            try {
+                // 解码原始样板
+                IPatternDetails originalPattern = PatternDetailsHelper.decodePattern(patternStack, level);
+                if (originalPattern == null || !isPatternScalable(originalPattern)) {
+                    continue;
+                }
+
+                // ExtendedAE风格的样板缩放
+                ItemStack scaledPatternStack = scalePatternExtendedAEStyle(originalPattern, scaleFactor, level);
+                if (scaledPatternStack == null || scaledPatternStack.isEmpty()) {
+                    errors.add("槽位 " + i + ": 样板缩放失败");
+                    failedPatterns++;
+                    continue;
+                }
+
+                // 应用缩放后的样板 - 使用正确的方法确保数据持久化
+                setPatternWithPersistence(patternInventory, i, scaledPatternStack, patternProvider);
+                scaledPatterns++;
+
+            } catch (Exception e) {
+                errors.add("槽位 " + i + ": 处理样板时发生异常 - " + e.getMessage());
+                failedPatterns++;
+                
+                // ExtendedAE风格：出错时恢复原始样板
+                try {
+                    setPatternWithPersistence(patternInventory, i, originalPatterns.get(i), patternProvider);
+                } catch (Exception restoreException) {
+                    errors.add("槽位 " + i + ": 恢复原始样板失败 - " + restoreException.getMessage());
+                }
+            }
+        }
+
+        // 触发样板更新
+        try {
+            patternProvider.updatePatterns();
+        } catch (Exception e) {
+            errors.add("更新样板列表时发生异常: " + e.getMessage());
+        }
+
+        return new PatternScalingResult(totalPatterns, scaledPatterns, failedPatterns, errors);
+    }
+
+    /**
+     * 内部方法：执行样板数量缩放（保留原有实现以兼容性）
      */
     private static PatternScalingResult scalePatternAmounts(PatternProviderLogic patternProvider, double scaleFactor, boolean isMultiply) {
         List<String> errors = new ArrayList<>();
@@ -620,8 +759,8 @@ public class PatternProviderDataUtil {
                     continue;
                 }
 
-                // 替换原样板
-                patternInventory.setItemDirect(i, scaledPatternStack);
+                // 替换原样板 - 使用正确的方法确保数据持久化
+                setPatternWithPersistence(patternInventory, i, scaledPatternStack, patternProvider);
                 scaledPatterns++;
 
             } catch (Exception e) {
@@ -724,7 +863,228 @@ public class PatternProviderDataUtil {
     }
 
     /**
-     * 缩放处理样板
+     * 正确设置样板并确保数据持久化
+     * 解决样板修改后关闭UI就恢复的问题
+     */
+    private static void setPatternWithPersistence(InternalInventory patternInventory, int slot, ItemStack newPattern, PatternProviderLogic patternProvider) {
+        try {
+            // 1. 设置物品到库存
+            patternInventory.setItemDirect(slot, newPattern);
+            
+            // 2. 标记数据为脏数据，确保保存到磁盘
+            try {
+                // 通过反射获取host并标记为脏数据
+                var hostField = patternProvider.getClass().getDeclaredField("host");
+                hostField.setAccessible(true);
+                var host = hostField.get(patternProvider);
+                
+                if (host != null) {
+                    // 获取BlockEntity并标记为脏数据
+                    var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
+                    var blockEntity = getBlockEntityMethod.invoke(host);
+                    
+                    if (blockEntity != null) {
+                        // 调用setChanged()方法标记为脏数据
+                        var setChangedMethod = blockEntity.getClass().getMethod("setChanged");
+                        setChangedMethod.invoke(blockEntity);
+                        
+                        // 尝试触发网络同步
+                        try {
+                            var levelField = blockEntity.getClass().getSuperclass().getDeclaredField("level");
+                            levelField.setAccessible(true);
+                            Level level = (Level) levelField.get(blockEntity);
+                            
+                            if (level != null && !level.isClientSide()) {
+                                // 服务器端：强制同步到客户端
+                                var getBlockPosMethod = blockEntity.getClass().getMethod("getBlockPos");
+                                var blockPos = getBlockPosMethod.invoke(blockEntity);
+                                
+                                if (blockPos != null) {
+                                    // 通知客户端方块状态变更
+                                    var getBlockStateMethod = blockEntity.getClass().getMethod("getBlockState");
+                                    var blockState = getBlockStateMethod.invoke(blockEntity);
+                                    level.sendBlockUpdated((net.minecraft.core.BlockPos) blockPos, 
+                                                         (net.minecraft.world.level.block.state.BlockState) blockState, 
+                                                         (net.minecraft.world.level.block.state.BlockState) blockState, 3);
+                                }
+                            }
+                        } catch (Exception syncException) {
+                            // 网络同步失败不影响主要功能
+                            System.out.println("ExtendedAE Plus: 网络同步失败，但数据已保存: " + syncException.getMessage());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // 如果反射失败，使用备用方案
+                System.out.println("ExtendedAE Plus: 无法通过反射标记脏数据，使用备用方案: " + e.getMessage());
+            }
+            
+            // 3. 强制更新样板缓存
+            patternProvider.updatePatterns();
+            
+        } catch (Exception e) {
+            throw new RuntimeException("设置样板时发生错误: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * ExtendedAE风格：安全获取样板供应器的Level对象
+     */
+    private static Level getPatternProviderLevel(PatternProviderLogic patternProvider) {
+        try {
+            var hostField = patternProvider.getClass().getDeclaredField("host");
+            hostField.setAccessible(true);
+            var host = hostField.get(patternProvider);
+            if (host != null) {
+                var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
+                var blockEntity = getBlockEntityMethod.invoke(host);
+                if (blockEntity != null) {
+                    var getLevelMethod = blockEntity.getClass().getMethod("getLevel");
+                    return (Level) getLevelMethod.invoke(blockEntity);
+                }
+            }
+        } catch (Exception e) {
+            // 静默处理异常，返回null让调用者处理
+        }
+        return null;
+    }
+
+    /**
+     * ExtendedAE风格：检查样板是否可以缩放
+     */
+    private static boolean isPatternScalable(IPatternDetails pattern) {
+        if (pattern == null) return false;
+        
+        String className = pattern.getClass().getSimpleName();
+        // 只有处理样板可以缩放，合成样板不支持
+        return "AEProcessingPattern".equals(className) || 
+               (!className.equals("AECraftingPattern") && pattern.getOutputs().length > 0);
+    }
+
+    /**
+     * ExtendedAE风格：检查样板是否可以按指定比例缩放
+     */
+    private static boolean canScalePatternExtendedAEStyle(IPatternDetails pattern, double scaleFactor) {
+        if (!isPatternScalable(pattern)) return false;
+        
+        try {
+            // 对于倍增操作，总是允许
+            if (scaleFactor >= 1.0) return true;
+            
+            // 对于除法操作，检查所有输入输出是否可以被整除
+            double divisor = 1.0 / scaleFactor;
+            
+            // 检查输入
+            for (IPatternDetails.IInput input : pattern.getInputs()) {
+                GenericStack[] possibleInputs = input.getPossibleInputs();
+                long multiplier = input.getMultiplier();
+                
+                if (possibleInputs.length > 0 && possibleInputs[0] != null) {
+                    long currentAmount = possibleInputs[0].amount() * multiplier;
+                    if (currentAmount < divisor || (currentAmount % divisor != 0)) {
+                        return false;
+                    }
+                }
+            }
+            
+            // 检查输出
+            for (GenericStack output : pattern.getOutputs()) {
+                if (output != null && output.what() != null) {
+                    long currentAmount = output.amount();
+                    if (currentAmount < divisor || (currentAmount % divisor != 0)) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * ExtendedAE风格：缩放样板
+     */
+    private static ItemStack scalePatternExtendedAEStyle(IPatternDetails originalPattern, double scaleFactor, Level level) {
+        if (!isPatternScalable(originalPattern)) {
+            return null;
+        }
+
+        try {
+            // 获取原始输入输出
+            IPatternDetails.IInput[] originalInputs = originalPattern.getInputs();
+            GenericStack[] originalOutputs = originalPattern.getOutputs();
+
+            // ExtendedAE风格：更精确的数量计算
+            List<GenericStack> scaledInputs = new ArrayList<>();
+            for (IPatternDetails.IInput input : originalInputs) {
+                GenericStack[] possibleInputs = input.getPossibleInputs();
+                long multiplier = input.getMultiplier();
+                
+                if (possibleInputs.length > 0 && possibleInputs[0] != null) {
+                    GenericStack primaryInput = possibleInputs[0];
+                    long originalAmount = primaryInput.amount() * multiplier;
+                    
+                    // ExtendedAE风格：精确计算新数量
+                    long newAmount;
+                    if (scaleFactor >= 1.0) {
+                        // 倍增：四舍五入，但至少为1
+                        newAmount = Math.max(1, Math.round(originalAmount * scaleFactor));
+                    } else {
+                        // 除法：必须能整除
+                        double divisor = 1.0 / scaleFactor;
+                        if (originalAmount % divisor == 0) {
+                            newAmount = Math.max(1, (long)(originalAmount / divisor));
+                        } else {
+                            // 不能整除，返回null表示失败
+                            return null;
+                        }
+                    }
+                    
+                    scaledInputs.add(new GenericStack(primaryInput.what(), newAmount));
+                }
+            }
+
+            // ExtendedAE风格：缩放输出
+            List<GenericStack> scaledOutputs = new ArrayList<>();
+            for (GenericStack output : originalOutputs) {
+                if (output != null && output.what() != null) {
+                    long originalAmount = output.amount();
+                    
+                    // ExtendedAE风格：精确计算新数量
+                    long newAmount;
+                    if (scaleFactor >= 1.0) {
+                        // 倍增：四舍五入，但至少为1
+                        newAmount = Math.max(1, Math.round(originalAmount * scaleFactor));
+                    } else {
+                        // 除法：必须能整除
+                        double divisor = 1.0 / scaleFactor;
+                        if (originalAmount % divisor == 0) {
+                            newAmount = Math.max(1, (long)(originalAmount / divisor));
+                        } else {
+                            // 不能整除，返回null表示失败
+                            return null;
+                        }
+                    }
+                    
+                    scaledOutputs.add(new GenericStack(output.what(), newAmount));
+                }
+            }
+
+            // 创建新的处理样板
+            return PatternDetailsHelper.encodeProcessingPattern(
+                scaledInputs.toArray(new GenericStack[0]),
+                scaledOutputs.toArray(new GenericStack[0])
+            );
+
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 缩放处理样板（保留原有实现以兼容性）
      */
     private static ItemStack scaleProcessingPattern(IPatternDetails originalPattern, double scaleFactor) {
         try {

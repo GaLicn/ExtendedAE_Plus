@@ -40,6 +40,20 @@ public class NetworkHandler {
                 .encoder(PatternUploadResultPacket::encode)
                 .consumerMainThread(PatternUploadResultPacket::handle)
                 .add();
+        
+        // 样板缩放请求包（客户端 -> 服务器）
+        INSTANCE.messageBuilder(PatternScalingPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PatternScalingPacket::decode)
+                .encoder(PatternScalingPacket::encode)
+                .consumerMainThread(PatternScalingPacket::handle)
+                .add();
+        
+        // 样板缩放结果包（服务器 -> 客户端）
+        INSTANCE.messageBuilder(PatternScalingResultPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PatternScalingResultPacket::decode)
+                .encoder(PatternScalingResultPacket::encode)
+                .consumerMainThread(PatternScalingResultPacket::handle)
+                .add();
     }
     
     /**
