@@ -6,6 +6,8 @@ import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.VerticalButtonBar;
 import appeng.menu.SlotSemantics;
+import com.extendedae_plus.NewIcon;
+import com.extendedae_plus.util.PatternProviderUIHelper;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
@@ -85,6 +87,12 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                    if (nextPage != null && prevPage != null) {
                        this.nextPage.setVisibility(true);
                        this.prevPage.setVisibility(true);
+                   }
+                   if (x2Button != null) {
+                       this.x2Button.setVisibility(true);
+                   }
+                   if (divideBy2Button != null) {
+                       this.divideBy2Button.setVisibility(true);
                    }
             
             // 调整槽位位置
@@ -180,6 +188,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
     public ActionEPPButton nextPage;
     public ActionEPPButton prevPage;
+    public ActionEPPButton x2Button;
+    public ActionEPPButton divideBy2Button;
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
@@ -205,21 +215,68 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                    }, Icon.ARROW_LEFT);
 
                                this.nextPage = new ActionEPPButton((b) -> {
-                       int currentPage = getCurrentPage();
-                       int maxPage = getMaxPage();
-                       // 循环翻页：最后一页向后翻到第一页
-                       int newPage = (currentPage + 1) % maxPage;
-                       try {
-                           ContainerExPatternProvider menu1 = this.getMenu();
-                           java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                           setPageMethod.invoke(menu1, newPage);
-                       } catch (Exception e) {
-                           // 忽略反射错误
-                       }
-                   }, Icon.ARROW_RIGHT);
+                        int currentPage = getCurrentPage();
+                        int maxPage = getMaxPage();
+                        // 循环翻页：最后一页向后翻到第一页
+                        int newPage = (currentPage + 1) % maxPage;
+                        try {
+                            ContainerExPatternProvider menu1 = this.getMenu();
+                            java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                            setPageMethod.invoke(menu1, newPage);
+                        } catch (Exception e) {
+                            // 忽略反射错误
+                        }
+                    }, Icon.ARROW_RIGHT);
 
             this.addToLeftToolbar(this.nextPage);
             this.addToLeftToolbar(this.prevPage);
         }
+        
+        // x2 按钮 - 一直显示，将所有处理样板的输入输出乘以2
+        this.x2Button = new ActionEPPButton((b) -> {
+            try {
+                var result = PatternProviderUIHelper.multiplyCurrentPatternAmounts(2.0);
+                if (result != null) {
+                    if (result.isSuccessful()) {
+                        System.out.println("成功将 " + result.getScaledPatterns() + " 个处理样板的数量乘以2！");
+                        if (result.getFailedPatterns() > 0) {
+                            System.out.println("跳过了 " + result.getFailedPatterns() + " 个合成样板（合成样板不支持数量缩放）");
+                        }
+                    } else {
+                        System.out.println("样板数量缩放失败：" + String.join(", ", result.getErrors()));
+                    }
+                } else {
+                    System.out.println("无法获取当前样板供应器，请确保界面已正确打开");
+                }
+            } catch (Exception e) {
+                System.out.println("执行样板数量乘2时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.MULTIPLY2);
+        
+        // /2 按钮 - 一直显示，将所有处理样板的输入输出除以2
+        this.divideBy2Button = new ActionEPPButton((b) -> {
+            try {
+                var result = PatternProviderUIHelper.divideCurrentPatternAmounts(2.0);
+                if (result != null) {
+                    if (result.isSuccessful()) {
+                        System.out.println("成功将 " + result.getScaledPatterns() + " 个处理样板的数量除以2！");
+                        if (result.getFailedPatterns() > 0) {
+                            System.out.println("跳过了 " + result.getFailedPatterns() + " 个合成样板（合成样板不支持数量缩放）");
+                        }
+                    } else {
+                        System.out.println("样板数量缩放失败：" + String.join(", ", result.getErrors()));
+                    }
+                } else {
+                    System.out.println("无法获取当前样板供应器，请确保界面已正确打开");
+                }
+            } catch (Exception e) {
+                System.out.println("执行样板数量除以2时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.DIVIDE2);
+        
+        this.addToLeftToolbar(this.x2Button);
+        this.addToLeftToolbar(this.divideBy2Button);
     }
-} 
+}

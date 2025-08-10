@@ -12,7 +12,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
  */
 @Mod("extendedae_plus")
 public class ExtendedAEPlus {
-    
+
+    public static final String MODID = "extendedae_plus";
+
     public ExtendedAEPlus() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
