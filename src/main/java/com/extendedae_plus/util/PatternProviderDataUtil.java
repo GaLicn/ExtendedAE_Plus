@@ -20,6 +20,7 @@ import java.util.Arrays;
  * 用于获取样板供应器中的所有样板数据，包括输入输出物品的数量信息
  */
 public class PatternProviderDataUtil {
+    private static final boolean DEBUG = true; // 临时诊断开关，发布可设为 false
 
     /**
      * 样板数据类，包含样板的输入输出信息
@@ -101,8 +102,9 @@ public class PatternProviderDataUtil {
          * 通过检查实现类型来判断
          */
         public boolean isCraftingPattern() {
-            // 根据AE2源码，制作样板使用AECraftingPattern类
-            return patternDetails.getClass().getSimpleName().equals("AECraftingPattern");
+            // 使用样板定义判断，避免依赖类名（发布版会被混淆）
+            String def = String.valueOf(patternDetails.getDefinition()).toLowerCase();
+            return def.contains("crafting");
         }
 
         /**
@@ -110,8 +112,9 @@ public class PatternProviderDataUtil {
          * 通过检查实现类型来判断
          */
         public boolean isProcessingPattern() {
-            // 处理样板使用AEProcessingPattern类
-            return patternDetails.getClass().getSimpleName().equals("AEProcessingPattern");
+            // 使用样板定义判断处理类样板（含处理/石切/锻造等非合成）
+            String def = String.valueOf(patternDetails.getDefinition()).toLowerCase();
+            return def.contains("processing") || def.contains("stonecutting") || def.contains("smithing");
         }
 
         /**
@@ -785,34 +788,23 @@ public class PatternProviderDataUtil {
      */
     private static ItemStack scalePattern(IPatternDetails originalPattern, double scaleFactor, Level level) {
         try {
-            // 检查样板类型
-            boolean isCraftingPattern = originalPattern.getClass().getSimpleName().equals("AECraftingPattern");
-            boolean isProcessingPattern = originalPattern.getClass().getSimpleName().equals("AEProcessingPattern");
+            // 基于定义字符串进行类型判断，避免类名混淆问题
+            String def = String.valueOf(originalPattern.getDefinition()).toLowerCase();
+            boolean isCrafting = def.contains("crafting");
 
-            if (isCraftingPattern) {
-                // 合成样板不参与缩放，直接返回null表示跳过
+            if (isCrafting) {
+                // 合成样板不参与缩放
                 return null;
-            } else if (isProcessingPattern) {
-                // 如果是除法操作（scaleFactor < 1），需要检查是否可以除
-                if (scaleFactor < 1.0) {
-                    double divisor = 1.0 / scaleFactor;
-                    if (!canDivideProcessingPattern(originalPattern, divisor)) {
-                        // 不能被除，返回null表示跳过
-                        return null;
-                    }
-                }
-                // 只有处理样板才进行缩放
-                return scaleProcessingPattern(originalPattern, scaleFactor);
-            } else {
-                // 对于未知类型的样板，也尝试作为处理样板处理
-                if (scaleFactor < 1.0) {
-                    double divisor = 1.0 / scaleFactor;
-                    if (!canDivideProcessingPattern(originalPattern, divisor)) {
-                        return null;
-                    }
-                }
-                return scaleProcessingPattern(originalPattern, scaleFactor);
             }
+
+            // 非合成（处理/石切/锻造等）按处理样板流程处理
+            if (scaleFactor < 1.0) {
+                double divisor = 1.0 / scaleFactor;
+                if (!canDivideProcessingPattern(originalPattern, divisor)) {
+                    return null;
+                }
+            }
+            return scaleProcessingPattern(originalPattern, scaleFactor);
         } catch (Exception e) {
             return null;
         }
@@ -954,11 +946,10 @@ public class PatternProviderDataUtil {
      */
     private static boolean isPatternScalable(IPatternDetails pattern) {
         if (pattern == null) return false;
-        
-        String className = pattern.getClass().getSimpleName();
-        // 只有处理样板可以缩放，合成样板不支持
-        return "AEProcessingPattern".equals(className) || 
-               (!className.equals("AECraftingPattern") && pattern.getOutputs().length > 0);
+        String def = String.valueOf(pattern.getDefinition()).toLowerCase();
+        boolean isCrafting = def.contains("crafting");
+        // 非合成且有输出，认为可缩放（包含处理/石切/锻造等）
+        return !isCrafting && pattern.getOutputs().length > 0;
     }
 
     /**

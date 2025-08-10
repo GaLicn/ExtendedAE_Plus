@@ -294,131 +294,119 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Unique
     private void executePatternScalingOnServer(net.minecraft.server.level.ServerPlayer serverPlayer, String scalingType, double scaleFactor) {
         try {
-            // 获取服务器端的样板供应器逻辑
-            appeng.helpers.patternprovider.PatternProviderLogic patternProvider = getServerSidePatternProvider(serverPlayer);
-            if (patternProvider == null) {
-                System.out.println("ExtendedAE Plus: 无法获取服务器端样板供应器");
-                return;
-            }
-            
-            // 在服务器端执行样板缩放
-            com.extendedae_plus.util.PatternProviderDataUtil.PatternScalingResult result;
-            if ("MULTIPLY".equals(scalingType)) {
-                result = com.extendedae_plus.util.PatternProviderDataUtil.duplicatePatternAmountsExtendedAEStyle(patternProvider, scaleFactor);
-            } else {
-                result = com.extendedae_plus.util.PatternProviderDataUtil.dividePatternAmounts(patternProvider, scaleFactor);
-            }
-            
-            // 在客户端显示结果（单机模式下可以直接访问客户端）
-            net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-            if (minecraft.player != null && result != null) {
-                String message;
-                if (result.isSuccessful()) {
-                    if (result.getFailedPatterns() > 0) {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个样板，跳过 %d 个样板", 
-                                              "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
-                                              result.getScaledPatterns(), result.getFailedPatterns());
-                    } else {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个样板", 
-                                              "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
-                                              result.getScaledPatterns());
+            // 将实际逻辑切换到服务端主线程执行，避免跨线程访问导致读取到空库存
+            serverPlayer.getServer().execute(() -> {
+                try {
+                    // 直接基于容器槽位操作，完全绕开 PatternProviderLogic 及其内部字段
+                    if (!(serverPlayer.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExPatternProvider exMenu)) {
+                        System.out.println("ExtendedAE Plus: 当前容器不是 ExPatternProvider，无法执行样板缩放");
+                        return;
                     }
-                } else {
-                    message = String.format("❌ ExtendedAE Plus: 样板%s失败！错误: %s", 
-                                          "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
-                                          String.join("; ", result.getErrors()));
-                }
-                
-                // 显示消息到动作栏
-                minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
-                System.out.println("ExtendedAE Plus: " + message);
-            }
-            
-        } catch (Exception e) {
-            System.out.println("ExtendedAE Plus: 服务器端执行样板缩放时发生错误: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    /**
-     * 获取服务器端的样板供应器逻辑
-     */
-    @Unique
-    private appeng.helpers.patternprovider.PatternProviderLogic getServerSidePatternProvider(net.minecraft.server.level.ServerPlayer serverPlayer) {
-        try {
-            if (serverPlayer.containerMenu != null) {
-                // 检查是否是样板供应器菜单
-                String menuClassName = serverPlayer.containerMenu.getClass().getSimpleName();
-                System.out.println("ExtendedAE Plus: 服务器端菜单类名: " + menuClassName);
-                
-                if (menuClassName.contains("PatternProvider")) {
-                    // 尝试多种可能的字段名称
-                    String[] possibleFieldNames = {"logic", "patternProvider", "host", "provider"};
-                    
-                    for (String fieldName : possibleFieldNames) {
-                        try {
-                            var field = findFieldInHierarchy(serverPlayer.containerMenu.getClass(), fieldName);
-                            if (field != null) {
-                                field.setAccessible(true);
-                                Object fieldValue = field.get(serverPlayer.containerMenu);
-                                
-                                if (fieldValue instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
-                                    System.out.println("ExtendedAE Plus: 通过字段 '" + fieldName + "' 找到PatternProviderLogic");
-                                    return (appeng.helpers.patternprovider.PatternProviderLogic) fieldValue;
-                                }
-                                
-                                // 如果字段值是host，尝试从host获取logic
-                                if (fieldValue != null && fieldName.equals("host")) {
-                                    try {
-                                        var logicMethod = fieldValue.getClass().getMethod("getLogic");
-                                        Object logic = logicMethod.invoke(fieldValue);
-                                        if (logic instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
-                                            System.out.println("ExtendedAE Plus: 通过host.getLogic()找到PatternProviderLogic");
-                                            return (appeng.helpers.patternprovider.PatternProviderLogic) logic;
-                                        }
-                                    } catch (Exception hostException) {
-                                        // 忽略host方法调用失败
+
+                    int scaled = 0;
+                    int failed = 0;
+                    int total = 0;
+                    final int scale = (int) Math.round(scaleFactor);
+                    final boolean div = !"MULTIPLY".equals(scalingType);
+
+                    java.util.List<net.minecraft.world.inventory.Slot> slots = exMenu.getSlots(appeng.menu.SlotSemantics.ENCODED_PATTERN);
+                    for (var slot : slots) {
+                        var stack = slot.getItem();
+                        if (stack.getItem() instanceof appeng.crafting.pattern.EncodedPatternItem patternItem) {
+                            total++;
+                            var detail = patternItem.decode(stack, serverPlayer.level(), false);
+                            if (detail instanceof appeng.crafting.pattern.AEProcessingPattern process) {
+                                var input = process.getSparseInputs();
+                                var output = process.getOutputs();
+
+                                // 检查是否可修改（来源：ExtendedAE ContainerPatternModifier.checkModify）
+                                if (checkModifyLikeExtendedAE(input, scale, div) && checkModifyLikeExtendedAE(output, scale, div)) {
+                                    var mulInput = new appeng.api.stacks.GenericStack[input.length];
+                                    var mulOutput = new appeng.api.stacks.GenericStack[output.length];
+                                    modifyStacksLikeExtendedAE(input, mulInput, scale, div);
+                                    modifyStacksLikeExtendedAE(output, mulOutput, scale, div);
+                                    var newPattern = appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(mulInput, mulOutput);
+                                    if (slot instanceof appeng.menu.slot.AppEngSlot as) {
+                                        as.set(newPattern);
+                                    } else {
+                                        slot.set(newPattern);
                                     }
+                                    scaled++;
+                                } else {
+                                    failed++;
                                 }
+                            } else {
+                                // 非处理样板：跳过
+                                failed++;
                             }
-                        } catch (Exception fieldException) {
-                            // 继续尝试下一个字段名
                         }
                     }
-                    
-                    // 如果直接字段访问失败，尝试通过方法获取
-                    try {
-                        var getLogicMethod = serverPlayer.containerMenu.getClass().getMethod("getLogic");
-                        Object logic = getLogicMethod.invoke(serverPlayer.containerMenu);
-                        if (logic instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
-                            System.out.println("ExtendedAE Plus: 通过getLogic()方法找到PatternProviderLogic");
-                            return (appeng.helpers.patternprovider.PatternProviderLogic) logic;
-                        }
-                    } catch (Exception methodException) {
-                        // 方法调用失败，继续其他尝试
+
+                    // 构造结果并回显
+                    String message;
+                    if (scaled == 0) {
+                        message = String.format(
+                            "ℹ️ ExtendedAE Plus: 样板%s完成，但未处理任何样板。共发现 %d 个样板，失败 %d 个（可能全为合成样板或数量不满足条件）",
+                            div ? "除法" : "倍增", total, failed);
+                    } else if (failed > 0) {
+                        message = String.format("✅ ExtendedAE Plus: 样板%s完成！处理了 %d 个，跳过 %d 个", div ? "除法" : "倍增", scaled, failed);
+                    } else {
+                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个", div ? "除法" : "倍增", scaled);
+                    }
+
+                    var minecraft = net.minecraft.client.Minecraft.getInstance();
+                    if (minecraft.player != null) {
+                        minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
+                    }
+                    System.out.println("ExtendedAE Plus: " + message);
+
+                } catch (Exception e) {
+                    System.out.println("ExtendedAE Plus: 服务器端执行样板缩放时发生错误: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            });
+
+        } catch (Exception e) {
+            System.out.println("ExtendedAE Plus: 调度到服务器主线程时发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Unique
+    private boolean checkModifyLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks, int scale, boolean div) {
+        if (div) {
+            for (var stack : stacks) {
+                if (stack != null) {
+                    if (stack.amount() % scale != 0) {
+                        return false;
                     }
                 }
             }
-        } catch (Exception e) {
-            System.out.println("ExtendedAE Plus: 获取服务器端样板供应器逻辑时发生错误: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return null;
-    }
-    
-    /**
-     * 在类继承层次中查找字段
-     */
-    @Unique
-    private java.lang.reflect.Field findFieldInHierarchy(Class<?> clazz, String fieldName) {
-        Class<?> currentClass = clazz;
-        while (currentClass != null && currentClass != Object.class) {
-            try {
-                return currentClass.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                currentClass = currentClass.getSuperclass();
+        } else {
+            for (var stack : stacks) {
+                if (stack != null) {
+                    long upper = 999999L * stack.what().getAmountPerUnit();
+                    if (stack.amount() * scale > upper) {
+                        return false;
+                    }
+                }
             }
         }
-        return null;
+        return true;
     }
+
+    @Unique
+    private void modifyStacksLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks,
+                                            appeng.api.stacks.GenericStack[] des,
+                                            int scale,
+                                            boolean div) {
+        for (int i = 0; i < stacks.length; i++) {
+            if (stacks[i] != null) {
+                long amt = div ? stacks[i].amount() / scale : stacks[i].amount() * scale;
+                des[i] = new appeng.api.stacks.GenericStack(stacks[i].what(), amt);
+            }
+        }
+    }
+    
+
 }
