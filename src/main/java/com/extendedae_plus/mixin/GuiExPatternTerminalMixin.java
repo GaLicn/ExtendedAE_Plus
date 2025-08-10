@@ -109,11 +109,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
             ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
             
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                // 显示正在上传的消息
-                this.minecraft.player.displayClientMessage(
-                    Component.literal("ExtendedAE Plus: 正在上传样板 " + itemToUpload.getDisplayName().getString() + " 到供应器..."), 
-                    true
-                );
+                // 取消上传过程中的左下角提示
                 
                 // 在单机游戏中，直接在客户端线程中执行服务器端逻辑
                 // 因为单机游戏的客户端和服务器运行在同一个进程中
@@ -131,15 +127,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                                 currentlychooicepatterprovider
                             );
                             
-                            // 显示结果消息
-                            String message = success ? 
-                                "✅ ExtendedAE Plus: 样板上传成功！" : 
-                                "❌ ExtendedAE Plus: 样板上传失败，请检查供应器状态";
-                            
-                            this.minecraft.player.displayClientMessage(
-                                Component.literal(message), 
-                                true
-                            );
+                            // 取消上传完成后的左下角提示
                         }
                     }
                 });
