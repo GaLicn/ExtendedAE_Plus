@@ -232,51 +232,193 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.addToLeftToolbar(this.prevPage);
         }
         
-        // x2 按钮 - 一直显示，将所有处理样板的输入输出乘以2
+        // x2 按钮 - 单机模式直接调用服务器端逻辑
         this.x2Button = new ActionEPPButton((b) -> {
             try {
-                var result = PatternProviderUIHelper.multiplyCurrentPatternAmounts(2.0);
-                if (result != null) {
-                    if (result.isSuccessful()) {
-                        System.out.println("成功将 " + result.getScaledPatterns() + " 个处理样板的数量乘以2！");
-                        if (result.getFailedPatterns() > 0) {
-                            System.out.println("跳过了 " + result.getFailedPatterns() + " 个合成样板（合成样板不支持数量缩放）");
-                        }
+                // 单机模式：直接在逻辑服务器端执行样板倍增
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    // 获取逻辑服务器端的玩家实例
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    
+                    if (serverPlayer != null) {
+                        // 在服务器端执行样板倍增逻辑
+                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 2.0);
                     } else {
-                        System.out.println("样板数量缩放失败：" + String.join(", ", result.getErrors()));
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
                     }
                 } else {
-                    System.out.println("无法获取当前样板供应器，请确保界面已正确打开");
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
                 }
+                
             } catch (Exception e) {
-                System.out.println("执行样板数量乘2时发生错误：" + e.getMessage());
+                System.out.println("ExtendedAE Plus: 执行样板倍增时发生错误：" + e.getMessage());
                 e.printStackTrace();
             }
         }, NewIcon.MULTIPLY2);
         
-        // /2 按钮 - 一直显示，将所有处理样板的输入输出除以2
+        // /2 按钮 - 单机模式直接调用服务器端逻辑
         this.divideBy2Button = new ActionEPPButton((b) -> {
             try {
-                var result = PatternProviderUIHelper.divideCurrentPatternAmounts(2.0);
-                if (result != null) {
-                    if (result.isSuccessful()) {
-                        System.out.println("成功将 " + result.getScaledPatterns() + " 个处理样板的数量除以2！");
-                        if (result.getFailedPatterns() > 0) {
-                            System.out.println("跳过了 " + result.getFailedPatterns() + " 个合成样板（合成样板不支持数量缩放）");
-                        }
+                // 单机模式：直接在逻辑服务器端执行样板除法
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    // 获取逻辑服务器端的玩家实例
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    
+                    if (serverPlayer != null) {
+                        // 在服务器端执行样板除法逻辑
+                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 2.0);
                     } else {
-                        System.out.println("样板数量缩放失败：" + String.join(", ", result.getErrors()));
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
                     }
                 } else {
-                    System.out.println("无法获取当前样板供应器，请确保界面已正确打开");
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
                 }
+                
             } catch (Exception e) {
-                System.out.println("执行样板数量除以2时发生错误：" + e.getMessage());
+                System.out.println("ExtendedAE Plus: 执行样板除法时发生错误：" + e.getMessage());
                 e.printStackTrace();
             }
         }, NewIcon.DIVIDE2);
         
         this.addToLeftToolbar(this.x2Button);
         this.addToLeftToolbar(this.divideBy2Button);
+    }
+    
+    /**
+     * 在服务器端执行样板缩放操作（单机模式）
+     */
+    @Unique
+    private void executePatternScalingOnServer(net.minecraft.server.level.ServerPlayer serverPlayer, String scalingType, double scaleFactor) {
+        try {
+            // 获取服务器端的样板供应器逻辑
+            appeng.helpers.patternprovider.PatternProviderLogic patternProvider = getServerSidePatternProvider(serverPlayer);
+            if (patternProvider == null) {
+                System.out.println("ExtendedAE Plus: 无法获取服务器端样板供应器");
+                return;
+            }
+            
+            // 在服务器端执行样板缩放
+            com.extendedae_plus.util.PatternProviderDataUtil.PatternScalingResult result;
+            if ("MULTIPLY".equals(scalingType)) {
+                result = com.extendedae_plus.util.PatternProviderDataUtil.duplicatePatternAmountsExtendedAEStyle(patternProvider, scaleFactor);
+            } else {
+                result = com.extendedae_plus.util.PatternProviderDataUtil.dividePatternAmounts(patternProvider, scaleFactor);
+            }
+            
+            // 在客户端显示结果（单机模式下可以直接访问客户端）
+            net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+            if (minecraft.player != null && result != null) {
+                String message;
+                if (result.isSuccessful()) {
+                    if (result.getFailedPatterns() > 0) {
+                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个样板，跳过 %d 个样板", 
+                                              "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
+                                              result.getScaledPatterns(), result.getFailedPatterns());
+                    } else {
+                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个样板", 
+                                              "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
+                                              result.getScaledPatterns());
+                    }
+                } else {
+                    message = String.format("❌ ExtendedAE Plus: 样板%s失败！错误: %s", 
+                                          "MULTIPLY".equals(scalingType) ? "倍增" : "除法",
+                                          String.join("; ", result.getErrors()));
+                }
+                
+                // 显示消息到动作栏
+                minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
+                System.out.println("ExtendedAE Plus: " + message);
+            }
+            
+        } catch (Exception e) {
+            System.out.println("ExtendedAE Plus: 服务器端执行样板缩放时发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 获取服务器端的样板供应器逻辑
+     */
+    @Unique
+    private appeng.helpers.patternprovider.PatternProviderLogic getServerSidePatternProvider(net.minecraft.server.level.ServerPlayer serverPlayer) {
+        try {
+            if (serverPlayer.containerMenu != null) {
+                // 检查是否是样板供应器菜单
+                String menuClassName = serverPlayer.containerMenu.getClass().getSimpleName();
+                System.out.println("ExtendedAE Plus: 服务器端菜单类名: " + menuClassName);
+                
+                if (menuClassName.contains("PatternProvider")) {
+                    // 尝试多种可能的字段名称
+                    String[] possibleFieldNames = {"logic", "patternProvider", "host", "provider"};
+                    
+                    for (String fieldName : possibleFieldNames) {
+                        try {
+                            var field = findFieldInHierarchy(serverPlayer.containerMenu.getClass(), fieldName);
+                            if (field != null) {
+                                field.setAccessible(true);
+                                Object fieldValue = field.get(serverPlayer.containerMenu);
+                                
+                                if (fieldValue instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
+                                    System.out.println("ExtendedAE Plus: 通过字段 '" + fieldName + "' 找到PatternProviderLogic");
+                                    return (appeng.helpers.patternprovider.PatternProviderLogic) fieldValue;
+                                }
+                                
+                                // 如果字段值是host，尝试从host获取logic
+                                if (fieldValue != null && fieldName.equals("host")) {
+                                    try {
+                                        var logicMethod = fieldValue.getClass().getMethod("getLogic");
+                                        Object logic = logicMethod.invoke(fieldValue);
+                                        if (logic instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
+                                            System.out.println("ExtendedAE Plus: 通过host.getLogic()找到PatternProviderLogic");
+                                            return (appeng.helpers.patternprovider.PatternProviderLogic) logic;
+                                        }
+                                    } catch (Exception hostException) {
+                                        // 忽略host方法调用失败
+                                    }
+                                }
+                            }
+                        } catch (Exception fieldException) {
+                            // 继续尝试下一个字段名
+                        }
+                    }
+                    
+                    // 如果直接字段访问失败，尝试通过方法获取
+                    try {
+                        var getLogicMethod = serverPlayer.containerMenu.getClass().getMethod("getLogic");
+                        Object logic = getLogicMethod.invoke(serverPlayer.containerMenu);
+                        if (logic instanceof appeng.helpers.patternprovider.PatternProviderLogic) {
+                            System.out.println("ExtendedAE Plus: 通过getLogic()方法找到PatternProviderLogic");
+                            return (appeng.helpers.patternprovider.PatternProviderLogic) logic;
+                        }
+                    } catch (Exception methodException) {
+                        // 方法调用失败，继续其他尝试
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ExtendedAE Plus: 获取服务器端样板供应器逻辑时发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
+     * 在类继承层次中查找字段
+     */
+    @Unique
+    private java.lang.reflect.Field findFieldInHierarchy(Class<?> clazz, String fieldName) {
+        Class<?> currentClass = clazz;
+        while (currentClass != null && currentClass != Object.class) {
+            try {
+                return currentClass.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                currentClass = currentClass.getSuperclass();
+            }
+        }
+        return null;
     }
 }
