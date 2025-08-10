@@ -292,9 +292,11 @@ public class ExtendedAEPatternUploadUtil {
      * @param message 消息内容
      */
     private static void sendMessage(ServerPlayer player, String message) {
-        if (player != null) {
-            player.sendSystemMessage(Component.literal(message));
-        }
+        // 静默：不再向玩家左下角发送任何提示信息
+        // 如需恢复，取消下面注释即可：
+        // if (player != null) {
+        //     player.sendSystemMessage(Component.literal(message));
+        // }
         // 如果玩家为null，静默忽略（用于测试环境）
     }
 

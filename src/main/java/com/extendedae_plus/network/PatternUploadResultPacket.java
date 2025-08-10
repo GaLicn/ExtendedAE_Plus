@@ -44,15 +44,7 @@ public class PatternUploadResultPacket {
     public static void handle(PatternUploadResultPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
-            // 在客户端显示结果消息
-            Minecraft minecraft = Minecraft.getInstance();
-            if (minecraft.player != null) {
-                String prefix = packet.success ? "✅ ExtendedAE Plus: " : "❌ ExtendedAE Plus: ";
-                minecraft.player.displayClientMessage(
-                    Component.literal(prefix + packet.message),
-                    true
-                );
-            }
+            // 不再在客户端左下角显示上传结果消息，保持静默
         });
         context.setPacketHandled(true);
     }
