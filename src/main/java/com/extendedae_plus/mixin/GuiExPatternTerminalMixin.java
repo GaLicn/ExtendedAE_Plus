@@ -5,6 +5,8 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.IconButton;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.glodblock.github.extendedae.network.EPPNetworkHandler;
+import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.client.gui.GuiWirelessExPAT;
 import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
@@ -109,28 +111,10 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
             ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
             
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                // 取消上传过程中的左下角提示
-                
-                // 在单机游戏中，直接在客户端线程中执行服务器端逻辑
-                // 因为单机游戏的客户端和服务器运行在同一个进程中
-                this.minecraft.execute(() -> {
-                    // 获取服务器端的玩家实例
-                    if (this.minecraft.getSingleplayerServer() != null) {
-                        var serverPlayer = this.minecraft.getSingleplayerServer().getPlayerList()
-                            .getPlayer(this.minecraft.player.getUUID());
-                        
-                        if (serverPlayer != null) {
-                            // 直接调用服务器端上传逻辑
-                            boolean success = ExtendedAEPatternUploadUtil.uploadPatternToProvider(
-                                serverPlayer, 
-                                playerSlotIndex, 
-                                currentlychooicepatterprovider
-                            );
-                            
-                            // 取消上传完成后的左下角提示
-                        }
-                    }
-                });
+                // 通过 ExtendedAE 内置网络系统发送通用动作到服务端
+                // 动作: "upload"，参数: 槽位索引(int)、供应器ID(long)
+                System.out.println("[EAE+][Client] send upload: slot=" + playerSlotIndex + ", provider=" + currentlychooicepatterprovider);
+                EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("upload", playerSlotIndex, currentlychooicepatterprovider));
                 
             } else {
                 this.minecraft.player.displayClientMessage(
