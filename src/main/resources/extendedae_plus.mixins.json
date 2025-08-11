@@ -12,7 +12,8 @@
   "mixins": [
     "ContainerExPatternProviderMixin",
     "ContainerExPatternTerminalMixin",
-    "ContainerWirelessExPatternTerminalMixin"
+    "ContainerWirelessExPatternTerminalMixin",
+    "ContainerUWirelessExPatternTerminalMixin"
   ],
   "injectors": {
     "defaultRequire": 1
