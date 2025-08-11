@@ -9,9 +9,10 @@ import appeng.menu.SlotSemantics;
 import com.extendedae_plus.NewIcon;
 import com.extendedae_plus.util.PatternProviderUIHelper;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
+import com.glodblock.github.extendedae.network.EPPNetworkHandler;
+import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
-import com.extendedae_plus.network.UpdatePagePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -271,194 +272,86 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     public ActionEPPButton divideBy5Button;
     public ActionEPPButton x10Button;
     public ActionEPPButton divideBy10Button;
-
-    @Inject(method = "<init>", at = @At("RETURN"), remap = false)
+    
+    // 在构造器返回后初始化按钮与翻页控制
+    @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.screenStyle = style;
+        // 打印当前菜单类型，确认是否为扩展容器
+        try {
+            var m = this.getMenu();
+            System.out.println("[EAE+][Client] Screen menu class = " + (m == null ? "null" : m.getClass().getName()));
+        } catch (Throwable ignored) {}
 
-        // 只有当槽位数超过每页显示数量时才添加翻页按钮
-        int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        if (maxSlots > SLOTS_PER_PAGE) {
-            // 前进后退按钮
-                               this.prevPage = new ActionEPPButton((b) -> {
-                       int currentPage = getCurrentPage();
-                       int maxPage = getMaxPage();
-                       // 循环翻页：第一页向前翻到最后一页
-                       int newPage = (currentPage - 1 + maxPage) % maxPage;
-                       try {
-                           ContainerExPatternProvider menu1 = this.getMenu();
-                           java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                           setPageMethod.invoke(menu1, newPage);
-                       } catch (Exception e) {
-                           // 忽略反射错误
-                       }
-                   }, Icon.ARROW_LEFT);
+        // 翻页按钮（仅在需要时显示）
+        int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
+        if (totalSlots > SLOTS_PER_PAGE) {
+            this.prevPage = new ActionEPPButton((b) -> {
+                int currentPage = getCurrentPage();
+                int maxPage = getMaxPage();
+                int newPage = (currentPage - 1 + maxPage) % maxPage;
+                try {
+                    ContainerExPatternProvider menu1 = this.getMenu();
+                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                    setPageMethod.invoke(menu1, newPage);
+                } catch (Exception ignored) {}
+            }, Icon.ARROW_LEFT);
 
-                               this.nextPage = new ActionEPPButton((b) -> {
-                        int currentPage = getCurrentPage();
-                        int maxPage = getMaxPage();
-                        // 循环翻页：最后一页向后翻到第一页
-                        int newPage = (currentPage + 1) % maxPage;
-                        try {
-                            ContainerExPatternProvider menu1 = this.getMenu();
-                            java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                            setPageMethod.invoke(menu1, newPage);
-                        } catch (Exception e) {
-                            // 忽略反射错误
-                        }
-                    }, Icon.ARROW_RIGHT);
+            this.nextPage = new ActionEPPButton((b) -> {
+                int currentPage = getCurrentPage();
+                int maxPage = getMaxPage();
+                int newPage = (currentPage + 1) % maxPage;
+                try {
+                    ContainerExPatternProvider menu1 = this.getMenu();
+                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                    setPageMethod.invoke(menu1, newPage);
+                } catch (Exception ignored) {}
+            }, Icon.ARROW_RIGHT);
 
             this.addToLeftToolbar(this.nextPage);
             this.addToLeftToolbar(this.prevPage);
         }
-        
-        // x2 按钮 - 单机模式直接调用服务器端逻辑
+
+        // 倍增/除法按钮，通过 ExtendedAE 的通用包派发
         this.x2Button = new ActionEPPButton((b) -> {
-            try {
-                // 单机模式：直接在逻辑服务器端执行样板倍增
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    // 获取逻辑服务器端的玩家实例
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    
-                    if (serverPlayer != null) {
-                        // 在服务器端执行样板倍增逻辑
-                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 2.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-                
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板倍增时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("[EAE+][Client] click multiply2");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply2"));
         }, NewIcon.MULTIPLY2);
         this.x2Button.setVisibility(true);
-        
-        // /2 按钮 - 单机模式直接调用服务器端逻辑
+
         this.divideBy2Button = new ActionEPPButton((b) -> {
-            try {
-                // 单机模式：直接在逻辑服务器端执行样板除法
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    // 获取逻辑服务器端的玩家实例
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    
-                    if (serverPlayer != null) {
-                        // 在服务器端执行样板除法逻辑
-                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 2.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-                
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板除法时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("[EAE+][Client] click divide2");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide2"));
         }, NewIcon.DIVIDE2);
         this.divideBy2Button.setVisibility(true);
-        
-        // 使用原版渲染注册，确保在屏幕中绘制
-        this.addRenderableWidget(this.divideBy2Button);
-        this.addRenderableWidget(this.x2Button);
 
-        // x10 按钮 - 单机模式直接调用服务器端逻辑
         this.x10Button = new ActionEPPButton((b) -> {
-            try {
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    if (serverPlayer != null) {
-                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 10.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板x10倍增时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("[EAE+][Client] click multiply10");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply10"));
         }, NewIcon.MULTIPLY10);
         this.x10Button.setVisibility(true);
 
-        // x5 按钮 - 单机模式直接调用服务器端逻辑
-        this.x5Button = new ActionEPPButton((b) -> {
-            try {
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    if (serverPlayer != null) {
-                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 5.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板x5倍增时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
-        }, NewIcon.MULTIPLY5);
-        this.x5Button.setVisibility(true);
-
-        // /10 按钮 - 单机模式直接调用服务器端逻辑
         this.divideBy10Button = new ActionEPPButton((b) -> {
-            try {
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    if (serverPlayer != null) {
-                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 10.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板/10时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("[EAE+][Client] click divide10");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide10"));
         }, NewIcon.DIVIDE10);
         this.divideBy10Button.setVisibility(true);
 
-        // /5 按钮 - 单机模式直接调用服务器端逻辑
         this.divideBy5Button = new ActionEPPButton((b) -> {
-            try {
-                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
-                if (minecraft.level != null && minecraft.player != null) {
-                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
-                        .getPlayerList().getPlayer(minecraft.player.getUUID());
-                    if (serverPlayer != null) {
-                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 5.0);
-                    } else {
-                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
-                    }
-                } else {
-                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
-                }
-            } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 执行样板/5时发生错误：" + e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("[EAE+][Client] click divide5");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide5"));
         }, NewIcon.DIVIDE5);
         this.divideBy5Button.setVisibility(true);
 
-        // 注册新增按钮
+        this.x5Button = new ActionEPPButton((b) -> {
+            System.out.println("[EAE+][Client] click multiply5");
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply5"));
+        }, NewIcon.MULTIPLY5);
+        this.x5Button.setVisibility(true);
+
+        // 注册可渲染按钮
+        this.addRenderableWidget(this.divideBy2Button);
+        this.addRenderableWidget(this.x2Button);
         this.addRenderableWidget(this.divideBy5Button);
         this.addRenderableWidget(this.x5Button);
         this.addRenderableWidget(this.divideBy10Button);

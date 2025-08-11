@@ -29,7 +29,7 @@ public class ExtendedAEPlus {
      * 通用初始化设置
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // 注册网络处理器
-        NetworkHandler.registerPackets();
+        // 注册网络处理器（确保在注册窗口关闭前完成）
+        event.enqueueWork(NetworkHandler::initialize);
     }
 }
