@@ -7,11 +7,8 @@ license = "Insert License Here"
 modId = "extendedae_plus"
 version = "${version}"
 displayName = "ExtendedAE Plus"
-authors = "ExtendedAE Plus Team"
-description = '''
-ExtendedAE Plus is an enhancement mod for ExtendedAE that increases the pattern provider slots from 36 to 108.
-This allows for much more efficient automation setups with ExtendedAE's pattern providers.
-'''
+authors = "GaLi"
+description = '为extendedAE模组增强更多实用功能'
 #logoFile = ""
 
 [[dependencies.extendedae_plus]]
