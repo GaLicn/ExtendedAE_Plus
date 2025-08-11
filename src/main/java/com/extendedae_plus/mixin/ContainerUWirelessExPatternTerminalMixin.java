@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
 /**
  * 为通用无线样板访问终端（AE2WTlib 集成）容器注册通用动作（CGenericPacket 分发）
  */
+@Pseudo
 @Mixin(ContainerUWirelessExPAT.class)
 public abstract class ContainerUWirelessExPatternTerminalMixin implements IActionHolder {
 

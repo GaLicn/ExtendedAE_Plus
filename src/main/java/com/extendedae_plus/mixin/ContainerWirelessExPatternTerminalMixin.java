@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
 /**
  * 为无线样板访问终端容器注册通用动作（CGenericPacket 分发）
  */
+@Pseudo
 @Mixin(ContainerWirelessExPAT.class)
 public abstract class ContainerWirelessExPatternTerminalMixin implements IActionHolder {
 
@@ -31,7 +33,7 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
     private Player epp$player;
 
     // 明确目标构造签名：<init>(int, Inventory, HostWirelessExPAT)
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0)
     private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostWirelessExPAT host, CallbackInfo ci) {
         this.epp$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致
