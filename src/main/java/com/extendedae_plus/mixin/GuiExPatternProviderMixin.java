@@ -33,8 +33,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Unique
     ScreenStyle screenStyle;
 
-    @Unique
-    private VerticalButtonBar rightToolbar;
+    // 跟踪上次屏幕尺寸，处理 GUI 缩放/窗口大小变化后按钮丢失问题
+    private int epp_lastScreenWidth = -1;
+    private int epp_lastScreenHeight = -1;
+
+    // 不再使用右侧 VerticalButtonBar，直接把按钮注册为独立 AE2 小部件
 
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
@@ -105,6 +108,74 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.adjustSlotPositions(page);
         } catch (Exception e) {
             // 忽略反射错误
+        }
+
+        // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册按钮，避免被 Screen.init 清空
+        if (this.width != epp_lastScreenWidth || this.height != epp_lastScreenHeight) {
+            epp_lastScreenWidth = this.width;
+            epp_lastScreenHeight = this.height;
+            try {
+                if (this.divideBy2Button != null) {
+                    this.removeWidget(this.divideBy2Button);
+                    this.addRenderableWidget(this.divideBy2Button);
+                }
+                if (this.x2Button != null) {
+                    this.removeWidget(this.x2Button);
+                    this.addRenderableWidget(this.x2Button);
+                }
+                if (this.divideBy5Button != null) {
+                    this.removeWidget(this.divideBy5Button);
+                    this.addRenderableWidget(this.divideBy5Button);
+                }
+                if (this.x5Button != null) {
+                    this.removeWidget(this.x5Button);
+                    this.addRenderableWidget(this.x5Button);
+                }
+                if (this.divideBy10Button != null) {
+                    this.removeWidget(this.divideBy10Button);
+                    this.addRenderableWidget(this.divideBy10Button);
+                }
+                if (this.x10Button != null) {
+                    this.removeWidget(this.x10Button);
+                    this.addRenderableWidget(this.x10Button);
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // 每帧定位四个按钮到 GUI 右缘外侧一点（使用绝对屏幕坐标）
+        int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
+        int by = this.topPos + 20;
+        int spacing = 22;
+        if (this.divideBy2Button != null) {
+            this.divideBy2Button.setVisibility(true);
+            this.divideBy2Button.setX(bx);
+            this.divideBy2Button.setY(by);
+        }
+        if (this.x2Button != null) {
+            this.x2Button.setVisibility(true);
+            this.x2Button.setX(bx);
+            this.x2Button.setY(by + spacing);
+        }
+        if (this.divideBy10Button != null) {
+            this.divideBy10Button.setVisibility(true);
+            this.divideBy10Button.setX(bx);
+            this.divideBy10Button.setY(by + spacing * 4);
+        }
+        if (this.x10Button != null) {
+            this.x10Button.setVisibility(true);
+            this.x10Button.setX(bx);
+            this.x10Button.setY(by + spacing * 5);
+        }
+        // 新增 /5 与 x5 的定位（位于 /2、x2 之后）
+        if (this.divideBy5Button != null) {
+            this.divideBy5Button.setVisibility(true);
+            this.divideBy5Button.setX(bx);
+            this.divideBy5Button.setY(by + spacing * 2);
+        }
+        if (this.x5Button != null) {
+            this.x5Button.setVisibility(true);
+            this.x5Button.setX(bx);
+            this.x5Button.setY(by + spacing * 3);
         }
     }
     
@@ -196,13 +267,14 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     public ActionEPPButton prevPage;
     public ActionEPPButton x2Button;
     public ActionEPPButton divideBy2Button;
+    public ActionEPPButton x5Button;
+    public ActionEPPButton divideBy5Button;
     public ActionEPPButton x10Button;
     public ActionEPPButton divideBy10Button;
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.screenStyle = style;
-        this.rightToolbar = new VerticalButtonBar();
 
         // 只有当槽位数超过每页显示数量时才添加翻页按钮
         int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
@@ -265,6 +337,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 e.printStackTrace();
             }
         }, NewIcon.MULTIPLY2);
+        this.x2Button.setVisibility(true);
         
         // /2 按钮 - 单机模式直接调用服务器端逻辑
         this.divideBy2Button = new ActionEPPButton((b) -> {
@@ -291,9 +364,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 e.printStackTrace();
             }
         }, NewIcon.DIVIDE2);
+        this.divideBy2Button.setVisibility(true);
         
-        this.addToLeftToolbar(this.x2Button);
-        this.addToLeftToolbar(this.divideBy2Button);
+        // 使用原版渲染注册，确保在屏幕中绘制
+        this.addRenderableWidget(this.divideBy2Button);
+        this.addRenderableWidget(this.x2Button);
 
         // x10 按钮 - 单机模式直接调用服务器端逻辑
         this.x10Button = new ActionEPPButton((b) -> {
@@ -315,6 +390,29 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 e.printStackTrace();
             }
         }, NewIcon.MULTIPLY10);
+        this.x10Button.setVisibility(true);
+
+        // x5 按钮 - 单机模式直接调用服务器端逻辑
+        this.x5Button = new ActionEPPButton((b) -> {
+            try {
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    if (serverPlayer != null) {
+                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 5.0);
+                    } else {
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
+                    }
+                } else {
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
+                }
+            } catch (Exception e) {
+                System.out.println("ExtendedAE Plus: 执行样板x5倍增时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.MULTIPLY5);
+        this.x5Button.setVisibility(true);
 
         // /10 按钮 - 单机模式直接调用服务器端逻辑
         this.divideBy10Button = new ActionEPPButton((b) -> {
@@ -336,10 +434,38 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 e.printStackTrace();
             }
         }, NewIcon.DIVIDE10);
+        this.divideBy10Button.setVisibility(true);
 
-        this.addToLeftToolbar(this.x10Button);
-        this.addToLeftToolbar(this.divideBy10Button);
+        // /5 按钮 - 单机模式直接调用服务器端逻辑
+        this.divideBy5Button = new ActionEPPButton((b) -> {
+            try {
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    if (serverPlayer != null) {
+                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 5.0);
+                    } else {
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
+                    }
+                } else {
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
+                }
+            } catch (Exception e) {
+                System.out.println("ExtendedAE Plus: 执行样板/5时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.DIVIDE5);
+        this.divideBy5Button.setVisibility(true);
+
+        // 注册新增按钮
+        this.addRenderableWidget(this.divideBy5Button);
+        this.addRenderableWidget(this.x5Button);
+        this.addRenderableWidget(this.divideBy10Button);
+        this.addRenderableWidget(this.x10Button);
     }
+
+    // 注意：不再注入 Screen#init，避免混入在某些映射情况下失败导致 TransformerError
     
     /**
      * 在服务器端执行样板缩放操作（单机模式）
