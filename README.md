@@ -18,6 +18,10 @@ ExtendedAE Plus 是一个面向 Applied Energistics 2 与 ExtendedAE 的功能�
 - **无线终端兼容**
   - 兼容 ExtendedAE 的无线样板访问终端
   - 兼容 AE2WTLib 提供的通用无线终端
-
 ---
 如需更详细的开发/构建与排错说明，可在仓库提交 Issue 讨论。
+---
+
+[![QQ群](https://img.shields.io/badge/QQ群-1051490623-brightgreen?style=for-the-badge&logo=tencent-qq)](https://qm.qq.com/cgi-bin/qm/qr?k=8GZaFv9ZTz3X9lWZPtqBBG6kY6nLwV3Z&jump_from=webapi) **← 请暂时添加 QQ 群下载使用**
+
+
