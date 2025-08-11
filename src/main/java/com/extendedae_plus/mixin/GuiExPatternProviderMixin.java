@@ -94,6 +94,12 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                    if (divideBy2Button != null) {
                        this.divideBy2Button.setVisibility(true);
                    }
+                   if (x10Button != null) {
+                       this.x10Button.setVisibility(true);
+                   }
+                   if (divideBy10Button != null) {
+                       this.divideBy10Button.setVisibility(true);
+                   }
             
             // 调整槽位位置
             this.adjustSlotPositions(page);
@@ -190,6 +196,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     public ActionEPPButton prevPage;
     public ActionEPPButton x2Button;
     public ActionEPPButton divideBy2Button;
+    public ActionEPPButton x10Button;
+    public ActionEPPButton divideBy10Button;
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
@@ -286,6 +294,51 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         
         this.addToLeftToolbar(this.x2Button);
         this.addToLeftToolbar(this.divideBy2Button);
+
+        // x10 按钮 - 单机模式直接调用服务器端逻辑
+        this.x10Button = new ActionEPPButton((b) -> {
+            try {
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    if (serverPlayer != null) {
+                        executePatternScalingOnServer(serverPlayer, "MULTIPLY", 10.0);
+                    } else {
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
+                    }
+                } else {
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
+                }
+            } catch (Exception e) {
+                System.out.println("ExtendedAE Plus: 执行样板x10倍增时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.MULTIPLY10);
+
+        // /10 按钮 - 单机模式直接调用服务器端逻辑
+        this.divideBy10Button = new ActionEPPButton((b) -> {
+            try {
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft.level != null && minecraft.player != null) {
+                    net.minecraft.server.level.ServerPlayer serverPlayer = minecraft.getSingleplayerServer()
+                        .getPlayerList().getPlayer(minecraft.player.getUUID());
+                    if (serverPlayer != null) {
+                        executePatternScalingOnServer(serverPlayer, "DIVIDE", 10.0);
+                    } else {
+                        System.out.println("ExtendedAE Plus: 无法获取服务器端玩家实例");
+                    }
+                } else {
+                    System.out.println("ExtendedAE Plus: 单机服务器未启动或玩家为null");
+                }
+            } catch (Exception e) {
+                System.out.println("ExtendedAE Plus: 执行样板/10时发生错误：" + e.getMessage());
+                e.printStackTrace();
+            }
+        }, NewIcon.DIVIDE10);
+
+        this.addToLeftToolbar(this.x10Button);
+        this.addToLeftToolbar(this.divideBy10Button);
     }
     
     /**
