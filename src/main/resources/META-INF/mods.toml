@@ -34,3 +34,6 @@ mandatory = true
 versionRange = "[1.4.2,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mixins]]
+config = "extendedae_plus.mixins.json"

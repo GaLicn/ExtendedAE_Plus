@@ -2,8 +2,8 @@ package com.extendedae_plus.mixin;
 
 import appeng.api.util.IConfigurableObject;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
-import com.glodblock.github.extendedae.container.ContainerWirelessExPAT;
-import com.glodblock.github.extendedae.common.me.itemhost.HostWirelessExPAT;
+import com.glodblock.github.extendedae.xmod.wt.ContainerUWirelessExPAT;
+import com.glodblock.github.extendedae.xmod.wt.HostUWirelessExPAT;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,10 +19,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * 为无线样板访问终端容器注册通用动作（CGenericPacket 分发）
+ * 为通用无线样板访问终端（AE2WTlib 集成）容器注册通用动作（CGenericPacket 分发）
  */
-@Mixin(ContainerWirelessExPAT.class)
-public abstract class ContainerWirelessExPatternTerminalMixin implements IActionHolder {
+@Mixin(ContainerUWirelessExPAT.class)
+public abstract class ContainerUWirelessExPatternTerminalMixin implements IActionHolder {
 
     @Unique
     private final Map<String, Consumer<Paras>> actions = createHolder();
@@ -30,9 +30,9 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
     @Unique
     private Player epp$player;
 
-    // 明确目标构造签名：<init>(int, Inventory, HostWirelessExPAT)
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"))
-    private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostWirelessExPAT host, CallbackInfo ci) {
+    // 明确目标构造签名：<init>(int, Inventory, HostUWirelessExPAT)
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostUWirelessExPAT;)V", at = @At("TAIL"))
+    private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostUWirelessExPAT host, CallbackInfo ci) {
         this.epp$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致
         this.actions.put("upload", p -> {
@@ -42,13 +42,13 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server][Wireless] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
+                System.out.println("[EAE+][Server][UWireless] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
                 ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable t) {
                 t.printStackTrace();
             }
         });
-        System.out.println("[EAE+][Server] WirelessExPAT actions registered: " + this.actions.keySet());
+        System.out.println("[EAE+][Server] UWirelessExPAT actions registered: " + this.actions.keySet());
     }
 
     // 兼容部分整合包构造签名（第三参为 IConfigurableObject），在不存在该重载时不报错
@@ -62,13 +62,13 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server][Wireless/Fallback] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
+                System.out.println("[EAE+][Server][UWireless/Fallback] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
                 ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable t) {
                 t.printStackTrace();
             }
         });
-        System.out.println("[EAE+][Server] WirelessExPAT actions registered (fallback): " + this.actions.keySet());
+        System.out.println("[EAE+][Server] UWirelessExPAT actions registered (fallback): " + this.actions.keySet());
     }
 
     @NotNull
