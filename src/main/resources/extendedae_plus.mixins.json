@@ -15,7 +15,9 @@
     "ContainerWirelessExPatternTerminalMixin",
     "ContainerUWirelessExPatternTerminalMixin",
     "TileExPatternProviderMixin",
-    "PartExPatternProviderMixin"
+    "PartExPatternProviderMixin",
+    "PatternEncodingTermMenuMixin",
+    "accessor.MEStorageMenuAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
