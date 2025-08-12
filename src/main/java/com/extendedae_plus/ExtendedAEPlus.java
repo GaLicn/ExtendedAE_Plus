@@ -7,6 +7,9 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModItems;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -21,6 +24,11 @@ public class ExtendedAEPlus {
         
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
+        
+        // 注册方块与方块实体
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
         
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
