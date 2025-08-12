@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin;
 
 import appeng.client.gui.layout.SlotGridLayout;
 import appeng.client.Point;
+import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,8 +17,13 @@ public abstract class SlotGridLayoutMixin {
 
     @Inject(method = "getRowBreakPosition", at = @At("HEAD"), cancellable = true, remap = false)
     private static void onGetRowBreakPosition(int x, int y, int semanticIdx, int cols, CallbackInfoReturnable<Point> cir) {
-        // 只处理BREAK_AFTER_9COLS布局
+        // 仅在 9 列布局 且 当前屏幕为 扩展样板供应器 时处理
         if (cols != 9) {
+            return;
+        }
+
+        var screen = Minecraft.getInstance().screen;
+        if (!(screen instanceof com.glodblock.github.extendedae.client.gui.GuiExPatternProvider)) {
             return;
         }
 
