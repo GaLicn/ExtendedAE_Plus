@@ -4,6 +4,9 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
+import com.extendedae_plus.config.ModConfigs;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -21,6 +24,9 @@ public class ExtendedAEPlus {
         
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
+
+        // 注册通用配置
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
     }
     
     /**

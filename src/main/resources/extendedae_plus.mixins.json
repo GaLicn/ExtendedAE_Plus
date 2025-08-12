@@ -13,7 +13,9 @@
     "ContainerExPatternProviderMixin",
     "ContainerExPatternTerminalMixin",
     "ContainerWirelessExPatternTerminalMixin",
-    "ContainerUWirelessExPatternTerminalMixin"
+    "ContainerUWirelessExPatternTerminalMixin",
+    "TileExPatternProviderMixin",
+    "PartExPatternProviderMixin"
   ],
   "injectors": {
     "defaultRequire": 1
