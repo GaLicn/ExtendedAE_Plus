@@ -16,6 +16,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 import com.extendedae_plus.init.ModBlockEntities;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.chat.Component;
 
 public class WirelessTransceiverBlock extends Block implements EntityBlock {
     public WirelessTransceiverBlock(Properties props) {
@@ -23,8 +25,27 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
     }
 
     @Override
-    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new WirelessTransceiverBlockEntity(pos, state);
+    }
+
+    @Override
+    public void attack(BlockState state, Level level, BlockPos pos, Player player) {
+        // 潜行左键：减频（-1 或 -10）
+        if (!level.isClientSide && player.isShiftKeyDown()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof WirelessTransceiverBlockEntity te) {
+                int step = 1;
+                if (player.getMainHandItem().is(Items.REDSTONE_TORCH)) step = 10;
+                if (player.getMainHandItem().is(Items.STICK)) step = 10;
+                long f = te.getFrequency();
+                f -= step;
+                if (f < 0) f = 0;
+                te.setFrequency(f);
+                player.displayClientMessage(Component.literal("Freq: " + te.getFrequency()), true);
+            }
+        }
+        super.attack(state, level, pos, player);
     }
 
     @Override
@@ -36,13 +57,24 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         if (be instanceof WirelessTransceiverBlockEntity te) {
             boolean sneaking = player.isShiftKeyDown();
             if (sneaking) {
-                // 简单演示：Shift+右键 频率+1
+                // 频率调节：主手 +1（或 +10），副手 -1（或 -10）
+                int step = 1;
+                // 手持红石火把：加10；手持木棍：减10（仅改变步长，不改变加/减方向）
+                if (player.getItemInHand(hand).is(Items.REDSTONE_TORCH)) step = 10;
+                if (player.getItemInHand(hand).is(Items.STICK)) step = 10;
+
                 long f = te.getFrequency();
-                te.setFrequency(f + 1);
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("Freq: " + te.getFrequency()), true);
+                if (hand == InteractionHand.MAIN_HAND) {
+                    f += step;
+                } else {
+                    f -= step;
+                    if (f < 0) f = 0;
+                }
+                te.setFrequency(f);
+                player.displayClientMessage(Component.literal("Freq: " + te.getFrequency()), true);
             } else {
                 te.setMasterMode(!te.isMasterMode());
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal(te.isMasterMode() ? "Mode: MASTER" : "Mode: SLAVE"), true);
+                player.displayClientMessage(Component.literal(te.isMasterMode() ? "Mode: MASTER" : "Mode: SLAVE"), true);
             }
             return InteractionResult.CONSUME;
         }
