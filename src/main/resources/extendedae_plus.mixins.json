@@ -19,6 +19,7 @@
     "ContainerUWirelessExPatternTerminalMixin",
     "TileExPatternProviderMixin",
     "PartExPatternProviderMixin",
+    "PatternEncodingTermMenuMixin",
     "ContainerPatternEncodingTermMenuMixin",
     "accessor.MEStorageMenuAccessor",
     "accessor.PatternEncodingTermMenuAccessor"
