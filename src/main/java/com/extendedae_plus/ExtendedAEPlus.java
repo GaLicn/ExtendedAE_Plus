@@ -10,6 +10,7 @@ import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModBlocks;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.init.ModCreativeTabs;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -29,6 +30,7 @@ public class ExtendedAEPlus {
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
         
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
