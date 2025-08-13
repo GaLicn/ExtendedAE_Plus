@@ -1,14 +1,18 @@
 package com.extendedae_plus.mixin;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import appeng.menu.slot.RestrictedInputSlot;
+import appeng.api.crafting.PatternDetailsHelper;
+import appeng.parts.encoding.EncodingMode;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
+import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,44 +33,81 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @Unique
     private Player epp$player;
 
+    @Shadow(remap = false)
+    private RestrictedInputSlot encodedPatternSlot;
+
+    @Unique
+    private void epp$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
+        sp.server.execute(() -> {
+            try {
+                if (attemptsLeft < 0) {
+                    return;
+                }
+                var stack = this.encodedPatternSlot != null ? this.encodedPatternSlot.getItem() : net.minecraft.world.item.ItemStack.EMPTY;
+                if (stack != null && !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
+                    System.out.println("[EAE+][Server] Auto-upload crafting pattern after encode.");
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
+                } else {
+                    // 槽位可能尚未同步到位，继续下一 tick 重试
+                    if (attemptsLeft > 0) {
+                        epp$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
+                    } else {
+                        System.out.println("[EAE+][Server] Auto-upload aborted: encoded slot still empty or not encoded after retries.");
+                    }
+                }
+            } catch (Throwable t) {
+                System.out.println("[EAE+][Server] Auto-upload after encode failed: " + t);
+                t.printStackTrace();
+            }
+        });
+    }
+
     // AE2 终端主构造：PatternEncodingTermMenu(int id, Inventory ip, IPatternTerminalMenuHost host)
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;)V", at = @At("TAIL"), remap = false)
     private void epp$ctorA(int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, CallbackInfo ci) {
         this.epp$player = ip.player;
-        // 注册动作：无参，由服务端直接读 encoded 槽位。
-        System.out.println("[EAE+][Server] Register action 'upload_to_matrix' for PatternEncodingTermMenu ctorA");
-        this.actions.put("upload_to_matrix", p -> {
-            try {
-                var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server] Handle action 'upload_to_matrix' from " + sp.getGameProfile().getName());
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, (PatternEncodingTermMenu) (Object) this);
-            } catch (Throwable t) {
-                System.out.println("[EAE+][Server] Exception in 'upload_to_matrix': " + t);
-                t.printStackTrace();
-            }
-        });
+        // 不再注册任何上传相关动作
     }
 
     // AE2 另一个构造：PatternEncodingTermMenu(MenuType, int, Inventory, IPatternTerminalMenuHost, boolean)
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;Z)V", at = @At("TAIL"), remap = false)
     private void epp$ctorB(net.minecraft.world.inventory.MenuType<?> menuType, int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, boolean bindInventory, CallbackInfo ci) {
         this.epp$player = ip.player;
-        System.out.println("[EAE+][Server] Register action 'upload_to_matrix' for PatternEncodingTermMenu ctorB");
-        this.actions.put("upload_to_matrix", p -> {
-            try {
-                var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server] Handle action 'upload_to_matrix' from " + sp.getGameProfile().getName());
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, (PatternEncodingTermMenu) (Object) this);
-            } catch (Throwable t) {
-                System.out.println("[EAE+][Server] Exception in 'upload_to_matrix': " + t);
-                t.printStackTrace();
-            }
-        });
+        // 不再注册任何上传相关动作
     }
 
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
         return this.actions;
+    }
+
+    // 服务器端：在 encode() 执行完毕后，如果已编码槽位存在样板且当前为“合成模式”，则上传到装配矩阵
+    @Inject(method = "encode", at = @At("TAIL"), remap = false)
+    private void epp$serverUploadAfterEncode(CallbackInfo ci) {
+        try {
+            if (!(this.epp$player instanceof ServerPlayer sp)) {
+                return; // 仅服务器执行
+            }
+            var menu = (PatternEncodingTermMenu) (Object) this;
+            if (menu.getMode() != EncodingMode.CRAFTING) {
+                return; // 只处理合成样板
+            }
+            if (this.encodedPatternSlot == null) {
+                return;
+            }
+            var stack = this.encodedPatternSlot.getItem();
+            if (stack == null || stack.isEmpty()) {
+                return; // 没有编码样板
+            }
+            if (!PatternDetailsHelper.isEncodedPattern(stack)) {
+                return; // 不是编码样板
+            }
+            // 为兼容整合包中可能出现的延后写槽位/同步，增加多次重试（共 5 次，每次间隔 1 tick）
+            epp$scheduleUploadWithRetry(sp, menu, 5);
+        } catch (Throwable t) {
+            System.out.println("[EAE+][Server] epp$serverUploadAfterEncode error: " + t);
+            t.printStackTrace();
+        }
     }
 }
