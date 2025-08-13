@@ -13,5 +13,6 @@
   "message.extendedae_plus.uploading_pattern": "Uploading pattern...",
   "gui.extendedae_plus.group_header.choice": "Toggle Group Choice",
   "gui.extendedae_plus.group_header.choiceable": "Group is choiceable",
-  "gui.extendedae_plus.group_header.not_choiceable": "Group is not choiceable"
+  "gui.extendedae_plus.group_header.not_choiceable": "Group is not choiceable",
+  "itemGroup.extendedae_plus.main": "ExtendedAE Plus"
 }

@@ -4,5 +4,6 @@
   "gui.expatternprovider.show_slots": "显示槽位",
   "gui.expatternprovider.clear_selection": "取消选择",
   "block.extendedae_plus.wireless_transceiver": "无线收发器",
-  "item.extendedae_plus.wireless_transceiver": "无线收发器"
+  "item.extendedae_plus.wireless_transceiver": "无线收发器",
+  "itemGroup.extendedae_plus.main": "扩展AE Plus"
 }

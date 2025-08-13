@@ -31,7 +31,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
     private IconButton toggleSlotsButton;
 
     @Unique
-    private boolean showSlots = true; // 默认显示槽位
+    private boolean showSlots = false; // 默认显示槽位
     
     @Unique
     private long currentlychooicepatterprovider = -1; // 当前选择的样板供应器ID
