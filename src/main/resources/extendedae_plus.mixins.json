@@ -9,7 +9,8 @@
     "GuiExPatternTerminalMixin",
     "HighlightButtonMixin",
     "GuiPatternEncodingTermMixin",
-    "accessor.AEBaseScreenAccessor"
+    "accessor.AEBaseScreenAccessor",
+    "accessor.ScreenAccessor"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",
