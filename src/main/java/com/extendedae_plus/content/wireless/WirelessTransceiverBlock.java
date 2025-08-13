@@ -42,7 +42,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                 f -= step;
                 if (f < 0) f = 0;
                 te.setFrequency(f);
-                player.displayClientMessage(Component.literal("Freq: " + te.getFrequency()), true);
+                player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
             }
         }
         super.attack(state, level, pos, player);
@@ -71,10 +71,10 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     if (f < 0) f = 0;
                 }
                 te.setFrequency(f);
-                player.displayClientMessage(Component.literal("Freq: " + te.getFrequency()), true);
+                player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
             } else {
                 te.setMasterMode(!te.isMasterMode());
-                player.displayClientMessage(Component.literal(te.isMasterMode() ? "Mode: MASTER" : "Mode: SLAVE"), true);
+                player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
             }
             return InteractionResult.CONSUME;
         }

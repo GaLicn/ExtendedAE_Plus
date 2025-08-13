@@ -64,10 +64,13 @@ public class WirelessSlaveLink {
         shutdown = false;
         distance = 0.0D;
 
-        if (master != null && !master.isEndpointRemoved() && master.getServerLevel() == level) {
-            distance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
+        boolean crossDim = ModConfigs.WIRELESS_CROSS_DIM_ENABLE.get();
+        if (master != null && !master.isEndpointRemoved() && (crossDim || master.getServerLevel() == level)) {
+            if (!crossDim) {
+                distance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
+            }
             double maxRange = ModConfigs.WIRELESS_MAX_RANGE.get();
-            if (distance <= maxRange) {
+            if (crossDim || distance <= maxRange) {
                 // 保持/建立连接
                 try {
                     var current = connection.getConnection();
@@ -97,7 +100,7 @@ public class WirelessSlaveLink {
                 shutdown = true; // 超出范围
             }
         } else {
-            shutdown = true; // 无主或主端不可用/不同维度
+            shutdown = true; // 无主或主端不可用
         }
 
         // 需要关闭连接
