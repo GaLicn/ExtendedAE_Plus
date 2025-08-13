@@ -33,7 +33,7 @@ public abstract class ContainerUWirelessExPatternTerminalMixin implements IActio
     private Player epp$player;
 
     // 明确目标构造签名：<init>(int, Inventory, HostUWirelessExPAT)
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostUWirelessExPAT;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostUWirelessExPAT;)V", at = @At("TAIL"), remap = false)
     private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostUWirelessExPAT host, CallbackInfo ci) {
         this.epp$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致

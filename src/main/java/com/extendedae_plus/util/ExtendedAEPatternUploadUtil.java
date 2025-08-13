@@ -2,6 +2,8 @@ package com.extendedae_plus.util;
 
 import appeng.api.inventories.InternalInventory;
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.util.inv.FilteredInternalInventory;
@@ -12,6 +14,14 @@ import net.minecraft.network.chat.Component;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Set;
+
+import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.api.crafting.IPatternDetails;
+import appeng.crafting.pattern.AECraftingPattern;
+import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.IItemHandler;
 
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
@@ -29,20 +39,178 @@ public class ExtendedAEPatternUploadUtil {
         if (player == null || player.containerMenu == null) {
             return null;
         }
-        
         // 优先检查ExtendedAE的扩展样板管理终端（使用类名检查避免直接导入）
         String containerClassName = player.containerMenu.getClass().getName();
         if (containerClassName.equals("com.glodblock.github.extendedae.container.ContainerExPatternTerminal")) {
             // ExtendedAE的容器继承自PatternAccessTermMenu，可以安全转换
             return (PatternAccessTermMenu) player.containerMenu;
         }
-        
         // 兼容原版AE2的样板访问终端
         if (player.containerMenu instanceof PatternAccessTermMenu) {
             return (PatternAccessTermMenu) player.containerMenu;
         }
-        
         return null;
+    }
+
+    /**
+     * 从 AE2 的图样编码终端菜单上传当前“已编码图样”至 ExtendedAE 装配矩阵（仅合成图样）。
+     * 不会处理“处理图样”。
+     *
+     * @param player 服务器玩家
+     * @param menu   PatternEncodingTermMenu
+     * @return 是否成功插入矩阵
+     */
+    public static boolean uploadFromEncodingMenuToMatrix(ServerPlayer player, PatternEncodingTermMenu menu) {
+        if (player == null || menu == null) {
+            System.out.println("[EAE+][Server] uploadFromEncodingMenuToMatrix: player or menu is null");
+            return false;
+        }
+
+        // 读取已编码槽位的物品
+        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
+                .epp$getEncodedPatternSlot();
+        ItemStack stack = encodedSlot.getItem();
+        System.out.println("[EAE+][Server] Encoded slot stack: " + stack + ", count=" + stack.getCount());
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            sendMessage(player, "ExtendedAE Plus: 没有可上传的编码样板");
+            System.out.println("[EAE+][Server] Fail: stack empty or not encoded pattern");
+            return false;
+        }
+
+        // 仅允许“合成图样”
+        IPatternDetails details = PatternDetailsHelper.decodePattern(stack, player.level());
+        System.out.println("[EAE+][Server] Decoded details: " + (details == null ? "null" : details.getClass().getName()));
+        if (!(details instanceof AECraftingPattern)) {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_not_crafting");
+            System.out.println("[EAE+][Server] Fail: not AECraftingPattern");
+            return false;
+        }
+
+        // 获取 AE 网络
+        IGridNode node = menu.getNetworkNode();
+        System.out.println("[EAE+][Server] Grid node: " + node);
+        if (node == null) {
+            sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
+            System.out.println("[EAE+][Server] Fail: grid node null");
+            return false;
+        }
+        IGrid grid = node.getGrid();
+        System.out.println("[EAE+][Server] Grid: " + grid);
+        if (grid == null) {
+            sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
+            System.out.println("[EAE+][Server] Fail: grid null");
+            return false;
+        }
+
+        // 查找已成型的装配矩阵（图样模块）的内部库存（优先使用内部库存，其带有正确过滤逻辑）
+        InternalInventory matrixInv = findFirstMatrixPatternInventory(grid);
+        System.out.println("[EAE+][Server] Matrix internal inventory: " + matrixInv);
+        if (matrixInv == null) {
+            // 回退：尝试 Forge 能力（旧实现）
+            IItemHandler cap = findFirstMatrixPatternHandler(grid);
+            System.out.println("[EAE+][Server] Fallback Matrix item handler: " + cap);
+            if (cap == null) {
+                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
+                System.out.println("[EAE+][Server] Fail: no formed matrix found");
+                return false;
+            }
+            // 使用能力插入
+            ItemStack toInsert = stack.copy();
+            System.out.println("[EAE+][Server] Try insert via capability, count=" + toInsert.getCount());
+            ItemStack remain = insertIntoAnySlot(cap, toInsert);
+            System.out.println("[EAE+][Server] Insert remain count=" + remain.getCount());
+            if (remain.getCount() < stack.getCount()) {
+                int inserted = stack.getCount() - remain.getCount();
+                stack.shrink(inserted);
+                if (stack.isEmpty()) {
+                    encodedSlot.set(ItemStack.EMPTY);
+                }
+                sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                System.out.println("[EAE+][Server] Success via capability: inserted=" + inserted);
+                return true;
+            } else {
+                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+                System.out.println("[EAE+][Server] Fail via capability: inventory full or cannot accept pattern");
+                return false;
+            }
+        }
+
+        // 通过内部库存插入（遵循其过滤规则）
+        ItemStack toInsert = stack.copy();
+        System.out.println("[EAE+][Server] Try insert via internal inventory, count=" + toInsert.getCount());
+        ItemStack remain = matrixInv.addItems(toInsert);
+        System.out.println("[EAE+][Server] Internal inventory remain count=" + remain.getCount());
+        if (remain.getCount() < stack.getCount()) {
+            // 扣除插入数量
+            int inserted = stack.getCount() - remain.getCount();
+            stack.shrink(inserted);
+            if (stack.isEmpty()) {
+                encodedSlot.set(ItemStack.EMPTY);
+            }
+            sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+            System.out.println("[EAE+][Server] Success via internal inventory: inserted=" + inserted);
+            return true;
+        } else {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+            System.out.println("[EAE+][Server] Fail via internal inventory: inventory full or cannot accept pattern");
+            return false;
+        }
+    }
+
+    /**
+     * 在给定 AE Grid 中查找第一台已成型且在线的装配矩阵“图样模块”，并返回其用于外部插入的内部库存。
+     * 优先使用 TileAssemblerMatrixPattern#getExposedInventory（仅允许插入，且已带AE过滤规则）。
+     */
+    private static InternalInventory findFirstMatrixPatternInventory(IGrid grid) {
+        try {
+            var tiles = grid.getMachines(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern.class);
+            for (com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern tile : tiles) {
+                if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
+                    var inv = tile.getExposedInventory();
+                    if (inv != null) {
+                        return inv;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("[EAE+][Server] findFirstMatrixPatternInventory exception: " + t);
+        }
+        return null;
+    }
+
+    /**
+     * 在给定 AE Grid 中查找第一台已成型的装配矩阵，并返回其聚合图样仓的 IItemHandler。
+     */
+    private static IItemHandler findFirstMatrixPatternHandler(IGrid grid) {
+        try {
+            Set<TileAssemblerMatrixBase> matrices = grid.getMachines(TileAssemblerMatrixBase.class);
+            for (TileAssemblerMatrixBase tile : matrices) {
+                if (tile != null && tile.isFormed()) {
+                    var capOpt = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, null);
+                    if (capOpt != null) {
+                        var handler = capOpt.orElse(null);
+                        if (handler != null) {
+                            return handler;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 尝试将整个物品栈插入到 IItemHandler 的任意槽位，返回剩余物品。
+     */
+    private static ItemStack insertIntoAnySlot(IItemHandler handler, ItemStack stack) {
+        ItemStack remaining = stack.copy();
+        if (handler == null || remaining.isEmpty()) return remaining;
+        for (int i = 0; i < handler.getSlots(); i++) {
+            remaining = handler.insertItem(i, remaining, false);
+            if (remaining.isEmpty()) break;
+        }
+        return remaining;
     }
 
     /**
