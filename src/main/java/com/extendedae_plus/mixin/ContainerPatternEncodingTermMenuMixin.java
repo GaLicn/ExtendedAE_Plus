@@ -103,8 +103,15 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             if (!PatternDetailsHelper.isEncodedPattern(stack)) {
                 return; // 不是编码样板
             }
-            // 为兼容整合包中可能出现的延后写槽位/同步，增加多次重试（共 5 次，每次间隔 1 tick）
-            epp$scheduleUploadWithRetry(sp, menu, 5);
+            // 为避免与 AE2 后续同步竞争，切到下一 tick 执行
+            sp.server.execute(() -> {
+                try {
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
+                } catch (Throwable t) {
+                    System.out.println("[EAE+][Server] Auto-upload after encode failed: " + t);
+                    t.printStackTrace();
+                }
+            });
         } catch (Throwable t) {
             System.out.println("[EAE+][Server] epp$serverUploadAfterEncode error: " + t);
             t.printStackTrace();

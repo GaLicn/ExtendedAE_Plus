@@ -7,10 +7,7 @@
     "GuiExPatternProviderMixin",
     "SlotGridLayoutMixin",
     "GuiExPatternTerminalMixin",
-    "HighlightButtonMixin",
-    "GuiPatternEncodingTermMixin",
-    "accessor.AEBaseScreenAccessor",
-    "accessor.ScreenAccessor"
+    "HighlightButtonMixin"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",
