@@ -18,15 +18,25 @@ public class WirelessMasterLink {
     public long getFrequency() { return frequency; }
 
     public void setFrequency(long frequency) {
-        if (this.frequency == frequency) return;
-        // 先反注册旧频率
-        if (registered) {
-            unregister();
+        // 如果频率发生变化，先撤销旧频率的注册
+        if (this.frequency != frequency) {
+            if (registered) {
+                unregister();
+            }
+            this.frequency = frequency;
         }
-        this.frequency = frequency;
-        // 再尝试注册新频率
+
+        // 频率未变的情况下也要校正注册状态：
+        // - 当从“从端”切回“主端”时，registered 可能为 false，需要重新注册；
+        // - 当频率为 0 或端点被移除时，确保处于未注册。
         if (frequency != 0L && !host.isEndpointRemoved()) {
-            register();
+            if (!registered) {
+                register();
+            }
+        } else {
+            if (registered) {
+                unregister();
+            }
         }
     }
 

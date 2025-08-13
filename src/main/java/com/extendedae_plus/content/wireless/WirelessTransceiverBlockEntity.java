@@ -26,8 +26,6 @@ import java.util.EnumSet;
  * - 频率设置；
  * - 集成 AE2 节点；
  * - 集成无线主/从逻辑。
- *
- * 注意：本类不包含注册常量，需在你的注册系统中完成 BlockEntityType 的创建与绑定。
  */
 public class WirelessTransceiverBlockEntity extends BlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
@@ -149,6 +147,14 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
         // 在首个 tick 创建，以保证区块已就绪
         GridHelper.onFirstTick(this, be -> {
             be.managedNode.create(be.getLevel(), be.getBlockPos());
+            // 节点创建后，重新应用当前模式与频率，确保：
+            // - 主端在重载后完成注册；
+            // - 从端在重载后开始维护连接。
+            if (be.masterMode) {
+                be.masterLink.setFrequency(be.frequency);
+            } else {
+                be.slaveLink.setFrequency(be.frequency);
+            }
         });
     }
 
