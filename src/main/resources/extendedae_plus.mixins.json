@@ -7,7 +7,9 @@
     "GuiExPatternProviderMixin",
     "SlotGridLayoutMixin",
     "GuiExPatternTerminalMixin",
-    "HighlightButtonMixin"
+    "HighlightButtonMixin",
+    "GuiPatternEncodingTermMixin",
+    "accessor.AEBaseScreenAccessor"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",
@@ -16,8 +18,9 @@
     "ContainerUWirelessExPatternTerminalMixin",
     "TileExPatternProviderMixin",
     "PartExPatternProviderMixin",
-    "PatternEncodingTermMenuMixin",
-    "accessor.MEStorageMenuAccessor"
+    "ContainerPatternEncodingTermMenuMixin",
+    "accessor.MEStorageMenuAccessor",
+    "accessor.PatternEncodingTermMenuAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

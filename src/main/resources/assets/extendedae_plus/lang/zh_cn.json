@@ -5,5 +5,10 @@
   "gui.expatternprovider.clear_selection": "取消选择",
   "block.extendedae_plus.wireless_transceiver": "无线收发器",
   "item.extendedae_plus.wireless_transceiver": "无线收发器",
-  "itemGroup.extendedae_plus.main": "扩展AE Plus"
+  "itemGroup.extendedae_plus.main": "扩展AE Plus",
+  "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
+  "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
+  "extendedae_plus.upload_to_matrix.fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
+  "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
+  "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入"
 }
