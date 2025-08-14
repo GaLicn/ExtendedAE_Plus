@@ -15,6 +15,12 @@ import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.locator.MenuLocator;
 import com.extendedae_plus.menu.host.CuriosWirelessTerminalMenuHost;
 
+// ae2wtlib
+import de.mari_023.ae2wtlib.wut.WUTHandler;
+import de.mari_023.ae2wtlib.wut.WTDefinition;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import com.extendedae_plus.menu.host.CuriosWTMenuHost;
+
 // Curios API (软依赖)
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
@@ -35,8 +41,26 @@ public record CuriosItemLocator(String slotId, int index) implements MenuLocator
                 if (stacksHandler != null) {
                     ItemStack it = stacksHandler.getStacks().getStackInSlot(index);
                     if (!it.isEmpty()) {
+                        // 1) ae2wtlib: 优先构造 WTMenuHost 以启用量子卡的跨维/跨距逻辑
+                        String current = WUTHandler.getCurrentTerminal(it);
+                        WTDefinition def = WUTHandler.wirelessTerminals.get(current);
+                        if (def != null) {
+                            WTMenuHost wtHost = new CuriosWTMenuHost(
+                                    player,
+                                    null,
+                                    it,
+                                    stacksHandler,
+                                    index,
+                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this)
+                            );
+                            if (hostInterface.isInstance(wtHost)) {
+                                return hostInterface.cast(wtHost);
+                            }
+                        }
+
+                        // 2) 回退：AE2 原生无线终端
                         if (it.getItem() instanceof WirelessTerminalItem) {
-                            // 为 Curios 构建一个带回写能力的宿主
+                            // 首选：为 CraftAmountMenu 等需要网络/能量上下文的菜单提供 WirelessTerminalMenuHost
                             WirelessTerminalMenuHost host = new CuriosWirelessTerminalMenuHost(
                                     player,
                                     it,

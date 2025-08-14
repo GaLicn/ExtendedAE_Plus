@@ -50,6 +50,17 @@ public class OpenCraftFromJeiC2SPacket {
             var located = WirelessTerminalLocator.find(player);
             if (located.isEmpty()) return;
 
+            // 若为 Curios 槽位：跳过 AE2 基类的距离/电量前置校验，直接打开数量界面，
+            // 让菜单与宿主（WirelessTerminalMenuHost）以及 ae2wtlib 自身处理量子卡跨维/跨距逻辑。
+            String curiosSlotId = located.getCuriosSlotId();
+            int curiosIndex = located.getCuriosIndex();
+            if (curiosSlotId != null && curiosIndex >= 0) {
+                int initial = 1;
+                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
+                return;
+            }
+
+            // 非 Curios（主手/副手/背包）仍按原先流程做前置校验，保持行为一致。
             if (!(located.stack.getItem() instanceof WirelessTerminalItem wt)) return;
 
             // 基本前置校验：联网、电量
@@ -71,15 +82,7 @@ public class OpenCraftFromJeiC2SPacket {
                 int initial = 1; // 初始数量，避免依赖具体 Key 的单位定义
                 CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, initial);
             } else {
-                // Curios 槽位：使用自定义定位器携带 slotId + index 作为菜单宿主
-                String curiosSlotId = located.getCuriosSlotId();
-                int curiosIndex = located.getCuriosIndex();
-                if (curiosSlotId != null && curiosIndex >= 0) {
-                    int initial = 1;
-                    CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
-                } else {
-                    // 未知宿主（回退忽略）
-                }
+                // 未知宿主（回退忽略）
             }
         });
         context.setPacketHandled(true);
