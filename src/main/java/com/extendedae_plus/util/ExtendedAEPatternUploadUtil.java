@@ -15,6 +15,8 @@ import net.minecraft.network.chat.Component;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.api.crafting.IPatternDetails;
@@ -102,102 +104,114 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
 
-        // 查找已成型的装配矩阵（图样模块）的内部库存（优先使用内部库存，其带有正确过滤逻辑）
-        InternalInventory matrixInv = findFirstMatrixPatternInventory(grid);
-        System.out.println("[EAE+][Server] Matrix internal inventory: " + matrixInv);
-        if (matrixInv == null) {
-            // 回退：尝试 Forge 能力（旧实现）
-            IItemHandler cap = findFirstMatrixPatternHandler(grid);
-            System.out.println("[EAE+][Server] Fallback Matrix item handler: " + cap);
-            if (cap == null) {
-                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
-                System.out.println("[EAE+][Server] Fail: no formed matrix found");
-                return false;
-            }
-            // 使用能力插入
-            ItemStack toInsert = stack.copy();
-            System.out.println("[EAE+][Server] Try insert via capability, count=" + toInsert.getCount());
-            ItemStack remain = insertIntoAnySlot(cap, toInsert);
-            System.out.println("[EAE+][Server] Insert remain count=" + remain.getCount());
-            if (remain.getCount() < stack.getCount()) {
-                int inserted = stack.getCount() - remain.getCount();
-                stack.shrink(inserted);
-                if (stack.isEmpty()) {
-                    encodedSlot.set(ItemStack.EMPTY);
+        // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
+        List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+        System.out.println("[EAE+][Server] Matrix internal inventories count: " + inventories.size());
+        if (!inventories.isEmpty()) {
+            for (int i = 0; i < inventories.size(); i++) {
+                var inv = inventories.get(i);
+                ItemStack toInsert = stack.copy();
+                System.out.println("[EAE+][Server] Try insert via internal inventory[" + i + "], count=" + toInsert.getCount());
+                ItemStack remain = inv.addItems(toInsert);
+                System.out.println("[EAE+][Server] Internal inventory[" + i + "] remain count=" + remain.getCount());
+                if (remain.getCount() < stack.getCount()) {
+                    int inserted = stack.getCount() - remain.getCount();
+                    stack.shrink(inserted);
+                    if (stack.isEmpty()) {
+                        encodedSlot.set(ItemStack.EMPTY);
+                    }
+                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    System.out.println("[EAE+][Server] Success via internal inventory[" + i + "]: inserted=" + inserted);
+                    return true;
                 }
-                sendMessage(player, "extendedae_plus.upload_to_matrix.success");
-                System.out.println("[EAE+][Server] Success via capability: inserted=" + inserted);
-                return true;
-            } else {
-                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
-                System.out.println("[EAE+][Server] Fail via capability: inventory full or cannot accept pattern");
-                return false;
+            }
+            // 所有内部库存都无法接收
+            System.out.println("[EAE+][Server] All internal inventories refused or full. Trying capability fallback.");
+        }
+
+        // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
+        List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
+        System.out.println("[EAE+][Server] Fallback Matrix item handlers count: " + handlers.size());
+        if (!handlers.isEmpty()) {
+            for (int i = 0; i < handlers.size(); i++) {
+                var cap = handlers.get(i);
+                ItemStack toInsert = stack.copy();
+                System.out.println("[EAE+][Server] Try insert via capability[" + i + "], count=" + toInsert.getCount());
+                ItemStack remain = insertIntoAnySlot(cap, toInsert);
+                System.out.println("[EAE+][Server] Capability[" + i + "] remain count=" + remain.getCount());
+                if (remain.getCount() < stack.getCount()) {
+                    int inserted = stack.getCount() - remain.getCount();
+                    stack.shrink(inserted);
+                    if (stack.isEmpty()) {
+                        encodedSlot.set(ItemStack.EMPTY);
+                    }
+                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    System.out.println("[EAE+][Server] Success via capability[" + i + "]: inserted=" + inserted);
+                    return true;
+                }
             }
         }
 
-        // 通过内部库存插入（遵循其过滤规则）
-        ItemStack toInsert = stack.copy();
-        System.out.println("[EAE+][Server] Try insert via internal inventory, count=" + toInsert.getCount());
-        ItemStack remain = matrixInv.addItems(toInsert);
-        System.out.println("[EAE+][Server] Internal inventory remain count=" + remain.getCount());
-        if (remain.getCount() < stack.getCount()) {
-            // 扣除插入数量
-            int inserted = stack.getCount() - remain.getCount();
-            stack.shrink(inserted);
-            if (stack.isEmpty()) {
-                encodedSlot.set(ItemStack.EMPTY);
-            }
-            sendMessage(player, "extendedae_plus.upload_to_matrix.success");
-            System.out.println("[EAE+][Server] Success via internal inventory: inserted=" + inserted);
-            return true;
+        // 未找到可用矩阵或全部拒收
+        if (inventories.isEmpty() && handlers.isEmpty()) {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
+            System.out.println("[EAE+][Server] Fail: no formed matrix found");
         } else {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
-            System.out.println("[EAE+][Server] Fail via internal inventory: inventory full or cannot accept pattern");
-            return false;
+            System.out.println("[EAE+][Server] Fail: all matrices full or cannot accept pattern");
         }
+        return false;
     }
 
     /**
-     * 在给定 AE Grid 中查找第一台已成型且在线的装配矩阵“图样模块”，并返回其用于外部插入的内部库存。
+     * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“图样模块”的用于外部插入的内部库存。
      * 优先使用 TileAssemblerMatrixPattern#getExposedInventory（仅允许插入，且已带AE过滤规则）。
      */
-    private static InternalInventory findFirstMatrixPatternInventory(IGrid grid) {
+    private static List<InternalInventory> findAllMatrixPatternInventories(IGrid grid) {
+        List<InternalInventory> result = new ArrayList<>();
         try {
             var tiles = grid.getMachines(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern.class);
+            int idx = 0;
             for (com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern tile : tiles) {
                 if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
                     var inv = tile.getExposedInventory();
                     if (inv != null) {
-                        return inv;
+                        result.add(inv);
+                        System.out.println("[EAE+][Server] Found matrix internal inventory at index " + idx);
                     }
                 }
+                idx++;
             }
         } catch (Throwable t) {
-            System.out.println("[EAE+][Server] findFirstMatrixPatternInventory exception: " + t);
+            System.out.println("[EAE+][Server] findAllMatrixPatternInventories exception: " + t);
         }
-        return null;
+        return result;
     }
 
     /**
-     * 在给定 AE Grid 中查找第一台已成型的装配矩阵，并返回其聚合图样仓的 IItemHandler。
+     * 在给定 AE Grid 中收集所有已成型的装配矩阵的聚合图样仓 IItemHandler（若可用）。
      */
-    private static IItemHandler findFirstMatrixPatternHandler(IGrid grid) {
+    private static List<IItemHandler> findAllMatrixPatternHandlers(IGrid grid) {
+        List<IItemHandler> result = new ArrayList<>();
         try {
             Set<TileAssemblerMatrixBase> matrices = grid.getMachines(TileAssemblerMatrixBase.class);
+            int idx = 0;
             for (TileAssemblerMatrixBase tile : matrices) {
                 if (tile != null && tile.isFormed()) {
                     var capOpt = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, null);
                     if (capOpt != null) {
                         var handler = capOpt.orElse(null);
                         if (handler != null) {
-                            return handler;
+                            result.add(handler);
+                            System.out.println("[EAE+][Server] Found matrix capability handler at index " + idx);
                         }
                     }
                 }
+                idx++;
             }
         } catch (Throwable ignored) {
         }
-        return null;
+        return result;
     }
 
     /**
