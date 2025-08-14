@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.HitResult;
 
 import com.extendedae_plus.network.ModNetwork;
@@ -33,7 +34,8 @@ public class PickFromWirelessMixin {
         }
         // 发送到服务端处理
         BlockHitResult bhr = (BlockHitResult) this.hitResult;
-        ModNetwork.CHANNEL.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection()));
+        Vec3 loc = bhr.getLocation();
+        ModNetwork.CHANNEL.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
         ci.cancel();
     }
 }
