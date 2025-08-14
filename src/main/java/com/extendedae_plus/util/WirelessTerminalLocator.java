@@ -9,12 +9,13 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.common.util.LazyOptional;
 
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
+import appeng.items.tools.powered.WirelessTerminalItem;
 
 // Curios API (软依赖)
 import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
-import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 
 /**
  * 定位玩家身上的无线终端：
@@ -75,11 +76,11 @@ public final class WirelessTerminalLocator {
 
         // 1) 先检查主手/副手
         var main = player.getMainHandItem();
-        if (!main.isEmpty() && main.getItem() instanceof WirelessCraftingTerminalItem) {
+        if (!main.isEmpty() && (main.getItem() instanceof WirelessCraftingTerminalItem || main.getItem() instanceof WirelessTerminalItem)) {
             return new LocatedTerminal(main, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ns), -1, net.minecraft.world.InteractionHand.MAIN_HAND);
         }
         var off = player.getOffhandItem();
-        if (!off.isEmpty() && off.getItem() instanceof WirelessCraftingTerminalItem) {
+        if (!off.isEmpty() && (off.getItem() instanceof WirelessCraftingTerminalItem || off.getItem() instanceof WirelessTerminalItem)) {
             return new LocatedTerminal(off, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ns), -1, net.minecraft.world.InteractionHand.OFF_HAND);
         }
 
@@ -88,7 +89,7 @@ public final class WirelessTerminalLocator {
         int size = inv.getContainerSize();
         for (int i = 0; i < size; i++) {
             ItemStack st = inv.getItem(i);
-            if (!st.isEmpty() && st.getItem() instanceof WirelessCraftingTerminalItem) {
+            if (!st.isEmpty() && (st.getItem() instanceof WirelessCraftingTerminalItem || st.getItem() instanceof WirelessTerminalItem)) {
                 final int slot = i;
                 return new LocatedTerminal(st, (ns) -> inv.setItem(slot, ns), slot);
             }
@@ -97,7 +98,6 @@ public final class WirelessTerminalLocator {
         // 3) Curios 饰品槽（若已加载）
         if (ModList.get().isLoaded("curios")) {
             try {
-                // Curios 1.20.x: 通过 CuriosApi.getCuriosInventory 获取 LazyOptional
                 var resolved = CuriosApi.getCuriosInventory(player).resolve();
                 if (resolved.isPresent()) {
                     ICuriosItemHandler handler = resolved.get();
@@ -108,10 +108,10 @@ public final class WirelessTerminalLocator {
                         int slots = stacks.getSlots();
                         for (int i = 0; i < slots; i++) {
                             ItemStack st = stacks.getStackInSlot(i);
-                            if (!st.isEmpty() && st.getItem() instanceof WirelessCraftingTerminalItem) {
+                            if (!st.isEmpty() && (st.getItem() instanceof WirelessCraftingTerminalItem || st.getItem() instanceof WirelessTerminalItem)) {
                                 final int slot = i;
-                                // 记录 Curios 槽位标识与索引，供应后续使用自定义 MenuLocator 打开菜单
-                                return new LocatedTerminal(st, (ns) -> stacks.setStackInSlot(slot, ns), -1, null, slotId, slot);
+                                java.util.function.Consumer<ItemStack> setter = (ns) -> stacks.setStackInSlot(slot, ns);
+                                return new LocatedTerminal(st, setter, -1, null, slotId, slot);
                             }
                         }
                     }
