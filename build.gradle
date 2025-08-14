@@ -85,6 +85,9 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
+    //curios
+    modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
+    modCompileOnly "curse.maven:curios-309927:${curios_version}"
 
     // Runtime test
     modRuntimeOnly "curse.maven:architectury-api-419699:${architectury_version}"
@@ -95,7 +98,6 @@ dependencies {
     modRuntimeOnly "curse.maven:projecte-226410:${projecte_version}"
     modRuntimeOnly "curse.maven:appliede-1009940:${appliede_version}"
     modRuntimeOnly "curse.maven:cloth-config-348521:5729105"
-    modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
     //extendedAE
     modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
 

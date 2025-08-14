@@ -11,6 +11,7 @@ import com.extendedae_plus.init.ModBlocks;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModCreativeTabs;
+import com.extendedae_plus.network.ModNetwork;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -43,6 +44,7 @@ public class ExtendedAEPlus {
      * 通用初始化设置
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // 现已改用 ExtendedAE 的 EPPNetworkHandler + CGenericPacket，无需自定义网络初始化
+        // 注册本模组网络通道与数据包
+        event.enqueueWork(ModNetwork::register);
     }
 }
