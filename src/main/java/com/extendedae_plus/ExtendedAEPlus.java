@@ -12,6 +12,8 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModCreativeTabs;
 import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import appeng.menu.locator.MenuLocators;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -45,6 +47,10 @@ public class ExtendedAEPlus {
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
         // 注册本模组网络通道与数据包
-        event.enqueueWork(ModNetwork::register);
+        event.enqueueWork(() -> {
+            ModNetwork.register();
+            // 注册自定义 Curios 宿主定位器，便于将菜单宿主信息在服务端与客户端间同步
+            MenuLocators.register(CuriosItemLocator.class, CuriosItemLocator::writeToPacket, CuriosItemLocator::readFromPacket);
+        });
     }
 }
