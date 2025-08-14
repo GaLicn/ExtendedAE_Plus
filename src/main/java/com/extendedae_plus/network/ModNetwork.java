@@ -24,6 +24,12 @@ public class ModNetwork {
                 .decoder(PickFromWirelessC2SPacket::decode)
                 .consumerNetworkThread(PickFromWirelessC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(OpenCraftFromJeiC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(OpenCraftFromJeiC2SPacket::encode)
+                .decoder(OpenCraftFromJeiC2SPacket::decode)
+                .consumerNetworkThread(OpenCraftFromJeiC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }
