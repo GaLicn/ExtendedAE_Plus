@@ -20,7 +20,7 @@ import appeng.api.storage.StorageHelper;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.me.helpers.PlayerSource;
-import appeng.items.tools.powered.WirelessTerminalItem;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import com.extendedae_plus.util.WirelessTerminalLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
 
@@ -68,7 +68,7 @@ public class PickFromWirelessC2SPacket {
             // 服务端权威：定位玩家任意槽位的无线终端（含 Curios）
             LocatedTerminal located = WirelessTerminalLocator.find(player);
             ItemStack terminal = located.stack;
-            WirelessTerminalItem wt = terminal.getItem() instanceof WirelessTerminalItem w ? w : null;
+            WirelessCraftingTerminalItem wt = terminal.getItem() instanceof WirelessCraftingTerminalItem w ? w : null;
             if (wt == null || terminal.isEmpty()) {
                 return;
             }

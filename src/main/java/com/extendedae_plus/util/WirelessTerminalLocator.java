@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.common.util.LazyOptional;
 
-import appeng.items.tools.powered.WirelessTerminalItem;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 
 // Curios API (软依赖)
 import top.theillusivec4.curios.api.CuriosApi;
@@ -75,11 +75,11 @@ public final class WirelessTerminalLocator {
 
         // 1) 先检查主手/副手
         var main = player.getMainHandItem();
-        if (!main.isEmpty() && main.getItem() instanceof WirelessTerminalItem) {
+        if (!main.isEmpty() && main.getItem() instanceof WirelessCraftingTerminalItem) {
             return new LocatedTerminal(main, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ns), -1, net.minecraft.world.InteractionHand.MAIN_HAND);
         }
         var off = player.getOffhandItem();
-        if (!off.isEmpty() && off.getItem() instanceof WirelessTerminalItem) {
+        if (!off.isEmpty() && off.getItem() instanceof WirelessCraftingTerminalItem) {
             return new LocatedTerminal(off, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ns), -1, net.minecraft.world.InteractionHand.OFF_HAND);
         }
 
@@ -88,7 +88,7 @@ public final class WirelessTerminalLocator {
         int size = inv.getContainerSize();
         for (int i = 0; i < size; i++) {
             ItemStack st = inv.getItem(i);
-            if (!st.isEmpty() && st.getItem() instanceof WirelessTerminalItem) {
+            if (!st.isEmpty() && st.getItem() instanceof WirelessCraftingTerminalItem) {
                 final int slot = i;
                 return new LocatedTerminal(st, (ns) -> inv.setItem(slot, ns), slot);
             }
@@ -108,7 +108,7 @@ public final class WirelessTerminalLocator {
                         int slots = stacks.getSlots();
                         for (int i = 0; i < slots; i++) {
                             ItemStack st = stacks.getStackInSlot(i);
-                            if (!st.isEmpty() && st.getItem() instanceof WirelessTerminalItem) {
+                            if (!st.isEmpty() && st.getItem() instanceof WirelessCraftingTerminalItem) {
                                 final int slot = i;
                                 // 记录 Curios 槽位标识与索引，供应后续使用自定义 MenuLocator 打开菜单
                                 return new LocatedTerminal(st, (ns) -> stacks.setStackInSlot(slot, ns), -1, null, slotId, slot);
