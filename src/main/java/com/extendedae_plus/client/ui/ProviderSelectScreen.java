@@ -52,6 +52,15 @@ public class ProviderSelectScreen extends Screen {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
+        // 如果有来自 JEI 的最近处理名称，则作为初始查询
+        try {
+            String recent = com.extendedae_plus.util.ExtendedAEPatternUploadUtil.lastProcessingName;
+            if (recent != null && !recent.isBlank()) {
+                this.query = recent;
+                // 用后即清空，避免污染下次
+                com.extendedae_plus.util.ExtendedAEPatternUploadUtil.lastProcessingName = null;
+            }
+        } catch (Throwable ignored) {}
         buildGroups();
         applyFilter();
     }
