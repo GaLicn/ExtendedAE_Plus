@@ -9,7 +9,8 @@
     "GuiExPatternTerminalMixin",
     "HighlightButtonMixin",
     "PickFromWirelessMixin",
-    "PatternEncodingTermScreenMixin"
+    "PatternEncodingTermScreenMixin",
+    "jei.EncodePatternTransferHandlerMixin"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",

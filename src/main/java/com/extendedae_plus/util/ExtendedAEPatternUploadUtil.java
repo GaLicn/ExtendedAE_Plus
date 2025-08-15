@@ -26,11 +26,46 @@ import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerM
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeType;
+
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
  * 兼容ExtendedAE的ContainerExPatternTerminal和原版AE2的PatternAccessTermMenu
  */
 public class ExtendedAEPatternUploadUtil {
+
+    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
+    public static volatile String lastProcessingName = null;
+
+    public static void setLastProcessingName(String name) {
+        lastProcessingName = name;
+    }
+
+    public static String mapRecipeTypeToCn(Recipe<?> recipe) {
+        if (recipe == null) return null;
+        RecipeType<?> type = recipe.getType();
+        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        if (key == null) return null;
+        String id = key.toString();
+        String path = key.getPath();
+        // 常见原版类型映射
+        switch (path) {
+            case "smelting":
+                return "烧炼"; // 熔炉
+            case "blasting":
+                return "高炉";
+            case "smoking":
+                return "烟熏";
+            case "campfire_cooking":
+                return "营火烹饪";
+            default:
+                // 其他模组类型，返回路径名，必要时可再做表扩展
+                return path;
+        }
+    }
 
     /**
      * 获取玩家当前的样板访问终端菜单（支持ExtendedAE和原版AE2）
