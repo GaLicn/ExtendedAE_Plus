@@ -7,6 +7,7 @@ import net.minecraftforge.network.NetworkDirection;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
+import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 
 public class ModNetwork {
     private static final String PROTOCOL_VERSION = "1";
@@ -36,6 +37,24 @@ public class ModNetwork {
                 .encoder(PullFromJeiOrCraftC2SPacket::encode)
                 .decoder(PullFromJeiOrCraftC2SPacket::decode)
                 .consumerNetworkThread(PullFromJeiOrCraftC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(UploadEncodedPatternToProviderC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(UploadEncodedPatternToProviderC2SPacket::encode)
+                .decoder(UploadEncodedPatternToProviderC2SPacket::decode)
+                .consumerNetworkThread(UploadEncodedPatternToProviderC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(RequestProvidersListC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RequestProvidersListC2SPacket::encode)
+                .decoder(RequestProvidersListC2SPacket::decode)
+                .consumerNetworkThread(RequestProvidersListC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ProvidersListS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ProvidersListS2CPacket::encode)
+                .decoder(ProvidersListS2CPacket::decode)
+                .consumerNetworkThread(ProvidersListS2CPacket::handle)
                 .add();
     }
 

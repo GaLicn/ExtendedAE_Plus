@@ -8,7 +8,8 @@
     "SlotGridLayoutMixin",
     "GuiExPatternTerminalMixin",
     "HighlightButtonMixin",
-    "PickFromWirelessMixin"
+    "PickFromWirelessMixin",
+    "PatternEncodingTermScreenMixin"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",

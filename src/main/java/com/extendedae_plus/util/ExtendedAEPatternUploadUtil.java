@@ -2,10 +2,14 @@ package com.extendedae_plus.util;
 
 import appeng.api.inventories.InternalInventory;
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
+import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.crafting.pattern.AECraftingPattern;
+import appeng.core.definitions.AEItems;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,10 +22,6 @@ import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 
-import appeng.menu.me.items.PatternEncodingTermMenu;
-import appeng.core.definitions.AEItems;
-import appeng.api.crafting.IPatternDetails;
-import appeng.crafting.pattern.AECraftingPattern;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.IItemHandler;
@@ -631,5 +631,239 @@ public class ExtendedAEPatternUploadUtil {
         } else {
             return "未知终端类型";
         }
+    }
+
+    /**
+     * 从 AE2 的图样编码终端菜单上传当前“已编码图样”至当前网络中任意可用的样板供应器。
+     * 策略：
+     * 1) 仅当 encoded 槽位存在有效编码样板时执行；
+     * 2) 通过 menu.getNetworkNode() 获取 IGrid，遍历在线的 PatternContainer；
+     * 3) 仅选择在终端中可见（isVisibleInTerminal）且库存存在空位的供应器；
+     * 4) 使用 AE2 的标准 FilteredInternalInventory + Pattern 过滤器尝试插入；
+     * 5) 成功后清空 encoded 槽位，返回 true；否则返回 false。
+     */
+    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, PatternEncodingTermMenu menu) {
+        if (player == null || menu == null) {
+            return false;
+        }
+        // 读取已编码槽位的物品（通过 accessor）
+        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
+                .epp$getEncodedPatternSlot();
+        ItemStack stack = encodedSlot.getItem();
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            return false;
+        }
+
+        // 获取 AE 网络
+        IGridNode node = menu.getNetworkNode();
+        if (node == null) {
+            return false;
+        }
+        IGrid grid = node.getGrid();
+        if (grid == null) {
+            return false;
+        }
+
+        // 遍历在线的 PatternContainer，寻找第一个可见且有空位的供应器
+        try {
+            for (var machineClass : grid.getMachineClasses()) {
+                if (PatternContainer.class.isAssignableFrom(machineClass)) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                    for (var container : grid.getActiveMachines(containerClass)) {
+                        if (container == null || !container.isVisibleInTerminal()) {
+                            continue;
+                        }
+                        InternalInventory inv = container.getTerminalPatternInventory();
+                        if (inv == null || inv.size() <= 0) {
+                            continue;
+                        }
+                        boolean hasEmpty = false;
+                        for (int i = 0; i < inv.size(); i++) {
+                            if (inv.getStackInSlot(i).isEmpty()) {
+                                hasEmpty = true;
+                                break;
+                            }
+                        }
+                        if (!hasEmpty) {
+                            continue;
+                        }
+
+                        // 按 AE2 样板过滤规则尝试插入
+                        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+                        ItemStack toInsert = stack.copy();
+                        ItemStack remain = filtered.addItems(toInsert);
+                        if (remain.getCount() < toInsert.getCount()) {
+                            int inserted = toInsert.getCount() - remain.getCount();
+                            stack.shrink(inserted);
+                            if (stack.isEmpty()) {
+                                encodedSlot.set(ItemStack.EMPTY);
+                            } else {
+                                encodedSlot.set(stack);
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            // 忽略异常以避免噪声
+        }
+        return false;
+    }
+
+    /**
+     * 将图样编码终端的“已编码图样”上传到指定的样板供应器（通过 providerId 定位）。
+     */
+    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
+        if (player == null || menu == null) {
+            return false;
+        }
+        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
+                .epp$getEncodedPatternSlot();
+        ItemStack stack = encodedSlot.getItem();
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            return false;
+        }
+
+        PatternAccessTermMenu accessMenu = getPatternAccessMenu(player);
+        if (accessMenu == null) {
+            return false;
+        }
+        PatternContainer container = getPatternContainerById(accessMenu, providerId);
+        if (container == null || !container.isVisibleInTerminal()) {
+            return false;
+        }
+        InternalInventory inv = container.getTerminalPatternInventory();
+        if (inv == null || inv.size() <= 0) {
+            return false;
+        }
+
+        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+        ItemStack toInsert = stack.copy();
+        ItemStack remain = filtered.addItems(toInsert);
+        if (remain.getCount() < toInsert.getCount()) {
+            int inserted = toInsert.getCount() - remain.getCount();
+            stack.shrink(inserted);
+            if (stack.isEmpty()) {
+                encodedSlot.set(ItemStack.EMPTY);
+            } else {
+                encodedSlot.set(stack);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 列出当前菜单中所有供应器的服务器ID（原样返回 byId 的 key 集合）。
+     */
+    public static java.util.List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
+        java.util.List<Long> result = new java.util.ArrayList<>();
+        if (menu == null) return result;
+        try {
+            java.lang.reflect.Field byIdField = findByIdField(menu.getClass());
+            if (byIdField == null) return result;
+            byIdField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<Long, Object> byId = (java.util.Map<Long, Object>) byIdField.get(menu);
+            if (byId != null) {
+                result.addAll(byId.keySet());
+            }
+        } catch (Throwable ignored) {
+        }
+        return result;
+    }
+
+    /**
+     * 基于编码终端菜单的 AE Grid 遍历，列出“可在终端中可见且有空位”的供应器容器。
+     * 返回顺序稳定：按 grid 的 machineClasses 顺序，再按 activeMachines 迭代顺序。
+     */
+    public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
+        List<PatternContainer> list = new ArrayList<>();
+        if (menu == null) return list;
+        try {
+            IGridNode node = menu.getNetworkNode();
+            if (node == null) return list;
+            IGrid grid = node.getGrid();
+            if (grid == null) return list;
+            for (var machineClass : grid.getMachineClasses()) {
+                if (PatternContainer.class.isAssignableFrom(machineClass)) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                    for (var container : grid.getActiveMachines(containerClass)) {
+                        if (container == null || !container.isVisibleInTerminal()) continue;
+                        InternalInventory inv = container.getTerminalPatternInventory();
+                        if (inv == null || inv.size() <= 0) continue;
+                        boolean hasEmpty = false;
+                        for (int i = 0; i < inv.size(); i++) {
+                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
+                        }
+                        if (hasEmpty) list.add(container);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return list;
+    }
+
+    /** 获取供应器显示名（优先组名） */
+    public static String getProviderDisplayName(PatternContainer container) {
+        if (container == null) return "未知供应器";
+        try {
+            var group = container.getTerminalGroup();
+            if (group != null) return group.name().getString();
+        } catch (Throwable ignored) {
+        }
+        return "样板供应器";
+    }
+
+    /** 计算供应器空槽位数量 */
+    public static int getAvailableSlots(PatternContainer container) {
+        if (container == null) return -1;
+        InternalInventory inv = container.getTerminalPatternInventory();
+        if (inv == null) return -1;
+        int available = 0;
+        for (int i = 0; i < inv.size(); i++) {
+            if (inv.getStackInSlot(i).isEmpty()) available++;
+        }
+        return available;
+    }
+
+    /**
+     * 基于“索引”的定向上传：使用 listAvailableProvidersFromGrid(menu) 的顺序，
+     * 将编码槽样板插入到第 index 个供应器。
+     */
+    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
+        if (player == null || menu == null || index < 0) return false;
+        List<PatternContainer> list = listAvailableProvidersFromGrid(menu);
+        if (index >= list.size()) return false;
+        var container = list.get(index);
+        if (container == null) return false;
+
+        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
+                .epp$getEncodedPatternSlot();
+        ItemStack stack = encodedSlot.getItem();
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            return false;
+        }
+
+        InternalInventory inv = container.getTerminalPatternInventory();
+        if (inv == null || inv.size() <= 0) return false;
+        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+        ItemStack toInsert = stack.copy();
+        ItemStack remain = filtered.addItems(toInsert);
+        if (remain.getCount() < toInsert.getCount()) {
+            int inserted = toInsert.getCount() - remain.getCount();
+            stack.shrink(inserted);
+            if (stack.isEmpty()) {
+                encodedSlot.set(ItemStack.EMPTY);
+            } else {
+                encodedSlot.set(stack);
+            }
+            return true;
+        }
+        return false;
     }
 }
