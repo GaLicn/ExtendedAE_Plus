@@ -8,10 +8,12 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
+import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 
 import appeng.api.stacks.GenericStack;
 import appeng.integration.modules.jei.GenericEntryStackHelper;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,26 +25,47 @@ public final class InputEvents {
 
     @SubscribeEvent
     public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
-        // 只处理中键按下
-        if (event.getButton() != GLFW.GLFW_MOUSE_BUTTON_MIDDLE) return;
-
-        // 优先在 JEI 配方界面基于坐标获取；若无，再从覆盖层/书签获取
-        double mouseX = event.getMouseX();
-        double mouseY = event.getMouseY();
-        Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
-        if (hovered.isEmpty()) {
-            hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+        // 优先处理：Shift + 左键（拉取或下单）
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
+            double mouseX = event.getMouseX();
+            double mouseY = event.getMouseY();
+            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
+            if (hovered.isEmpty()) {
+                hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+            }
+            if (hovered.isPresent()) {
+                ITypedIngredient<?> typed = hovered.get();
+                GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+                if (stack != null) {
+                    // 发送到服务端：若网络有库存则拉取一组到空槽，否则若可合成则打开下单界面
+                    ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+                    // 消费此次点击，避免 JEI/原版对左键的其它处理
+                    event.setCanceled(true);
+                    return;
+                }
+            }
         }
-        if (hovered.isEmpty()) return;
 
-        ITypedIngredient<?> typed = hovered.get();
-        GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
-        if (stack == null) return;
+        // 中键：打开 AE 下单界面（保持原有功能）
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            // 优先在 JEI 配方界面基于坐标获取；若无，再从覆盖层/书签获取
+            double mouseX = event.getMouseX();
+            double mouseY = event.getMouseY();
+            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
+            if (hovered.isEmpty()) {
+                hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+            }
+            if (hovered.isEmpty()) return;
 
-        // 发送到服务端，让其验证并打开 CraftAmountMenu
-        ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+            ITypedIngredient<?> typed = hovered.get();
+            GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+            if (stack == null) return;
 
-        // 消费此次点击，避免 JEI/原版对中键的其它处理
-        event.setCanceled(true);
+            // 发送到服务端，让其验证并打开 CraftAmountMenu
+            ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+
+            // 消费此次点击，避免 JEI/原版对中键的其它处理
+            event.setCanceled(true);
+        }
     }
 }
