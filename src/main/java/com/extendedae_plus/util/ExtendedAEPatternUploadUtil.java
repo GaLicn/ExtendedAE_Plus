@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.core.definitions.AEItems;
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AECraftingPattern;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
@@ -101,6 +102,37 @@ public class ExtendedAEPatternUploadUtil {
         if (grid == null) {
             sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
             System.out.println("[EAE+][Server] Fail: grid null");
+            return false;
+        }
+
+        // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
+        if (matrixContainsPattern(grid, stack)) {
+            // 直接提醒并跳过上传，并将同等数量的空白样板放回空白样板槽，否则退回玩家背包
+            if (player != null) {
+                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
+            }
+            try {
+                var accessor = (com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu;
+                var blankSlot = accessor.epp$getBlankPatternSlot();
+                ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
+                if (blankSlot != null && blankSlot.mayPlace(blanks)) {
+                    ItemStack remain = blankSlot.safeInsert(blanks);
+                    if (!remain.isEmpty() && player != null) {
+                        player.getInventory().placeItemBackInInventory(remain, false);
+                    }
+                } else if (player != null) {
+                    player.getInventory().placeItemBackInInventory(blanks, false);
+                }
+            } catch (Throwable t) {
+                System.out.println("[EAE+][Server] Failed to return blank patterns: " + t);
+                if (player != null) {
+                    // 兜底：直接还给玩家背包
+                    player.getInventory().placeItemBackInInventory(AEItems.BLANK_PATTERN.stack(stack.getCount()), false);
+                }
+            }
+            // 清空编码样板槽，防止再次输出
+            encodedSlot.set(ItemStack.EMPTY);
+            System.out.println("[EAE+][Server] Skip: duplicate pattern already present in matrix, returned blanks and cleared encoded slot");
             return false;
         }
 
@@ -225,6 +257,45 @@ public class ExtendedAEPatternUploadUtil {
             if (remaining.isEmpty()) break;
         }
         return remaining;
+    }
+
+    /**
+     * 检查装配矩阵（所有已成型矩阵的图样仓）中是否已存在与给定样板完全相同的物品（含NBT）。
+     */
+    private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
+        if (grid == null || pattern == null || pattern.isEmpty()) return false;
+        try {
+            // 先检查提供外部插入视图的内部库存
+            List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+            for (InternalInventory inv : inventories) {
+                if (inv == null) continue;
+                for (int i = 0; i < inv.size(); i++) {
+                    ItemStack s = inv.getStackInSlot(i);
+                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameTags(s, pattern)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("[EAE+][Server] matrixContainsPattern (InternalInventory) exception: " + t);
+        }
+        try {
+            // 再检查聚合能力视图
+            List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
+            for (IItemHandler h : handlers) {
+                if (h == null) continue;
+                int slots = h.getSlots();
+                for (int i = 0; i < slots; i++) {
+                    ItemStack s = h.getStackInSlot(i);
+                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameTags(s, pattern)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("[EAE+][Server] matrixContainsPattern (Capability) exception: " + t);
+        }
+        return false;
     }
 
     /**
