@@ -4,6 +4,7 @@ import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -29,6 +30,17 @@ public class ProviderSelectScreen extends Screen {
     private final List<Integer> gTotalSlots = new ArrayList<>();  // 该名称下供应器空位总和
     private final List<Integer> gCount = new ArrayList<>();       // 该名称下供应器数量
 
+    // 过滤后的数据（由查询生成）
+    private final List<Long> fIds = new ArrayList<>();
+    private final List<String> fNames = new ArrayList<>();
+    private final List<Integer> fTotalSlots = new ArrayList<>();
+    private final List<Integer> fCount = new ArrayList<>();
+
+    // 搜索框
+    private EditBox searchBox;
+    private String query = "";
+    private boolean needsRefresh = false;
+
     private int page = 0;
     private static final int PAGE_SIZE = 6;
 
@@ -41,6 +53,7 @@ public class ProviderSelectScreen extends Screen {
         this.names = names;
         this.emptySlots = emptySlots;
         buildGroups();
+        applyFilter();
     }
 
     @Override
@@ -48,11 +61,31 @@ public class ProviderSelectScreen extends Screen {
         this.clearWidgets();
         entryButtons.clear();
 
-        int start = page * PAGE_SIZE;
-        int end = Math.min(start + PAGE_SIZE, gIds.size());
-
         int centerX = this.width / 2;
         int startY = this.height / 2 - 70;
+
+        // 搜索框（置于条目上方）
+        if (searchBox == null) {
+            searchBox = new EditBox(this.font, centerX - 120, startY - 25, 240, 18, Component.translatable("extendedae_plus.screen.search"));
+        } else {
+            // 重新定位，保持输入值
+            searchBox.setX(centerX - 120);
+            searchBox.setY(startY - 25);
+            searchBox.setWidth(240);
+        }
+        searchBox.setValue(query);
+        searchBox.setResponder(text -> {
+            query = text;
+            page = 0;
+            applyFilter();
+            // 避免在回调中直接重建 UI，延迟到下一次 tick
+            needsRefresh = true;
+        });
+        this.addRenderableWidget(searchBox);
+
+        int start = page * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, fIds.size());
+
         int buttonWidth = 240;
         int buttonHeight = 20;
         int gap = 5;
@@ -76,7 +109,7 @@ public class ProviderSelectScreen extends Screen {
                 .bounds(centerX + 40, navY, 20, 20)
                 .build();
         prev.active = page > 0;
-        next.active = (page + 1) * PAGE_SIZE < gIds.size();
+        next.active = (page + 1) * PAGE_SIZE < fIds.size();
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
 
@@ -90,22 +123,22 @@ public class ProviderSelectScreen extends Screen {
     private void changePage(int delta) {
         int newPage = page + delta;
         if (newPage < 0) return;
-        if (newPage * PAGE_SIZE >= Math.max(1, gIds.size())) return;
+        if (newPage * PAGE_SIZE >= Math.max(1, fIds.size())) return;
         page = newPage;
         init();
     }
 
     private String buildLabel(int idx) {
-        String name = gNames.get(idx);
-        int totalSlots = gTotalSlots.get(idx);
-        int count = gCount.get(idx);
+        String name = fNames.get(idx);
+        int totalSlots = fTotalSlots.get(idx);
+        int count = fCount.get(idx);
         // 不显示具体 id，显示合并统计：名称（总空位）x数量
         return name + "  (" + totalSlots + ")  x" + count;
     }
 
     private void onChoose(int idx) {
-        if (idx < 0 || idx >= gIds.size()) return;
-        long providerId = gIds.get(idx);
+        if (idx < 0 || idx >= fIds.size()) return;
+        long providerId = fIds.get(idx);
         ModNetwork.CHANNEL.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId));
         this.onClose();
     }
@@ -151,5 +184,80 @@ public class ProviderSelectScreen extends Screen {
         int bestSlots = Integer.MIN_VALUE;
         int totalSlots = 0;
         int count = 0;
+    }
+
+    private void applyFilter() {
+        fIds.clear();
+        fNames.clear();
+        fTotalSlots.clear();
+        fCount.clear();
+        String q = query == null ? "" : query.trim();
+        for (int i = 0; i < gIds.size(); i++) {
+            String name = gNames.get(i);
+            if (q.isEmpty() || nameMatches(name, q)) {
+                fIds.add(gIds.get(i));
+                fNames.add(name);
+                fTotalSlots.add(gTotalSlots.get(i));
+                fCount.add(gCount.get(i));
+            }
+        }
+    }
+
+    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
+    private static Boolean JEC_AVAILABLE = null;
+    private static java.lang.reflect.Method JEC_CONTAINS = null;
+
+    private static boolean nameMatches(String name, String key) {
+        if (name == null) return false;
+        if (key == null || key.isEmpty()) return true;
+        try {
+            if (JEC_AVAILABLE == null) {
+                try {
+                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
+                    // 使用 contains(CharSequence, CharSequence)
+                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
+                    JEC_AVAILABLE = true;
+                } catch (Throwable t) {
+                    JEC_AVAILABLE = false;
+                }
+            }
+            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
+                Object r = JEC_CONTAINS.invoke(null, name, key);
+                if (r instanceof Boolean) return (Boolean) r;
+            }
+        } catch (Throwable ignored) {
+            // 回退
+        }
+        // 默认大小写不敏感子串
+        return name.toLowerCase().contains(key.toLowerCase());
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (searchBox != null && searchBox.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (searchBox != null && searchBox.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (searchBox != null) {
+            searchBox.tick();
+        }
+        if (needsRefresh) {
+            needsRefresh = false;
+            // 重新构建当前屏幕内容
+            init();
+        }
     }
 }
