@@ -9,4 +9,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface PatternEncodingTermMenuAccessor {
     @Accessor("encodedPatternSlot")
     RestrictedInputSlot epp$getEncodedPatternSlot();
+
+    @Accessor("blankPatternSlot")
+    RestrictedInputSlot epp$getBlankPatternSlot();
 }
