@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.storage.MEStorage;
 import appeng.menu.me.common.MEStorageMenu;
+import appeng.api.util.IConfigManager;
 
 @Mixin(MEStorageMenu.class)
 public interface MEStorageMenuAccessor {
@@ -21,4 +22,13 @@ public interface MEStorageMenuAccessor {
 
     @Accessor("hasPower")
     boolean getHasPower();
+
+    // Access client-side config manager mirror used for syncing settings
+    @Accessor("clientCM")
+    IConfigManager getClientCM();
+
+    // Access server-side config manager
+    @Accessor("serverCM")
+    @Nullable
+    IConfigManager getServerCM();
 }
