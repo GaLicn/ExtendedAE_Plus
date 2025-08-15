@@ -16,8 +16,8 @@ import appeng.api.config.Setting;
  * 而客户端 clientCM 未注册时，AE2 在同步环节会对 clientCM 执行 getSetting，
  * 进而抛出 UnsupportedSettingException。
  *
- * 方案：在服务端首次 broadcastChanges 时，将 serverCM 中的所有设置镜像注册到 clientCM，
- * 以确保后续同步安全。
+ * 方案：在服务端首次 broadcastChanges 时，仅为“客户端缺失”的设置执行注册补齐，且占位值与服务端不同，
+ * 以确保 AE2 后续仍会发送 ConfigValuePacket 完成真正的值同步，避免影响排序等行为。
  */
 @Mixin(MEStorageMenu.class)
 public abstract class MEStorageMenuMixin {
@@ -40,14 +40,65 @@ public abstract class MEStorageMenuMixin {
                 return;
             }
             for (Setting<?> setting : server.getSettings()) {
+                boolean clientHasSetting = true;
                 try {
-                    // 使用 AE2 提供的通用复制接口，内部会处理未注册场景
-                    setting.copy(server, client);
-                } catch (Throwable ignore) { }
+                    // 若未注册，这里会抛出异常
+                    client.getSetting(setting);
+                } catch (Throwable unsupported) {
+                    clientHasSetting = false;
+                }
+
+                if (!clientHasSetting) {
+                    try {
+                        Object serverValue = server.getSetting(setting);
+                        Object placeholder = extendedae_plus$chooseDifferentEnumValue(serverValue);
+                        if (placeholder == null) {
+                            // 若无法选择不同的占位值（例如只有一个枚举常量），则退回服务端值
+                            placeholder = serverValue;
+                        }
+                        // 使用辅助方法，统一进行受检的泛型转换后再注册
+                        extendedae_plus$registerSettingCompat(client, setting, placeholder);
+                    } catch (Throwable ignore) {
+                        // 防御：不让异常影响主流程
+                    }
+                }
             }
             this.extendedae_plus$settingsMirrored = true;
         } catch (Throwable t) {
             // 防御：绝不让同步失败导致崩溃
         }
+    }
+
+    @Unique
+    private Object extendedae_plus$chooseDifferentEnumValue(Object serverValue) {
+        if (!(serverValue instanceof Enum<?> sv)) {
+            return null;
+        }
+        @SuppressWarnings("unchecked")
+        Class<? extends Enum<?>> enumClass = sv.getDeclaringClass();
+        Object[] constants = enumClass.getEnumConstants();
+        if (constants == null || constants.length == 0) {
+            return null;
+        }
+        for (Object c : constants) {
+            if (c != sv) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    @Unique
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static <T extends Enum<T>> void extendedae_plus$registerSettingCompat(
+            IConfigManager client, Setting<?> setting, Object value) {
+        // 前置校验：仅处理枚举类型的设置值
+        if (!(value instanceof Enum<?>)) {
+            // 非枚举则忽略（AE2 设置值通常为枚举）
+            return;
+        }
+        Setting<T> typedSetting = (Setting<T>) setting;
+        T typedValue = (T) value;
+        client.registerSetting(typedSetting, typedValue);
     }
 }
