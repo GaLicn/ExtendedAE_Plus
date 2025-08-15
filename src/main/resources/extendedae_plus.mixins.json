@@ -19,6 +19,7 @@
     "PartExPatternProviderMixin",
     "PatternEncodingTermMenuMixin",
     "ContainerPatternEncodingTermMenuMixin",
+    "MEStorageMenuMixin",
     "accessor.MEStorageMenuAccessor",
     "accessor.PatternEncodingTermMenuAccessor"
   ],
