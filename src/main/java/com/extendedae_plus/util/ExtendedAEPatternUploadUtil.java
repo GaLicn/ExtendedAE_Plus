@@ -138,9 +138,90 @@ public class ExtendedAEPatternUploadUtil {
             case "campfire_cooking":
                 return "营火";
             default:
-                // 其他模组类型，返回路径名，必要时可再做表扩展
-                return path;
+                // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
+                return id;
         }
+    }
+
+    /**
+     * 供搜索使用的关键字映射：
+     * - 有中文映射则返回中文；
+     * - 否则返回配方类型的 path（不含命名空间），例如 assembler。
+     */
+    public static String mapRecipeTypeToSearchKey(Recipe<?> recipe) {
+        if (recipe == null) return null;
+        RecipeType<?> type = recipe.getType();
+        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        if (key == null) return null;
+        String custom = CUSTOM_NAMES.get(key);
+        if (custom != null && !custom.isBlank()) {
+            return custom;
+        }
+        return key.getPath();
+    }
+
+    /**
+     * GTCEu 的 GTRecipe -> 搜索关键字
+     * 优先自定义中文映射；其次使用注册ID的 path；最后回退到完整ID字符串。
+     */
+    public static String mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe gtRecipe) {
+        if (gtRecipe == null) return null;
+        try {
+            // GTRecipeType.toString() 返回 registryName.toString() 即 namespace:path
+            String idStr = String.valueOf(gtRecipe.getType());
+            if (idStr == null || idStr.isBlank()) return null;
+            ResourceLocation rl = new ResourceLocation(idStr);
+            // 1) 配置优先
+            String custom = CUSTOM_NAMES.get(rl);
+            if (custom != null && !custom.isBlank()) return custom;
+            // 2) 返回 path 作为搜索关键字
+            String path = rl.getPath();
+            return (path != null && !path.isBlank()) ? path : idStr;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * 当 JEI 传入的 recipeBase 不是原版 Recipe<?> 时，根据类的包名/类名推导一个尽量可用的搜索关键字。
+     * 例如："moe.gregtech.recipe.SomeAssemblerRecipe" -> "gtceu assembler"
+     */
+    public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
+        if (recipeBase == null) return null;
+        try {
+            Class<?> cls = recipeBase.getClass();
+            String simple = cls.getSimpleName();
+            String pkg = cls.getName();
+
+            String ns = null;
+            String lower = pkg.toLowerCase();
+            if (lower.contains("gtceu")) ns = "gtceu";
+            else if (lower.contains("gregtech")) ns = "gregtech";
+            else if (lower.contains("projecte")) ns = "projecte";
+            else if (lower.contains("create")) ns = "create";
+            else if (lower.contains("immersiveengineering")) ns = "immersive";
+
+            String token = toSearchToken(simple);
+            if (ns != null && token != null && !token.isBlank()) return ns + " " + token;
+            return token != null && !token.isBlank() ? token : ns;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static String toSearchToken(String simpleName) {
+        if (simpleName == null || simpleName.isBlank()) return null;
+        // 去掉常见后缀
+        String s = simpleName
+                .replaceAll("Recipe$", "")
+                .replaceAll("Recipes$", "")
+                .replaceAll("Category$", "")
+                .replaceAll("JEI$", "");
+        // 驼峰转空格并小写
+        s = s.replaceAll("(?<!^)([A-Z])", " $1").toLowerCase();
+        // 取首个关键词
+        s = s.trim();
+        return s;
     }
 
     /**

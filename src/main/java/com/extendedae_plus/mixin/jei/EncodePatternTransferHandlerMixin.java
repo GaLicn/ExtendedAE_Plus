@@ -28,10 +28,29 @@ public abstract class EncodePatternTransferHandlerMixin {
                                                        boolean doTransfer,
                                                        CallbackInfoReturnable<IRecipeTransferError> cir) {
         if (!doTransfer) return;
-        if (!(recipeBase instanceof Recipe<?> recipe)) return;
-        // 仅记录处理配方（非 3x3 合成）
-        if (EncodingHelper.isSupportedCraftingRecipe(recipe)) return;
-        String name = ExtendedAEPatternUploadUtil.mapRecipeTypeToCn(recipe);
+        String name = null;
+        if (recipeBase instanceof Recipe<?> recipe) {
+            // 仅记录处理配方（非 3x3 合成）
+            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) return;
+            name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+        } else if (recipeBase instanceof com.gregtechceu.gtceu.api.recipe.GTRecipe gtRecipe) {
+            // GTCEu 专用：从 GTRecipeType 提取注册ID并映射为中文或path
+            name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(gtRecipe);
+        } else if ("com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
+            // 通过反射处理 GTCEu JEI 包装类，避免硬依赖
+            try {
+                var field = recipeBase.getClass().getField("recipe"); // public final GTRecipe recipe;
+                Object inner = field.get(recipeBase);
+                if (inner instanceof com.gregtechceu.gtceu.api.recipe.GTRecipe gtRecipeInner) {
+                    name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(gtRecipeInner);
+                }
+            } catch (Throwable ignored) {
+                // 反射失败则继续走通用回退
+            }
+        } else {
+            // 非原版 Recipe<?> 的 JEI 条目，尝试从类名/包名推导关键词
+            name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+        }
         if (name != null && !name.isBlank()) {
             ExtendedAEPatternUploadUtil.setLastProcessingName(name);
         }

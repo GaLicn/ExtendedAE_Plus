@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,8 @@ public class ProviderSelectScreen extends Screen {
         }
         searchBox.setValue(query);
         searchBox.setResponder(text -> {
+            // 只有当输入真正发生变化时，才重置页码与过滤
+            if (Objects.equals(text, query)) return;
             query = text;
             page = 0;
             applyFilter();
@@ -132,9 +135,10 @@ public class ProviderSelectScreen extends Screen {
     private void changePage(int delta) {
         int newPage = page + delta;
         if (newPage < 0) return;
-        if (newPage * PAGE_SIZE >= Math.max(1, fIds.size())) return;
+        if (newPage * PAGE_SIZE >= fIds.size()) return;
         page = newPage;
-        init();
+        // 避免在回调中直接重建 UI，改为下帧刷新
+        needsRefresh = true;
     }
 
     private String buildLabel(int idx) {
@@ -206,6 +210,15 @@ public class ProviderSelectScreen extends Screen {
             if (q.isEmpty() || nameMatches(name, q)) {
                 fIds.add(gIds.get(i));
                 fNames.add(name);
+                fTotalSlots.add(gTotalSlots.get(i));
+                fCount.add(gCount.get(i));
+            }
+        }
+        // 若查询不为空但没有任何匹配，则回退为显示全部，避免“空列表”误导用户
+        if (!q.isEmpty() && fIds.isEmpty()) {
+            for (int i = 0; i < gIds.size(); i++) {
+                fIds.add(gIds.get(i));
+                fNames.add(gNames.get(i));
                 fTotalSlots.add(gTotalSlots.get(i));
                 fCount.add(gCount.get(i));
             }
