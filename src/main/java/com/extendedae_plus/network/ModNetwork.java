@@ -6,6 +6,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.network.NetworkDirection;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 
 public class ModNetwork {
     private static final String PROTOCOL_VERSION = "1";
@@ -29,6 +30,12 @@ public class ModNetwork {
                 .encoder(OpenCraftFromJeiC2SPacket::encode)
                 .decoder(OpenCraftFromJeiC2SPacket::decode)
                 .consumerNetworkThread(OpenCraftFromJeiC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(PullFromJeiOrCraftC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(PullFromJeiOrCraftC2SPacket::encode)
+                .decoder(PullFromJeiOrCraftC2SPacket::decode)
+                .consumerNetworkThread(PullFromJeiOrCraftC2SPacket::handle)
                 .add();
     }
 
