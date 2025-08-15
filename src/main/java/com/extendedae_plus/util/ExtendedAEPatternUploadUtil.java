@@ -21,9 +21,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.io.IOException;
 
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.items.IItemHandler;
 
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -31,11 +37,76 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
  * 兼容ExtendedAE的ContainerExPatternTerminal和原版AE2的PatternAccessTermMenu
  */
 public class ExtendedAEPatternUploadUtil {
+
+    // --------------------------- 配置：RecipeType 中文名称映射 ---------------------------
+    private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
+    private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    static {
+        try {
+            loadRecipeTypeNames();
+        } catch (Throwable t) {
+            // 安静失败，使用内置映射
+        }
+    }
+
+    /**
+     * 从配置文件加载 RecipeType → 中文名称映射。文件不存在则生成模板。
+     */
+    public static synchronized void loadRecipeTypeNames() {
+        try {
+            Path cfgDir = FMLPaths.CONFIGDIR.get();
+            Path cfgPath = cfgDir.resolve(CONFIG_RELATIVE);
+            if (!Files.exists(cfgPath)) {
+                // 创建目录并写入模板
+                Files.createDirectories(cfgPath.getParent());
+                JsonObject tmpl = new JsonObject();
+                // 提供一些常见原版默认（仅作为示例，实际仍以内置 switch 为兜底）
+                tmpl.addProperty("minecraft:smelting", "熔炉");
+                tmpl.addProperty("minecraft:blasting", "高炉");
+                tmpl.addProperty("minecraft:smoking", "烟熏");
+                tmpl.addProperty("minecraft:campfire_cooking", "营火");
+                // GTCEu 示例占位
+                tmpl.addProperty("gtceu:assembler", "组装机");
+                tmpl.addProperty("gtceu:arc_furnace", "电弧炉");
+                tmpl.addProperty("gtceu:chemical_reactor", "化学反应器");
+                Files.writeString(cfgPath, GSON.toJson(tmpl));
+            }
+
+            String json = Files.readString(cfgPath);
+            JsonObject obj = GSON.fromJson(json, JsonObject.class);
+            Map<ResourceLocation, String> map = new HashMap<>();
+            if (obj != null) {
+                for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
+                    String k = e.getKey();
+                    JsonElement v = e.getValue();
+                    if (v != null && v.isJsonPrimitive()) {
+                        try {
+                            ResourceLocation rl = new ResourceLocation(k);
+                            String name = v.getAsString();
+                            if (name != null && !name.isBlank()) {
+                                map.put(rl, name);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+            CUSTOM_NAMES.clear();
+            CUSTOM_NAMES.putAll(map);
+        } catch (IOException ignored) {
+        }
+    }
 
     // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
     public static volatile String lastProcessingName = null;
@@ -49,18 +120,23 @@ public class ExtendedAEPatternUploadUtil {
         RecipeType<?> type = recipe.getType();
         ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key == null) return null;
+        // 1) 自定义配置优先
+        String custom = CUSTOM_NAMES.get(key);
+        if (custom != null && !custom.isBlank()) {
+            return custom;
+        }
         String id = key.toString();
         String path = key.getPath();
         // 常见原版类型映射
         switch (path) {
             case "smelting":
-                return "烧炼"; // 熔炉
+                return "熔炉"; // 熔炉
             case "blasting":
                 return "高炉";
             case "smoking":
                 return "烟熏";
             case "campfire_cooking":
-                return "营火烹饪";
+                return "营火";
             default:
                 // 其他模组类型，返回路径名，必要时可再做表扩展
                 return path;
