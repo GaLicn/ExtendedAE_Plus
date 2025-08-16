@@ -51,6 +51,8 @@ public class ExtendedAEPatternUploadUtil {
     // --------------------------- 配置：RecipeType 中文名称映射 ---------------------------
     private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
     private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
+    // 允许使用最终搜索关键字（通常为 path 或自定义短语）作为键，例如："assembler": "组装机"
+    private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     static {
@@ -63,6 +65,10 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 从配置文件加载 RecipeType → 中文名称映射。文件不存在则生成模板。
+     * 同时支持“别名”形式：不含冒号的键会被视为最终搜索关键字（大小写不敏感），如：
+     * {
+     *   "assembler": "组装机"
+     * }
      */
     public static synchronized void loadRecipeTypeNames() {
         try {
@@ -81,29 +87,39 @@ public class ExtendedAEPatternUploadUtil {
                 tmpl.addProperty("gtceu:assembler", "组装机");
                 tmpl.addProperty("gtceu:arc_furnace", "电弧炉");
                 tmpl.addProperty("gtceu:chemical_reactor", "化学反应器");
+                // 也支持别名（最终搜索关键字）形式，例如：
+                tmpl.addProperty("assembler", "组装机");
                 Files.writeString(cfgPath, GSON.toJson(tmpl));
             }
 
             String json = Files.readString(cfgPath);
             JsonObject obj = GSON.fromJson(json, JsonObject.class);
             Map<ResourceLocation, String> map = new HashMap<>();
+            Map<String, String> alias = new HashMap<>();
             if (obj != null) {
                 for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
                     String k = e.getKey();
                     JsonElement v = e.getValue();
                     if (v != null && v.isJsonPrimitive()) {
-                        try {
-                            ResourceLocation rl = new ResourceLocation(k);
-                            String name = v.getAsString();
-                            if (name != null && !name.isBlank()) {
+                        String name = v.getAsString();
+                        if (name == null || name.isBlank()) continue;
+                        if (k.contains(":")) {
+                            // 形如 namespace:path
+                            try {
+                                ResourceLocation rl = new ResourceLocation(k);
                                 map.put(rl, name);
-                            }
-                        } catch (Exception ignored) {}
+                            } catch (Exception ignored) {}
+                        } else {
+                            // 视为别名：最终搜索关键字（大小写不敏感）
+                            alias.put(k.toLowerCase(), name);
+                        }
                     }
                 }
             }
             CUSTOM_NAMES.clear();
             CUSTOM_NAMES.putAll(map);
+            CUSTOM_ALIASES.clear();
+            CUSTOM_ALIASES.putAll(alias);
         } catch (IOException ignored) {
         }
     }
@@ -153,6 +169,10 @@ public class ExtendedAEPatternUploadUtil {
         RecipeType<?> type = recipe.getType();
         ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key == null) return null;
+        // 先查别名（按 path 匹配）
+        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
+        if (alias != null && !alias.isBlank()) return alias;
+        // 再查完整ID映射
         String custom = CUSTOM_NAMES.get(key);
         if (custom != null && !custom.isBlank()) {
             return custom;
@@ -171,11 +191,16 @@ public class ExtendedAEPatternUploadUtil {
             String idStr = String.valueOf(gtRecipe.getType());
             if (idStr == null || idStr.isBlank()) return null;
             ResourceLocation rl = new ResourceLocation(idStr);
-            // 1) 配置优先
+            // 1) 先查别名（使用 path 作为最终搜索关键字）
+            String path = rl.getPath();
+            if (path != null) {
+                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
+                if (alias != null && !alias.isBlank()) return alias;
+            }
+            // 2) 再查完整ID映射
             String custom = CUSTOM_NAMES.get(rl);
             if (custom != null && !custom.isBlank()) return custom;
-            // 2) 返回 path 作为搜索关键字
-            String path = rl.getPath();
+            // 3) 默认返回 path 作为搜索关键字
             return (path != null && !path.isBlank()) ? path : idStr;
         } catch (Throwable t) {
             return null;
@@ -202,8 +227,13 @@ public class ExtendedAEPatternUploadUtil {
             else if (lower.contains("immersiveengineering")) ns = "immersive";
 
             String token = toSearchToken(simple);
-            if (ns != null && token != null && !token.isBlank()) return ns + " " + token;
-            return token != null && !token.isBlank() ? token : ns;
+            String key;
+            if (ns != null && token != null && !token.isBlank()) key = ns + " " + token;
+            else key = token != null && !token.isBlank() ? token : ns;
+            if (key == null || key.isBlank()) return null;
+            // 尝试别名映射（大小写不敏感）
+            String alias = CUSTOM_ALIASES.get(key.toLowerCase());
+            return (alias != null && !alias.isBlank()) ? alias : key;
         } catch (Throwable ignored) {
             return null;
         }
