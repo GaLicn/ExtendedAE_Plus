@@ -10,7 +10,10 @@
     "HighlightButtonMixin",
     "PickFromWirelessMixin",
     "PatternEncodingTermScreenMixin",
-    "jei.EncodePatternTransferHandlerMixin"
+    "jei.EncodePatternTransferHandlerMixin",
+    "accessor.AEBaseScreenAccessor",
+    "accessor.AbstractContainerScreenAccessor",
+    "accessor.ScreenAccessor"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",
