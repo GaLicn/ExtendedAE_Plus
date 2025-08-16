@@ -125,6 +125,12 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
 
+        // 重载映射按钮（热重载 recipe_type_names.json）——移至下一行，与关闭按钮并排
+        Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> reloadMapping())
+                .bounds(centerX - 130, navY + 30, 80, 20)
+                .build();
+        this.addRenderableWidget(reload);
+
         // 关闭按钮
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
                 .bounds(centerX - 40, navY + 30, 80, 20)
@@ -139,6 +145,22 @@ public class ProviderSelectScreen extends Screen {
         page = newPage;
         // 避免在回调中直接重建 UI，改为下帧刷新
         needsRefresh = true;
+    }
+
+    private void reloadMapping() {
+        try {
+            com.extendedae_plus.util.ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
+            var player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 已重载映射表"));
+            }
+            // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
+        } catch (Throwable t) {
+            var player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 重载映射表失败: " + t.getClass().getSimpleName()));
+            }
+        }
     }
 
     private String buildLabel(int idx) {
