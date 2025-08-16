@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 
@@ -44,10 +45,55 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         if (extendedae_plus$uploadBtn == null) {
             extendedae_plus$uploadBtn = new IconButton(btn -> ModNetwork.CHANNEL
                     .sendToServer(new com.extendedae_plus.network.RequestProvidersListC2SPacket())) {
-            @Override
-            protected Icon getIcon() {
-                return Icon.ARROW_UP;
-            }
+                private final float extendedae_plus$scale = 0.75f; // 约 12x12
+
+                @Override
+                protected Icon getIcon() {
+                    return Icon.ARROW_UP;
+                }
+
+                @Override
+                public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
+                    // 参照 AE2 IconButton 实现，改为自定义缩放
+                    if (this.visible) {
+                        var icon = this.getIcon();
+                        var blitter = icon.getBlitter();
+                        if (!this.active) {
+                            blitter.opacity(0.5f);
+                        }
+
+                        // 动态更新宽高用于聚焦边框/命中框
+                        this.width = Math.round(16 * extendedae_plus$scale);
+                        this.height = Math.round(16 * extendedae_plus$scale);
+
+                        com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
+                        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+
+                        if (isFocused()) {
+                            guiGraphics.fill(getX() - 1, getY() - 1, getX() + width + 1, getY(), 0xFFFFFFFF);
+                            guiGraphics.fill(getX() - 1, getY(), getX(), getY() + height, 0xFFFFFFFF);
+                            guiGraphics.fill(getX() + width, getY(), getX() + width + 1, getY() + height, 0xFFFFFFFF);
+                            guiGraphics.fill(getX() - 1, getY() + height, getX() + width + 1, getY() + height + 1, 0xFFFFFFFF);
+                        }
+
+                        var pose = guiGraphics.pose();
+                        pose.pushPose();
+                        pose.translate(getX(), getY(), 0.0F);
+                        pose.scale(extendedae_plus$scale, extendedae_plus$scale, 1.f);
+                        if (!this.isDisableBackground()) {
+                            Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
+                        }
+                        blitter.dest(0, 0).blit(guiGraphics);
+                        pose.popPose();
+
+                        com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+                    }
+                }
+
+                @Override
+                public Rect2i getTooltipArea() {
+                    return new Rect2i(getX(), getY(), Math.round(16 * extendedae_plus$scale), Math.round(16 * extendedae_plus$scale));
+                }
             };
             extendedae_plus$uploadBtn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
         }
@@ -62,22 +108,24 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageHeight();
             Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
             var pos = ws.resolve(bounds);
-            int targetW = ws.getWidth() > 0 ? ws.getWidth() : 18;
-            int targetH = ws.getHeight() > 0 ? ws.getHeight() : 18;
-            // 尺寸与 encodePattern 一致
+            int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
+            int baseH = ws.getHeight() > 0 ? ws.getHeight() : 16;
+            int targetW = Math.max(10, Math.round(baseW * 0.75f));
+            int targetH = Math.max(10, Math.round(baseH * 0.75f));
+            // 缩小为原尺寸的 0.75（稍微变大于 8x8）
             extendedae_plus$uploadBtn.setWidth(targetW);
             extendedae_plus$uploadBtn.setHeight(targetH);
-            // 放在其左侧紧挨（预留 2px 间距）
-            extendedae_plus$uploadBtn.setX(pos.getX() - targetW - 2);
+            // 仍位于其左侧，但整体向右微移（减小间距）约 2px
+            extendedae_plus$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
             extendedae_plus$uploadBtn.setY(pos.getY());
         } catch (Throwable t) {
             // 回退：放在界面右侧大致位置，避免不可见
-            extendedae_plus$uploadBtn.setWidth(18);
-            extendedae_plus$uploadBtn.setHeight(18);
+            extendedae_plus$uploadBtn.setWidth(12);
+            extendedae_plus$uploadBtn.setHeight(12);
             int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
             int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
             int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-            extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 18 - 8);
+            extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2); // 向右微移 2px
             extendedae_plus$uploadBtn.setY(topPos + 88);
         }
 
@@ -113,19 +161,21 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                 int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageHeight();
                 Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
                 var pos = ws.resolve(bounds);
-                int targetW = ws.getWidth() > 0 ? ws.getWidth() : 18;
-                int targetH = ws.getHeight() > 0 ? ws.getHeight() : 18;
+                int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
+                int baseH = ws.getHeight() > 0 ? ws.getHeight() : 16;
+                int targetW = Math.max(10, Math.round(baseW * 0.75f));
+                int targetH = Math.max(10, Math.round(baseH * 0.75f));
                 extendedae_plus$uploadBtn.setWidth(targetW);
                 extendedae_plus$uploadBtn.setHeight(targetH);
-                extendedae_plus$uploadBtn.setX(pos.getX() - targetW - 2);
+                extendedae_plus$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
                 extendedae_plus$uploadBtn.setY(pos.getY());
             } catch (Throwable t) {
                 int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
                 int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
                 int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-                extendedae_plus$uploadBtn.setWidth(18);
-                extendedae_plus$uploadBtn.setHeight(18);
-                extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 18 - 8);
+                extendedae_plus$uploadBtn.setWidth(12);
+                extendedae_plus$uploadBtn.setHeight(12);
+                extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2);
                 extendedae_plus$uploadBtn.setY(topPos + 88);
             }
             var accessor2 = (ScreenAccessor) (Object) this;
