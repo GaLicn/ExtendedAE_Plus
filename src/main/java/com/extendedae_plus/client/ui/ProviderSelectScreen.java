@@ -285,7 +285,12 @@ public class ProviderSelectScreen extends Screen {
             }
             if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
                 Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean) return (Boolean) r;
+                if (r instanceof Boolean && (Boolean) r) return true;
+                // 再尝试大小写不敏感：双方转为小写重新匹配
+                String nL = name.toLowerCase();
+                String kL = key.toLowerCase();
+                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
+                if (r2 instanceof Boolean && (Boolean) r2) return true;
             }
         } catch (Throwable ignored) {
             // 回退
