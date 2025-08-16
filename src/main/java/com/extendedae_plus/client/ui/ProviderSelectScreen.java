@@ -39,6 +39,8 @@ public class ProviderSelectScreen extends Screen {
 
     // 搜索框
     private EditBox searchBox;
+    // 中文名输入框（用于添加映射）
+    private EditBox cnInput;
     private String query = "";
     private boolean needsRefresh = false;
 
@@ -130,6 +132,22 @@ public class ProviderSelectScreen extends Screen {
                 .bounds(centerX - 130, navY + 30, 80, 20)
                 .build();
         this.addRenderableWidget(reload);
+
+        // 中文名输入框（用于新增映射的值）
+        if (cnInput == null) {
+            cnInput = new EditBox(this.font, centerX + 50, navY + 30, 120, 20, Component.translatable("extendedae_plus.screen.cn_name"));
+        } else {
+            cnInput.setX(centerX + 50);
+            cnInput.setY(navY + 30);
+            cnInput.setWidth(120);
+        }
+        this.addRenderableWidget(cnInput);
+
+        // 增加映射按钮（使用当前搜索关键字 -> 中文）
+        Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> addMappingFromUI())
+                .bounds(centerX + 175, navY + 30, 60, 20)
+                .build();
+        this.addRenderableWidget(addMap);
 
         // 关闭按钮
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
@@ -298,10 +316,36 @@ public class ProviderSelectScreen extends Screen {
         if (searchBox != null) {
             searchBox.tick();
         }
+        if (cnInput != null) {
+            cnInput.tick();
+        }
         if (needsRefresh) {
             needsRefresh = false;
             // 重新构建当前屏幕内容
             init();
+        }
+    }
+
+    private void addMappingFromUI() {
+        String key = query == null ? "" : query.trim();
+        String val = cnInput == null ? "" : cnInput.getValue().trim();
+        var player = Minecraft.getInstance().player;
+        if (key.isEmpty()) {
+            if (player != null) player.sendSystemMessage(Component.literal("请输入搜索关键字后再添加映射"));
+            return;
+        }
+        if (val.isEmpty()) {
+            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称"));
+            return;
+        }
+        boolean ok = com.extendedae_plus.util.ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
+        if (ok) {
+            if (player != null) player.sendSystemMessage(Component.literal("已添加/更新映射: " + key + " -> " + val));
+            // 更新本地过滤显示（若名称包含中文可被搜索）
+            applyFilter();
+            needsRefresh = true;
+        } else {
+            if (player != null) player.sendSystemMessage(Component.literal("写入映射失败"));
         }
     }
 }

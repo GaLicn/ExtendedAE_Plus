@@ -131,6 +131,54 @@ public class ExtendedAEPatternUploadUtil {
         lastProcessingName = name;
     }
 
+    /**
+     * 向配置中新增或更新“别名 -> 中文”映射，并刷新内存映射。
+     * 仅用于非原版（或希望使用最终搜索关键字）场景。
+     *
+     * @param aliasKey 最终搜索关键字（不含冒号），大小写不敏感
+     * @param cnValue  中文名称
+     * @return 是否写入成功
+     */
+    public static synchronized boolean addOrUpdateAliasMapping(String aliasKey, String cnValue) {
+        if (aliasKey == null || aliasKey.isBlank() || cnValue == null || cnValue.isBlank()) {
+            return false;
+        }
+        try {
+            Path cfgDir = FMLPaths.CONFIGDIR.get();
+            Path cfgPath = cfgDir.resolve(CONFIG_RELATIVE);
+            if (!Files.exists(cfgPath)) {
+                // 若文件不存在，先创建模板
+                loadRecipeTypeNames();
+            }
+            JsonObject obj;
+            if (Files.exists(cfgPath)) {
+                String json = Files.readString(cfgPath);
+                obj = GSON.fromJson(json, JsonObject.class);
+                if (obj == null) obj = new JsonObject();
+            } else {
+                obj = new JsonObject();
+            }
+            String key = aliasKey.trim();
+            // 仅允许作为别名写入（不含冒号），如包含冒号，仍按原样写入，但推荐别名
+            obj.addProperty(key, cnValue);
+            Files.createDirectories(cfgPath.getParent());
+            Files.writeString(cfgPath, GSON.toJson(obj));
+
+            // 更新内存映射
+            if (key.contains(":")) {
+                try {
+                    ResourceLocation rl = new ResourceLocation(key);
+                    CUSTOM_NAMES.put(rl, cnValue);
+                } catch (Exception ignored) {}
+            } else {
+                CUSTOM_ALIASES.put(key.toLowerCase(), cnValue);
+            }
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     public static String mapRecipeTypeToCn(Recipe<?> recipe) {
         if (recipe == null) return null;
         RecipeType<?> type = recipe.getType();

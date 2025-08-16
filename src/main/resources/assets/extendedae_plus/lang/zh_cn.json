@@ -10,5 +10,9 @@
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
-  "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入"
+  "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入",
+  "extendedae_plus.screen.reload_mapping": "重载映射",
+  "extendedae_plus.screen.add_mapping": "增加映射",
+  "extendedae_plus.screen.cn_name": "中文名",
+  "extendedae_plus.button.choose_provider":"上传样板"
 }
