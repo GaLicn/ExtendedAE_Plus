@@ -1000,27 +1000,42 @@ public class ExtendedAEPatternUploadUtil {
         if (accessMenu == null) {
             return false;
         }
-        PatternContainer container = getPatternContainerById(accessMenu, providerId);
-        if (container == null || !container.isVisibleInTerminal()) {
-            return false;
-        }
-        InternalInventory inv = container.getTerminalPatternInventory();
-        if (inv == null || inv.size() <= 0) {
-            return false;
-        }
-
-        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
-        ItemStack toInsert = stack.copy();
-        ItemStack remain = filtered.addItems(toInsert);
-        if (remain.getCount() < toInsert.getCount()) {
-            int inserted = toInsert.getCount() - remain.getCount();
-            stack.shrink(inserted);
-            if (stack.isEmpty()) {
-                encodedSlot.set(ItemStack.EMPTY);
-            } else {
-                encodedSlot.set(stack);
+        // 先确定目标容器名称，用于同名回退
+        String targetName = getProviderDisplayName(providerId, accessMenu);
+        // 构建尝试顺序：先指定ID，其次同名的其他ID
+        java.util.List<Long> tryIds = new java.util.ArrayList<>();
+        tryIds.add(providerId);
+        try {
+            java.util.List<Long> all = getAllProviderIds(accessMenu);
+            for (Long id : all) {
+                if (id == null || id == providerId) continue;
+                String name = getProviderDisplayName(id, accessMenu);
+                if (name != null && name.equals(targetName)) {
+                    tryIds.add(id);
+                }
             }
-            return true;
+        } catch (Throwable ignored) {}
+
+        // 按顺序逐个尝试插入
+        for (Long id : tryIds) {
+            PatternContainer c = getPatternContainerById(accessMenu, id);
+            if (c == null || !c.isVisibleInTerminal()) continue;
+            InternalInventory inv = c.getTerminalPatternInventory();
+            if (inv == null || inv.size() <= 0) continue;
+
+            var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+            ItemStack toInsert = stack.copy();
+            ItemStack remain = filtered.addItems(toInsert);
+            if (remain.getCount() < toInsert.getCount()) {
+                int inserted = toInsert.getCount() - remain.getCount();
+                stack.shrink(inserted);
+                if (stack.isEmpty()) {
+                    encodedSlot.set(ItemStack.EMPTY);
+                } else {
+                    encodedSlot.set(stack);
+                }
+                return true;
+            }
         }
         return false;
     }
@@ -1119,20 +1134,36 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
 
-        InternalInventory inv = container.getTerminalPatternInventory();
-        if (inv == null || inv.size() <= 0) return false;
-        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
-        ItemStack toInsert = stack.copy();
-        ItemStack remain = filtered.addItems(toInsert);
-        if (remain.getCount() < toInsert.getCount()) {
-            int inserted = toInsert.getCount() - remain.getCount();
-            stack.shrink(inserted);
-            if (stack.isEmpty()) {
-                encodedSlot.set(ItemStack.EMPTY);
-            } else {
-                encodedSlot.set(stack);
+        // 以名称为键，同名供应器依次尝试：先 index 指定的，再同名的其他
+        String targetName = getProviderDisplayName(container);
+        java.util.List<PatternContainer> tryList = new java.util.ArrayList<>();
+        tryList.add(container);
+        try {
+            for (PatternContainer c : list) {
+                if (c == null || c == container) continue;
+                String name = getProviderDisplayName(c);
+                if (name != null && name.equals(targetName)) {
+                    tryList.add(c);
+                }
             }
-            return true;
+        } catch (Throwable ignored) {}
+
+        for (PatternContainer c : tryList) {
+            InternalInventory inv = c.getTerminalPatternInventory();
+            if (inv == null || inv.size() <= 0) continue;
+            var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+            ItemStack toInsert = stack.copy();
+            ItemStack remain = filtered.addItems(toInsert);
+            if (remain.getCount() < toInsert.getCount()) {
+                int inserted = toInsert.getCount() - remain.getCount();
+                stack.shrink(inserted);
+                if (stack.isEmpty()) {
+                    encodedSlot.set(ItemStack.EMPTY);
+                } else {
+                    encodedSlot.set(stack);
+                }
+                return true;
+            }
         }
         return false;
     }
