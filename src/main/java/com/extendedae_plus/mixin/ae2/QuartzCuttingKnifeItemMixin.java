@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.ae2;
 import appeng.items.tools.quartz.QuartzCuttingKnifeItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.platform.Window;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -16,6 +17,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
+import org.lwjgl.glfw.GLFW;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -76,12 +82,10 @@ public abstract class QuartzCuttingKnifeItemMixin {
         if (name == null || name.isBlank()) {
             name = state.getBlock().getName().getString();
         }
-        try {
-            mc.keyboardHandler.setClipboard(name);
-            // 轻量提示（客户端侧），不刷屏
-            player.displayClientMessage(Component.literal("已复制方块名: " + name), true);
-        } catch (Throwable ignored) {
-        }
+        boolean ok = tryCopyToClipboard(mc, name);
+        player.displayClientMessage(Component.literal(ok
+                ? ("已复制方块名: " + name)
+                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"), true);
         // 拦截默认行为，不再打开刀具界面
         ItemStack held = player.getItemInHand(hand);
         cir.setReturnValue(new InteractionResultHolder<>(InteractionResult.SUCCESS, held));
@@ -125,12 +129,72 @@ public abstract class QuartzCuttingKnifeItemMixin {
         if (name == null || name.isBlank()) {
             name = state.getBlock().getName().getString();
         }
-        try {
-            Minecraft.getInstance().keyboardHandler.setClipboard(name);
-            player.displayClientMessage(Component.literal("已复制方块/部件名: " + name), true);
-        } catch (Throwable ignored) {
-        }
+        boolean ok = tryCopyToClipboard(Minecraft.getInstance(), name);
+        player.displayClientMessage(Component.literal(ok
+                ? ("已复制方块/部件名: " + name)
+                : "复制失败：整合包可能限制剪贴板或未聚焦窗口"), true);
         // 拦截默认行为
         cir.setReturnValue(InteractionResult.SUCCESS);
+    }
+
+    /**
+     * 多级回退的剪贴板写入：
+     * 1) KeyboardHandler.setClipboard
+     * 2) GLFW.glfwSetClipboardString(Window handle)
+     * 3) AWT 系统剪贴板（可能在某些整合包/无头环境不可用）
+     */
+    private static boolean tryCopyToClipboard(Minecraft mc, String text) {
+        if (text == null) return false;
+        // 确保在游戏主线程执行
+        if (!mc.isSameThread()) {
+            AtomicBoolean result = new AtomicBoolean(false);
+            CountDownLatch latch = new CountDownLatch(1);
+            mc.execute(() -> {
+                try {
+                    result.set(doCopy(mc, text));
+                } finally {
+                    latch.countDown();
+                }
+            });
+            try { latch.await(); } catch (InterruptedException ignored) {}
+            return result.get();
+        } else {
+            return doCopy(mc, text);
+        }
+    }
+
+    private static boolean doCopy(Minecraft mc, String text) {
+        try {
+            mc.keyboardHandler.setClipboard(text);
+            return true;
+        } catch (Throwable ignored) {
+        }
+        try {
+            // GLFW 路径 1：使用窗口句柄
+            Window window = mc.getWindow();
+            long handle = window == null ? 0L : window.getWindow();
+            if (handle != 0L) {
+                GLFW.glfwSetClipboardString(handle, text);
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            // GLFW 路径 2：使用当前上下文（部分整合包自定义窗口实现时更稳健）
+            long current = GLFW.glfwGetCurrentContext();
+            if (current != 0L) {
+                GLFW.glfwSetClipboardString(current, text);
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            // 最后回退到 AWT（可能在无头环境不可用）
+            var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(new StringSelection(text), null);
+            return true;
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 }

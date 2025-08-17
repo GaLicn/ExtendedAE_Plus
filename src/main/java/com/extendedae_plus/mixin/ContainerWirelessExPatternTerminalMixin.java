@@ -53,26 +53,6 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
         System.out.println("[EAE+][Server] WirelessExPAT actions registered: " + this.actions.keySet());
     }
 
-    // 兼容部分整合包构造签名（第三参为 IConfigurableObject），在不存在该重载时不报错
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/api/util/IConfigurableObject;)V", at = @At("TAIL"), require = 0)
-    private void initFallback(int id, net.minecraft.world.entity.player.Inventory playerInventory, IConfigurableObject host, CallbackInfo ci) {
-        this.epp$player = playerInventory.player;
-        this.actions.put("upload", p -> {
-            try {
-                Object o0 = p.get(0);
-                Object o1 = p.get(1);
-                int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
-                long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
-                var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server][Wireless/Fallback] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
-                ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        });
-        System.out.println("[EAE+][Server] WirelessExPAT actions registered (fallback): " + this.actions.keySet());
-    }
-
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
