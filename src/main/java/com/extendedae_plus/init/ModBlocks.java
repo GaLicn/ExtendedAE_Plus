@@ -16,6 +16,11 @@ public final class ModBlocks {
 
     public static final RegistryObject<Block> WIRELESS_TRANSCEIVER = BLOCKS.register(
             "wireless_transceiver",
-            () -> new WirelessTransceiverBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2.0F, 6.0F))
+            () -> new WirelessTransceiverBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
     );
 }
