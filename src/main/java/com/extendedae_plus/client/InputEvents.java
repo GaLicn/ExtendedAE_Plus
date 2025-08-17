@@ -34,6 +34,10 @@ public final class InputEvents {
                 hovered = JeiRuntimeProxy.getIngredientUnderMouse();
             }
             if (hovered.isPresent()) {
+                // 若 JEI 作弊模式开启，则放行给 JEI 处理（Shift+左键=一组）
+                if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
+                    return;
+                }
                 ITypedIngredient<?> typed = hovered.get();
                 GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
                 if (stack != null) {
@@ -58,6 +62,10 @@ public final class InputEvents {
             if (hovered.isEmpty()) return;
 
             ITypedIngredient<?> typed = hovered.get();
+            // 若 JEI 作弊模式开启，则放行给 JEI 处理（中键=一组）
+            if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
+                return;
+            }
             GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
             if (stack == null) return;
 

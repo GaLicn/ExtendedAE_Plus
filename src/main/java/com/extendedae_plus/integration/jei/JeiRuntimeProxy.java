@@ -61,4 +61,17 @@ public final class JeiRuntimeProxy {
 
         return Optional.empty();
     }
+
+    /**
+     * 检测 JEI 是否开启了作弊模式（给物品）。
+     * 使用 JEI 内部开关，若 JEI 未初始化或异常则返回 false。
+     */
+    public static boolean isJeiCheatModeEnabled() {
+        try {
+            // 使用完全限定名以避免在源码缺失时的编译依赖问题
+            return mezz.jei.common.Internal.getClientToggleState().isCheatItemsEnabled();
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 }

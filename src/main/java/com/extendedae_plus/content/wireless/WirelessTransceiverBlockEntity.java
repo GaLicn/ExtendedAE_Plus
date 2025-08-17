@@ -31,8 +31,9 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
 
     private IManagedGridNode managedNode;
 
-    private long frequency = 0L;
-    private boolean masterMode = true;
+    private long frequency = 1L;
+    private boolean masterMode = false;
+    private boolean locked = false;
 
     private WirelessMasterLink masterLink;
     private WirelessSlaveLink slaveLink;
@@ -86,6 +87,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     public void setFrequency(long frequency) {
+        if (this.locked) return;
         if (this.frequency == frequency) return;
         this.frequency = frequency;
         if (isMasterMode()) {
@@ -101,6 +103,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     public void setMasterMode(boolean masterMode) {
+        if (this.locked) return;
         if (this.masterMode == masterMode) return;
         // 切换前清理原模式状态
         if (this.masterMode) {
@@ -115,6 +118,16 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
         } else {
             slaveLink.setFrequency(frequency);
         }
+        setChanged();
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        if (this.locked == locked) return;
+        this.locked = locked;
         setChanged();
     }
 
@@ -164,6 +177,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
         super.saveAdditional(tag);
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
+        tag.putBoolean("locked", locked);
         if (managedNode != null) {
             managedNode.saveToNBT(tag);
         }
@@ -174,6 +188,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
         super.load(tag);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
+        this.locked = tag.getBoolean("locked");
         if (managedNode != null) {
             managedNode.loadFromNBT(tag);
         }
