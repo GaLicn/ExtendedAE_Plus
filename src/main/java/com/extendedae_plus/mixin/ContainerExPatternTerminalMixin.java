@@ -57,13 +57,10 @@ public abstract class ContainerExPatternTerminalMixin implements IActionHolder {
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
-                System.out.println("[EAE+][Server] upload: slot=" + playerSlotIndex + ", provider=" + providerId);
                 ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable t) {
-                t.printStackTrace();
             }
         });
-        System.out.println("[EAE+][Server] ExPatternTerminal actions registered: " + this.actions.keySet());
     }
 
     @NotNull

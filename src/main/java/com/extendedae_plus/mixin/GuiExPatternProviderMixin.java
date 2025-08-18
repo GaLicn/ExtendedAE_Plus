@@ -277,11 +277,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.screenStyle = style;
-        // 打印当前菜单类型，确认是否为扩展容器
-        try {
-            var m = this.getMenu();
-            System.out.println("[EAE+][Client] Screen menu class = " + (m == null ? "null" : m.getClass().getName()));
-        } catch (Throwable ignored) {}
+        // 保留：不再打印菜单类型
 
         // 翻页按钮（仅在需要时显示）
         int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
@@ -314,37 +310,31 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
         // 倍增/除法按钮，通过 ExtendedAE 的通用包派发
         this.x2Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click multiply2");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply2"));
         }, NewIcon.MULTIPLY2);
         this.x2Button.setVisibility(true);
 
         this.divideBy2Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click divide2");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide2"));
         }, NewIcon.DIVIDE2);
         this.divideBy2Button.setVisibility(true);
 
         this.x10Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click multiply10");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply10"));
         }, NewIcon.MULTIPLY10);
         this.x10Button.setVisibility(true);
 
         this.divideBy10Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click divide10");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide10"));
         }, NewIcon.DIVIDE10);
         this.divideBy10Button.setVisibility(true);
 
         this.divideBy5Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click divide5");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide5"));
         }, NewIcon.DIVIDE5);
         this.divideBy5Button.setVisibility(true);
 
         this.x5Button = new ActionEPPButton((b) -> {
-            System.out.println("[EAE+][Client] click multiply5");
             EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply5"));
         }, NewIcon.MULTIPLY5);
         this.x5Button.setVisibility(true);
@@ -371,7 +361,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 try {
                     // 直接基于容器槽位操作，完全绕开 PatternProviderLogic 及其内部字段
                     if (!(serverPlayer.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExPatternProvider exMenu)) {
-                        System.out.println("ExtendedAE Plus: 当前容器不是 ExPatternProvider，无法执行样板缩放");
                         return;
                     }
 
@@ -430,17 +419,12 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
                     }
-                    System.out.println("ExtendedAE Plus: " + message);
 
                 } catch (Exception e) {
-                    System.out.println("ExtendedAE Plus: 服务器端执行样板缩放时发生错误: " + e.getMessage());
-                    e.printStackTrace();
                 }
             });
 
         } catch (Exception e) {
-            System.out.println("ExtendedAE Plus: 调度到服务器主线程时发生错误: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 

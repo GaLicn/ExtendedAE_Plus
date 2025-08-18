@@ -45,19 +45,16 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 }
                 var stack = this.encodedPatternSlot != null ? this.encodedPatternSlot.getItem() : net.minecraft.world.item.ItemStack.EMPTY;
                 if (stack != null && !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
-                    System.out.println("[EAE+][Server] Auto-upload crafting pattern after encode.");
                     ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
                 } else {
                     // 槽位可能尚未同步到位，继续下一 tick 重试
                     if (attemptsLeft > 0) {
                         epp$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
                     } else {
-                        System.out.println("[EAE+][Server] Auto-upload aborted: encoded slot still empty or not encoded after retries.");
+                        
                     }
                 }
             } catch (Throwable t) {
-                System.out.println("[EAE+][Server] Auto-upload after encode failed: " + t);
-                t.printStackTrace();
             }
         });
     }
@@ -108,13 +105,9 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 try {
                     ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
                 } catch (Throwable t) {
-                    System.out.println("[EAE+][Server] Auto-upload after encode failed: " + t);
-                    t.printStackTrace();
                 }
             });
         } catch (Throwable t) {
-            System.out.println("[EAE+][Server] epp$serverUploadAfterEncode error: " + t);
-            t.printStackTrace();
         }
     }
 }

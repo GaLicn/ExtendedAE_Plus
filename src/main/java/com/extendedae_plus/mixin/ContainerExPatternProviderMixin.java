@@ -82,14 +82,12 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         this.maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
 
         // 注册通用动作（供 CGenericPacket 分发）
-        this.actions.put("multiply2", p -> { System.out.println("[EAE+][Server] multiply2"); modifyPatterns(2, false); });
-        this.actions.put("divide2",   p -> { System.out.println("[EAE+][Server] divide2");   modifyPatterns(2, true);  });
-        this.actions.put("multiply5", p -> { System.out.println("[EAE+][Server] multiply5"); modifyPatterns(5, false); });
-        this.actions.put("divide5",   p -> { System.out.println("[EAE+][Server] divide5");   modifyPatterns(5, true);  });
-        this.actions.put("multiply10",p -> { System.out.println("[EAE+][Server] multiply10");modifyPatterns(10, false);});
-        this.actions.put("divide10",  p -> { System.out.println("[EAE+][Server] divide10");  modifyPatterns(10, true); });
-
-        System.out.println("[EAE+][Server] ContainerExPatternProvider actions registered: " + this.actions.keySet());
+        this.actions.put("multiply2", p -> { modifyPatterns(2, false); });
+        this.actions.put("divide2",   p -> { modifyPatterns(2, true);  });
+        this.actions.put("multiply5", p -> { modifyPatterns(5, false); });
+        this.actions.put("divide5",   p -> { modifyPatterns(5, true);  });
+        this.actions.put("multiply10",p -> { modifyPatterns(10, false);});
+        this.actions.put("divide10",  p -> { modifyPatterns(10, true); });
     }
 
     @Unique

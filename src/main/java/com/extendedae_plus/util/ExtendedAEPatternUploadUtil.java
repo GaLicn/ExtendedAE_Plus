@@ -335,7 +335,6 @@ public class ExtendedAEPatternUploadUtil {
      */
     public static boolean uploadFromEncodingMenuToMatrix(ServerPlayer player, PatternEncodingTermMenu menu) {
         if (player == null || menu == null) {
-            System.out.println("[EAE+][Server] uploadFromEncodingMenuToMatrix: player or menu is null");
             return false;
         }
 
@@ -343,35 +342,27 @@ public class ExtendedAEPatternUploadUtil {
         var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
                 .epp$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
-        System.out.println("[EAE+][Server] Encoded slot stack: " + stack + ", count=" + stack.getCount());
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             sendMessage(player, "ExtendedAE Plus: 没有可上传的编码样板");
-            System.out.println("[EAE+][Server] Fail: stack empty or not encoded pattern");
             return false;
         }
 
         // 仅允许“合成图样”
         IPatternDetails details = PatternDetailsHelper.decodePattern(stack, player.level());
-        System.out.println("[EAE+][Server] Decoded details: " + (details == null ? "null" : details.getClass().getName()));
         if (!(details instanceof AECraftingPattern)) {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_not_crafting");
-            System.out.println("[EAE+][Server] Fail: not AECraftingPattern");
             return false;
         }
 
         // 获取 AE 网络
         IGridNode node = menu.getNetworkNode();
-        System.out.println("[EAE+][Server] Grid node: " + node);
         if (node == null) {
             sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
-            System.out.println("[EAE+][Server] Fail: grid node null");
             return false;
         }
         IGrid grid = node.getGrid();
-        System.out.println("[EAE+][Server] Grid: " + grid);
         if (grid == null) {
             sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
-            System.out.println("[EAE+][Server] Fail: grid null");
             return false;
         }
 
@@ -394,7 +385,6 @@ public class ExtendedAEPatternUploadUtil {
                     player.getInventory().placeItemBackInInventory(blanks, false);
                 }
             } catch (Throwable t) {
-                System.out.println("[EAE+][Server] Failed to return blank patterns: " + t);
                 if (player != null) {
                     // 兜底：直接还给玩家背包
                     player.getInventory().placeItemBackInInventory(AEItems.BLANK_PATTERN.stack(stack.getCount()), false);
@@ -402,20 +392,16 @@ public class ExtendedAEPatternUploadUtil {
             }
             // 清空编码样板槽，防止再次输出
             encodedSlot.set(ItemStack.EMPTY);
-            System.out.println("[EAE+][Server] Skip: duplicate pattern already present in matrix, returned blanks and cleared encoded slot");
             return false;
         }
 
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
         List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
-        System.out.println("[EAE+][Server] Matrix internal inventories count: " + inventories.size());
         if (!inventories.isEmpty()) {
             for (int i = 0; i < inventories.size(); i++) {
                 var inv = inventories.get(i);
                 ItemStack toInsert = stack.copy();
-                System.out.println("[EAE+][Server] Try insert via internal inventory[" + i + "], count=" + toInsert.getCount());
                 ItemStack remain = inv.addItems(toInsert);
-                System.out.println("[EAE+][Server] Internal inventory[" + i + "] remain count=" + remain.getCount());
                 if (remain.getCount() < stack.getCount()) {
                     int inserted = stack.getCount() - remain.getCount();
                     stack.shrink(inserted);
@@ -423,24 +409,19 @@ public class ExtendedAEPatternUploadUtil {
                         encodedSlot.set(ItemStack.EMPTY);
                     }
                     sendMessage(player, "extendedae_plus.upload_to_matrix.success");
-                    System.out.println("[EAE+][Server] Success via internal inventory[" + i + "]: inserted=" + inserted);
                     return true;
                 }
             }
-            // 所有内部库存都无法接收
-            System.out.println("[EAE+][Server] All internal inventories refused or full. Trying capability fallback.");
+            // 所有内部库存都无法接收 -> 尝试 capability 回退
         }
 
         // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
         List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
-        System.out.println("[EAE+][Server] Fallback Matrix item handlers count: " + handlers.size());
         if (!handlers.isEmpty()) {
             for (int i = 0; i < handlers.size(); i++) {
                 var cap = handlers.get(i);
                 ItemStack toInsert = stack.copy();
-                System.out.println("[EAE+][Server] Try insert via capability[" + i + "], count=" + toInsert.getCount());
                 ItemStack remain = insertIntoAnySlot(cap, toInsert);
-                System.out.println("[EAE+][Server] Capability[" + i + "] remain count=" + remain.getCount());
                 if (remain.getCount() < stack.getCount()) {
                     int inserted = stack.getCount() - remain.getCount();
                     stack.shrink(inserted);
@@ -448,7 +429,6 @@ public class ExtendedAEPatternUploadUtil {
                         encodedSlot.set(ItemStack.EMPTY);
                     }
                     sendMessage(player, "extendedae_plus.upload_to_matrix.success");
-                    System.out.println("[EAE+][Server] Success via capability[" + i + "]: inserted=" + inserted);
                     return true;
                 }
             }
@@ -457,10 +437,8 @@ public class ExtendedAEPatternUploadUtil {
         // 未找到可用矩阵或全部拒收
         if (inventories.isEmpty() && handlers.isEmpty()) {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
-            System.out.println("[EAE+][Server] Fail: no formed matrix found");
         } else {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
-            System.out.println("[EAE+][Server] Fail: all matrices full or cannot accept pattern");
         }
         return false;
     }
@@ -479,13 +457,11 @@ public class ExtendedAEPatternUploadUtil {
                     var inv = tile.getExposedInventory();
                     if (inv != null) {
                         result.add(inv);
-                        System.out.println("[EAE+][Server] Found matrix internal inventory at index " + idx);
                     }
                 }
                 idx++;
             }
         } catch (Throwable t) {
-            System.out.println("[EAE+][Server] findAllMatrixPatternInventories exception: " + t);
         }
         return result;
     }
@@ -505,7 +481,6 @@ public class ExtendedAEPatternUploadUtil {
                         var handler = capOpt.orElse(null);
                         if (handler != null) {
                             result.add(handler);
-                            System.out.println("[EAE+][Server] Found matrix capability handler at index " + idx);
                         }
                     }
                 }
@@ -547,7 +522,6 @@ public class ExtendedAEPatternUploadUtil {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[EAE+][Server] matrixContainsPattern (InternalInventory) exception: " + t);
         }
         try {
             // 再检查聚合能力视图
@@ -563,7 +537,6 @@ public class ExtendedAEPatternUploadUtil {
                 }
             }
         } catch (Throwable t) {
-            System.out.println("[EAE+][Server] matrixContainsPattern (Capability) exception: " + t);
         }
         return false;
     }

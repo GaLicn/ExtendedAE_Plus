@@ -113,7 +113,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
                 // 通过 ExtendedAE 内置网络系统发送通用动作到服务端
                 // 动作: "upload"，参数: 槽位索引(int)、供应器ID(long)
-                System.out.println("[EAE+][Client] send upload: slot=" + playerSlotIndex + ", provider=" + currentlychooicepatterprovider);
                 EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("upload", playerSlotIndex, currentlychooicepatterprovider));
                 
             } else {
@@ -137,9 +136,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
     private void injectConstructor(ContainerExPatternTerminal menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 创建切换槽位显示的按钮
         this.toggleSlotsButton = new IconButton((b) -> {
-            System.out.println("ExtendedAE Plus: 按钮被点击，当前showSlots: " + this.showSlots);
             this.showSlots = !this.showSlots; // 开关状态
-            System.out.println("ExtendedAE Plus: 切换后showSlots: " + this.showSlots);
             
             // 通过反射调用refreshList方法 - 先尝试当前类，失败后尝试父类
             try {
@@ -147,24 +144,18 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 try {
                     // 先尝试在当前类中查找
                     refreshMethod = this.getClass().getDeclaredMethod("refreshList");
-                    System.out.println("ExtendedAE Plus: 在当前类中找到refreshList方法: " + this.getClass().getSimpleName());
                 } catch (NoSuchMethodException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
                         refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
-                        System.out.println("ExtendedAE Plus: 在父类中找到refreshList方法: " + this.getClass().getSuperclass().getSimpleName());
                     } catch (NoSuchMethodException e2) {
-                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到refreshList方法");
                         throw e2;
                     }
                 }
                 
                 refreshMethod.setAccessible(true);
                 refreshMethod.invoke(this);
-                System.out.println("ExtendedAE Plus: refreshList调用成功");
             } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 调用refreshList失败: " + e.getMessage());
-                e.printStackTrace();
             }
         }) {
             @Override
@@ -178,13 +169,10 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
         
         // 添加到左侧工具栏
         this.addToLeftToolbar(this.toggleSlotsButton);
-        
-        System.out.println("ExtendedAE Plus: 槽位切换按钮已添加到工具栏，默认显示模式: " + this.showSlots);
     }
 
     @Inject(method = "refreshList", at = @At("HEAD"), remap = false)
     private void onRefreshListStart(CallbackInfo ci) {
-        System.out.println("ExtendedAE Plus: refreshList开始执行 - 显示槽位: " + this.showSlots);
         
         // 更新按钮图标
         if (this.toggleSlotsButton != null) {
@@ -196,7 +184,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
 
     @Inject(method = "refreshList", at = @At("TAIL"), remap = false)
     private void onRefreshListEnd(CallbackInfo ci) {
-        System.out.println("ExtendedAE Plus: refreshList结束 - showSlots状态: " + this.showSlots);
         
         // 在refreshList结束后，根据showSlots状态过滤SlotsRow
         if (!this.showSlots) {
@@ -206,43 +193,33 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 try {
                     // 先尝试在当前类中查找
                     rowsField = this.getClass().getDeclaredField("rows");
-                    System.out.println("ExtendedAE Plus: 在当前类中找到rows字段: " + this.getClass().getSimpleName());
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
                         rowsField = this.getClass().getSuperclass().getDeclaredField("rows");
-                        System.out.println("ExtendedAE Plus: 在父类中找到rows字段: " + this.getClass().getSuperclass().getSimpleName());
                     } catch (NoSuchFieldException e2) {
-                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到rows字段");
                         throw e2;
                     }
                 }
                 rowsField.setAccessible(true);
                 java.util.ArrayList<?> rows = (java.util.ArrayList<?>) rowsField.get(this);
                 
-                System.out.println("ExtendedAE Plus: 找到rows字段，当前行数: " + rows.size());
-                
                 // 通过反射访问highlightBtns字段
                 java.lang.reflect.Field highlightBtnsField = null;
                 try {
                     // 先尝试在当前类中查找
                     highlightBtnsField = this.getClass().getDeclaredField("highlightBtns");
-                    System.out.println("ExtendedAE Plus: 在当前类中找到highlightBtns字段: " + this.getClass().getSimpleName());
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
                         highlightBtnsField = this.getClass().getSuperclass().getDeclaredField("highlightBtns");
-                        System.out.println("ExtendedAE Plus: 在父类中找到highlightBtns字段: " + this.getClass().getSuperclass().getSimpleName());
                     } catch (NoSuchFieldException e2) {
-                        System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到highlightBtns字段");
                         throw e2;
                     }
                 }
                 highlightBtnsField.setAccessible(true);
                 @SuppressWarnings("unchecked")
                 java.util.HashMap<Integer, Object> highlightBtns = (java.util.HashMap<Integer, Object>) highlightBtnsField.get(this);
-                
-                System.out.println("ExtendedAE Plus: 找到highlightBtns字段，当前按钮数: " + highlightBtns.size());
                 
                 // 创建新的索引映射
                 java.util.HashMap<Integer, Object> newHighlightBtns = new java.util.HashMap<>();
@@ -252,7 +229,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 for (int i = 0; i < rows.size(); i++) {
                     Object row = rows.get(i);
                     String className = row.getClass().getSimpleName();
-                    System.out.println("ExtendedAE Plus: 检查行 " + i + "，类型: " + className);
                     
                     if (className.equals("GroupHeaderRow")) {
                         // 保留GroupHeaderRow，并重新映射对应的高亮按钮
@@ -267,20 +243,12 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                         if (highlightBtns.containsKey(i + 1)) {
                             Object button = highlightBtns.get(i + 1);
                             newHighlightBtns.put(newIndex, button);
-                            System.out.println("ExtendedAE Plus: 重新映射高亮按钮，从索引 " + (i + 1) + " 到 " + newIndex);
                         }
                         
                         newIndex++;
                     } else if (className.equals("SlotsRow")) {
-                        System.out.println("ExtendedAE Plus: 移除行 " + i);
                         // 不保留SlotsRow，也不增加newIndex
                     }
-                }
-                
-                // 打印所有原始的高亮按钮索引，帮助调试
-                System.out.println("ExtendedAE Plus: 原始高亮按钮索引:");
-                for (java.util.Map.Entry<Integer, Object> entry : highlightBtns.entrySet()) {
-                    System.out.println("ExtendedAE Plus: 索引 " + entry.getKey() + " -> 按钮对象: " + entry.getValue().getClass().getSimpleName());
                 }
                 
                 // 移除多余的行
@@ -292,43 +260,28 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<ContainerEx
                 highlightBtns.clear();
                 highlightBtns.putAll(newHighlightBtns);
                 
-                System.out.println("ExtendedAE Plus: 已隐藏槽位行，剩余行数: " + rows.size() + "，重新映射的高亮按钮数: " + newHighlightBtns.size());
-                
-                // 打印所有重新映射的按钮索引
-                for (java.util.Map.Entry<Integer, Object> entry : newHighlightBtns.entrySet()) {
-                    System.out.println("ExtendedAE Plus: 高亮按钮映射 - 索引 " + entry.getKey() + " -> 按钮对象: " + entry.getValue().getClass().getSimpleName());
-                }
-                
                 // 强制刷新滚动条
                 try {
                     java.lang.reflect.Method resetScrollbarMethod = null;
                     try {
                         // 先尝试在当前类中查找
                         resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
-                        System.out.println("ExtendedAE Plus: 在当前类中找到resetScrollbar方法: " + this.getClass().getSimpleName());
                     } catch (NoSuchMethodException e1) {
                         // 如果当前类没有，尝试在父类中查找
                         try {
                             resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
-                            System.out.println("ExtendedAE Plus: 在父类中找到resetScrollbar方法: " + this.getClass().getSuperclass().getSimpleName());
                         } catch (NoSuchMethodException e2) {
-                            System.out.println("ExtendedAE Plus: 在当前类和父类中都找不到resetScrollbar方法");
                             throw e2;
                         }
                     }
                     
                     resetScrollbarMethod.setAccessible(true);
                     resetScrollbarMethod.invoke(this);
-                    System.out.println("ExtendedAE Plus: 滚动条已重置");
                 } catch (Exception e) {
-                    System.out.println("ExtendedAE Plus: 重置滚动条失败: " + e.getMessage());
                 }
             } catch (Exception e) {
-                System.out.println("ExtendedAE Plus: 访问字段失败: " + e.getMessage());
-                e.printStackTrace();
             }
         } else {
-            System.out.println("ExtendedAE Plus: showSlots为true，不隐藏槽位行");
         }
     }
 }

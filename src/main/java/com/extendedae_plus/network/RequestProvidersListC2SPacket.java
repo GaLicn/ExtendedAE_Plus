@@ -29,7 +29,6 @@ public class RequestProvidersListC2SPacket {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
             if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
-            System.out.println("[EAE+][Server] RequestProvidersListC2S from " + player.getGameProfile().getName());
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
             PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);
@@ -49,7 +48,6 @@ public class RequestProvidersListC2SPacket {
                     slots.add(empty);
                 }
 
-                System.out.println("[EAE+][Server] Providers via accessMenu: size=" + filteredIds.size());
                 ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(filteredIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
@@ -69,7 +67,6 @@ public class RequestProvidersListC2SPacket {
                 names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(c));
                 slots.add(empty);
             }
-            System.out.println("[EAE+][Server] Providers via grid-fallback: size=" + idxIds.size());
             ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
         });
         ctx.setPacketHandled(true);

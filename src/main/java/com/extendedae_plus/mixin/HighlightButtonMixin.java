@@ -49,18 +49,13 @@ public abstract class HighlightButtonMixin {
                                 try {
                                     var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
                                     setMethod.invoke(terminal, serverId);
-                                    System.out.println("ExtendedAE Plus: 通过Mixin设置了当前选择的样板供应器ID: " + serverId);
                                 } catch (Exception e) {
-                                    System.out.println("ExtendedAE Plus: 无法设置样板供应器ID，错误: " + e.getMessage());
-                                    e.printStackTrace();
                                 }
                                 break;
                             }
                         }
                     }
                 } catch (Exception e) {
-                    System.out.println("ExtendedAE Plus: 通过Mixin设置样板供应器ID时出错: " + e.getMessage());
-                    e.printStackTrace();
                 }
             }
         }
