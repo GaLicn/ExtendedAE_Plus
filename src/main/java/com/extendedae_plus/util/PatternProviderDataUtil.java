@@ -902,13 +902,11 @@ public class PatternProviderDataUtil {
                             }
                         } catch (Exception syncException) {
                             // 网络同步失败不影响主要功能
-                            System.out.println("ExtendedAE Plus: 网络同步失败，但数据已保存: " + syncException.getMessage());
                         }
                     }
                 }
             } catch (Exception e) {
                 // 如果反射失败，使用备用方案
-                System.out.println("ExtendedAE Plus: 无法通过反射标记脏数据，使用备用方案: " + e.getMessage());
             }
             
             // 3. 强制更新样板缓存

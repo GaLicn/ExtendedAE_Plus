@@ -58,7 +58,6 @@ public class ProvidersListS2CPacket {
     private static void handleClient(ProvidersListS2CPacket msg) {
         var mc = Minecraft.getInstance();
         if (mc == null) return;
-        System.out.println("[EAE+][Client] ProvidersListS2C received, size=" + msg.ids.size());
         var current = mc.screen;
         mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
     }
