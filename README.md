@@ -1,4 +1,4 @@
-﻿# ExtendedAE Plus
+# ExtendedAE Plus
 
 ExtendedAE Plus 是一个面向 Applied Energistics 2 与 ExtendedAE 的功能增强附属模组，专注于样板（Pattern）相关的效率与易用性提升。
 
@@ -25,3 +25,21 @@ ExtendedAE Plus 是一个面向 Applied Energistics 2 与 ExtendedAE 的功能�
 [![QQ群](https://img.shields.io/badge/QQ群-1051490623-brightgreen?style=for-the-badge&logo=tencent-qq)](https://qm.qq.com/cgi-bin/qm/qr?k=8GZaFv9ZTz3X9lWZPtqBBG6kY6nLwV3Z&jump_from=webapi) **← 请暂时添加 QQ 群下载使用**
 
 
+
+## 许可证
+
+本项目依据 GNU Lesser General Public License v3.0（LGPL-3.0）发布，详见仓库根目录的 `LICENSE` 文件。
+
+要点：
+- 允许以闭源方式链接/使用本库；
+- 对本库的修改需继续以 LGPL-3.0 公开源码；
+- 以 jar 形式分发通常已满足“可重新链接”的要求。
+
+## 第三方声明（节选）
+
+本项目在构建/运行时可能使用以下第三方组件（非完整列表）：
+
+- Applied Energistics 2（AE2）：MIT License
+- SpongePowered Mixin：MIT License
+
+请查阅各上游项目以获取完整与最新的许可证信息。第三方组件的许可证与版权归其各自作者所有。

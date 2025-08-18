@@ -123,6 +123,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+// 将 LICENSE 打包进发布的 jar
+tasks.named('jar', Jar).configure {
+    from('.') {
+        include 'LICENSE'
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     it.options.release = 17
 }
@@ -132,6 +139,15 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            pom {
+                licenses {
+                    license {
+                        name = 'GNU Lesser General Public License v3.0'
+                        url = 'https://www.gnu.org/licenses/lgpl-3.0.en.html'
+                        distribution = 'repo'
+                    }
+                }
+            }
         }
     }
 
