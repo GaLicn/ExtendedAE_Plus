@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * - 名称优先取方块实体的自定义名（若实现 Nameable），否则使用方块显示名。
  * - 仅在客户端执行剪贴板操作；避免在服务端加载客户端类，使用 level.isClientSide() 的分支内访问 Minecraft 类。
  */
-@Mixin(value = QuartzCuttingKnifeItem.class, remap = false)
+@Mixin(value = QuartzCuttingKnifeItem.class)
 public abstract class QuartzCuttingKnifeItemMixin {
 
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
