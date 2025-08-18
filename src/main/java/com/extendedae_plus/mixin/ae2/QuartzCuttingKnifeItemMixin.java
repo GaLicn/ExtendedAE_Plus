@@ -44,7 +44,7 @@ public abstract class QuartzCuttingKnifeItemMixin {
         if (!level.isClientSide()) {
             return;
         }
-        if (player == null || !player.isShiftKeyDown()) {
+        if (player == null || !player.isCrouching()) {
             return;
         }
         // 仅在客户端分支访问 Minecraft 类，防止服务端类加载问题
@@ -96,7 +96,7 @@ public abstract class QuartzCuttingKnifeItemMixin {
                                                     CallbackInfoReturnable<InteractionResult> cir) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
-        if (!level.isClientSide() || player == null || !player.isShiftKeyDown()) {
+        if (!level.isClientSide() || player == null || !player.isCrouching()) {
             return;
         }
         var pos = context.getClickedPos();
