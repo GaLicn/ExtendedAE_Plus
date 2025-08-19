@@ -3,8 +3,6 @@ package com.extendedae_plus.mixin.ae2;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
 import appeng.items.tools.quartz.QuartzCuttingKnifeItem;
-import com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity;
-import com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine;
 import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -23,6 +21,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fml.ModList;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +33,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -127,9 +128,11 @@ public abstract class QuartzCuttingKnifeItemMixin {
         }
 
         // 3. GregTech CEu 配方翻译
-        String gtceuName = eap$handleGTCEuBlock(blockEntity);
-        if (gtceuName != null && !gtceuName.isBlank()) {
-            return gtceuName;
+        if (ModList.get().isLoaded("gtceu")) {
+            String gtceuName = eap$handleGTCEuBlock(blockEntity);
+            if (gtceuName != null && !gtceuName.isBlank()) {
+                return gtceuName;
+            }
         }
 
         // 4. 方块名称
@@ -141,16 +144,40 @@ public abstract class QuartzCuttingKnifeItemMixin {
      */
     @Unique
     private String eap$handleGTCEuBlock(BlockEntity blockEntity) {
-        if (blockEntity instanceof MetaMachineBlockEntity meta) {
-            if (meta.metaMachine instanceof WorkableElectricMultiblockMachine workable) {
-                String recipeName = workable.getRecipeType().toString();
-                // e.g., gtceu.cracker
-                String translationKey = "gtceu." + recipeName.replace("gtceu:","");
-                // 客户端直接使用 I18n
-                return I18n.get(translationKey, recipeName); // e.g., 裂化机
+        try {
+            // 动态加载 GTCEu 类
+            Class<?> metaMachineBlockEntityClass = Class.forName("com.gregtechceu.gtceu.api.blockentity.MetaMachineBlockEntity");
+            Class<?> workableElectricMultiblockMachineClass = Class.forName("com.gregtechceu.gtceu.api.machine.multiblock.WorkableElectricMultiblockMachine");
+
+            if (metaMachineBlockEntityClass.isInstance(blockEntity)) {
+                // 获取 metaMachine 字段
+                Field metaMachineField = metaMachineBlockEntityClass.getDeclaredField("metaMachine");
+                metaMachineField.setAccessible(true);
+                Object metaMachine = metaMachineField.get(blockEntity);
+
+                if (workableElectricMultiblockMachineClass.isInstance(metaMachine)) {
+                    // 调用 getRecipeType 方法
+                    Method getRecipeTypeMethod = workableElectricMultiblockMachineClass.getMethod("getRecipeType");
+                    getRecipeTypeMethod.setAccessible(true);
+                    Object recipeType = getRecipeTypeMethod.invoke(metaMachine);
+
+                    if (recipeType != null) {
+                        // 调用 toString 方法获取配方名
+                        String recipeName = recipeType.toString().replace("gtceu:", "");
+                        String translationKey = "gtceu." + recipeName; // e.g., gtceu.cracker
+                        // 客户端使用 I18n
+                        return I18n.get(translationKey, recipeName); // e.g., 裂化机
+                    }
+                }
             }
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("GregTech CEu 类未找到，跳过配方翻译处理");
+            return null; // GTCEu 不可用
+        } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
+            LOGGER.error("处理 GTCEu 配方翻译失败: {}", e.getMessage());
+            return null; // 反射失败
         }
-        return null;
+        return null; // 非 GTCEu 方块实体
     }
 
     /**
