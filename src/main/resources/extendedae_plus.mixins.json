@@ -10,6 +10,7 @@
     "HighlightButtonMixin",
     "PickFromWirelessMixin",
     "PatternEncodingTermScreenMixin",
+    "ae2.PatternProviderScreenMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "ae2.QuartzCuttingKnifeItemMixin",
     "accessor.AEBaseScreenAccessor",
@@ -27,7 +28,11 @@
     "ContainerPatternEncodingTermMenuMixin",
     "MEStorageMenuMixin",
     "accessor.MEStorageMenuAccessor",
-    "accessor.PatternEncodingTermMenuAccessor"
+    "accessor.PatternEncodingTermMenuAccessor",
+    "ae2.PatternProviderLogicAdvancedMixin",
+    "ae2.PatternProviderMenuAdvancedMixin",
+    "accessor.PatternProviderMenuAdvancedAccessor",
+    "accessor.PatternProviderLogicAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
