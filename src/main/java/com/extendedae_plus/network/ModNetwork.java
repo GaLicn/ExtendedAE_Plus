@@ -56,6 +56,18 @@ public class ModNetwork {
                 .decoder(ProvidersListS2CPacket::decode)
                 .consumerNetworkThread(ProvidersListS2CPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(ToggleAdvancedBlockingC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ToggleAdvancedBlockingC2SPacket::encode)
+                .decoder(ToggleAdvancedBlockingC2SPacket::decode)
+                .consumerNetworkThread(ToggleAdvancedBlockingC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(AdvancedBlockingSyncS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(AdvancedBlockingSyncS2CPacket::encode)
+                .decoder(AdvancedBlockingSyncS2CPacket::decode)
+                .consumerNetworkThread(AdvancedBlockingSyncS2CPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }
