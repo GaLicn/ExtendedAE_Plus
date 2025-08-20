@@ -56,50 +56,40 @@ dependencies {
     mappings loom.officialMojangMappings()
     forge "net.minecraftforge:forge:${forge_version}"
 
+    //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
+    //extendedAE
+    modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
+
+    //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
-
     modCompileOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
+
     modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+
+    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+
     modCompileOnly "curse.maven:applied-flux-965012:${applied_flux_version}"
     modCompileOnly "curse.maven:mega-cells-622112:${mega_cells_version}"
     modCompileOnly "curse.maven:jade-324717:${jade_version}"
 
-    // REI
-    modCompileOnly "me.shedaniel.cloth:basic-math:${basic_math_version}"
-    modCompileOnly "curse.maven:architectury-api-419699:${architectury_version}"
-    modCompileOnly "me.shedaniel:RoughlyEnoughItems-forge:${rei_version}"
-    modCompileOnly "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
-
-    // ProjectE
-    modCompileOnly "curse.maven:projecte-226410:${projecte_version}"
-    modCompileOnly "curse.maven:appliede-1009940:${appliede_version}"
-
     // GregTech
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
     modCompileOnly "curse.maven:ldlib-626676:${ldlib_version}"
-
-    // Immersive Engineering
-    modCompileOnly "curse.maven:immersive-engineering-231951:${ie_version}"
-
-    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
     //curios
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
     modCompileOnly "curse.maven:curios-309927:${curios_version}"
 
     // Runtime test
+    modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
+    modRuntimeOnly "curse.maven:jade-324717:${jade_version}"
     modRuntimeOnly "curse.maven:architectury-api-419699:${architectury_version}"
     modRuntimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    modRuntimeOnly "curse.maven:jade-324717:${jade_version}"
-    modRuntimeOnly "curse.maven:mega-cells-622112:${mega_cells_version}"
-    modRuntimeOnly "curse.maven:projecte-226410:${projecte_version}"
-    modRuntimeOnly "curse.maven:appliede-1009940:${appliede_version}"
     modRuntimeOnly "curse.maven:cloth-config-348521:5729105"
-    //extendedAE
-    modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
+
     //jec
     modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
     modRuntimeOnly "curse.maven:just-enough-characters-250702:6680042"
