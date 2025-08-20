@@ -179,6 +179,69 @@ public class ExtendedAEPatternUploadUtil {
         }
     }
 
+    /**
+     * 按中文值精确匹配删除映射（支持别名与完整ID）。
+     * 返回删除的条目数量。
+     */
+    public static synchronized int removeMappingsByCnValue(String cnValue) {
+        if (cnValue == null) return 0;
+        String target = cnValue.trim();
+        if (target.isEmpty()) return 0;
+        try {
+            Path cfgDir = FMLPaths.CONFIGDIR.get();
+            Path cfgPath = cfgDir.resolve(CONFIG_RELATIVE);
+            if (!Files.exists(cfgPath)) {
+                return 0;
+            }
+            String json = Files.readString(cfgPath);
+            JsonObject obj = GSON.fromJson(json, JsonObject.class);
+            if (obj == null) return 0;
+
+            java.util.List<String> toRemove = new java.util.ArrayList<>();
+            for (java.util.Map.Entry<String, JsonElement> e : obj.entrySet()) {
+                JsonElement v = e.getValue();
+                if (v != null && v.isJsonPrimitive()) {
+                    String name = v.getAsString();
+                    if (target.equals(name)) {
+                        toRemove.add(e.getKey());
+                    }
+                }
+            }
+            if (toRemove.isEmpty()) return 0;
+
+            // 从 JSON 中移除
+            for (String k : toRemove) {
+                obj.remove(k);
+            }
+            Files.createDirectories(cfgPath.getParent());
+            Files.writeString(cfgPath, GSON.toJson(obj));
+
+            // 同步移除内存映射
+            for (String k : toRemove) {
+                if (k.contains(":")) {
+                    try {
+                        ResourceLocation rl = new ResourceLocation(k);
+                        // 仅当值匹配才移除（双重保险）
+                        String cur = CUSTOM_NAMES.get(rl);
+                        if (target.equals(cur)) {
+                            CUSTOM_NAMES.remove(rl);
+                        }
+                    } catch (Exception ignored) {}
+                } else {
+                    // 别名按小写存放
+                    String lower = k.toLowerCase();
+                    String cur = CUSTOM_ALIASES.get(lower);
+                    if (target.equals(cur)) {
+                        CUSTOM_ALIASES.remove(lower);
+                    }
+                }
+            }
+            return toRemove.size();
+        } catch (IOException e) {
+            return 0;
+        }
+    }
+
     public static String mapRecipeTypeToCn(Recipe<?> recipe) {
         if (recipe == null) return null;
         RecipeType<?> type = recipe.getType();
@@ -240,6 +303,35 @@ public class ExtendedAEPatternUploadUtil {
             if (idStr == null || idStr.isBlank()) return null;
             ResourceLocation rl = new ResourceLocation(idStr);
             // 1) 先查别名（使用 path 作为最终搜索关键字）
+            String path = rl.getPath();
+            if (path != null) {
+                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
+                if (alias != null && !alias.isBlank()) return alias;
+            }
+            // 2) 再查完整ID映射
+            String custom = CUSTOM_NAMES.get(rl);
+            if (custom != null && !custom.isBlank()) return custom;
+            // 3) 默认返回 path 作为搜索关键字
+            return (path != null && !path.isBlank()) ? path : idStr;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
+     * 逻辑与 {@link #mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe)} 等价。
+     */
+    public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
+        if (gtRecipeObj == null) return null;
+        try {
+            // 通过反射调用 getType()，其 toString() 应返回 registryName，即 namespace:path
+            java.lang.reflect.Method mGetType = gtRecipeObj.getClass().getMethod("getType");
+            Object typeObj = mGetType.invoke(gtRecipeObj);
+            String idStr = String.valueOf(typeObj);
+            if (idStr == null || idStr.isBlank()) return null;
+            ResourceLocation rl = new ResourceLocation(idStr);
+            // 1) 别名优先（使用 path 作为最终搜索关键字）
             String path = rl.getPath();
             if (path != null) {
                 String alias = CUSTOM_ALIASES.get(path.toLowerCase());

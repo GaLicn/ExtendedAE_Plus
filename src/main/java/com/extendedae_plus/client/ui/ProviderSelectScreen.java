@@ -149,6 +149,12 @@ public class ProviderSelectScreen extends Screen {
                 .build();
         this.addRenderableWidget(addMap);
 
+        // 删除映射（按中文值精确匹配删除）按钮
+        Button delByCn = Button.builder(Component.literal("删除映射"), b -> deleteMappingByCnFromUI())
+                .bounds(centerX + 240, navY + 30, 60, 20)
+                .build();
+        this.addRenderableWidget(delByCn);
+
         // 关闭按钮
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
                 .bounds(centerX - 40, navY + 30, 80, 20)
@@ -351,6 +357,24 @@ public class ProviderSelectScreen extends Screen {
             needsRefresh = true;
         } else {
             if (player != null) player.sendSystemMessage(Component.literal("写入映射失败"));
+        }
+    }
+
+    // 使用中文值精确匹配删除映射
+    private void deleteMappingByCnFromUI() {
+        String val = cnInput == null ? "" : cnInput.getValue().trim();
+        var player = Minecraft.getInstance().player;
+        if (val.isEmpty()) {
+            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称后再删除映射"));
+            return;
+        }
+        int removed = com.extendedae_plus.util.ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
+        if (removed > 0) {
+            if (player != null) player.sendSystemMessage(Component.literal("已删除 " + removed + " 条映射，中文= " + val));
+            applyFilter();
+            needsRefresh = true;
+        } else {
+            if (player != null) player.sendSystemMessage(Component.literal("未找到中文为 '" + val + "' 的映射"));
         }
     }
 }
