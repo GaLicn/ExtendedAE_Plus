@@ -109,8 +109,8 @@ public final class InputEvents {
         if (screen instanceof MEStorageScreen<?> me) {
             try {
                 MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;
-                acc.ext$getSearchField().setValue(name);
-                acc.ext$setSearchText(name); // 同步到 Repo 并刷新
+                acc.eap$getSearchField().setValue(name);
+                acc.eap$setSearchText(name); // 同步到 Repo 并刷新
                 event.setCanceled(true);
                 return;
             } catch (Throwable ignored) {

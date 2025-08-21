@@ -16,6 +16,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -24,14 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PatternEncodingTermMenuMixin {
 
     // 防止重复执行
-    @org.spongepowered.asm.mixin.Unique
-    private boolean extendedae_plus$blankAutoFilled = false;
+    @Unique
+    private boolean eap$blankAutoFilled = false;
 
     @Shadow
     private RestrictedInputSlot blankPatternSlot;
 
-    @org.spongepowered.asm.mixin.Unique
-    private void extendedae_plus$tryFill(IPatternTerminalMenuHost host, Inventory ip) {
+    @Unique
+    private void eap$tryFill(IPatternTerminalMenuHost host, Inventory ip) {
         try {
             var self = (PatternEncodingTermMenu) (Object) this;
             var player = ip.player;
@@ -87,22 +88,22 @@ public abstract class PatternEncodingTermMenuMixin {
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;Z)V",
             at = @At("TAIL"))
-    private void extendedae_plus$autoFillBlankPattern(MenuType<?> menuType, int id, Inventory ip,
-                                                      IPatternTerminalMenuHost host, boolean bindInventory,
-                                                      CallbackInfo ci) {
-        extendedae_plus$tryFill(host, ip);
+    private void eap$autoFillBlankPattern(MenuType<?> menuType, int id, Inventory ip,
+                                          IPatternTerminalMenuHost host, boolean bindInventory,
+                                          CallbackInfo ci) {
+        eap$tryFill(host, ip);
     }
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;)V",
             at = @At("TAIL"))
-    private void extendedae_plus$autoFillCtor3(int id, Inventory ip, IPatternTerminalMenuHost host, CallbackInfo ci) {
-        extendedae_plus$tryFill(host, ip);
+    private void eap$autoFillCtor3(int id, Inventory ip, IPatternTerminalMenuHost host, CallbackInfo ci) {
+        eap$tryFill(host, ip);
     }
 
     // 在首次 broadcastChanges 后再尝试一次，避免构造时网络未激活
     @Inject(method = "broadcastChanges", at = @At("TAIL"))
-    private void extendedae_plus$retryFillAfterPower(CallbackInfo ci) {
-        if (this.extendedae_plus$blankAutoFilled) {
+    private void eap$retryFillAfterPower(CallbackInfo ci) {
+        if (this.eap$blankAutoFilled) {
             return;
         }
         // 仅在服务器端执行
@@ -127,7 +128,7 @@ public abstract class PatternEncodingTermMenuMixin {
         int space = Math.max(0, limit - current.getCount());
         space = Math.min(space, AEItems.BLANK_PATTERN.asItem().getMaxStackSize());
         if (space <= 0) {
-            this.extendedae_plus$blankAutoFilled = true;
+            this.eap$blankAutoFilled = true;
             return;
         }
 
@@ -149,6 +150,6 @@ public abstract class PatternEncodingTermMenuMixin {
         if (leftover > 0) {
             StorageHelper.poweredInsert(power, storage, blankKey, leftover, self.getActionSource());
         }
-        this.extendedae_plus$blankAutoFilled = true;
+        this.eap$blankAutoFilled = true;
     }
 }

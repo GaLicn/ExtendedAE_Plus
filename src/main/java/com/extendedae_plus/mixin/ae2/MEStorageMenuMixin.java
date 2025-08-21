@@ -22,12 +22,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MEStorageMenuMixin {
 
     @Unique
-    private boolean extendedae_plus$settingsMirrored = false;
+    private boolean eap$settingsMirrored = false;
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
-    private void extendedae_plus$mirrorServerSettingsToClient(CallbackInfo ci) {
+    private void eap$mirrorServerSettingsToClient(CallbackInfo ci) {
         var self = (MEStorageMenu) (Object) this;
-        if (this.extendedae_plus$settingsMirrored) {
+        if (this.eap$settingsMirrored) {
             return;
         }
         try {
@@ -50,30 +50,29 @@ public abstract class MEStorageMenuMixin {
                 if (!clientHasSetting) {
                     try {
                         Object serverValue = server.getSetting(setting);
-                        Object placeholder = extendedae_plus$chooseDifferentEnumValue(serverValue);
+                        Object placeholder = eap$chooseDifferentEnumValue(serverValue);
                         if (placeholder == null) {
                             // 若无法选择不同的占位值（例如只有一个枚举常量），则退回服务端值
                             placeholder = serverValue;
                         }
                         // 使用辅助方法，统一进行受检的泛型转换后再注册
-                        extendedae_plus$registerSettingCompat(client, setting, placeholder);
+                        eap$registerSettingCompat(client, setting, placeholder);
                     } catch (Throwable ignore) {
                         // 防御：不让异常影响主流程
                     }
                 }
             }
-            this.extendedae_plus$settingsMirrored = true;
+            this.eap$settingsMirrored = true;
         } catch (Throwable t) {
             // 防御：绝不让同步失败导致崩溃
         }
     }
 
     @Unique
-    private Object extendedae_plus$chooseDifferentEnumValue(Object serverValue) {
+    private Object eap$chooseDifferentEnumValue(Object serverValue) {
         if (!(serverValue instanceof Enum<?> sv)) {
             return null;
         }
-        @SuppressWarnings("unchecked")
         Class<? extends Enum<?>> enumClass = sv.getDeclaringClass();
         Object[] constants = enumClass.getEnumConstants();
         if (constants == null || constants.length == 0) {
@@ -89,7 +88,7 @@ public abstract class MEStorageMenuMixin {
 
     @Unique
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static <T extends Enum<T>> void extendedae_plus$registerSettingCompat(
+    private static <T extends Enum<T>> void eap$registerSettingCompat(
             IConfigManager client, Setting<?> setting, Object value) {
         // 前置校验：仅处理枚举类型的设置值
         if (!(value instanceof Enum<?>)) {

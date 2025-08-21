@@ -49,13 +49,13 @@ public abstract class HighlightButtonMixin {
                                 try {
                                     var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
                                     setMethod.invoke(terminal, serverId);
-                                } catch (Exception e) {
+                                } catch (Exception ignored) {
                                 }
                                 break;
                             }
                         }
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
         }

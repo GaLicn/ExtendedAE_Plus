@@ -426,7 +426,7 @@ public class ExtendedAEPatternUploadUtil {
 
         // 读取已编码槽位的物品
         var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             sendMessage(player, "ExtendedAE Plus: 没有可上传的编码样板");
@@ -460,7 +460,7 @@ public class ExtendedAEPatternUploadUtil {
             }
             try {
                 var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
-                var blankSlot = accessor.epp$getBlankPatternSlot();
+                var blankSlot = accessor.eap$getBlankPatternSlot();
                 ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
                 if (blankSlot != null && blankSlot.mayPlace(blanks)) {
                     ItemStack remain = blankSlot.safeInsert(blanks);
@@ -977,7 +977,7 @@ public class ExtendedAEPatternUploadUtil {
         }
         // 读取已编码槽位的物品（通过 accessor）
         var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1049,7 +1049,7 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
         var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1187,7 +1187,7 @@ public class ExtendedAEPatternUploadUtil {
         if (container == null) return false;
 
         var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;

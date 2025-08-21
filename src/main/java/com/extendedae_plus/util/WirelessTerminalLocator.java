@@ -1,21 +1,16 @@
 package com.extendedae_plus.util;
 
-import java.util.function.Consumer;
-
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.common.util.LazyOptional;
-
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
-
-// Curios API (软依赖)
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.fml.ModList;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import top.theillusivec4.curios.api.type.inventory.IDynamicStackHandler;
+
+import java.util.function.Consumer;
 
 /**
  * 定位玩家身上的无线终端：

@@ -1,34 +1,30 @@
 package com.extendedae_plus.network;
 
-import java.util.function.Supplier;
-
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraft.network.FriendlyByteBuf;
-
 import appeng.api.networking.IGrid;
-import appeng.api.storage.MEStorage;
-import appeng.api.storage.StorageHelper;
+import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
-import appeng.api.networking.energy.IEnergyService;
+import appeng.api.storage.MEStorage;
+import appeng.api.storage.StorageHelper;
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-
-// ae2wtlib
-import de.mari_023.ae2wtlib.wut.WUTHandler;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import de.mari_023.ae2wtlib.wut.WTDefinition;
+import de.mari_023.ae2wtlib.wut.WUTHandler;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 public class PullFromJeiOrCraftC2SPacket {
     private final GenericStack stack;

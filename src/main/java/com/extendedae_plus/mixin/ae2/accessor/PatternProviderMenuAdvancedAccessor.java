@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(PatternProviderMenu.class)
 public interface PatternProviderMenuAdvancedAccessor {
     @Accessor("logic")
-    PatternProviderLogic ext$logic();
+    PatternProviderLogic eap$logic();
 }

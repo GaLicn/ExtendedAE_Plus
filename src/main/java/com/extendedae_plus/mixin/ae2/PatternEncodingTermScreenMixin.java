@@ -30,19 +30,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
     @Unique
-    private IconButton extendedae_plus$uploadBtn;
+    private IconButton eap$uploadBtn;
 
     @Inject(method = "init", at = @At("TAIL"))
-    private void extendedae_plus$addUploadButton(CallbackInfo ci) {
+    private void eap$addUploadButton(CallbackInfo ci) {
         // 仅在图样编码终端界面中添加按钮
         if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
             return;
         }
         // 复用已存在的按钮实例，避免重复创建
-        if (extendedae_plus$uploadBtn == null) {
-            extendedae_plus$uploadBtn = new IconButton(btn -> ModNetwork.CHANNEL
+        if (eap$uploadBtn == null) {
+            eap$uploadBtn = new IconButton(btn -> ModNetwork.CHANNEL
                     .sendToServer(new com.extendedae_plus.network.RequestProvidersListC2SPacket())) {
-                private final float extendedae_plus$scale = 0.75f; // 约 12x12
+                private final float eap$scale = 0.75f; // 约 12x12
 
                 @Override
                 protected Icon getIcon() {
@@ -60,8 +60,8 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         }
 
                         // 动态更新宽高用于聚焦边框/命中框
-                        this.width = Math.round(16 * extendedae_plus$scale);
-                        this.height = Math.round(16 * extendedae_plus$scale);
+                        this.width = Math.round(16 * eap$scale);
+                        this.height = Math.round(16 * eap$scale);
 
                         com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
                         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
@@ -76,7 +76,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         var pose = guiGraphics.pose();
                         pose.pushPose();
                         pose.translate(getX(), getY(), 0.0F);
-                        pose.scale(extendedae_plus$scale, extendedae_plus$scale, 1.f);
+                        pose.scale(eap$scale, eap$scale, 1.f);
                         if (!this.isDisableBackground()) {
                             Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
                         }
@@ -89,20 +89,20 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
                 @Override
                 public Rect2i getTooltipArea() {
-                    return new Rect2i(getX(), getY(), Math.round(16 * extendedae_plus$scale), Math.round(16 * extendedae_plus$scale));
+                    return new Rect2i(getX(), getY(), Math.round(16 * eap$scale), Math.round(16 * eap$scale));
                 }
             };
-            extendedae_plus$uploadBtn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
+            eap$uploadBtn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
         }
 
         // 解析 encodePattern 的样式位置
         try {
-            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).extendedae_plus$getStyle();
+            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
             WidgetStyle ws = style.getWidget("encodePattern");
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageHeight();
+            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
             Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
             var pos = ws.resolve(bounds);
             int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
@@ -110,79 +110,79 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             int targetW = Math.max(10, Math.round(baseW * 0.75f));
             int targetH = Math.max(10, Math.round(baseH * 0.75f));
             // 缩小为原尺寸的 0.75（稍微变大于 8x8）
-            extendedae_plus$uploadBtn.setWidth(targetW);
-            extendedae_plus$uploadBtn.setHeight(targetH);
+            eap$uploadBtn.setWidth(targetW);
+            eap$uploadBtn.setHeight(targetH);
             // 仍位于其左侧，但整体向右微移（减小间距）约 2px
-            extendedae_plus$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
-            extendedae_plus$uploadBtn.setY(pos.getY());
+            eap$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
+            eap$uploadBtn.setY(pos.getY());
         } catch (Throwable t) {
             // 回退：放在界面右侧大致位置，避免不可见
-            extendedae_plus$uploadBtn.setWidth(12);
-            extendedae_plus$uploadBtn.setHeight(12);
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-            extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2); // 向右微移 2px
-            extendedae_plus$uploadBtn.setY(topPos + 88);
+            eap$uploadBtn.setWidth(12);
+            eap$uploadBtn.setHeight(12);
+            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2); // 向右微移 2px
+            eap$uploadBtn.setY(topPos + 88);
         }
 
         // 直接向 renderables / children 列表添加，避免依赖受保护方法
         var accessor = (ScreenAccessor) (Object) this;
-        var renderables = accessor.extendedae_plus$getRenderables();
-        var children = accessor.extendedae_plus$getChildren();
-        if (!renderables.contains(extendedae_plus$uploadBtn)) {
-            renderables.add(extendedae_plus$uploadBtn);
+        var renderables = accessor.eap$getRenderables();
+        var children = accessor.eap$getChildren();
+        if (!renderables.contains(eap$uploadBtn)) {
+            renderables.add(eap$uploadBtn);
         }
-        if (!children.contains(extendedae_plus$uploadBtn)) {
-            children.add(extendedae_plus$uploadBtn);
+        if (!children.contains(eap$uploadBtn)) {
+            children.add(eap$uploadBtn);
         }
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"))
-    private void extendedae_plus$ensureUploadButton(CallbackInfo ci) {
+    private void eap$ensureUploadButton(CallbackInfo ci) {
         if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
             return;
         }
-        if (extendedae_plus$uploadBtn == null) {
+        if (eap$uploadBtn == null) {
             return;
         }
-        var renderables2 = ((ScreenAccessor) (Object) this).extendedae_plus$getRenderables();
-        if (!renderables2.contains(extendedae_plus$uploadBtn)) {
+        var renderables2 = ((ScreenAccessor) (Object) this).eap$getRenderables();
+        if (!renderables2.contains(eap$uploadBtn)) {
             // 被其它模组清空/替换后，重新计算一次位置并补回
             try {
-                ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).extendedae_plus$getStyle();
+                ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
                 WidgetStyle ws = style.getWidget("encodePattern");
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-                int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageHeight();
+                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
+                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
+                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+                int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
                 Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
                 var pos = ws.resolve(bounds);
                 int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
                 int baseH = ws.getHeight() > 0 ? ws.getHeight() : 16;
                 int targetW = Math.max(10, Math.round(baseW * 0.75f));
                 int targetH = Math.max(10, Math.round(baseH * 0.75f));
-                extendedae_plus$uploadBtn.setWidth(targetW);
-                extendedae_plus$uploadBtn.setHeight(targetH);
-                extendedae_plus$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
-                extendedae_plus$uploadBtn.setY(pos.getY());
+                eap$uploadBtn.setWidth(targetW);
+                eap$uploadBtn.setHeight(targetH);
+                eap$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
+                eap$uploadBtn.setY(pos.getY());
             } catch (Throwable t) {
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).extendedae_plus$getImageWidth();
-                extendedae_plus$uploadBtn.setWidth(12);
-                extendedae_plus$uploadBtn.setHeight(12);
-                extendedae_plus$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2);
-                extendedae_plus$uploadBtn.setY(topPos + 88);
+                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
+                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
+                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+                eap$uploadBtn.setWidth(12);
+                eap$uploadBtn.setHeight(12);
+                eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2);
+                eap$uploadBtn.setY(topPos + 88);
             }
             var accessor2 = (ScreenAccessor) (Object) this;
-            var r = accessor2.extendedae_plus$getRenderables();
-            var c = accessor2.extendedae_plus$getChildren();
-            if (!r.contains(extendedae_plus$uploadBtn)) {
-                r.add(extendedae_plus$uploadBtn);
+            var r = accessor2.eap$getRenderables();
+            var c = accessor2.eap$getChildren();
+            if (!r.contains(eap$uploadBtn)) {
+                r.add(eap$uploadBtn);
             }
-            if (!c.contains(extendedae_plus$uploadBtn)) {
-                c.add(extendedae_plus$uploadBtn);
+            if (!c.contains(eap$uploadBtn)) {
+                c.add(eap$uploadBtn);
             }
         }
     }

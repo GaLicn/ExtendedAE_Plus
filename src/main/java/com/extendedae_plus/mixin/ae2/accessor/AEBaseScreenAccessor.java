@@ -9,5 +9,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(value = AEBaseScreen.class, remap = false)
 public interface AEBaseScreenAccessor<T extends AEBaseMenu> {
     @Accessor(value = "style", remap = false)
-    ScreenStyle extendedae_plus$getStyle();
+    ScreenStyle eap$getStyle();
 }

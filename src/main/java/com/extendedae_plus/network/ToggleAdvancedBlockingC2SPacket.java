@@ -33,15 +33,15 @@ public class ToggleAdvancedBlockingC2SPacket {
 
             // 通过 accessor 获取逻辑与当前状态
             var accessor = (PatternProviderMenuAdvancedAccessor) menu;
-            var logic = accessor.ext$logic();
+            var logic = accessor.eap$logic();
             if (logic instanceof AdvancedBlockingHolder holder) {
-                boolean current = holder.ext$getAdvancedBlocking();
+                boolean current = holder.eap$getAdvancedBlocking();
                 boolean next = !current;
-                holder.ext$setAdvancedBlocking(next);
+                holder.eap$setAdvancedBlocking(next);
                 // 关键：保存持久化，触发 AE2 写入逻辑（writeToNBT），并由菜单 @GuiSync 同步回客户端
                 logic.saveChanges();
                 // 直接下发 S2C 强制同步（带供应器标识：维度+方块坐标）
-                var host = ((PatternProviderLogicAccessor) logic).ext$host();
+                var host = ((PatternProviderLogicAccessor) logic).eap$host();
                 var be = host.getBlockEntity();
                 var level = be.getLevel();
                 String dimId = level.dimension().location().toString();

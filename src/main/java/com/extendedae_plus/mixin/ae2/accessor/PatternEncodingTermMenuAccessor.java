@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(PatternEncodingTermMenu.class)
 public interface PatternEncodingTermMenuAccessor {
     @Accessor("encodedPatternSlot")
-    RestrictedInputSlot epp$getEncodedPatternSlot();
+    RestrictedInputSlot eap$getEncodedPatternSlot();
 
     @Accessor("blankPatternSlot")
-    RestrictedInputSlot epp$getBlankPatternSlot();
+    RestrictedInputSlot eap$getBlankPatternSlot();
 }

@@ -1,18 +1,14 @@
 package com.extendedae_plus.menu.host;
 
-import java.util.function.BiConsumer;
-
-import org.jetbrains.annotations.Nullable;
-
+import appeng.menu.ISubMenu;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-
-import appeng.menu.ISubMenu;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-
-// Curios API
+import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
+
+import java.util.function.BiConsumer;
 
 /**
  * 针对 Curios 槽位的 ae2wtlib WTMenuHost 适配器：

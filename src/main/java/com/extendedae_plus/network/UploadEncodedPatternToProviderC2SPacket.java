@@ -1,13 +1,12 @@
 package com.extendedae_plus.network;
 
+import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
-
-import net.minecraft.server.level.ServerPlayer;
-import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 
 /**
  * C2S: 请求将图样编码终端的已编码样板上传到指定的样板供应器（由客户端选择）。

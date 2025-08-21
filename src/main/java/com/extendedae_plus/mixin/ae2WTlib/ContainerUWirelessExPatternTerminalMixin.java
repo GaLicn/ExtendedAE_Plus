@@ -26,23 +26,23 @@ import java.util.function.Consumer;
 public abstract class ContainerUWirelessExPatternTerminalMixin implements IActionHolder {
 
     @Unique
-    private final Map<String, Consumer<Paras>> actions = createHolder();
+    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
 
     @Unique
-    private Player epp$player;
+    private Player eap$player;
 
     // 明确目标构造签名：<init>(int, Inventory, HostUWirelessExPAT)
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostUWirelessExPAT;)V", at = @At("TAIL"), remap = false)
     private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostUWirelessExPAT host, CallbackInfo ci) {
-        this.epp$player = playerInventory.player;
+        this.eap$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致
-        this.actions.put("upload", p -> {
+        this.eap$actions.put("upload", p -> {
             try {
                 Object o0 = p.get(0);
                 Object o1 = p.get(1);
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
-                var sp = (ServerPlayer) this.epp$player;
+                var sp = (ServerPlayer) this.eap$player;
                 ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable t) {
             }
@@ -53,6 +53,6 @@ public abstract class ContainerUWirelessExPatternTerminalMixin implements IActio
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
-        return this.actions;
+        return this.eap$actions;
     }
 }
