@@ -74,4 +74,18 @@ public final class JeiRuntimeProxy {
             return false;
         }
     }
+
+    /**
+     * 将文本写入 JEI 的搜索过滤框。
+     * 若 JEI runtime 不可用则静默返回。
+     */
+    public static void setIngredientFilterText(String text) {
+        IJeiRuntime rt = RUNTIME;
+        if (rt == null) return;
+        try {
+            rt.getIngredientFilter().setFilterText(text == null ? "" : text);
+        } catch (Throwable ignored) {
+            // 兼容不同 JEI 版本或在启动阶段尚未就绪
+        }
+    }
 }

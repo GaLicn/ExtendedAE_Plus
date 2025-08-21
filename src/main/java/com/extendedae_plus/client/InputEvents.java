@@ -13,11 +13,16 @@ import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import appeng.api.stacks.GenericStack;
 import appeng.integration.modules.jei.GenericEntryStackHelper;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.api.constants.VanillaTypes;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import appeng.client.gui.me.common.MEStorageScreen;
+import com.extendedae_plus.mixin.accessor.MEStorageScreenAccessor;
 
 @Mod.EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class InputEvents {
@@ -74,6 +79,44 @@ public final class InputEvents {
 
             // 消费此次点击，避免 JEI/原版对中键的其它处理
             event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
+        if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
+
+        // 仅当鼠标确实悬停在 JEI 配料上时触发
+        Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+        if (hovered.isEmpty()) return;
+
+        ITypedIngredient<?> typed = hovered.get();
+
+        String name = null;
+        try {
+            if (typed.getType() == VanillaTypes.ITEM_STACK) {
+                //noinspection unchecked
+                ItemStack stack = ((ITypedIngredient<ItemStack>) typed).getIngredient();
+                if (stack != null) {
+                    name = stack.getHoverName().getString();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        if (name == null || name.isEmpty()) return; // 非物品类型暂不处理（避免依赖未知 JEI 接口）
+
+        // 写入 AE2 终端的搜索框
+        var screen = Minecraft.getInstance().screen;
+        if (screen instanceof MEStorageScreen<?> me) {
+            try {
+                MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;
+                acc.ext$getSearchField().setValue(name);
+                acc.ext$setSearchText(name); // 同步到 Repo 并刷新
+                event.setCanceled(true);
+                return;
+            } catch (Throwable ignored) {
+            }
         }
     }
 }
