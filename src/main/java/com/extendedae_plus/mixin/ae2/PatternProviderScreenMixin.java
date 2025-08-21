@@ -54,18 +54,14 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             String dimId = level.dimension().location().toString();
             long posLong = be.getBlockPos().asLong();
             this.eppProviderKey = ClientAdvancedBlockingState.key(dimId, posLong);
-            System.out.println("[EPP][CLIENT] init: providerKey=" + this.eppProviderKey);
         } catch (Throwable t) {
-            System.out.println("[EPP][CLIENT] init: providerKey resolve failed: " + t);
         }
 
         // 优先使用该供应器最近一次 S2C 状态；否则回退读取 @GuiSync 初始化
         if (this.eppProviderKey != null && ClientAdvancedBlockingState.has(this.eppProviderKey)) {
             this.eppAdvancedBlockingEnabled = ClientAdvancedBlockingState.get(this.eppProviderKey);
-            System.out.println("[EPP][CLIENT] init: use ClientState key=" + this.eppProviderKey + ", value=" + this.eppAdvancedBlockingEnabled);
         } else if (menu instanceof PatternProviderMenuAdvancedSync sync) {
             this.eppAdvancedBlockingEnabled = sync.ext$getAdvancedBlockingSynced();
-            System.out.println("[EPP][CLIENT] init: use GuiSync value=" + this.eppAdvancedBlockingEnabled);
         }
         // 使用 ToggleButton 以便在 YES/NO 图标与提示之间动态切换
         this.eppAdvancedBlockingToggle = new ToggleButton(
@@ -78,7 +74,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                     // 客户端立即反馈：切换图标/提示
                     this.eppAdvancedBlockingEnabled = state;
                     this.eppAdvancedBlockingToggle.setState(state);
-                    System.out.println("[EPP][CLIENT] Click toggle: state=" + state);
                     // 发送 C2S 切换请求
                     ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket());
                     // 可根据状态调整提示文本（演示性：开启/关闭不同第二行）
@@ -132,7 +127,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         if (desired != this.eppAdvancedBlockingEnabled) {
             this.eppAdvancedBlockingEnabled = desired;
             this.eppAdvancedBlockingToggle.setState(desired);
-            System.out.println("[EPP][CLIENT] updateBeforeRender apply: eppAdvancedBlocking=" + desired);
             // 同步 tooltip 二行提示
             this.eppAdvancedBlockingToggle.setTooltipOn(java.util.List.of(
                     Component.literal("高级阻挡模式"),

@@ -14,7 +14,6 @@ public final class ClientAdvancedBlockingState {
 
     public static void set(String key, boolean v) {
         states.put(key, v);
-        System.out.println("[EPP][CLIENT][S2C] Received advancedBlocking key=" + key + ", value=" + v);
     }
 
     public static boolean has(String key) {

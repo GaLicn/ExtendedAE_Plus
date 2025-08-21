@@ -92,7 +92,6 @@ dependencies {
 
     //jec
     modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
-    modRuntimeOnly "curse.maven:just-enough-characters-250702:6680042"
 }
 
 processResources {

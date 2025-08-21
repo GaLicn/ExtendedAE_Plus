@@ -18,9 +18,6 @@ import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 
 @Mixin(PatternProviderMenu.class)
 public abstract class PatternProviderMenuAdvancedMixin implements PatternProviderMenuAdvancedSync {
-    static {
-        System.out.println("[EPP][MIXIN] Loaded PatternProviderMenuAdvancedMixin");
-    }
     @Shadow
     protected abstract boolean isServerSide();
 
@@ -37,16 +34,12 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eppAdvancedBlocking = holder.ext$getAdvancedBlocking();
-                System.out.println("[EPP][MENU][S->C] broadcastChanges: eppAdvancedBlocking=" + this.eppAdvancedBlocking);
             }
-        } else {
-            System.out.println("[EPP][MENU][CLIENT] broadcastChanges called on client side");
         }
     }
 
     @Inject(method = "broadcastChanges", at = @At("TAIL"))
     private void epp$syncAdvancedBlockingTail(CallbackInfo ci) {
-        System.out.println("[EPP][MENU] broadcastChanges tail");
     }
 
     // 构造器尾注入（public ctor）
@@ -56,10 +49,8 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eppAdvancedBlocking = holder.ext$getAdvancedBlocking();
-                System.out.println("[EPP][MENU] <init>-public set initial eppAdvancedBlocking=" + this.eppAdvancedBlocking);
             }
         } catch (Throwable t) {
-            System.out.println("[EPP][MENU] <init>-public init error: " + t);
         }
     }
 
@@ -70,10 +61,8 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eppAdvancedBlocking = holder.ext$getAdvancedBlocking();
-                System.out.println("[EPP][MENU] <init>-protected set initial eppAdvancedBlocking=" + this.eppAdvancedBlocking);
             }
         } catch (Throwable t) {
-            System.out.println("[EPP][MENU] <init>-protected init error: " + t);
         }
     }
 
@@ -85,11 +74,9 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     // 调试：当 Screen 每帧读取这些 getter 时打印，验证 Mixin 是否生效
     @Inject(method = "getBlockingMode", at = @At("HEAD"), remap = false)
     private void epp$debug_getBlockingMode(CallbackInfoReturnable<?> cir) {
-        System.out.println("[EPP][MENU][DEBUG] getBlockingMode() called; eppAdvancedBlocking=" + this.eppAdvancedBlocking);
     }
 
     @Inject(method = "getShowInAccessTerminal", at = @At("HEAD"), remap = false)
     private void epp$debug_getShowInAccessTerminal(CallbackInfoReturnable<?> cir) {
-        System.out.println("[EPP][MENU][DEBUG] getShowInAccessTerminal() called; eppAdvancedBlocking=" + this.eppAdvancedBlocking);
     }
 }
