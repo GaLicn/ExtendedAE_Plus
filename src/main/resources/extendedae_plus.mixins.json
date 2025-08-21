@@ -15,7 +15,8 @@
     "ae2.QuartzCuttingKnifeItemMixin",
     "accessor.AEBaseScreenAccessor",
     "accessor.AbstractContainerScreenAccessor",
-    "accessor.ScreenAccessor"
+    "accessor.ScreenAccessor",
+    "accessor.MEStorageScreenAccessor"
   ],
   "mixins": [
     "ContainerExPatternProviderMixin",
