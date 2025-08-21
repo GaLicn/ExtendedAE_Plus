@@ -1,9 +1,8 @@
-package com.extendedae_plus.mixin.accessor;
-
-import org.spongepowered.asm.mixin.Mixin;
+package com.extendedae_plus.mixin.ae2.accessor;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.menu.AEBaseMenu;
+import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(AEBaseScreen.class)
 public interface AEBaseScreenInvoker<T extends AEBaseMenu> {

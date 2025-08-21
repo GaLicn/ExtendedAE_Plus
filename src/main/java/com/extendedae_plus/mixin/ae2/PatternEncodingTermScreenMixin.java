@@ -1,28 +1,25 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.ae2;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.network.chat.Component;
-
-import appeng.client.gui.Icon;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-
-import com.extendedae_plus.network.ModNetwork;
-import com.extendedae_plus.mixin.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
+import com.extendedae_plus.network.ModNetwork;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * 在图样编码终端界面加入一个上传按钮：

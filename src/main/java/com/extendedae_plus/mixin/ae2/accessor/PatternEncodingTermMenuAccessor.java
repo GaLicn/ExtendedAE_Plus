@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.accessor;
+package com.extendedae_plus.mixin.ae2.accessor;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;

@@ -6,6 +6,12 @@ import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.ToggleButton;
 import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
+import com.extendedae_plus.client.ClientAdvancedBlockingState;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
+import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,13 +19,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.network.ModNetwork;
-import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
-import com.extendedae_plus.client.ClientAdvancedBlockingState;
-import com.extendedae_plus.mixin.accessor.PatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.mixin.accessor.PatternProviderLogicAccessor;
 
 /**
  * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮（仅客户端UI反馈）。

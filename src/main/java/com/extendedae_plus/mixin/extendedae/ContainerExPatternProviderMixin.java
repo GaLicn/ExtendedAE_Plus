@@ -1,28 +1,27 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
+import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.stacks.GenericStack;
+import appeng.crafting.pattern.AEProcessingPattern;
+import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
-import appeng.crafting.pattern.EncodedPatternItem;
-import appeng.crafting.pattern.AEProcessingPattern;
-import appeng.api.stacks.GenericStack;
-import appeng.api.crafting.PatternDetailsHelper;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;

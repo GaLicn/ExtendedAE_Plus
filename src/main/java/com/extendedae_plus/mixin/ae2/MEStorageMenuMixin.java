@@ -1,21 +1,20 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.ae2;
 
+import appeng.api.config.Setting;
+import appeng.api.util.IConfigManager;
+import appeng.menu.me.common.MEStorageMenu;
+import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import appeng.api.util.IConfigManager;
-import appeng.menu.me.common.MEStorageMenu;
-import com.extendedae_plus.mixin.accessor.MEStorageMenuAccessor;
-import appeng.api.config.Setting;
-
 /**
  * 修复：当服务端 ConfigManager 注册了额外设置（例如 TERMINAL_SHOW_PATTERN_PROVIDERS）
  * 而客户端 clientCM 未注册时，AE2 在同步环节会对 clientCM 执行 getSetting，
  * 进而抛出 UnsupportedSettingException。
- *
+ * <p>
  * 方案：在服务端首次 broadcastChanges 时，仅为“客户端缺失”的设置执行注册补齐，且占位值与服务端不同，
  * 以确保 AE2 后续仍会发送 ConfigValuePacket 完成真正的值同步，避免影响排序等行为。
  */

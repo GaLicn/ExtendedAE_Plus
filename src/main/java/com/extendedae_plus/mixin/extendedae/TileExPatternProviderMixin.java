@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
 import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;

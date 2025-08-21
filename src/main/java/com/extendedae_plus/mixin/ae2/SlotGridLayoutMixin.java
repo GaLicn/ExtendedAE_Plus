@@ -1,7 +1,7 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.ae2;
 
-import appeng.client.gui.layout.SlotGridLayout;
 import appeng.client.Point;
+import appeng.client.gui.layout.SlotGridLayout;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
