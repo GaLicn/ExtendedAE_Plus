@@ -38,13 +38,9 @@ public class ToggleAdvancedBlockingC2SPacket {
             if (logic instanceof AdvancedBlockingHolder holder) {
                 boolean current = holder.ext$getAdvancedBlocking();
                 boolean next = !current;
-                System.out.println("[EPP][C2S] ToggleAdvancedBlockingC2SPacket: player=" + player.getGameProfile().getName()
-                        + ", menu=" + menu.getClass().getName()
-                        + ", before=" + current + ", after=" + next);
                 holder.ext$setAdvancedBlocking(next);
                 // 关键：保存持久化，触发 AE2 写入逻辑（writeToNBT），并由菜单 @GuiSync 同步回客户端
                 logic.saveChanges();
-                System.out.println("[EPP][C2S] logic.saveChanges() called for advancedBlocking=" + next);
                 // 直接下发 S2C 强制同步（带供应器标识：维度+方块坐标）
                 var host = ((PatternProviderLogicAccessor) logic).ext$host();
                 var be = host.getBlockEntity();

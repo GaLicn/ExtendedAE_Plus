@@ -39,16 +39,13 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     @Inject(method = "writeToNBT", at = @At("TAIL"), remap = false)
     private void epp$writeAdvancedToNbt(CompoundTag tag, CallbackInfo ci) {
         tag.putBoolean(EPP_ADV_BLOCKING_KEY, this.epp$advancedBlocking);
-        System.out.println("[EPP][NBT] writeToNBT: " + EPP_ADV_BLOCKING_KEY + "=" + this.epp$advancedBlocking);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
     private void epp$readAdvancedFromNbt(CompoundTag tag, CallbackInfo ci) {
         if (tag.contains(EPP_ADV_BLOCKING_KEY)) {
             this.epp$advancedBlocking = tag.getBoolean(EPP_ADV_BLOCKING_KEY);
-            System.out.println("[EPP][NBT] readFromNBT: " + EPP_ADV_BLOCKING_KEY + "=" + this.epp$advancedBlocking);
         } else {
-            System.out.println("[EPP][NBT] readFromNBT: key missing, default=" + this.epp$advancedBlocking);
         }
     }
 
