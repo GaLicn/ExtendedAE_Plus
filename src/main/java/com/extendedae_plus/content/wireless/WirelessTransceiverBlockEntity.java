@@ -1,23 +1,20 @@
 package com.extendedae_plus.content.wireless;
 
-import appeng.api.networking.GridHelper;
-import appeng.api.networking.IGridNode;
-import appeng.api.networking.IGridNodeListener;
-import appeng.api.networking.IManagedGridNode;
-import appeng.api.networking.IInWorldGridNodeHost;
+import appeng.api.networking.*;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.IWirelessEndpoint;
 import com.extendedae_plus.wireless.WirelessMasterLink;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
-import com.extendedae_plus.init.ModBlockEntities;
-import com.extendedae_plus.init.ModItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.EnumSet;
 
 /**

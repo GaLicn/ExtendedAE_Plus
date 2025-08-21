@@ -10,5 +10,5 @@ import java.util.Set;
 @Mixin(PatternProviderLogic.class)
 public interface PatternProviderLogicPatternInputsAccessor {
     @Accessor("patternInputs")
-    Set<AEKey> ext$patternInputs();
+    Set<AEKey> eap$patternInputs();
 }

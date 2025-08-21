@@ -1,5 +1,6 @@
 package com.extendedae_plus.wireless;
 
+import com.extendedae_plus.config.ModConfigs;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -8,8 +9,6 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import com.extendedae_plus.config.ModConfigs;
 
 /**
  * 无线主端注册中心：按 维度 + 频率 唯一注册一个主收发器端点。

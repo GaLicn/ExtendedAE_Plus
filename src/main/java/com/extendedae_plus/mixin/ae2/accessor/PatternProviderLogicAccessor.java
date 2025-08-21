@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(PatternProviderLogic.class)
 public interface PatternProviderLogicAccessor {
     @Accessor("host")
-    PatternProviderLogicHost ext$host();
+    PatternProviderLogicHost eap$host();
 }

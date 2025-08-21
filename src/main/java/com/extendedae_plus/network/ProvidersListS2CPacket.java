@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.client.ui.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;
@@ -9,8 +10,6 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-
-import com.extendedae_plus.client.ui.ProviderSelectScreen;
 
 /**
  * S2C: 返回可见且有空位的样板供应器列表，客户端弹窗展示供用户选择。

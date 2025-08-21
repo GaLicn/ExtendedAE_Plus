@@ -1,14 +1,13 @@
 package com.extendedae_plus.integration.jei;
 
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
-import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
+
+import javax.annotation.Nullable;
+import java.util.Optional;
 
 /**
  * 线程安全地缓存并访问 JEI Runtime。

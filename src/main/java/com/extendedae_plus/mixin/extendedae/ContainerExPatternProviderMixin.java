@@ -31,23 +31,23 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
 
     @GuiSync(11451)
     @Unique
-    public int page = 0;
+    public int eap$page = 0;
 
     @Unique
-    public int maxPage = 0;
+    public int eap$maxPage = 0;
 
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
     @Unique
-    private final Map<String, Consumer<Paras>> actions = createHolder();
+    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
 
     public ContainerExPatternProviderMixin(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host) {
         super(menuType, id, playerInventory, host);
     }
 
     @Unique
-    public void showPage() {
+    public void eap$showPage() {
         List<Slot> slots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
         int totalSlots = slots.size();
         
@@ -64,13 +64,9 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         for (Slot s : slots) {
             int page_id = slot_id / SLOTS_PER_PAGE;
 
-            if (page_id == this.page) {
-                // 当前页的槽位激活
-                ((AppEngSlot) s).setActive(true);
-            } else {
-                // 其他页的槽位隐藏
-                ((AppEngSlot) s).setActive(false);
-            }
+            // 当前页的槽位激活
+            // 其他页的槽位隐藏
+            ((AppEngSlot) s).setActive(page_id == this.eap$page);
             ++slot_id;
         }
     }
@@ -78,29 +74,29 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Inject(method = "<init>", at = @At("TAIL"))
     public void init(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        this.maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
+        this.eap$maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
 
         // 注册通用动作（供 CGenericPacket 分发）
-        this.actions.put("multiply2", p -> { modifyPatterns(2, false); });
-        this.actions.put("divide2",   p -> { modifyPatterns(2, true);  });
-        this.actions.put("multiply5", p -> { modifyPatterns(5, false); });
-        this.actions.put("divide5",   p -> { modifyPatterns(5, true);  });
-        this.actions.put("multiply10",p -> { modifyPatterns(10, false);});
-        this.actions.put("divide10",  p -> { modifyPatterns(10, true); });
+        this.eap$actions.put("multiply2", p -> { eap$modifyPatterns(2, false); });
+        this.eap$actions.put("divide2", p -> { eap$modifyPatterns(2, true);  });
+        this.eap$actions.put("multiply5", p -> { eap$modifyPatterns(5, false); });
+        this.eap$actions.put("divide5", p -> { eap$modifyPatterns(5, true);  });
+        this.eap$actions.put("multiply10", p -> { eap$modifyPatterns(10, false);});
+        this.eap$actions.put("divide10", p -> { eap$modifyPatterns(10, true); });
     }
 
     @Unique
     public int getPage() {
-        return this.page;
+        return this.eap$page;
     }
 
     @Unique
     public void setPage(int page) {
-        this.page = page;
+        this.eap$page = page;
     }
 
     @Unique
-    private void modifyPatterns(int scale, boolean div) {
+    private void eap$modifyPatterns(int scale, boolean div) {
         if (scale <= 0) return;
         for (var slot : this.getSlots(SlotSemantics.ENCODED_PATTERN)) {
             var stack = slot.getItem();
@@ -109,11 +105,11 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
                 if (detail instanceof AEProcessingPattern process) {
                     var input = process.getSparseInputs();
                     var output = process.getOutputs();
-                    if (checkModify(input, scale, div) && checkModify(output, scale, div)) {
+                    if (eap$checkModify(input, scale, div) && eap$checkModify(output, scale, div)) {
                         var mulInput = new GenericStack[input.length];
                         var mulOutput = new GenericStack[output.length];
-                        modifyStacks(input, mulInput, scale, div);
-                        modifyStacks(output, mulOutput, scale, div);
+                        eap$modifyStacks(input, mulInput, scale, div);
+                        eap$modifyStacks(output, mulOutput, scale, div);
                         var newPattern = PatternDetailsHelper.encodeProcessingPattern(mulInput, mulOutput);
                         slot.set(newPattern);
                     }
@@ -123,7 +119,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private boolean checkModify(GenericStack[] stacks, int scale, boolean div) {
+    private boolean eap$checkModify(GenericStack[] stacks, int scale, boolean div) {
         if (stacks == null) return false;
         if (div) {
             for (var stack : stacks) {
@@ -148,7 +144,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private void modifyStacks(GenericStack[] src, GenericStack[] dst, int scale, boolean div) {
+    private void eap$modifyStacks(GenericStack[] src, GenericStack[] dst, int scale, boolean div) {
         for (int i = 0; i < src.length; i++) {
             var stack = src[i];
             if (stack != null) {
@@ -164,6 +160,6 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
-        return this.actions;
+        return this.eap$actions;
     }
 }

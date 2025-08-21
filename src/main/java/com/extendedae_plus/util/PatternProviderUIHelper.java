@@ -1,10 +1,10 @@
 package com.extendedae_plus.util;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.menu.implementations.PatternProviderMenu;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * 样板供应器UI辅助工具类

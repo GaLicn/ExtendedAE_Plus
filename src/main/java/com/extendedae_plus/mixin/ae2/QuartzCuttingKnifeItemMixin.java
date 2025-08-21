@@ -23,8 +23,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fml.ModList;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,6 +36,8 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
  * 为 AE2 石英切割刀添加：潜行 + 右键 指向世界中的方块/部件（如线缆）时，复制其名称到剪贴板。
  * <p>
@@ -48,8 +48,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Mixin(value = QuartzCuttingKnifeItem.class)
 public abstract class QuartzCuttingKnifeItemMixin {
-    private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAEPlus");
-
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void eap$copyNameOnShiftRightClick(Level level, Player player, InteractionHand hand,
                                                CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {

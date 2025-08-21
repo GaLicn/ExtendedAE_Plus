@@ -17,7 +17,7 @@ public abstract class PartExPatternProviderMixin {
             ),
             index = 2
     )
-    private int extendedae_plus$multiplyCapacity(int original) {
+    private int eap$multiplyCapacity(int original) {
         int mult = ModConfigs.PAGE_MULTIPLIER.get();
         if (mult < 1) mult = 1;
         if (mult > 64) mult = 64;

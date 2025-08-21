@@ -23,34 +23,34 @@ public abstract class ContainerExPatternTerminalMixin implements IActionHolder {
 
     @GuiSync(11452)
     @Unique
-    public boolean hidePatternSlots = false;
+    public boolean eap$hidePatternSlots = false;
 
     @Unique
     public boolean isHidePatternSlots() {
-        return this.hidePatternSlots;
+        return this.eap$hidePatternSlots;
     }
 
     @Unique
     public void setHidePatternSlots(boolean hide) {
-        this.hidePatternSlots = hide;
+        this.eap$hidePatternSlots = hide;
     }
 
     @Unique
     public void toggleHidePatternSlots() {
-        this.hidePatternSlots = !this.hidePatternSlots;
+        this.eap$hidePatternSlots = !this.eap$hidePatternSlots;
     }
 
     @Unique
-    private final Map<String, Consumer<Paras>> actions = createHolder();
+    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
 
     @Unique
     private Player epp$player;
 
-    @Inject(method = "<init>", at = @At("TAIL"))
+    @Inject(method = "<init>*", at = @At("TAIL"))
     private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, IConfigurableObject host, CallbackInfo ci) {
         this.epp$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致
-        this.actions.put("upload", p -> {
+        this.eap$actions.put("upload", p -> {
             try {
                 Object o0 = p.get(0);
                 Object o1 = p.get(1);
@@ -58,7 +58,7 @@ public abstract class ContainerExPatternTerminalMixin implements IActionHolder {
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
                 ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
-            } catch (Throwable t) {
+            } catch (Throwable ignored) {
             }
         });
     }
@@ -66,6 +66,6 @@ public abstract class ContainerExPatternTerminalMixin implements IActionHolder {
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
-        return this.actions;
+        return this.eap$actions;
     }
 }

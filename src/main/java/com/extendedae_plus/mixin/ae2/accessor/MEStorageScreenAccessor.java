@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(value = MEStorageScreen.class, remap = false)
 public interface MEStorageScreenAccessor {
     @Accessor("searchField")
-    AETextField ext$getSearchField();
+    AETextField eap$getSearchField();
 
     @Invoker("setSearchText")
-    void ext$setSearchText(String text);
+    void eap$setSearchText(String text);
 }

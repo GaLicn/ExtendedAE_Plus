@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 /**
  * 给 AE2 的 PatternEncodingTermMenu 增加一个通用动作持有者，实现接收 EPP 的 CGenericPacket 动作。
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
@@ -28,7 +29,7 @@ import java.util.function.Consumer;
 public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder {
 
     @Unique
-    private final Map<String, Consumer<Paras>> actions = createHolder();
+    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
 
     @Unique
     private Player epp$player;
@@ -37,7 +38,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     private RestrictedInputSlot encodedPatternSlot;
 
     @Unique
-    private void epp$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
+    private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
         sp.server.execute(() -> {
             try {
                 if (attemptsLeft < 0) {
@@ -49,26 +50,25 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 } else {
                     // 槽位可能尚未同步到位，继续下一 tick 重试
                     if (attemptsLeft > 0) {
-                        epp$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
-                    } else {
-                        
+                        eap$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
                     }
                 }
             } catch (Throwable t) {
+                LOGGER.error("Error uploading pattern to matrix", t);
             }
         });
     }
 
     // AE2 终端主构造：PatternEncodingTermMenu(int id, Inventory ip, IPatternTerminalMenuHost host)
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;)V", at = @At("TAIL"), remap = false)
-    private void epp$ctorA(int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, CallbackInfo ci) {
+    private void eap$ctorA(int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, CallbackInfo ci) {
         this.epp$player = ip.player;
         // 不再注册任何上传相关动作
     }
 
     // AE2 另一个构造：PatternEncodingTermMenu(MenuType, int, Inventory, IPatternTerminalMenuHost, boolean)
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;Z)V", at = @At("TAIL"), remap = false)
-    private void epp$ctorB(net.minecraft.world.inventory.MenuType<?> menuType, int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, boolean bindInventory, CallbackInfo ci) {
+    private void eap$ctorB(net.minecraft.world.inventory.MenuType<?> menuType, int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, boolean bindInventory, CallbackInfo ci) {
         this.epp$player = ip.player;
         // 不再注册任何上传相关动作
     }
@@ -76,12 +76,12 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @NotNull
     @Override
     public Map<String, Consumer<Paras>> getActionMap() {
-        return this.actions;
+        return this.eap$actions;
     }
 
     // 服务器端：在 encode() 执行完毕后，如果已编码槽位存在样板且当前为“合成模式”，则上传到装配矩阵
     @Inject(method = "encode", at = @At("TAIL"), remap = false)
-    private void epp$serverUploadAfterEncode(CallbackInfo ci) {
+    private void eap$serverUploadAfterEncode(CallbackInfo ci) {
         try {
             if (!(this.epp$player instanceof ServerPlayer sp)) {
                 return; // 仅服务器执行
@@ -104,10 +104,11 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             sp.server.execute(() -> {
                 try {
                     ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
-                } catch (Throwable t) {
+                } catch (Throwable ignored) {
                 }
             });
         } catch (Throwable t) {
+            LOGGER.error("Error uploading pattern to matrix", t);
         }
     }
 }
