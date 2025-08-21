@@ -1,16 +1,15 @@
 package com.extendedae_plus.network;
 
+import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
-
-import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.mixin.accessor.PatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.mixin.accessor.PatternProviderLogicAccessor;
 
 /**
  * C2S：切换高级阻挡模式。
