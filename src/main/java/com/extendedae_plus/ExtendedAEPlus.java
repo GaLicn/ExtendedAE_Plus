@@ -15,6 +15,11 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraft.resources.ResourceLocation;
+
+import com.extendedae_plus.client.ClientProxy;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -23,6 +28,14 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class ExtendedAEPlus {
 
     public static final String MODID = "extendedae_plus";
+
+    // 在类加载时（尽可能早）在客户端注册内置模型，避免首次资源加载时错过。
+    static {
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+            System.out.println("[ExtendedAE_Plus] Static init: register built-in models");
+            ClientProxy.init();
+        });
+    }
 
     public ExtendedAEPlus() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -41,6 +54,9 @@ public class ExtendedAEPlus {
 
         // 注册通用配置
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+
+        // 构造期在客户端再确保一次注册（幂等）
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::init);
     }
     
     /**
@@ -53,5 +69,12 @@ public class ExtendedAEPlus {
             // 注册自定义 Curios 宿主定位器，便于将菜单宿主信息在服务端与客户端间同步
             MenuLocators.register(CuriosItemLocator.class, CuriosItemLocator::writeToPacket, CuriosItemLocator::readFromPacket);
         });
+    }
+
+    /**
+     * 便捷方法：生成 ResourceLocation
+     */
+    public static ResourceLocation id(String path) {
+        return new ResourceLocation(MODID, path);
     }
 }
