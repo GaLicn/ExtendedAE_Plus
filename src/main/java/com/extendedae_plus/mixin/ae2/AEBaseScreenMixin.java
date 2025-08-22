@@ -1,19 +1,22 @@
 package com.extendedae_plus.mixin.ae2;
 
+import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.TextOverride;
-import appeng.client.Point;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
+import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.ExPatternPageAccessor;
+import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -63,6 +66,40 @@ public abstract class AEBaseScreenMixin {
             c = c.getSuperclass();
         }
         return net.minecraft.client.Minecraft.getInstance().font;
+    }
+
+    /**
+     * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
+     */
+    @Inject(method = "renderSlot", at = @At("TAIL"))
+    private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
+        Object self = this;
+        
+        // 只处理AppEngSlot类型的槽位
+        if (!(s instanceof AppEngSlot appEngSlot)) {
+            return;
+        }
+        
+        // 检查槽位是否可见且有效
+        if (!appEngSlot.isActive() || !appEngSlot.isSlotEnabled()) {
+            return;
+        }
+        
+        // 获取槽位中的物品
+        var itemStack = appEngSlot.getItem();
+        if (itemStack.isEmpty()) {
+            return;
+        }
+        
+        // 使用GuiUtil的格式化方法获取数量文本
+        String amountText = GuiUtil.getPatternOutputText(itemStack);
+        if (amountText.isEmpty()) {
+            return;
+        }
+        
+        // 在槽位右下角绘制数量文本
+        Font font = eap$getFont(self);
+        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
     }
 
     // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
