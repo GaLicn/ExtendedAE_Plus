@@ -4,14 +4,15 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.ToggleButton;
+import appeng.client.gui.widgets.SettingToggleButton;
+import appeng.api.config.YesNo;
+import appeng.api.config.Settings;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.client.ClientAdvancedBlockingState;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
+import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,23 +22,20 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
- * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮（仅客户端UI反馈）。
+ * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮。
  * - 位于左侧工具栏
- * - 点击后切换图标（YES/NO）并切换 tooltip 提示
- * - 当前不做任何网络/服务端逻辑
+ * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
 @Mixin(PatternProviderScreen.class)
 public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
 
     @Unique
-    private ToggleButton eap$AdvancedBlockingToggle;
+    private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
 
     @Unique
     private boolean eap$AdvancedBlockingEnabled = false;
-
-    @Unique
-    private String eap$ProviderKey = null;
 
     public PatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -45,98 +43,67 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void eap$initAdvancedBlocking(C menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
-        // 计算供应器唯一键：维度ID + 方块坐标
+        // 使用 @GuiSync 初始化
         try {
-            var logic = ((PatternProviderMenuAdvancedAccessor) menu).eap$logic();
-            var host = ((PatternProviderLogicAccessor) logic).eap$host();
-            var be = host.getBlockEntity();
-            var level = be.getLevel();
-            String dimId = level.dimension().location().toString();
-            long posLong = be.getBlockPos().asLong();
-            this.eap$ProviderKey = ClientAdvancedBlockingState.key(dimId, posLong);
+            if (menu instanceof PatternProviderMenuAdvancedSync sync) {
+                this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
+            }
         } catch (Throwable t) {
             LOGGER.error("Error initializing advanced sync", t);
         }
 
-        // 优先使用该供应器最近一次 S2C 状态；否则回退读取 @GuiSync 初始化
-        if (this.eap$ProviderKey != null && ClientAdvancedBlockingState.has(this.eap$ProviderKey)) {
-            this.eap$AdvancedBlockingEnabled = ClientAdvancedBlockingState.get(this.eap$ProviderKey);
-        } else if (menu instanceof PatternProviderMenuAdvancedSync sync) {
-            this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
-        }
-        // 使用 ToggleButton 以便在 YES/NO 图标与提示之间动态切换
-        this.eap$AdvancedBlockingToggle = new ToggleButton(
-                Icon.BLOCKING_MODE_YES,
-                Icon.BLOCKING_MODE_NO,
-                // 提示文本：名称与说明
-                Component.literal("高级阻挡模式"),
-                Component.literal("高级阻挡模式：当开启时，执行更严格的阻挡判定"),
-                (state) -> {
-                    // 客户端立即反馈：切换图标/提示
-                    this.eap$AdvancedBlockingEnabled = state;
-                    this.eap$AdvancedBlockingToggle.setState(state);
-                    // 发送 C2S 切换请求
+        // 使用 SettingToggleButton<YesNo> 的外观（原版图标），但自定义悬停描述为“智能阻挡”
+        this.eap$AdvancedBlockingToggle = new SettingToggleButton<>(
+                Settings.BLOCKING_MODE,
+                this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO,
+                (btn, backwards) -> {
+                    // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
+                    LOGGER.debug("[EAP] Click advanced blocking toggle: send C2S");
                     ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket());
-                    // 可根据状态调整提示文本（演示性：开启/关闭不同第二行）
-                    if (state) {
-                        this.eap$AdvancedBlockingToggle.setTooltipOn(java.util.List.of(
-                                Component.literal("高级阻挡模式"),
-                                Component.literal("高级阻挡模式：已开启")));
-                        this.eap$AdvancedBlockingToggle.setTooltipOff(java.util.List.of(
-                                Component.literal("高级阻挡模式"),
-                                Component.literal("高级阻挡模式：已开启")));
-                    } else {
-                        this.eap$AdvancedBlockingToggle.setTooltipOn(java.util.List.of(
-                                Component.literal("高级阻挡模式"),
-                                Component.literal("高级阻挡模式：已关闭")));
-                        this.eap$AdvancedBlockingToggle.setTooltipOff(java.util.List.of(
-                                Component.literal("高级阻挡模式"),
-                                Component.literal("高级阻挡模式：已关闭")));
-                    }
                 }
-        );
-        this.eap$AdvancedBlockingToggle.setState(this.eap$AdvancedBlockingEnabled);
-        // 初始 tooltip
-        this.eap$AdvancedBlockingToggle.setTooltipOn(java.util.List.of(
-                Component.literal("高级阻挡模式"),
-                Component.literal(this.eap$AdvancedBlockingEnabled ? "高级阻挡模式：已开启" : "高级阻挡模式：已关闭")
-        ));
-        this.eap$AdvancedBlockingToggle.setTooltipOff(java.util.List.of(
-                Component.literal("高级阻挡模式"),
-                Component.literal(this.eap$AdvancedBlockingEnabled ? "高级阻挡模式：已开启" : "高级阻挡模式：已关闭")
-        ));
+        ) {
+            @Override
+            public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
+                boolean enabled = eap$AdvancedBlockingEnabled;
+                var title = net.minecraft.network.chat.Component.literal("智能阻挡");
+                var line = enabled
+                        ? net.minecraft.network.chat.Component.literal("已启用：YES")
+                        : net.minecraft.network.chat.Component.literal("已禁用：NO");
+                return java.util.List.of(title, line);
+            }
+        };
+        // 初始化后立刻对齐当前@GuiSync状态，避免首帧显示不一致
+        LOGGER.debug("[EAP] Screen init: initial synced={} -> set button", this.eap$AdvancedBlockingEnabled);
+        this.eap$AdvancedBlockingToggle.set(this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
 
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
     }
 
-    // 每帧刷新：从菜单同步布尔值，保持按钮状态一致
-    @Inject(method = "updateBeforeRender", at = @At("TAIL"), remap = false)
+    // 每帧刷新：仅从菜单(@GuiSync)同步布尔值，保持按钮状态一致
+    @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
     private void eap$updateAdvancedBlocking(CallbackInfo ci) {
-        // 打印一条轻量 tick 日志以确认该方法被调用（频繁输出可在验证后移除）
-        // System.out.println("[EPP][CLIENT] updateBeforeRender tick, local=" + this.eppAdvancedBlockingEnabled);
-
         if (this.eap$AdvancedBlockingToggle == null) return;
 
         boolean desired = this.eap$AdvancedBlockingEnabled;
-        // 优先使用该供应器最近一次 S2C 值
-        if (this.eap$ProviderKey != null && ClientAdvancedBlockingState.has(this.eap$ProviderKey)) {
-            desired = ClientAdvancedBlockingState.get(this.eap$ProviderKey);
-        } else if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
+        if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
             desired = sync.eap$getAdvancedBlockingSynced();
         }
 
-        if (desired != this.eap$AdvancedBlockingEnabled) {
-            this.eap$AdvancedBlockingEnabled = desired;
-            this.eap$AdvancedBlockingToggle.setState(desired);
-            // 同步 tooltip 二行提示
-            this.eap$AdvancedBlockingToggle.setTooltipOn(java.util.List.of(
-                    Component.literal("高级阻挡模式"),
-                    Component.literal(desired ? "高级阻挡模式：已开启" : "高级阻挡模式：已关闭")
-            ));
-            this.eap$AdvancedBlockingToggle.setTooltipOff(java.util.List.of(
-                    Component.literal("高级阻挡模式"),
-                    Component.literal(desired ? "高级阻挡模式：已开启" : "高级阻挡模式：已关闭")
-            ));
+        // 与AE2一致：每帧无条件对齐按钮状态至@GuiSync（使用YesNo以获得原版图标与提示）
+        LOGGER.debug("[EAP] updateBeforeRender tick: desired={}", desired);
+        if (this.eap$AdvancedBlockingEnabled != desired) {
+            LOGGER.debug("[EAP] updateBeforeRender: desired changed {} -> {}", this.eap$AdvancedBlockingEnabled, desired);
+        }
+        this.eap$AdvancedBlockingEnabled = desired;
+        this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
+
+        // 如果当前屏幕是 ExtendedAE 的 GuiExPatternProvider，则委托布局更新到 accessor
+        if ((Object) this instanceof GuiExPatternProvider) {
+            try {
+                ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
+            } catch (Throwable t) {
+                LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
+            }
         }
     }
 }

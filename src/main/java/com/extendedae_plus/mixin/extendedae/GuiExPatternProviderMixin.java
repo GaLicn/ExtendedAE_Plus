@@ -7,12 +7,12 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
 import com.extendedae_plus.NewIcon;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
+import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -25,9 +25,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(GuiExPatternProvider.class)
-public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> {
+public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements ExPatternButtonsAccessor, com.extendedae_plus.api.ExPatternPageAccessor {
 
     @Unique
     ScreenStyle eap$screenStyle;
@@ -41,224 +42,68 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
+    @Unique
+    private int eap$currentPage = 0;
+
+    @Unique
+    private int eap$maxPageLocal = 1;
+
     public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
 
-    @Unique
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        super.render(guiGraphics, mouseX, mouseY, partialTicks);
-
-        int maxSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        // 只有当槽位数超过每页显示数量时才显示翻页信息
-        if (maxSlots > SLOTS_PER_PAGE) {
-            Font fontRenderer = Minecraft.getInstance().font;
-
-            // 获取当前页码
-            int currentPage = getCurrentPage();
-            int maxPage = getMaxPage();
-
-                               // 获取ae通用界面样式
-                   int color = eap$screenStyle.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
-                   // 调整页码显示位置：在"样板"文字的右边
-                   guiGraphics.drawString(font, Component.literal("第 " + (currentPage + 1) + "/" + maxPage + " 页"),
-                           leftPos + 8 + 50, topPos + 30, color, false);
-        }
-    }
-
-    @Unique
-    public void updateBeforeRender() {
-        super.updateBeforeRender();
-        try {
-            ContainerExPatternProvider menu1 = this.getMenu();
-
-            // 调用showPage方法
-            java.lang.reflect.Method showPageMethod = menu1.getClass().getMethod("showPage");
-            showPageMethod.invoke(menu1);
-
-            // 获取当前页码和最大页码
-            Field fieldPage = menu1.getClass().getDeclaredField("page");
-            fieldPage.setAccessible(true);
-            Integer page = (Integer) fieldPage.get(menu1);
-
-            Field fieldMaxPage = menu1.getClass().getDeclaredField("maxPage");
-            fieldMaxPage.setAccessible(true);
-            Integer maxPage = (Integer) fieldMaxPage.get(menu1);
-
-                               // 更新按钮可见性 - 始终显示，支持循环翻页
-                   if (nextPage != null && prevPage != null) {
-                       this.nextPage.setVisibility(true);
-                       this.prevPage.setVisibility(true);
-                   }
-                   if (x2Button != null) {
-                       this.x2Button.setVisibility(true);
-                   }
-                   if (divideBy2Button != null) {
-                       this.divideBy2Button.setVisibility(true);
-                   }
-                   if (x10Button != null) {
-                       this.x10Button.setVisibility(true);
-                   }
-                   if (divideBy10Button != null) {
-                       this.divideBy10Button.setVisibility(true);
-                   }
-            
-            // 调整槽位位置
-            this.eap$adjustSlotPositions(page);
-        } catch (Exception e) {
-            // 忽略反射错误
-        }
-
-        // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册按钮，避免被 Screen.init 清空
-        if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
-            eap$lastScreenWidth = this.width;
-            eap$lastScreenHeight = this.height;
-            try {
-                if (this.divideBy2Button != null) {
-                    this.removeWidget(this.divideBy2Button);
-                    this.addRenderableWidget(this.divideBy2Button);
-                }
-                if (this.x2Button != null) {
-                    this.removeWidget(this.x2Button);
-                    this.addRenderableWidget(this.x2Button);
-                }
-                if (this.divideBy5Button != null) {
-                    this.removeWidget(this.divideBy5Button);
-                    this.addRenderableWidget(this.divideBy5Button);
-                }
-                if (this.x5Button != null) {
-                    this.removeWidget(this.x5Button);
-                    this.addRenderableWidget(this.x5Button);
-                }
-                if (this.divideBy10Button != null) {
-                    this.removeWidget(this.divideBy10Button);
-                    this.addRenderableWidget(this.divideBy10Button);
-                }
-                if (this.x10Button != null) {
-                    this.removeWidget(this.x10Button);
-                    this.addRenderableWidget(this.x10Button);
-                }
-            } catch (Throwable ignored) {}
-        }
-
-        // 每帧定位四个按钮到 GUI 右缘外侧一点（使用绝对屏幕坐标）
-        int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
-        int by = this.topPos + 20;
-        int spacing = 22;
-        if (this.divideBy2Button != null) {
-            this.divideBy2Button.setVisibility(true);
-            this.divideBy2Button.setX(bx);
-            this.divideBy2Button.setY(by);
-        }
-        if (this.x2Button != null) {
-            this.x2Button.setVisibility(true);
-            this.x2Button.setX(bx);
-            this.x2Button.setY(by + spacing);
-        }
-        if (this.divideBy10Button != null) {
-            this.divideBy10Button.setVisibility(true);
-            this.divideBy10Button.setX(bx);
-            this.divideBy10Button.setY(by + spacing * 4);
-        }
-        if (this.x10Button != null) {
-            this.x10Button.setVisibility(true);
-            this.x10Button.setX(bx);
-            this.x10Button.setY(by + spacing * 5);
-        }
-        // 新增 /5 与 x5 的定位（位于 /2、x2 之后）
-        if (this.divideBy5Button != null) {
-            this.divideBy5Button.setVisibility(true);
-            this.divideBy5Button.setX(bx);
-            this.divideBy5Button.setY(by + spacing * 2);
-        }
-        if (this.x5Button != null) {
-            this.x5Button.setVisibility(true);
-            this.x5Button.setX(bx);
-            this.x5Button.setY(by + spacing * 3);
-        }
-    }
     
-    @Unique
-    private void eap$adjustSlotPositions(int currentPage) {
-        try {
-            List<Slot> slots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN);
-            int totalSlots = slots.size();
-            
-            if (totalSlots <= SLOTS_PER_PAGE) {
-                return; // 不需要翻页
-            }
-            
-            int slot_id = 0;
-            for (Slot s : slots) {
-                int page_id = slot_id / SLOTS_PER_PAGE;
-                
-                if (page_id == currentPage) {
-                    // 当前页的槽位需要调整位置
-                    int slotInPage = slot_id % SLOTS_PER_PAGE;
-                    int row = slotInPage / 9;  // 0-3
-                    int col = slotInPage % 9;  // 0-8
-                    
-                    // 计算目标位置（始终在前4行）
-                    int x = 8 + col * 18;
-                    int y = 42 + row * 18;
-                    
-                    // 使用反射设置槽位位置，支持混淆环境
-                    Field xField = null;
-                    Field yField = null;
-                    
-                    // 尝试不同的字段名（开发环境和生产环境可能不同）
-                    String[] xFieldNames = {"x", "field_75262_c"};
-                    String[] yFieldNames = {"y", "field_75263_d"};
-                    
-                    for (String fieldName : xFieldNames) {
-                        try {
-                            xField = Slot.class.getDeclaredField(fieldName);
-                            xField.setAccessible(true);
-                            break;
-                        } catch (NoSuchFieldException ignored) {}
-                    }
-                    
-                    for (String fieldName : yFieldNames) {
-                        try {
-                            yField = Slot.class.getDeclaredField(fieldName);
-                            yField.setAccessible(true);
-                            break;
-                        } catch (NoSuchFieldException ignored) {}
-                    }
-                    
-                    if (xField != null && yField != null) {
-                        xField.set(s, x);
-                        yField.set(s, y);
-                    }
-                }
-                ++slot_id;
-            }
-        } catch (Exception e) {
-            // 忽略反射错误
-        }
-    }
+    
+    // 移除手动挪动 Slot 坐标，交由 SlotGridLayout + 原生布局控制
 
     @Unique
     private int getCurrentPage() {
-        try {
-            ContainerExPatternProvider menu1 = this.getMenu();
-            Field fieldPage = menu1.getClass().getDeclaredField("page");
-            fieldPage.setAccessible(true);
-            return (Integer) fieldPage.get(menu1);
-        } catch (Exception e) {
-            return 0;
-        }
+        // 优先使用本地 GUI 维护的页码
+        return Math.max(0, eap$currentPage % Math.max(1, eap$maxPageLocal));
     }
 
     @Unique
     private int getMaxPage() {
+        // 优先使用配置倍数
+        try {
+            int cfg = ModConfigs.PAGE_MULTIPLIER.get();
+            if (cfg > 1) return cfg;
+        } catch (Throwable ignored) {}
         try {
             ContainerExPatternProvider menu1 = this.getMenu();
-            Field fieldMaxPage = menu1.getClass().getDeclaredField("maxPage");
-            fieldMaxPage.setAccessible(true);
-            return (Integer) fieldMaxPage.get(menu1);
-        } catch (Exception e) {
-            return 1;
+            Field fieldMaxPage = eap$findFieldRecursive(menu1.getClass(), "maxPage");
+            if (fieldMaxPage != null) {
+                fieldMaxPage.setAccessible(true);
+                Object v = fieldMaxPage.get(menu1);
+                if (v instanceof Integer i) return i;
+            }
+        } catch (Throwable ignored) {}
+        // 回退：用槽位总数计算
+        try {
+            int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
+            return Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
+        } catch (Throwable ignored) {}
+        return 1;
+    }
+
+    @Unique
+    private static Field eap$findFieldRecursive(Class<?> cls, String name) {
+        Class<?> c = cls;
+        while (c != null && c != Object.class) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {}
+            c = c.getSuperclass();
+        }
+        return null;
+    }
+
+    @Unique
+    private static void eap$setIntFieldRecursive(Object obj, String name, int value) {
+        if (obj == null) return;
+        Field f = eap$findFieldRecursive(obj.getClass(), name);
+        if (f != null) {
+            try { f.setAccessible(true); f.set(obj, value); } catch (Throwable ignored) {}
         }
     }
 
@@ -277,31 +122,78 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.eap$screenStyle = style;
         // 保留：不再打印菜单类型
 
-        // 翻页按钮（仅在需要时显示）
+        // 计算并下发 maxPage（配置优先，其次按槽位总数计算）
         int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        if (totalSlots > SLOTS_PER_PAGE) {
+        int cfgPages = 1;
+        try { cfgPages = Math.max(1, ModConfigs.PAGE_MULTIPLIER.get()); } catch (Throwable ignored) {}
+        int calcPages = Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
+        int desiredMaxPage = Math.max(cfgPages, calcPages);
+        LOGGER.info("[EAP] GuiExPatternProvider init: totalSlots={}, cfgPages={}, calcPages={}, desiredMaxPage={}", totalSlots, cfgPages, calcPages, desiredMaxPage);
+        // 更新本地最大页
+        this.eap$maxPageLocal = Math.max(1, desiredMaxPage);
+        this.eap$currentPage = 0;
+        try {
+            Field fMax = eap$findFieldRecursive(menu.getClass(), "maxPage");
+            if (fMax != null) { fMax.setAccessible(true); fMax.set(menu, desiredMaxPage); }
+        } catch (Throwable ignored) {}
+
+        // 翻页按钮（当存在多页时显示；支持仅由配置决定的“空白页”）
+        if (desiredMaxPage > 1) {
             this.prevPage = new ActionEPPButton((b) -> {
                 int currentPage = getCurrentPage();
-                int maxPage = getMaxPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
                 int newPage = (currentPage - 1 + maxPage) % maxPage;
                 try {
                     ContainerExPatternProvider menu1 = this.getMenu();
-                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                    setPageMethod.invoke(menu1, newPage);
+                    // 尝试调用 setPage
+                    try {
+                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                        setPageMethod.invoke(menu1, newPage);
+                    } catch (Throwable ignored2) {}
+                    // 直接写入 page 字段，确保生效
+                    Field f = eap$findFieldRecursive(menu1.getClass(), "page");
+                    if (f != null) {
+                        f.setAccessible(true);
+                        f.set(menu1, newPage);
+                    }
                 } catch (Exception ignored) {}
+                // 同步到本地 GUI 页码
+                this.eap$currentPage = newPage;
+                // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
+                LOGGER.info("[EAP] PrevPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
+                this.repositionSlots(SlotSemantics.STORAGE);
+                this.hoveredSlot = null;
             }, Icon.ARROW_LEFT);
 
             this.nextPage = new ActionEPPButton((b) -> {
                 int currentPage = getCurrentPage();
-                int maxPage = getMaxPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
                 int newPage = (currentPage + 1) % maxPage;
                 try {
                     ContainerExPatternProvider menu1 = this.getMenu();
-                    java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                    setPageMethod.invoke(menu1, newPage);
+                    // 尝试调用 setPage
+                    try {
+                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                        setPageMethod.invoke(menu1, newPage);
+                    } catch (Throwable ignored2) {}
+                    // 直接写入 page 字段，确保生效
+                    Field f = eap$findFieldRecursive(menu1.getClass(), "page");
+                    if (f != null) {
+                        f.setAccessible(true);
+                        f.set(menu1, newPage);
+                    }
                 } catch (Exception ignored) {}
+                // 同步到本地 GUI 页码
+                this.eap$currentPage = newPage;
+                // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
+                LOGGER.info("[EAP] NextPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
+                this.repositionSlots(SlotSemantics.STORAGE);
+                this.hoveredSlot = null;
             }, Icon.ARROW_RIGHT);
 
+            // 恢复到 AE2 左侧工具栏
             this.addToLeftToolbar(this.nextPage);
             this.addToLeftToolbar(this.prevPage);
         }
@@ -346,8 +238,104 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addRenderableWidget(this.x10Button);
     }
 
+    @Override
+    public int eap$getCurrentPage() {
+        return getCurrentPage();
+    }
+
+    // 页码文本绘制移交给 AEBaseScreenMixin.renderLabels 尾部执行
+
     // 注意：不再注入 Screen#init，避免混入在某些映射情况下失败导致 TransformerError
     
+    @Override
+    public void eap$updateButtonsLayout() {
+        // 只处理按钮可见性与定位，不再强制 showPage 或挪动 Slot 坐标，避免与原布局/tooltip 冲突
+        if (nextPage != null && prevPage != null) {
+            this.nextPage.setVisibility(true);
+            this.prevPage.setVisibility(true);
+        }
+        if (x2Button != null) {
+            this.x2Button.setVisibility(true);
+        }
+        if (divideBy2Button != null) {
+            this.divideBy2Button.setVisibility(true);
+        }
+        if (x10Button != null) {
+            this.x10Button.setVisibility(true);
+        }
+        if (divideBy10Button != null) {
+            this.divideBy10Button.setVisibility(true);
+        }
+        if (divideBy5Button != null) {
+            this.divideBy5Button.setVisibility(true);
+        }
+        if (x5Button != null) {
+            this.x5Button.setVisibility(true);
+        }
+
+        // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册右侧外列的自定义按钮，翻页按钮由左侧工具栏托管
+        if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
+            eap$lastScreenWidth = this.width;
+            eap$lastScreenHeight = this.height;
+            try {
+                if (this.divideBy2Button != null) {
+                    this.removeWidget(this.divideBy2Button);
+                    this.addRenderableWidget(this.divideBy2Button);
+                }
+                if (this.x2Button != null) {
+                    this.removeWidget(this.x2Button);
+                    this.addRenderableWidget(this.x2Button);
+                }
+                if (this.divideBy5Button != null) {
+                    this.removeWidget(this.divideBy5Button);
+                    this.addRenderableWidget(this.divideBy5Button);
+                }
+                if (this.x5Button != null) {
+                    this.removeWidget(this.x5Button);
+                    this.addRenderableWidget(this.x5Button);
+                }
+                if (this.divideBy10Button != null) {
+                    this.removeWidget(this.divideBy10Button);
+                    this.addRenderableWidget(this.divideBy10Button);
+                }
+                if (this.x10Button != null) {
+                    this.removeWidget(this.x10Button);
+                    this.addRenderableWidget(this.x10Button);
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // 定位到 GUI 右缘外侧一点（使用绝对屏幕坐标）
+        int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
+        int by = this.topPos + 20;
+        int spacing = 22;
+        // 翻页按钮交由左侧工具栏布局，无需手动定位
+        if (this.divideBy2Button != null) {
+            this.divideBy2Button.setX(bx);
+            this.divideBy2Button.setY(by);
+        }
+        if (this.x2Button != null) {
+            this.x2Button.setX(bx);
+            this.x2Button.setY(by + spacing);
+        }
+        if (this.divideBy5Button != null) {
+            this.divideBy5Button.setX(bx);
+            this.divideBy5Button.setY(by + spacing * 2);
+        }
+        if (this.x5Button != null) {
+            this.x5Button.setX(bx);
+            this.x5Button.setY(by + spacing * 3);
+        }
+        if (this.divideBy10Button != null) {
+            this.divideBy10Button.setX(bx);
+            this.divideBy10Button.setY(by + spacing * 4);
+        }
+        if (this.x10Button != null) {
+            this.x10Button.setX(bx);
+            this.x10Button.setY(by + spacing * 5);
+        }
+    }
+
     /**
      * 在服务器端执行样板缩放操作（单机模式）
      */
