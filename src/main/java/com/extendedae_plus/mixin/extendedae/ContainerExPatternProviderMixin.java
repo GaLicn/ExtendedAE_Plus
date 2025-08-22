@@ -29,7 +29,8 @@ import java.util.function.Consumer;
 @Mixin(value = ContainerExPatternProvider.class, priority = 3000)
 public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu implements IActionHolder {
 
-    @GuiSync(11451)
+    // 使用高位唯一ID，避免与其他模组在同一类上的 @GuiSync 冲突
+    @GuiSync(31415)
     @Unique
     public int eap$page = 0;
 
