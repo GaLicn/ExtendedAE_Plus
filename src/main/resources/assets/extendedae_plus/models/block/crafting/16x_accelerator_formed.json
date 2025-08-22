@@ -1,4 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": { "all": "extendedae_plus:block/crafting/16x_accelerator_light" }
-}
