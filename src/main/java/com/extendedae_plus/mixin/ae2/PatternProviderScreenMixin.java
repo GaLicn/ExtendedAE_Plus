@@ -11,6 +11,8 @@ import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
+import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -94,5 +96,14 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         }
         this.eap$AdvancedBlockingEnabled = desired;
         this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
+
+        // 如果当前屏幕是 ExtendedAE 的 GuiExPatternProvider，则委托布局更新到 accessor
+        if ((Object) this instanceof GuiExPatternProvider) {
+            try {
+                ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
+            } catch (Throwable t) {
+                LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
+            }
+        }
     }
 }
