@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "formed=false": { "model": "extendedae_plus:block/crafting/256x_accelerator" },
+    "formed=true":  { "model": "extendedae_plus:block/crafting/256x_accelerator_formed_v2" }
+  }
+}

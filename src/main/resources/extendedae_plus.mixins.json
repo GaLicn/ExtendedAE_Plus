@@ -24,7 +24,8 @@
     "extendedae.HighlightButtonMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
-    "jei.EncodePatternTransferHandlerMixin"
+    "jei.EncodePatternTransferHandlerMixin",
+    "hooks.ModelBakeryMixin"
   ],
   "mixins": [
     "ae2.ContainerPatternEncodingTermMenuMixin",
@@ -41,6 +42,7 @@
     "extendedae.ContainerExPatternProviderMixin",
     "extendedae.ContainerExPatternTerminalMixin",
     "extendedae.ContainerWirelessExPatternTerminalMixin",
+    "ae2.CraftingCPUClusterMixin",
     "extendedae.PartExPatternProviderMixin",
     "extendedae.TileExPatternProviderMixin"
   ],
