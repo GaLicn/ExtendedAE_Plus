@@ -1,14 +1,12 @@
-package com.extendedae_plus.mixin.accessor;
-
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-import org.jetbrains.annotations.Nullable;
+package com.extendedae_plus.mixin.ae2.accessor;
 
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.storage.MEStorage;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.api.util.IConfigManager;
+import appeng.menu.me.common.MEStorageMenu;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(MEStorageMenu.class)
 public interface MEStorageMenuAccessor {

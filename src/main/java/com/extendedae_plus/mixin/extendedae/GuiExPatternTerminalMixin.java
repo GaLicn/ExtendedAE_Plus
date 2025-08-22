@@ -1,22 +1,19 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
-import appeng.client.gui.Icon;
+import appeng.api.crafting.PatternDetailsHelper;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.IconButton;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
-import com.glodblock.github.extendedae.client.gui.GuiWirelessExPAT;
-import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import appeng.api.crafting.PatternDetailsHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;

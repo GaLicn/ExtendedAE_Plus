@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
@@ -49,13 +49,13 @@ public abstract class HighlightButtonMixin {
                                 try {
                                     var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
                                     setMethod.invoke(terminal, serverId);
-                                } catch (Exception e) {
+                                } catch (Exception ignored) {
                                 }
                                 break;
                             }
                         }
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
         }

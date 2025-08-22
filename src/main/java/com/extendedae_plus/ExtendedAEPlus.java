@@ -1,19 +1,20 @@
 package com.extendedae_plus;
+
+import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.init.ModCreativeTabs;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import com.extendedae_plus.network.ModNetwork;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
-import com.extendedae_plus.config.ModConfigs;
-import com.extendedae_plus.init.ModBlocks;
-import com.extendedae_plus.init.ModBlockEntities;
-import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.init.ModCreativeTabs;
-import com.extendedae_plus.network.ModNetwork;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import appeng.menu.locator.MenuLocators;
 
 /**
  * ExtendedAE Plus 主mod类

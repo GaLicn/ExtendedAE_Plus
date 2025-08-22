@@ -1,27 +1,21 @@
 package com.extendedae_plus.menu.locator;
 
-import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-
 import appeng.api.implementations.menuobjects.IMenuItem;
 import appeng.api.implementations.menuobjects.ItemMenuHost;
 import appeng.helpers.WirelessTerminalMenuHost;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.MenuOpener;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.locator.MenuLocator;
-import com.extendedae_plus.menu.host.CuriosWirelessTerminalMenuHost;
-
-// ae2wtlib
-import de.mari_023.ae2wtlib.wut.WUTHandler;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import appeng.menu.me.common.MEStorageMenu;
 import com.extendedae_plus.menu.host.CuriosWTMenuHost;
-
-// Curios API (软依赖)
+import com.extendedae_plus.menu.host.CuriosWirelessTerminalMenuHost;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import de.mari_023.ae2wtlib.wut.WTDefinition;
+import de.mari_023.ae2wtlib.wut.WUTHandler;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 

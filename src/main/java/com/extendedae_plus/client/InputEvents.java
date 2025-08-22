@@ -1,19 +1,16 @@
 package com.extendedae_plus.client;
 
-import java.util.Optional;
-
-import org.lwjgl.glfw.GLFW;
-
+import appeng.api.stacks.GenericStack;
+import appeng.client.gui.me.common.MEStorageScreen;
+import appeng.integration.modules.jei.GenericEntryStackHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
-
-import appeng.api.stacks.GenericStack;
-import appeng.integration.modules.jei.GenericEntryStackHelper;
-import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.item.ItemStack;
@@ -21,8 +18,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import appeng.client.gui.me.common.MEStorageScreen;
-import com.extendedae_plus.mixin.accessor.MEStorageScreenAccessor;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.Optional;
 
 @Mod.EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class InputEvents {
@@ -111,8 +109,8 @@ public final class InputEvents {
         if (screen instanceof MEStorageScreen<?> me) {
             try {
                 MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;
-                acc.ext$getSearchField().setValue(name);
-                acc.ext$setSearchText(name); // 同步到 Repo 并刷新
+                acc.eap$getSearchField().setValue(name);
+                acc.eap$setSearchText(name); // 同步到 Repo 并刷新
                 event.setCanceled(true);
                 return;
             } catch (Throwable ignored) {

@@ -1,17 +1,16 @@
 package com.extendedae_plus.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraft.server.level.ServerPlayer;
-import appeng.menu.me.items.PatternEncodingTermMenu;
-import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.helpers.patternprovider.PatternContainer;
+import appeng.menu.implementations.PatternAccessTermMenu;
+import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 
 /**
  * C2S: 请求当前终端可见的样板供应器列表（用于弹窗选择）。

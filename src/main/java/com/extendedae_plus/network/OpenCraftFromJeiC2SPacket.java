@@ -1,21 +1,18 @@
 package com.extendedae_plus.network;
 
-import java.util.function.Supplier;
-
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-
-import net.minecraftforge.network.NetworkEvent;
-
 import appeng.api.networking.IGrid;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.MenuLocators;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import appeng.menu.me.crafting.CraftAmountMenu;
-
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 /**
  * C2S：从 JEI 中键点击请求打开 AE 的下单界面。

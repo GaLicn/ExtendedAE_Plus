@@ -1,10 +1,10 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.registries.DeferredRegister;
-import net.minecraft.core.registries.Registries;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModCreativeTabs {

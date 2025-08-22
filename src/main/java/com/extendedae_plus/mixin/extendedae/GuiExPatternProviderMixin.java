@@ -1,18 +1,16 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
 import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.VerticalButtonBar;
 import appeng.menu.SlotSemantics;
 import com.extendedae_plus.NewIcon;
-import com.extendedae_plus.util.PatternProviderUIHelper;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
-import com.glodblock.github.extendedae.network.EPPNetworkHandler;
-import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
+import com.glodblock.github.extendedae.network.EPPNetworkHandler;
+import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,11 +30,11 @@ import java.util.List;
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> {
 
     @Unique
-    ScreenStyle screenStyle;
+    ScreenStyle eap$screenStyle;
 
     // 跟踪上次屏幕尺寸，处理 GUI 缩放/窗口大小变化后按钮丢失问题
-    private int epp_lastScreenWidth = -1;
-    private int epp_lastScreenHeight = -1;
+    @Unique private int eap$lastScreenWidth = -1;
+    @Unique private int eap$lastScreenHeight = -1;
 
     // 不再使用右侧 VerticalButtonBar，直接把按钮注册为独立 AE2 小部件
 
@@ -61,7 +59,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             int maxPage = getMaxPage();
 
                                // 获取ae通用界面样式
-                   int color = screenStyle.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+                   int color = eap$screenStyle.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
                    // 调整页码显示位置：在"样板"文字的右边
                    guiGraphics.drawString(font, Component.literal("第 " + (currentPage + 1) + "/" + maxPage + " 页"),
                            leftPos + 8 + 50, topPos + 30, color, false);
@@ -106,15 +104,15 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                    }
             
             // 调整槽位位置
-            this.adjustSlotPositions(page);
+            this.eap$adjustSlotPositions(page);
         } catch (Exception e) {
             // 忽略反射错误
         }
 
         // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册按钮，避免被 Screen.init 清空
-        if (this.width != epp_lastScreenWidth || this.height != epp_lastScreenHeight) {
-            epp_lastScreenWidth = this.width;
-            epp_lastScreenHeight = this.height;
+        if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
+            eap$lastScreenWidth = this.width;
+            eap$lastScreenHeight = this.height;
             try {
                 if (this.divideBy2Button != null) {
                     this.removeWidget(this.divideBy2Button);
@@ -181,7 +179,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     }
     
     @Unique
-    private void adjustSlotPositions(int currentPage) {
+    private void eap$adjustSlotPositions(int currentPage) {
         try {
             List<Slot> slots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN);
             int totalSlots = slots.size();
@@ -276,7 +274,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     // 在构造器返回后初始化按钮与翻页控制
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
-        this.screenStyle = style;
+        this.eap$screenStyle = style;
         // 保留：不再打印菜单类型
 
         // 翻页按钮（仅在需要时显示）
@@ -420,11 +418,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                         minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
                     }
 
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             });
 
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 

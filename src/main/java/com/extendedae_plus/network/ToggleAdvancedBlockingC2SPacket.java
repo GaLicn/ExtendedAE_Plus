@@ -1,16 +1,15 @@
 package com.extendedae_plus.network;
 
+import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
-
-import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.mixin.accessor.PatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.mixin.accessor.PatternProviderLogicAccessor;
 
 /**
  * C2S：切换高级阻挡模式。
@@ -34,15 +33,15 @@ public class ToggleAdvancedBlockingC2SPacket {
 
             // 通过 accessor 获取逻辑与当前状态
             var accessor = (PatternProviderMenuAdvancedAccessor) menu;
-            var logic = accessor.ext$logic();
+            var logic = accessor.eap$logic();
             if (logic instanceof AdvancedBlockingHolder holder) {
-                boolean current = holder.ext$getAdvancedBlocking();
+                boolean current = holder.eap$getAdvancedBlocking();
                 boolean next = !current;
-                holder.ext$setAdvancedBlocking(next);
+                holder.eap$setAdvancedBlocking(next);
                 // 关键：保存持久化，触发 AE2 写入逻辑（writeToNBT），并由菜单 @GuiSync 同步回客户端
                 logic.saveChanges();
                 // 直接下发 S2C 强制同步（带供应器标识：维度+方块坐标）
-                var host = ((PatternProviderLogicAccessor) logic).ext$host();
+                var host = ((PatternProviderLogicAccessor) logic).eap$host();
                 var be = host.getBlockEntity();
                 var level = be.getLevel();
                 String dimId = level.dimension().location().toString();
