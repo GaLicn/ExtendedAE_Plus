@@ -193,6 +193,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 this.hoveredSlot = null;
             }, Icon.ARROW_RIGHT);
 
+            // 恢复到 AE2 左侧工具栏
             this.addToLeftToolbar(this.nextPage);
             this.addToLeftToolbar(this.prevPage);
         }
@@ -242,6 +243,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         return getCurrentPage();
     }
 
+    // 页码文本绘制移交给 AEBaseScreenMixin.renderLabels 尾部执行
+
     // 注意：不再注入 Screen#init，避免混入在某些映射情况下失败导致 TransformerError
     
     @Override
@@ -270,7 +273,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.x5Button.setVisibility(true);
         }
 
-        // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册按钮，避免被 Screen.init 清空
+        // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册右侧外列的自定义按钮，翻页按钮由左侧工具栏托管
         if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
             eap$lastScreenWidth = this.width;
             eap$lastScreenHeight = this.height;
@@ -306,6 +309,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
         int by = this.topPos + 20;
         int spacing = 22;
+        // 翻页按钮交由左侧工具栏布局，无需手动定位
         if (this.divideBy2Button != null) {
             this.divideBy2Button.setX(bx);
             this.divideBy2Button.setY(by);
