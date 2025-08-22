@@ -1,13 +1,19 @@
 package com.extendedae_plus.util;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Global logger utility for ExtendedAE Plus mod
+ * 统一日志工具类。
+ * 在需要的类中可使用：
+ * import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
  */
-public class ExtendedAELogger {
-    public static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAEPlus");
+public final class ExtendedAELogger {
+    public static final Logger LOGGER = LoggerFactory.getLogger(ExtendedAEPlus.MODID);
 
-    private ExtendedAELogger() {throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");}
+    private ExtendedAELogger() {
+        // no instance
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
 }
