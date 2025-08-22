@@ -64,4 +64,13 @@ public final class ModBlocks {
                 return b;
             }
     );
+
+    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_1024x = BLOCKS.register(
+            "1024x_crafting_accelerator",
+            () -> {
+                var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x);
+                b.setBlockEntity(CraftingBlockEntity.class, AEBlockEntities.CRAFTING_UNIT, null, null);
+                return b;
+            }
+    );
 }

@@ -9,7 +9,8 @@ public enum EPlusCraftingUnitType implements ICraftingUnitType {
     ACCELERATOR_4x(0, 4),
     ACCELERATOR_16x(0, 16),
     ACCELERATOR_64x(0, 64),
-    ACCELERATOR_256x(0, 256);
+    ACCELERATOR_256x(0, 256),
+    ACCELERATOR_1024x(0, 1024);
 
     private final long storage;
     private final int threads;
@@ -37,6 +38,7 @@ public enum EPlusCraftingUnitType implements ICraftingUnitType {
             case ACCELERATOR_16x -> ModItems.ACCELERATOR_16x.get();
             case ACCELERATOR_64x -> ModItems.ACCELERATOR_64x.get();
             case ACCELERATOR_256x -> ModItems.ACCELERATOR_256x.get();
+            case ACCELERATOR_1024x -> ModItems.ACCELERATOR_1024x.get();
         };
     }
 }

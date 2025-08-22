@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "   ",
+    "ACA",
+    "   "
+  ],
+  "key": {
+    "A": { "item": "ae2:cell_component_256k" },
+    "C": { "item": "extendedae_plus:256x_crafting_accelerator" }
+  },
+  "result": { "item": "extendedae_plus:1024x_crafting_accelerator", "count": 1 }
+}
