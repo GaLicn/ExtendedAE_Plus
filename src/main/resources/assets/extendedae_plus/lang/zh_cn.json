@@ -14,5 +14,15 @@
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.add_mapping": "增加映射",
   "extendedae_plus.screen.cn_name": "中文名",
-  "extendedae_plus.button.choose_provider":"上传样板"
+  "extendedae_plus.button.choose_provider":"上传样板",
+  
+  "block.extendedae_plus.4x_crafting_accelerator": "4x并行处理单元",
+  "block.extendedae_plus.16x_crafting_accelerator": "16x并行处理单元",
+  "block.extendedae_plus.64x_crafting_accelerator": "64x并行处理单元",
+  "block.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
+  
+  "item.extendedae_plus.4x_crafting_accelerator": "4x并行处理单元",
+  "item.extendedae_plus.16x_crafting_accelerator": "16x并行处理单元",
+  "item.extendedae_plus.64x_crafting_accelerator": "64x并行处理单元",
+  "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元"
 }
