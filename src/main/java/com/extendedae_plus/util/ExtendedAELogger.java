@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
  */
 public final class ExtendedAELogger {
     public static final Logger LOGGER = LoggerFactory.getLogger(ExtendedAEPlus.MODID);
-
     private ExtendedAELogger() {
         // no instance
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
