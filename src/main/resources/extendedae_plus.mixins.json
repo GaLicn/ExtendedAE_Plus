@@ -4,12 +4,11 @@
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
-    "ae2.AEBaseScreenMixin",
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
     "accessor.ScreenInvoker",
-    "ae2.PatternAccessTermScreenMixin",
+    "ae2.AEBaseScreenMixin",
     "ae2.PatternEncodingTermScreenMixin",
     "ae2.PatternProviderScreenMixin",
     "ae2.QuartzCuttingKnifeItemMixin",

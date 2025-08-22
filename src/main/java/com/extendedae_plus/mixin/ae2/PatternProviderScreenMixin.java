@@ -1,17 +1,16 @@
 package com.extendedae_plus.mixin.ae2;
 
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import appeng.api.config.YesNo;
-import appeng.api.config.Settings;
 import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
