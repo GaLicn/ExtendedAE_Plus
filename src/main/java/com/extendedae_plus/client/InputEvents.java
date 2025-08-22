@@ -90,19 +90,9 @@ public final class InputEvents {
 
         ITypedIngredient<?> typed = hovered.get();
 
-        String name = null;
-        try {
-            if (typed.getType() == VanillaTypes.ITEM_STACK) {
-                //noinspection unchecked
-                ItemStack stack = ((ITypedIngredient<ItemStack>) typed).getIngredient();
-                if (stack != null) {
-                    name = stack.getHoverName().getString();
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-
-        if (name == null || name.isEmpty()) return; // 非物品类型暂不处理（避免依赖未知 JEI 接口）
+        // 通用获取显示名称（兼容物品/流体等）
+        String name = JeiRuntimeProxy.getTypedIngredientDisplayName(typed);
+        if (name == null || name.isEmpty()) return;
 
         // 写入 AE2 终端的搜索框
         var screen = Minecraft.getInstance().screen;
