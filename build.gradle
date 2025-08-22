@@ -103,12 +103,9 @@ dependencies {
     modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
 }
 
-// 忽略所有过时警告
-gradle.projectsEvaluated {
-    tasks.withType(JavaCompile).tap {
-        configureEach {
-            options.compilerArgs << "-Xlint:-deprecation"
-        }
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs << "-Xlint:-deprecation"
     }
 }
 

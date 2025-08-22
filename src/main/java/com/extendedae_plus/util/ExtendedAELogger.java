@@ -14,5 +14,6 @@ public final class ExtendedAELogger {
 
     private ExtendedAELogger() {
         // no instance
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 }

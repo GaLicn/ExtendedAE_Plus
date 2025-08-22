@@ -48,6 +48,27 @@ import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
  */
 @Mixin(value = QuartzCuttingKnifeItem.class)
 public abstract class QuartzCuttingKnifeItemMixin {
+    /**
+     * 清理方块名称，移除分节符号和其他格式字符
+     */
+    @Unique
+    private String eap$cleanBlockName(String name) {
+        if (name == null || name.isBlank()) {
+            return name;
+        }
+        
+        // 移除 Minecraft 分节符号 (§) 及其后面的字符
+        name = name.replaceAll("§[0-9a-fk-or]", "");
+        
+        // 移除多余的空白字符
+        name = name.trim();
+        
+        // 移除常见的格式字符
+        name = name.replaceAll("[\\[\\](){}]", "");
+        
+        return name;
+    }
+
     @Inject(method = "use", at = @At("HEAD"), cancellable = true)
     private void eap$copyNameOnShiftRightClick(Level level, Player player, InteractionHand hand,
                                                CallbackInfoReturnable<InteractionResultHolder<ItemStack>> cir) {
@@ -69,6 +90,9 @@ public abstract class QuartzCuttingKnifeItemMixin {
 
         // 获取方块名称
         String name = eap$getBlockName(level, pos, hr.getLocation());
+        
+        // 清理名称，移除分节符号等格式字符
+        name = eap$cleanBlockName(name);
 
         // 复制到剪贴板并反馈
         boolean success = eap$tryCopyToClipboard(Minecraft.getInstance(), name);
@@ -95,6 +119,9 @@ public abstract class QuartzCuttingKnifeItemMixin {
 
         // 获取方块名称
         String name = eap$getBlockName(level, pos, context.getClickLocation());
+        
+        // 清理名称，移除分节符号等格式字符
+        name = eap$cleanBlockName(name);
 
         // 复制到剪贴板并反馈
         boolean success = eap$tryCopyToClipboard(Minecraft.getInstance(), name);

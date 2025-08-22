@@ -3,61 +3,70 @@ package com.extendedae_plus.mixin.extendedae;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.gui.components.Button;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Objects;
+
 @Mixin(value = HighlightButton.class, priority = 1000)
 public abstract class HighlightButtonMixin {
+	@Shadow(remap = false)
+	private static void highlight(Button btn) {}
 
-    @Shadow(remap = false)
-    private static void highlight(Button btn) {}
+	private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAEPlus");
 
-    @Inject(method = "highlight", at = @At("TAIL"), remap = false)
-    private static void onHighlight(Button btn, CallbackInfo ci) {
-        if (btn instanceof HighlightButton hb) {
-            // 获取当前打开的GUI屏幕
-            var minecraft = net.minecraft.client.Minecraft.getInstance();
-            if (minecraft.screen instanceof GuiExPatternTerminal<?> terminal) {
-                // 通过反射获取HighlightButton的serverId信息
-                try {
-                    // 获取HighlightButton的pos字段，用于标识对应的样板供应器
-                    var posField = HighlightButton.class.getDeclaredField("pos");
-                    posField.setAccessible(true);
-                    var pos = posField.get(hb);
-                    
-                    if (pos != null) {
-                        // 通过反射访问infoMap字段
-                        var infoMapField = GuiExPatternTerminal.class.getDeclaredField("infoMap");
-                        infoMapField.setAccessible(true);
-                        @SuppressWarnings("unchecked")
-                        var infoMap = (java.util.Map<Long, Object>) infoMapField.get(terminal);
-                        
-                        // 查找对应的样板供应器ID
-                        for (var entry : infoMap.entrySet()) {
-                            var info = entry.getValue();
-                            // 通过反射调用pos()方法
-                            var posMethod = info.getClass().getMethod("pos");
-                            var infoPos = posMethod.invoke(info);
-                            
-                            if (pos.equals(infoPos)) {
-                                long serverId = entry.getKey();
-                                
-                                // 通过反射调用setter方法
-                                try {
-                                    var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
-                                    setMethod.invoke(terminal, serverId);
-                                } catch (Exception ignored) {
-                                }
-                                break;
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-        }
-    }
+	@Inject(method = "highlight", at = @At("TAIL"), remap = false)
+	private static void onHighlight(Button btn, CallbackInfo ci) {
+		if (btn instanceof HighlightButton hb) {
+			var minecraft = net.minecraft.client.Minecraft.getInstance();
+			if (minecraft.screen instanceof GuiExPatternTerminal<?> terminal) {
+				try {
+					var fPos = HighlightButton.class.getDeclaredField("pos");
+					fPos.setAccessible(true);
+					Object btnPos = fPos.get(hb);
+					if (btnPos == null) {
+						return;
+					}
+
+					var fFace = HighlightButton.class.getDeclaredField("face");
+					fFace.setAccessible(true);
+					Object btnFace = fFace.get(hb); // 允许为 null：方块形
+
+					var infoMapField = GuiExPatternTerminal.class.getDeclaredField("infoMap");
+					infoMapField.setAccessible(true);
+					@SuppressWarnings("unchecked")
+					var infoMap = (java.util.Map<Long, Object>) infoMapField.get(terminal);
+
+					for (var entry : infoMap.entrySet()) {
+						var info = entry.getValue();
+						var mPos = info.getClass().getMethod("pos");
+						mPos.setAccessible(true);
+						Object infoPos = mPos.invoke(info);
+
+						var mFace = info.getClass().getMethod("face");
+						mFace.setAccessible(true);
+						Object infoFace = mFace.invoke(info); // 允许为 null：方块形
+
+						// 匹配规则：pos 必须相等；face 允许为 null，null 仅与 null 匹配
+						boolean posEqual = Objects.equals(btnPos, infoPos);
+						boolean faceEqual = (btnFace == null && infoFace == null) || Objects.equals(btnFace, infoFace);
+						if (posEqual && faceEqual) {
+							long serverId = entry.getKey();
+							var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
+							setMethod.setAccessible(true);
+							setMethod.invoke(terminal, serverId);
+							break;
+						}
+					}
+				} catch (Throwable t) {
+					LOGGER.warn("HighlightButton onHighlight 处理异常", t);
+				}
+			}
+		}
+	}
 } 
