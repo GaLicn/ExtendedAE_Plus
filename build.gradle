@@ -16,6 +16,15 @@ loom {
     forge {
         mixinConfig 'extendedae_plus.mixins.json'
     }
+
+    runs {
+        client1 {
+            client()
+            name "Client 1"
+            runDir "run/client1"
+            programArgs "--username", "Player1"
+        }
+    }
 }
 
 repositories {
