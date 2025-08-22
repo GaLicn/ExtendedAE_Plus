@@ -2,11 +2,9 @@ package com.extendedae_plus.network;
 
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -22,7 +20,7 @@ public class ToggleAdvancedBlockingC2SPacket {
 
     public static ToggleAdvancedBlockingC2SPacket decode(FriendlyByteBuf buf) {
         return new ToggleAdvancedBlockingC2SPacket();
-        }
+    }
 
     public static void handle(ToggleAdvancedBlockingC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
         var ctx = ctxSupplier.get();
@@ -38,15 +36,8 @@ public class ToggleAdvancedBlockingC2SPacket {
                 boolean current = holder.eap$getAdvancedBlocking();
                 boolean next = !current;
                 holder.eap$setAdvancedBlocking(next);
-                // 关键：保存持久化，触发 AE2 写入逻辑（writeToNBT），并由菜单 @GuiSync 同步回客户端
+                // 保存并触发 AE2 的菜单 @GuiSync 广播到所有观看该菜单的玩家
                 logic.saveChanges();
-                // 直接下发 S2C 强制同步（带供应器标识：维度+方块坐标）
-                var host = ((PatternProviderLogicAccessor) logic).eap$host();
-                var be = host.getBlockEntity();
-                var level = be.getLevel();
-                String dimId = level.dimension().location().toString();
-                long posLong = be.getBlockPos().asLong();
-                ModNetwork.CHANNEL.sendTo(new AdvancedBlockingSyncS2CPacket(dimId, posLong, next), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
             }
         });
         ctx.setPacketHandled(true);

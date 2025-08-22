@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.ae2;
 
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
@@ -21,9 +22,6 @@ import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 @Mixin(PatternProviderMenu.class)
 public abstract class PatternProviderMenuAdvancedMixin implements PatternProviderMenuAdvancedSync {
     @Shadow
-    protected abstract boolean isServerSide();
-
-    @Shadow
     protected PatternProviderLogic logic;
 
     // 选择一个未占用的 GUI 同步 id（AE2 已用到 7），这里使用 20 以避冲突
@@ -33,16 +31,14 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
     private void eap$syncAdvancedBlocking(CallbackInfo ci) {
-        if (this.isServerSide()) {
+        // 避免@Shadow父类方法，改用公共API：AEBaseMenu#isClientSide()
+        if (!((AEBaseMenu) (Object) this).isClientSide()) {
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
+                LOGGER.debug("[EAP] Menu broadcastChanges HEAD: eap$AdvancedBlocking={}", this.eap$AdvancedBlocking);
             }
         }
-    }
-
-    @Inject(method = "broadcastChanges", at = @At("TAIL"))
-    private void eap$syncAdvancedBlockingTail(CallbackInfo ci) {
     }
 
     // 构造器尾注入（public ctor）
