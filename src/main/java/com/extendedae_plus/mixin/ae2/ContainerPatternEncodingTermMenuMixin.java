@@ -20,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 /**
  * 给 AE2 的 PatternEncodingTermMenu 增加一个通用动作持有者，实现接收 EPP 的 CGenericPacket 动作。
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
@@ -53,8 +52,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                         eap$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
                     }
                 }
-            } catch (Throwable t) {
-                LOGGER.error("Error uploading pattern to matrix", t);
+            } catch (Throwable ignored) {
             }
         });
     }
@@ -87,8 +85,10 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 return; // 仅服务器执行
             }
             var menu = (PatternEncodingTermMenu) (Object) this;
-            if (menu.getMode() != EncodingMode.CRAFTING) {
-                return; // 只处理合成样板
+            if (menu.getMode() != EncodingMode.CRAFTING
+                    && menu.getMode() != EncodingMode.SMITHING_TABLE
+                    && menu.getMode() != EncodingMode.STONECUTTING) {
+                return; // 只处理合成/锻造台/切石机样板
             }
             if (this.encodedPatternSlot == null) {
                 return;
@@ -107,8 +107,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 } catch (Throwable ignored) {
                 }
             });
-        } catch (Throwable t) {
-            LOGGER.error("Error uploading pattern to matrix", t);
+        } catch (Throwable ignored) {
         }
     }
 }

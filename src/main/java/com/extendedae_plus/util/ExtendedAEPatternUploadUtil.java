@@ -7,6 +7,8 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.core.definitions.AEItems;
 import appeng.crafting.pattern.AECraftingPattern;
+import appeng.crafting.pattern.AESmithingTablePattern;
+import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
@@ -433,10 +435,12 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
 
-        // 仅允许“合成图样”
+        // 仅允许“合成/锻造台/切石机图样”
         IPatternDetails details = PatternDetailsHelper.decodePattern(stack, player.level());
-        if (!(details instanceof AECraftingPattern)) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_not_crafting");
+        if (!(details instanceof AECraftingPattern
+                || details instanceof AESmithingTablePattern
+                || details instanceof AEStonecuttingPattern)) {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
             return false;
         }
 

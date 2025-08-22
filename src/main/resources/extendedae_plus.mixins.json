@@ -8,6 +8,7 @@
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
     "accessor.ScreenInvoker",
+    "ae2.PatternAccessTermScreenMixin",
     "ae2.PatternEncodingTermScreenMixin",
     "ae2.PatternProviderScreenMixin",
     "ae2.QuartzCuttingKnifeItemMixin",
@@ -15,9 +16,13 @@
     "ae2.accessor.AEBaseScreenAccessor",
     "ae2.accessor.AEBaseScreenInvoker",
     "ae2.accessor.MEStorageScreenAccessor",
+    "ae2.accessor.PatternAccessTermScreenAccessor",
+    "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "extendedae.GuiExPatternProviderMixin",
     "extendedae.GuiExPatternTerminalMixin",
     "extendedae.HighlightButtonMixin",
+    "extendedae.accessor.GuiExPatternTerminalAccessor",
+    "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
     "jei.EncodePatternTransferHandlerMixin"
   ],
   "mixins": [
