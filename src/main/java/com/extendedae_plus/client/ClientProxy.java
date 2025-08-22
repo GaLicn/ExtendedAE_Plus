@@ -33,5 +33,9 @@ public final class ClientProxy {
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/256x_accelerator_formed_v2"),
                 new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_256x)));
+
+        BuiltInModelHooks.addBuiltInModel(
+                ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2"),
+                new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_1024x)));
     }
 }

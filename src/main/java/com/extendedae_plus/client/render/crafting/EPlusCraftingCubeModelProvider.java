@@ -44,6 +44,8 @@ public class EPlusCraftingCubeModelProvider
             "64x_accelerator_light");
     protected static final Material ACCELERATOR_256X_LIGHT = texture(ExtendedAEPlus.MODID,
             "256x_accelerator_light");
+    protected static final Material ACCELERATOR_1024X_LIGHT = texture(ExtendedAEPlus.MODID,
+            "1024x_accelerator_light");
 
     public EPlusCraftingCubeModelProvider(EPlusCraftingUnitType type) {
         super(type);
@@ -74,6 +76,7 @@ public class EPlusCraftingCubeModelProvider
             case ACCELERATOR_16x -> textureGetter.apply(ACCELERATOR_16X_LIGHT);
             case ACCELERATOR_64x -> textureGetter.apply(ACCELERATOR_64X_LIGHT);
             case ACCELERATOR_256x -> textureGetter.apply(ACCELERATOR_256X_LIGHT);
+            case ACCELERATOR_1024x -> textureGetter.apply(ACCELERATOR_1024X_LIGHT);
         };
     }
 

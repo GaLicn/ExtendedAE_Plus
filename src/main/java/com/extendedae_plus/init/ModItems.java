@@ -37,4 +37,9 @@ public final class ModItems {
             "256x_crafting_accelerator",
             () -> new BlockItem(ModBlocks.ACCELERATOR_256x.get(), new Item.Properties())
     );
+
+    public static final RegistryObject<Item> ACCELERATOR_1024x = ITEMS.register(
+            "1024x_crafting_accelerator",
+            () -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), new Item.Properties())
+    );
 }

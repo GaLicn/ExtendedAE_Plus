@@ -24,6 +24,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ACCELERATOR_16x.get());
                         output.accept(ModItems.ACCELERATOR_64x.get());
                         output.accept(ModItems.ACCELERATOR_256x.get());
+                        output.accept(ModItems.ACCELERATOR_1024x.get());
                     })
                     .build());
 }
