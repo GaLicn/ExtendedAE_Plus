@@ -273,6 +273,29 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.x5Button.setVisibility(true);
         }
 
+        // 若从 JEI 配方界面返回后，Screen 的 renderables/children 可能被清空，导致按钮丢失
+        // 这里在每帧保证这些按钮存在于渲染列表中（不存在则重新注册）
+        try {
+            if (this.divideBy2Button != null && !this.renderables.contains(this.divideBy2Button)) {
+                this.addRenderableWidget(this.divideBy2Button);
+            }
+            if (this.x2Button != null && !this.renderables.contains(this.x2Button)) {
+                this.addRenderableWidget(this.x2Button);
+            }
+            if (this.divideBy5Button != null && !this.renderables.contains(this.divideBy5Button)) {
+                this.addRenderableWidget(this.divideBy5Button);
+            }
+            if (this.x5Button != null && !this.renderables.contains(this.x5Button)) {
+                this.addRenderableWidget(this.x5Button);
+            }
+            if (this.divideBy10Button != null && !this.renderables.contains(this.divideBy10Button)) {
+                this.addRenderableWidget(this.divideBy10Button);
+            }
+            if (this.x10Button != null && !this.renderables.contains(this.x10Button)) {
+                this.addRenderableWidget(this.x10Button);
+            }
+        } catch (Throwable ignored) {}
+
         // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册右侧外列的自定义按钮，翻页按钮由左侧工具栏托管
         if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
             eap$lastScreenWidth = this.width;
