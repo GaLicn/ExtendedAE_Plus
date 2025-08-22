@@ -1,33 +1,30 @@
 package com.extendedae_plus.network;
 
-import java.util.function.Supplier;
-
+import appeng.api.networking.IGrid;
+import appeng.api.networking.energy.IEnergyService;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.storage.MEStorage;
+import appeng.api.storage.StorageHelper;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
+import appeng.items.tools.powered.WirelessTerminalItem;
+import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.util.WirelessTerminalLocator;
+import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import de.mari_023.ae2wtlib.wut.WTDefinition;
+import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraft.network.FriendlyByteBuf;
 
-import appeng.api.networking.IGrid;
-import appeng.api.storage.MEStorage;
-import appeng.api.storage.StorageHelper;
-import appeng.api.stacks.AEItemKey;
-import appeng.api.networking.energy.IEnergyService;
-import appeng.me.helpers.PlayerSource;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
-// ae2wtlib
-import de.mari_023.ae2wtlib.wut.WUTHandler;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import com.extendedae_plus.util.WirelessTerminalLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
+import java.util.function.Supplier;
 
 public class PickFromWirelessC2SPacket {
     private final BlockPos pos;

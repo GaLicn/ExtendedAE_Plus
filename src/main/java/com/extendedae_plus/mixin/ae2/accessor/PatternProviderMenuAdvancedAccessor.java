@@ -1,13 +1,12 @@
-package com.extendedae_plus.mixin.accessor;
+package com.extendedae_plus.mixin.ae2.accessor;
 
+import appeng.helpers.patternprovider.PatternProviderLogic;
+import appeng.menu.implementations.PatternProviderMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
-
-import appeng.menu.implementations.PatternProviderMenu;
-import appeng.helpers.patternprovider.PatternProviderLogic;
 
 @Mixin(PatternProviderMenu.class)
 public interface PatternProviderMenuAdvancedAccessor {
     @Accessor("logic")
-    PatternProviderLogic ext$logic();
+    PatternProviderLogic eap$logic();
 }

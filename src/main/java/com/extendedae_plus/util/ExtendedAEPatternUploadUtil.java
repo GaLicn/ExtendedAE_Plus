@@ -1,46 +1,40 @@
 package com.extendedae_plus.util;
 
-import appeng.api.inventories.InternalInventory;
-import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.crafting.IPatternDetails;
+import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.core.definitions.AEItems;
+import appeng.crafting.pattern.AECraftingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import appeng.crafting.pattern.AECraftingPattern;
-import appeng.core.definitions.AEItems;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.Component;
-
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.nio.file.Path;
-import java.nio.file.Files;
-import java.io.IOException;
-
+import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.items.IItemHandler;
-
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.crafting.Recipe;
-import net.minecraft.world.item.crafting.RecipeType;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.items.IItemHandler;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
@@ -431,8 +425,8 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 读取已编码槽位的物品
-        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             sendMessage(player, "ExtendedAE Plus: 没有可上传的编码样板");
@@ -465,8 +459,8 @@ public class ExtendedAEPatternUploadUtil {
                 player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
             }
             try {
-                var accessor = (com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu;
-                var blankSlot = accessor.epp$getBlankPatternSlot();
+                var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
+                var blankSlot = accessor.eap$getBlankPatternSlot();
                 ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
                 if (blankSlot != null && blankSlot.mayPlace(blanks)) {
                     ItemStack remain = blankSlot.safeInsert(blanks);
@@ -982,8 +976,8 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
         // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1054,8 +1048,8 @@ public class ExtendedAEPatternUploadUtil {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1192,8 +1186,8 @@ public class ExtendedAEPatternUploadUtil {
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((com.extendedae_plus.mixin.accessor.PatternEncodingTermMenuAccessor) (Object) menu)
-                .epp$getEncodedPatternSlot();
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+                .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;

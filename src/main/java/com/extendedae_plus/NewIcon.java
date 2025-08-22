@@ -1,7 +1,6 @@
 package com.extendedae_plus;
 
 import appeng.client.gui.style.Blitter;
-import com.glodblock.github.extendedae.ExtendedAE;
 import net.minecraft.resources.ResourceLocation;
 
 public class NewIcon {

@@ -1,13 +1,10 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
-import net.minecraftforge.network.NetworkDirection;
-
-import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
-import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 
 public class ModNetwork {
     private static final String PROTOCOL_VERSION = "1";

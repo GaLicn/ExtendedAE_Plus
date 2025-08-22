@@ -1,21 +1,20 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.ae2;
 
+import appeng.api.config.Setting;
+import appeng.api.util.IConfigManager;
+import appeng.menu.me.common.MEStorageMenu;
+import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import appeng.api.util.IConfigManager;
-import appeng.menu.me.common.MEStorageMenu;
-import com.extendedae_plus.mixin.accessor.MEStorageMenuAccessor;
-import appeng.api.config.Setting;
-
 /**
  * 修复：当服务端 ConfigManager 注册了额外设置（例如 TERMINAL_SHOW_PATTERN_PROVIDERS）
  * 而客户端 clientCM 未注册时，AE2 在同步环节会对 clientCM 执行 getSetting，
  * 进而抛出 UnsupportedSettingException。
- *
+ * <p>
  * 方案：在服务端首次 broadcastChanges 时，仅为“客户端缺失”的设置执行注册补齐，且占位值与服务端不同，
  * 以确保 AE2 后续仍会发送 ConfigValuePacket 完成真正的值同步，避免影响排序等行为。
  */
@@ -23,12 +22,12 @@ import appeng.api.config.Setting;
 public abstract class MEStorageMenuMixin {
 
     @Unique
-    private boolean extendedae_plus$settingsMirrored = false;
+    private boolean eap$settingsMirrored = false;
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
-    private void extendedae_plus$mirrorServerSettingsToClient(CallbackInfo ci) {
+    private void eap$mirrorServerSettingsToClient(CallbackInfo ci) {
         var self = (MEStorageMenu) (Object) this;
-        if (this.extendedae_plus$settingsMirrored) {
+        if (this.eap$settingsMirrored) {
             return;
         }
         try {
@@ -51,30 +50,29 @@ public abstract class MEStorageMenuMixin {
                 if (!clientHasSetting) {
                     try {
                         Object serverValue = server.getSetting(setting);
-                        Object placeholder = extendedae_plus$chooseDifferentEnumValue(serverValue);
+                        Object placeholder = eap$chooseDifferentEnumValue(serverValue);
                         if (placeholder == null) {
                             // 若无法选择不同的占位值（例如只有一个枚举常量），则退回服务端值
                             placeholder = serverValue;
                         }
                         // 使用辅助方法，统一进行受检的泛型转换后再注册
-                        extendedae_plus$registerSettingCompat(client, setting, placeholder);
+                        eap$registerSettingCompat(client, setting, placeholder);
                     } catch (Throwable ignore) {
                         // 防御：不让异常影响主流程
                     }
                 }
             }
-            this.extendedae_plus$settingsMirrored = true;
+            this.eap$settingsMirrored = true;
         } catch (Throwable t) {
             // 防御：绝不让同步失败导致崩溃
         }
     }
 
     @Unique
-    private Object extendedae_plus$chooseDifferentEnumValue(Object serverValue) {
+    private Object eap$chooseDifferentEnumValue(Object serverValue) {
         if (!(serverValue instanceof Enum<?> sv)) {
             return null;
         }
-        @SuppressWarnings("unchecked")
         Class<? extends Enum<?>> enumClass = sv.getDeclaringClass();
         Object[] constants = enumClass.getEnumConstants();
         if (constants == null || constants.length == 0) {
@@ -90,7 +88,7 @@ public abstract class MEStorageMenuMixin {
 
     @Unique
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static <T extends Enum<T>> void extendedae_plus$registerSettingCompat(
+    private static <T extends Enum<T>> void eap$registerSettingCompat(
             IConfigManager client, Setting<?> setting, Object value) {
         // 前置校验：仅处理枚举类型的设置值
         if (!(value instanceof Enum<?>)) {

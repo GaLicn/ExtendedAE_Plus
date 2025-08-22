@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.extendedae;
 
 import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
@@ -17,7 +17,7 @@ public abstract class TileExPatternProviderMixin {
             ),
             index = 2
     )
-    private int extendedae_plus$multiplyCapacity(int original) {
+    private int eap$multiplyCapacity(int original) {
         int mult = ModConfigs.PAGE_MULTIPLIER.get();
         if (mult < 1) mult = 1;
         if (mult > 64) mult = 64;

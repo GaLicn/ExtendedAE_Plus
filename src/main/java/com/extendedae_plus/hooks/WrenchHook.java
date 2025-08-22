@@ -1,5 +1,6 @@
 package com.extendedae_plus.hooks;
 
+import appeng.util.InteractionUtil;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,6 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import appeng.util.InteractionUtil;
 
 @Mod.EventBusSubscriber(modid = ExtendedAEPlus.MODID)
 public final class WrenchHook {
