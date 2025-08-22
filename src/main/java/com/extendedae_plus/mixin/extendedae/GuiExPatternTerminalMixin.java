@@ -9,7 +9,6 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -343,9 +342,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Inject(method = "drawFG", at = @At("TAIL"), remap = false)
     private void eap$afterDrawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, CallbackInfo ci) {
-        // 调用GuiUtil的通用渲染方法显示样板数量
-        GuiUtil.renderPatternAmounts(guiGraphics, this);
-
         // 原有的搜索高亮逻辑
         // 仅当任一搜索框非空时绘制叠加层（与原版行为保持一致）
         boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue().isEmpty())
