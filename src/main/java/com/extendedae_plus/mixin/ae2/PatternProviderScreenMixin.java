@@ -66,7 +66,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 boolean enabled = eap$AdvancedBlockingEnabled;
                 var title = net.minecraft.network.chat.Component.literal("智能阻挡");
                 var line = enabled
-                        ? net.minecraft.network.chat.Component.literal("已启用：对于同一种配方将不再阻挡")
+                        ? net.minecraft.network.chat.Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
                         : net.minecraft.network.chat.Component.literal("已禁用：这么好的功能为什么不打开呢");
                 return java.util.List.of(title, line);
             }

@@ -3,6 +3,8 @@ package com.extendedae_plus.hooks;
 import appeng.util.InteractionUtil;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
+import appeng.block.crafting.CraftingUnitBlock;
+import appeng.blockentity.crafting.CraftingBlockEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -60,6 +62,28 @@ public final class WrenchHook {
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+            }
+            // AE2 并行处理器系列（CraftingUnitBlock）潜行扳手拆除：直接入背包
+            else {
+                var pos = hit.getBlockPos();
+                BlockState state = level.getBlockState(pos);
+                if (state.getBlock() instanceof CraftingUnitBlock) {
+                    if (!level.isClientSide) {
+                        var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, level.getBlockEntity(pos), player, stack);
+                        for (var item : drops) {
+                            player.getInventory().placeItemBackInInventory(item);
+                        }
+                    }
+
+                    level.playSound(player, hit.getBlockPos(), SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.7F, 1.0F);
+
+                    state.getBlock().playerWillDestroy(level, pos, state, player);
+                    level.removeBlock(pos, false);
+                    state.getBlock().destroy(level, pos, state);
+
+                    event.setCanceled(true);
+                    event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+                }
             }
         } else if (!InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
             // 未潜行 + 扳手：切换锁定状态
