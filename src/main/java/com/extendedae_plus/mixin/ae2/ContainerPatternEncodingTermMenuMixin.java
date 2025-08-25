@@ -9,6 +9,7 @@ import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -109,5 +111,13 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             });
         } catch (Throwable ignored) {
         }
+    }
+
+    // 服务器端：在构造样板返回前插入编码玩家的名称
+    @Inject(method = "encodePattern", at = @At("TAIL"), remap = false, cancellable = true)
+    private void eap$writeEncodePlayerToPattern(CallbackInfoReturnable<ItemStack> cir) {
+        ItemStack itemStack = cir.getReturnValue();
+        itemStack.getOrCreateTag().putString("encodePlayer", this.epp$player.getGameProfile().getName());
+        cir.setReturnValue(itemStack);
     }
 }
