@@ -7,7 +7,7 @@ import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 
 /**
- * 客户端模型注册，参照 MAE2 的做法将 formed 模型注册为内置模型。
+ * 客户端模型注册，将 formed 模型注册为内置模型。
  */
 public final class ClientProxy {
     private ClientProxy() {}
@@ -17,7 +17,7 @@ public final class ClientProxy {
     public static void init() {
         if (REGISTERED) return;
         REGISTERED = true;
-        // 注册四种形成态模型为内置模型（使用 *_formed_v2 避免与现有 JSON 冲突）
+        // 注册四种形成态模型为内置模型
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/4x_accelerator_formed_v2"),
                 new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_4x)));
