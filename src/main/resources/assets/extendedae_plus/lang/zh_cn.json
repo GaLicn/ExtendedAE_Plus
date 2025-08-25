@@ -26,5 +26,15 @@
   "item.extendedae_plus.16x_crafting_accelerator": "16x并行处理单元",
   "item.extendedae_plus.64x_crafting_accelerator": "64x并行处理单元",
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
-  "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元"
+  "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
+
+  "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
+  "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",
+  "config.jade.plugin_extendedae_plus.wt_master_mode": "显示主/从模式",
+  "config.jade.plugin_extendedae_plus.wt_master_location": "显示主节点位置",
+  "config.jade.plugin_extendedae_plus.wt_locked": "显示锁定状态",
+  "config.jade.plugin_extendedae_plus.wt_network_usable": "显示网络在线状态",
+  "extendedae_plus.tooltip.frequency": "频率: %d",
+  "extendedae_plus.tooltip.master_mode": "模式: %s",
+  "extendedae_plus.tooltip.locked": "锁定状态: %s"
 }
