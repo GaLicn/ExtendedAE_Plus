@@ -9,6 +9,7 @@
     "accessor.ScreenAccessor",
     "accessor.ScreenInvoker",
     "ae2.AEBaseScreenMixin",
+    "ae2.EncodedPatternItemMixin",
     "ae2.PatternEncodingTermScreenMixin",
     "ae2.PatternProviderScreenMixin",
     "ae2.QuartzCuttingKnifeItemMixin",
