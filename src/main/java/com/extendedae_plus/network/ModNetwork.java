@@ -18,6 +18,12 @@ public class ModNetwork {
     private static int id = 0;
 
     public static void register() {
+        CHANNEL.messageBuilder(OpenProviderUiC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(OpenProviderUiC2SPacket::encode)
+                .decoder(OpenProviderUiC2SPacket::decode)
+                .consumerNetworkThread(OpenProviderUiC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(PickFromWirelessC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(PickFromWirelessC2SPacket::encode)
                 .decoder(PickFromWirelessC2SPacket::decode)

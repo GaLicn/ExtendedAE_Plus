@@ -10,6 +10,8 @@ import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,6 +24,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -264,25 +267,22 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 faceOrd = ((Direction) face).ordinal();
             }
 
-            // 发送 CGenericPacket("open_ui", [posLong, dim, face])
+            // 发送我们自己的 C2S 包：OpenProviderUiC2SPacket
             try {
-                Class<?> EPPNetworkHandlerClass = Class.forName("com.glodblock.github.extendedae.network.EPPNetworkHandler");
-                Object handlerInstance = EPPNetworkHandlerClass.getField("INSTANCE").get(null);
-
-                Class<?> packetClass = Class.forName("com.glodblock.github.glodium.network.packet.CGenericPacket");
-                Constructor<?> constructor = packetClass.getConstructor(String.class, Object[].class);
-                Object packet = constructor.newInstance("open_ui", new Object[]{posLong, dimStr, faceOrd});
-
-                Class<?> iMessage = Class.forName("com.glodblock.github.glodium.network.packet.IMessage");
-                Method sendToServer = EPPNetworkHandlerClass.getMethod("sendToServer", iMessage);
-
-                sendToServer.invoke(handlerInstance, packet);
                 if (this.minecraft != null && this.minecraft.player != null) {
-                    EAP_LOGGER.debug("[EPlus] Sent open_ui packet: pos={}, dim={}, face={}", posLong, dimStr, faceOrd);
+                    this.minecraft.player.displayClientMessage(Component.literal("↗ 正在请求打开供应器界面..."), true);
+                }
+                ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
+                        posLong,
+                        new ResourceLocation(dimStr),
+                        faceOrd
+                ));
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    EAP_LOGGER.info("[EPlus] Sent OpenProviderUiC2SPacket: pos={}, dim={}, face={}", posLong, dimStr, faceOrd);
                 }
             } catch (Throwable t) {
                 if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.displayClientMessage(Component.literal("❌ ExtendedAE Plus: 网络模块不可用，无法发送打开UI请求"), true);
+                    this.minecraft.player.displayClientMessage(Component.literal("❌ ExtendedAE Plus: 发送打开UI请求失败"), true);
                 }
             }
         } catch (Throwable t) {
