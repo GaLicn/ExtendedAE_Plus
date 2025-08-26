@@ -504,7 +504,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 if (btn == null) {
                     btn = Button.builder(Component.literal("UI"), (b) -> {
                         eap$tryOpenProviderUI(rowIndex);
-                    }).size(18, 16).build();
+                    }).size(14, 12).build();
                     btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
                     eap$openUIButtons.put(rowIndex, btn);
                     this.addRenderableWidget(btn);
