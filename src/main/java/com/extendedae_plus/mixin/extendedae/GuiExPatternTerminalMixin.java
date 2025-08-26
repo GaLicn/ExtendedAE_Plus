@@ -10,6 +10,8 @@ import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -18,6 +20,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -252,12 +256,12 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             Object face = info.getClass().getMethod("face").invoke(info); // 可能为 null（方块型供应器）
             Object playerWorld = info.getClass().getMethod("playerWorld").invoke(info);
 
-            long posLong = (long) pos.getClass().getMethod("asLong").invoke(pos);
-            Object rl = playerWorld.getClass().getMethod("location").invoke(playerWorld); // ResourceLocation
-            String dimStr = (String) rl.getClass().getMethod("toString").invoke(rl);
+            // 避免对 MC 类进行反射，使用强制类型转换后直接调用方法（由 Forge 运行时重映射保证）
+            long posLong = ((BlockPos) pos).asLong();
+            String dimStr = ((ResourceKey<Level>) playerWorld).location().toString();
             int faceOrd = -1;
             if (face != null) {
-                faceOrd = (int) face.getClass().getMethod("ordinal").invoke(face);
+                faceOrd = ((Direction) face).ordinal();
             }
 
             // 发送 CGenericPacket("open_ui", [posLong, dim, face])
