@@ -36,7 +36,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Pseudo
-@Mixin(value = GuiExPatternTerminal.class, remap = false)
+@Mixin(value = GuiExPatternTerminal.class)
 public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> {
 
     @Unique
@@ -122,8 +122,9 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     /**
      * 拦截鼠标点击事件，实现Shift+左键快速上传样板功能
+     * 注意：某些整合包的 ExtendedAE 版本不在该类中覆写 mouseClicked，此处设置 require=0 以防止注入失败导致崩溃。
      */
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0)
     private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         // 检查是否是左键点击 + Shift键
         if (button == 0 && hasShiftDown()) {
