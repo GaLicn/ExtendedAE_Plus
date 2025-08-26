@@ -333,7 +333,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.addToLeftToolbar(this.eap$toggleSlotsButton);
     }
 
-    @Inject(method = "init", at = @At("TAIL"), remap = false)
+    @Inject(method = "init", at = @At("TAIL"), remap = false, require = 0)
     private void eap$onInit(CallbackInfo ci) {
         // 清理旧的打开UI按钮
         this.eap$openUIButtons.values().forEach(this::removeWidget);
