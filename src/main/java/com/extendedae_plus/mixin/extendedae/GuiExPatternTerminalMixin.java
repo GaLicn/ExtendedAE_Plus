@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -337,6 +338,63 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.addToLeftToolbar(this.eap$toggleSlotsButton);
     }
 
+    /**
+     * 处理屏幕缩放（resize）后按钮位置未更新的问题：
+     * - 清理并移除现有的“打开UI”按钮
+     * - 尝试重置滚动条并刷新列表
+     * 缩放后的下一帧，drawFG 会基于新的 leftPos/topPos 重建与定位按钮
+     */
+    @Inject(method = "resize", at = @At("TAIL"), remap = false, require = 0)
+    private void eap$onResize(Minecraft mc, int width, int height, CallbackInfo ci) {
+        try {
+            // 移除并清理按钮，避免旧位置残留
+            this.eap$openUIButtons.values().forEach(this::removeWidget);
+            this.eap$openUIButtons.clear();
+
+            // 重置一次滚动条，避免可见行/偏移在缩放后与 UI 尺寸不一致
+            try {
+                Method resetScrollbarMethod = null;
+                try {
+                    resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
+                } catch (NoSuchMethodException e1) {
+                    try {
+                        resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
+                    } catch (NoSuchMethodException e2) {
+                        resetScrollbarMethod = null;
+                    }
+                }
+                if (resetScrollbarMethod != null) {
+                    resetScrollbarMethod.setAccessible(true);
+                    resetScrollbarMethod.invoke(this);
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // 刷新列表，使 rows/visibleRows 立即以新尺寸重算
+            try {
+                Method refreshMethod = null;
+                try {
+                    refreshMethod = this.getClass().getDeclaredMethod("refreshList");
+                } catch (NoSuchMethodException e1) {
+                    try {
+                        refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
+                    } catch (NoSuchMethodException e2) {
+                        refreshMethod = null;
+                    }
+                }
+                if (refreshMethod != null) {
+                    refreshMethod.setAccessible(true);
+                    refreshMethod.invoke(this);
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // 下次绘制重新输出一次调试行，便于确认缩放后的 rows/scroll
+            this.eap$debugLoggedOnce = false;
+        } catch (Throwable ignored) {
+        }
+    }
+
     @Inject(method = "init", at = @At("TAIL"), remap = false, require = 0)
     private void eap$onInit(CallbackInfo ci) {
         // 清理旧的打开UI按钮
@@ -503,7 +561,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
                 // 放置按钮：位于名称文本右侧，与原类 choiceButton 锚点相邻，向右偏移 20px
                 int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 40;
-                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT;
+                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 3;
 
                 Button btn = eap$openUIButtons.get(rowIndex);
                 if (btn == null) {
