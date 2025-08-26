@@ -11,6 +11,7 @@ import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -29,9 +30,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Pseudo
-@Mixin(GuiExPatternTerminal.class)
+@Mixin(value = GuiExPatternTerminal.class, remap = false)
 public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> {
 
     @Unique
@@ -46,6 +51,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     private boolean eap$showSlots = false; // 默认显示槽位
     @Unique
     private long eap$currentlyChoicePatterProvider = -1; // 当前选择的样板供应器ID
+    @Unique
+    private final Map<Integer, Button> eap$openUIButtons = new HashMap<>();
+
+    @Unique
+    private static final Logger EAP_LOGGER = LogManager.getLogger("ExtendedAE_Plus");
+
+    @Unique
+    private boolean eap$debugLoggedOnce = false;
     @Shadow(remap = false) private AETextField searchOutField;
     @Shadow(remap = false) private AETextField searchInField;
     @Shadow(remap = false) private Set<ItemStack> matchedStack;
@@ -181,6 +194,97 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         }
     }
 
+    @Unique
+    private int getIntConst(Class<?> cls, String name, int defVal) {
+        try {
+            var f = cls.getDeclaredField(name);
+            f.setAccessible(true);
+            return (int) f.get(null);
+        } catch (Throwable t) {
+            return defVal;
+        }
+    }
+
+    @Unique
+    private void eap$tryOpenProviderUI(int rowIndex) {
+        try {
+            // 使用 Accessor 获取 rows，避免取到父类导致失败
+            com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor acc =
+                (com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor) (Object) this;
+            java.util.ArrayList<?> rows = acc.getRows();
+
+            // 找到该分组对应的第一个 PatternContainerRecord
+            Class<?> cls = com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal.class;
+            var byGroupField = cls.getDeclaredField("byGroup");
+            byGroupField.setAccessible(true);
+            Object byGroup = byGroupField.get(this); // HashMultimap<PatternContainerGroup, PatternContainerRecord>
+
+            Object headerRow = rows.get(rowIndex);
+            var groupField = headerRow.getClass().getDeclaredField("group");
+            groupField.setAccessible(true);
+            Object group = groupField.get(headerRow);
+
+            // 调用 byGroup.get(group)，再取第一个元素
+            java.util.Collection<?> containers = (java.util.Collection<?>) byGroup.getClass().getMethod("get", Object.class).invoke(byGroup, group);
+            if (containers == null || containers.isEmpty()) {
+                return;
+            }
+            Object firstRecord = containers.iterator().next(); // PatternContainerRecord
+            long serverId = (long) firstRecord.getClass().getMethod("getServerId").invoke(firstRecord);
+
+            // 通过 infoMap 获取位置信息
+            var infoMapField = cls.getDeclaredField("infoMap");
+            infoMapField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.HashMap<Long, Object> infoMap = (java.util.HashMap<Long, Object>) infoMapField.get(this);
+            Object info = infoMap.get(serverId);
+            if (info == null) {
+                // 无位置信息，提示
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.displayClientMessage(Component.literal("未找到该供应器的位置信息，无法打开UI"), true);
+                }
+                return;
+            }
+
+            // PatternProviderInfo record: pos(), face(), playerWorld()
+            Object pos = info.getClass().getMethod("pos").invoke(info);
+            Object face = info.getClass().getMethod("face").invoke(info); // 可能为 null（方块型供应器）
+            Object playerWorld = info.getClass().getMethod("playerWorld").invoke(info);
+
+            long posLong = (long) pos.getClass().getMethod("asLong").invoke(pos);
+            Object rl = playerWorld.getClass().getMethod("location").invoke(playerWorld); // ResourceLocation
+            String dimStr = (String) rl.getClass().getMethod("toString").invoke(rl);
+            int faceOrd = -1;
+            if (face != null) {
+                faceOrd = (int) face.getClass().getMethod("ordinal").invoke(face);
+            }
+
+            // 发送 CGenericPacket("open_ui", [posLong, dim, face])
+            try {
+                Class<?> EPPNetworkHandlerClass = Class.forName("com.glodblock.github.extendedae.network.EPPNetworkHandler");
+                Object handlerInstance = EPPNetworkHandlerClass.getField("INSTANCE").get(null);
+
+                Class<?> packetClass = Class.forName("com.glodblock.github.glodium.network.packet.CGenericPacket");
+                Constructor<?> constructor = packetClass.getConstructor(String.class, Object[].class);
+                Object packet = constructor.newInstance("open_ui", new Object[]{posLong, dimStr, faceOrd});
+
+                Class<?> iMessage = Class.forName("com.glodblock.github.glodium.network.packet.IMessage");
+                Method sendToServer = EPPNetworkHandlerClass.getMethod("sendToServer", iMessage);
+
+                sendToServer.invoke(handlerInstance, packet);
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    EAP_LOGGER.debug("[EPlus] Sent open_ui packet: pos={}, dim={}, face={}", posLong, dimStr, faceOrd);
+                }
+            } catch (Throwable t) {
+                if (this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.displayClientMessage(Component.literal("❌ ExtendedAE Plus: 网络模块不可用，无法发送打开UI请求"), true);
+                }
+            }
+        } catch (Throwable t) {
+            EAP_LOGGER.warn("[EPlus] eap$tryOpenProviderUI failed: {}", t.toString());
+        }
+    }
+
     /**
      * 重置当前选择的样板供应器ID
      */
@@ -228,6 +332,13 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.addToLeftToolbar(this.eap$toggleSlotsButton);
     }
 
+    @Inject(method = "init", at = @At("TAIL"), remap = false)
+    private void eap$onInit(CallbackInfo ci) {
+        // 清理旧的打开UI按钮
+        this.eap$openUIButtons.values().forEach(this::removeWidget);
+        this.eap$openUIButtons.clear();
+    }
+
     @Inject(method = "refreshList", at = @At("HEAD"), remap = false)
     private void onRefreshListStart(CallbackInfo ci) {
         // 更新按钮图标
@@ -236,6 +347,9 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     this.eap$showSlots ? "gui.expatternprovider.hide_slots" : "gui.expatternprovider.show_slots"
             )));
         }
+        // 清理旧的打开UI按钮
+        this.eap$openUIButtons.values().forEach(this::removeWidget);
+        this.eap$openUIButtons.clear();
     }
 
     @Inject(method = "refreshList", at = @At("TAIL"), remap = false)
@@ -342,6 +456,71 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Inject(method = "drawFG", at = @At("TAIL"), remap = false)
     private void eap$afterDrawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, CallbackInfo ci) {
+        // 动态放置/创建每个组标题后的“打开UI”按钮
+        try {
+            // 使用 Accessor 获取必要的字段，避免反射失败
+            com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor acc =
+                (com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor) (Object) this;
+            java.util.ArrayList<?> rows = acc.getRows();
+            int currentScroll = acc.getScrollbar().getCurrentScroll();
+
+            // 直接引用目标类以获取其静态常量
+            Class<?> cls = com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal.class;
+            int GUI_PADDING_X = getIntConst(cls, "GUI_PADDING_X", 22);
+            int GUI_PADDING_Y = getIntConst(cls, "GUI_PADDING_Y", 6);
+            int GUI_HEADER_HEIGHT = getIntConst(cls, "GUI_HEADER_HEIGHT", 51);
+            int ROW_HEIGHT = getIntConst(cls, "ROW_HEIGHT", 18);
+            int TEXT_MAX_WIDTH = getIntConst(cls, "TEXT_MAX_WIDTH", 155);
+
+            int visibleRows = acc.getVisibleRows();
+
+            if (!eap$debugLoggedOnce) {
+                EAP_LOGGER.info("[EPlus] GuiExPatternTerminalMixin.afterDrawFG fired: rows={}, currentScroll={}, visibleRows={}",
+                        rows.size(), currentScroll, visibleRows);
+                eap$debugLoggedOnce = true;
+            }
+
+            // 先隐藏旧按钮，避免残留
+            for (Button b : this.eap$openUIButtons.values()) {
+                b.visible = false;
+            }
+
+            int shownCount = 0;
+            for (int i = 0; i < visibleRows; i++) {
+                int rowIndex = currentScroll + i;
+                if (rowIndex < 0 || rowIndex >= rows.size()) {
+                    continue;
+                }
+                Object row = rows.get(rowIndex);
+                if (!row.getClass().getSimpleName().equals("GroupHeaderRow")) {
+                    continue;
+                }
+
+                // 放置按钮：位于名称文本右侧，与原类 choiceButton 锚点相邻，向右偏移 20px
+                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 40;
+                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT;
+
+                Button btn = eap$openUIButtons.get(rowIndex);
+                if (btn == null) {
+                    btn = Button.builder(Component.literal("UI"), (b) -> {
+                        eap$tryOpenProviderUI(rowIndex);
+                    }).size(18, 16).build();
+                    btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
+                    eap$openUIButtons.put(rowIndex, btn);
+                    this.addRenderableWidget(btn);
+                }
+                btn.setPosition(bx, by);
+                btn.visible = true;
+                shownCount++;
+            }
+            if (shownCount == 0) {
+                EAP_LOGGER.debug("[EPlus] No GroupHeaderRow visible in current page (scroll={}, rows={})", currentScroll, rows.size());
+            } else {
+                EAP_LOGGER.debug("[EPlus] GroupHeaderRow buttons shown count: {}", shownCount);
+            }
+        } catch (Throwable ignored) {
+        }
+
         // 原有的搜索高亮逻辑
         // 仅当任一搜索框非空时绘制叠加层（与原版行为保持一致）
         boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue().isEmpty())
