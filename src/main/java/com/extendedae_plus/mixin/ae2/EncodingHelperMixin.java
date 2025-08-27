@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Mixin(EncodingHelper.class)
 public class EncodingHelperMixin {
@@ -25,10 +26,11 @@ public class EncodingHelperMixin {
     @Inject(method = "getIngredientPriorities", at = @At("TAIL"), cancellable = true, remap = false)
     private static void epp$addJeiIngredientPriorities(MEStorageMenu menu, Comparator<GridInventoryEntry> comparator, CallbackInfoReturnable<Map<AEKey, Integer>> cir){
         Map<AEKey, Integer> result = cir.getReturnValue();
+        AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
         List<? extends ITypedIngredient<?>> list = JeiRuntimeProxy.getBookmarkList();
         for (ITypedIngredient<?> ingredient : list) {
-            ingredient.getIngredient(VanillaTypes.ITEM_STACK).ifPresent(itemStack -> result.put(AEItemKey.of(itemStack), Integer.MAX_VALUE));
-            ingredient.getIngredient(ForgeTypes.FLUID_STACK).ifPresent(fluidStack -> result.put(AEFluidKey.of(fluidStack), Integer.MAX_VALUE));
+            ingredient.getIngredient(VanillaTypes.ITEM_STACK).ifPresent(itemStack -> result.put(AEItemKey.of(itemStack), index.getAndDecrement()));
+            ingredient.getIngredient(ForgeTypes.FLUID_STACK).ifPresent(fluidStack -> result.put(AEFluidKey.of(fluidStack), index.getAndDecrement()));
         }
         cir.setReturnValue(result);
     }
