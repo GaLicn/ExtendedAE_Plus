@@ -2,21 +2,28 @@ package com.extendedae_plus.mixin.ae2;
 
 import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.StackWithBounds;
+import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.TextOverride;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
+import appeng.api.stacks.AEKey;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.ExPatternPageAccessor;
+import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
+import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import com.mojang.logging.LogUtils;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,6 +43,40 @@ public abstract class AEBaseScreenMixin {
             if (v instanceof ScreenStyle s) return s;
         } catch (Throwable ignored) {}
         return null;
+    }
+
+    /**
+     * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+左键，
+     * 读取鼠标下的 AEKey 并发送 CraftingMonitorJumpC2SPacket。
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void eap$craftingCpuShiftLeftClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        // 仅处理 CraftingCPUScreen 实例
+        Object self = this;
+        if (!(self instanceof CraftingCPUScreen<?> screen)) {
+            return;
+        }
+        // 仅在 Shift + 左键 时触发
+        if (button != 0 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            return;
+        }
+        try {
+            StackWithBounds hovered = screen.getStackUnderMouse(mouseX, mouseY);
+            if (hovered == null || hovered.stack() == null) {
+                return;
+            }
+            AEKey key = hovered.stack().what();
+            if (key == null) {
+                return;
+            }
+            // Debug: 标记一次发送
+            try {
+                LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
+            } catch (Throwable ignored2) {}
+            ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
+            cir.setReturnValue(true);
+        } catch (Throwable ignored) {
+        }
     }
 
     @Unique
