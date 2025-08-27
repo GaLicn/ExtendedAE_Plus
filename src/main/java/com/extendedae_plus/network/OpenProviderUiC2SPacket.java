@@ -19,8 +19,6 @@ import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.Supplier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class OpenProviderUiC2SPacket {
     private final long posLong;
@@ -52,21 +50,17 @@ public class OpenProviderUiC2SPacket {
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
             if (player == null) return;
-            Logger logger = LogManager.getLogger("ExtendedAE_Plus");
+            
 
             // 校验维度与方块
             ResourceKey<Level> levelKey = ResourceKey.create(Registries.DIMENSION, msg.dimId);
             ServerLevel level = player.server.getLevel(levelKey);
             if (level == null) {
-                logger.warn("[EPlus] OpenProviderUiC2SPacket: invalid dimension {}", msg.dimId);
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("❌ 维度无效:" + msg.dimId), true);
                 return; // 无效维度
             }
 
             BlockPos pos = BlockPos.of(msg.posLong);
             if (!level.isLoaded(pos)) {
-                logger.warn("[EPlus] OpenProviderUiC2SPacket: chunk not loaded at {} in {}", pos, msg.dimId);
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("❌ 区块未加载:" + pos.toShortString()), true);
                 return; // 区块未加载
             }
 
@@ -83,14 +77,12 @@ public class OpenProviderUiC2SPacket {
                 BlockEntity tbe = level.getBlockEntity(targetPos);
                 if (tbe instanceof MenuProvider provider) {
                     NetworkHooks.openScreen(player, provider, targetPos);
-                    logger.debug("[EPlus] OpenProviderUiC2SPacket: opened BE MenuProvider at {} (neighbor via {})", targetPos, dir);
                     return;
                 }
                 var tstate = level.getBlockState(targetPos);
                 MenuProvider provider2 = tstate.getMenuProvider(level, targetPos);
                 if (provider2 != null) {
                     NetworkHooks.openScreen(player, provider2, targetPos);
-                    logger.debug("[EPlus] OpenProviderUiC2SPacket: opened State MenuProvider at {} (neighbor via {})", targetPos, dir);
                     return;
                 }
             }
@@ -105,9 +97,7 @@ public class OpenProviderUiC2SPacket {
                     var state2 = level.getBlockState(targetPos);
                     var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), dir.getOpposite(), targetPos, false);
                     InteractionResult r = state2.use(level, player, hand, hit);
-                    logger.debug("[EPlus] OpenProviderUiC2SPacket: fallback(use) at {} hit {} (via {}), result={}", targetPos, dir.getOpposite(), dir, r);
                     if (r.consumesAction()) {
-                        player.displayClientMessage(net.minecraft.network.chat.Component.literal("✅ 已尝试模拟右键交互: " + r), true);
                         return;
                     }
                 } else {
@@ -126,24 +116,18 @@ public class OpenProviderUiC2SPacket {
                         var state2 = level.getBlockState(targetPos);
                         var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), chosen.getOpposite(), targetPos, false);
                         InteractionResult r = state2.use(level, player, hand, hit);
-                        logger.debug("[EPlus] OpenProviderUiC2SPacket: fallback(use) at {} hit {} (auto via {}), result={}", targetPos, chosen.getOpposite(), chosen, r);
                         if (r.consumesAction()) {
-                            player.displayClientMessage(net.minecraft.network.chat.Component.literal("✅ 已尝试模拟右键交互: " + r), true);
                             return;
                         }
                     } else {
-                        logger.debug("[EPlus] OpenProviderUiC2SPacket: no neighbor candidate for fallback (faceOrd<0)");
+                        // 无可选邻居
                     }
                 }
             } else {
-                logger.debug("[EPlus] OpenProviderUiC2SPacket: skip fallback(use) because both hands occupied");
+                // 双手占用则跳过兜底交互
             }
 
-            // 若走到这里，说明未能打开界面
-            logger.warn("[EPlus] OpenProviderUiC2SPacket: No MenuProvider around {} (BE={}, Block={})", pos,
-                    be == null ? "null" : be.getClass().getName(), stateAtPos.getBlock().getClass().getName());
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("❌ 未找到可打开的相邻界面"), true);
+            context.setPacketHandled(true);
         });
-        context.setPacketHandled(true);
     }
 }

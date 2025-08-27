@@ -270,24 +270,16 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
             // 发送我们自己的 C2S 包：OpenProviderUiC2SPacket
             try {
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.displayClientMessage(Component.literal("↗ 正在请求打开供应器界面..."), true);
-                }
                 ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
                         posLong,
                         new ResourceLocation(dimStr),
                         faceOrd
                 ));
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    EAP_LOGGER.info("[EPlus] Sent OpenProviderUiC2SPacket: pos={}, dim={}, face={}", posLong, dimStr, faceOrd);
-                }
             } catch (Throwable t) {
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.displayClientMessage(Component.literal("❌ ExtendedAE Plus: 发送打开UI请求失败"), true);
-                }
+                // 静默失败：不提示玩家
             }
         } catch (Throwable t) {
-            EAP_LOGGER.warn("[EPlus] eap$tryOpenProviderUI failed: {}", t.toString());
+            // 静默失败：不输出日志
         }
     }
 
@@ -537,11 +529,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
             int visibleRows = acc.getVisibleRows();
 
-            if (!eap$debugLoggedOnce) {
-                EAP_LOGGER.info("[EPlus] GuiExPatternTerminalMixin.afterDrawFG fired: rows={}, currentScroll={}, visibleRows={}",
-                        rows.size(), currentScroll, visibleRows);
-                eap$debugLoggedOnce = true;
-            }
+            // 生产环境移除调试日志
 
             // 先隐藏旧按钮，避免残留
             for (Button b : this.eap$openUIButtons.values()) {
@@ -576,11 +564,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 btn.visible = true;
                 shownCount++;
             }
-            if (shownCount == 0) {
-                EAP_LOGGER.debug("[EPlus] No GroupHeaderRow visible in current page (scroll={}, rows={})", currentScroll, rows.size());
-            } else {
-                EAP_LOGGER.debug("[EPlus] GroupHeaderRow buttons shown count: {}", shownCount);
-            }
+            // 生产环境移除调试日志
         } catch (Throwable ignored) {
         }
 
