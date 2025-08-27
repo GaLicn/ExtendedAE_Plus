@@ -14,6 +14,7 @@ import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.ExPatternPageAccessor;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.mojang.logging.LogUtils;
@@ -74,6 +75,40 @@ public abstract class AEBaseScreenMixin {
                 LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
             } catch (Throwable ignored2) {}
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
+            cir.setReturnValue(true);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+右键，
+     * 读取鼠标下的 AEKey 并发送 CraftingMonitorOpenProviderC2SPacket（打开样板供应器UI）。
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void eap$craftingCpuShiftRightClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        // 仅处理 CraftingCPUScreen 实例
+        Object self = this;
+        if (!(self instanceof CraftingCPUScreen<?> screen)) {
+            return;
+        }
+        // 仅在 Shift + 右键 时触发
+        if (button != 1 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            return;
+        }
+        try {
+            StackWithBounds hovered = screen.getStackUnderMouse(mouseX, mouseY);
+            if (hovered == null || hovered.stack() == null) {
+                return;
+            }
+            AEKey key = hovered.stack().what();
+            if (key == null) {
+                return;
+            }
+            // Debug: 标记一次发送（打开供应器UI）
+            try {
+                LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
+            } catch (Throwable ignored2) {}
+            ModNetwork.CHANNEL.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }

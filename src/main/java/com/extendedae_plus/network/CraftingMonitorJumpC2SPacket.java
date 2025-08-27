@@ -8,9 +8,7 @@ import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.service.CraftingService;
-import appeng.menu.me.crafting.CraftingCPUMenu;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.CraftingCPUMenuAccessor;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -59,12 +57,17 @@ public class CraftingMonitorJumpC2SPacket {
             LogUtils.getLogger().info("EAP[S]: recv CraftingMonitorJumpC2SPacket key={} from {}", msg.what, player.getGameProfile().getName());
 
             // 必须在 CraftingCPU 界面内
-            if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
+            if (!(player.containerMenu instanceof appeng.menu.me.crafting.CraftingCPUMenu menu)) {
                 LogUtils.getLogger().info("EAP[S]: not in CraftingCPUMenu, abort");
                 return;
             }
-            // 直接通过 accessor 从菜单获取 Grid，避免对方块实体/level 的依赖
-            IGrid grid = ((CraftingCPUMenuAccessor) menu).getGrid();
+
+            // 通过菜单 target（可能是 BlockEntity/Part/ItemHost）按 IActionHost 获取 Grid
+            IGrid grid = null;
+            Object target = ((appeng.menu.AEBaseMenu) menu).getTarget();
+            if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                grid = host.getActionableNode().getGrid();
+            }
             if (grid == null) {
                 LogUtils.getLogger().info("EAP[S]: grid is null, abort");
                 return;
@@ -97,8 +100,7 @@ public class CraftingMonitorJumpC2SPacket {
                         PatternProviderLogicHost host = ((PatternProviderLogicAccessor) ppl).eap$host();
                         if (host == null) continue;
                         var pbe = host.getBlockEntity();
-                        var level = pbe.getLevel();
-                        if (!(level instanceof ServerLevel serverLevel)) continue;
+                        ServerLevel serverLevel = player.serverLevel();
 
                         // 尝试对邻居打开 GUI（复用 OpenProviderUiC2SPacket 的策略）
                         for (Direction dir : host.getTargets()) {
@@ -120,29 +122,26 @@ public class CraftingMonitorJumpC2SPacket {
                             }
                         }
 
-                        // 兜底：若无 MenuProvider，模拟徒手右键一次（优先有方块实体的面）
-                        boolean anyHandEmpty = player.getMainHandItem().isEmpty() || player.getOffhandItem().isEmpty();
-                        if (anyHandEmpty) {
-                            InteractionHand hand = player.getMainHandItem().isEmpty() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-                            Direction chosen = null;
+                        // 兜底：若无 MenuProvider，始终模拟一次右键（优先有方块实体的一面）
+                        InteractionHand hand = player.getMainHandItem().isEmpty() ? InteractionHand.MAIN_HAND : InteractionHand.MAIN_HAND;
+                        Direction chosen = null;
+                        for (Direction d : host.getTargets()) {
+                            if (serverLevel.getBlockEntity(pbe.getBlockPos().relative(d)) != null) { chosen = d; break; }
+                        }
+                        if (chosen == null) {
                             for (Direction d : host.getTargets()) {
-                                if (serverLevel.getBlockEntity(pbe.getBlockPos().relative(d)) != null) { chosen = d; break; }
+                                if (!serverLevel.getBlockState(pbe.getBlockPos().relative(d)).isAir()) { chosen = d; break; }
                             }
-                            if (chosen == null) {
-                                for (Direction d : host.getTargets()) {
-                                    if (!serverLevel.getBlockState(pbe.getBlockPos().relative(d)).isAir()) { chosen = d; break; }
-                                }
-                            }
-                            if (chosen != null) {
-                                BlockPos targetPos = pbe.getBlockPos().relative(chosen);
-                                var state2 = serverLevel.getBlockState(targetPos);
-                                var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), chosen.getOpposite(), targetPos, false);
-                                InteractionResult r = state2.use(serverLevel, player, hand, hit);
-                                if (r.consumesAction()) {
-                                    LogUtils.getLogger().info("EAP[S]: opened via simulated use at {} ({}), result={}", targetPos, chosen, r);
-                                    context.setPacketHandled(true);
-                                    return;
-                                }
+                        }
+                        if (chosen != null) {
+                            BlockPos targetPos = pbe.getBlockPos().relative(chosen);
+                            var state2 = serverLevel.getBlockState(targetPos);
+                            var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), chosen.getOpposite(), targetPos, false);
+                            InteractionResult r = state2.use(serverLevel, player, hand, hit);
+                            LogUtils.getLogger().info("EAP[S]: simulated use on {}, face={}, result={}", targetPos, chosen, r);
+                            if (r.consumesAction()) {
+                                context.setPacketHandled(true);
+                                return;
                             }
                         }
                     }

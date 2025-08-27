@@ -77,6 +77,12 @@ public class ModNetwork {
                 .decoder(CraftingMonitorJumpC2SPacket::decode)
                 .consumerNetworkThread(CraftingMonitorJumpC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(CraftingMonitorOpenProviderC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CraftingMonitorOpenProviderC2SPacket::encode)
+                .decoder(CraftingMonitorOpenProviderC2SPacket::decode)
+                .consumerNetworkThread(CraftingMonitorOpenProviderC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }
