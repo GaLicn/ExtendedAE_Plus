@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2.accessor;
+package com.extendedae_plus.mixin.autopattern;
 
 import appeng.api.stacks.AEKey;
 import appeng.crafting.CraftingTreeNode;

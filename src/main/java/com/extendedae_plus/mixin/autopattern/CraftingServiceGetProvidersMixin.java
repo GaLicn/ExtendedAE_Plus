@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.me.service.CraftingService;
