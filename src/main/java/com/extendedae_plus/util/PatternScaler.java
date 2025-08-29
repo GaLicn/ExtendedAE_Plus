@@ -8,6 +8,8 @@ import com.extendedae_plus.content.ScaledProcessingPattern;
 
 import java.util.Arrays;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 public final class PatternScaler {
     private PatternScaler() {
     }
@@ -103,14 +105,13 @@ public final class PatternScaler {
 
 
         /* Debug 输出 */
-        System.out.println("[extendedae_plus] 正在缩放样板：");
-        System.out.println("  原始样板: " + base);
-        System.out.println("  目标物品: " + target);
-        System.out.println("  请求数量: " + requestedAmount);
-        System.out.println("  缩放后输入: " + Arrays.toString(scaledInputs));
-        System.out.println("  缩放后输出: " + Arrays.toString(scaledCondensedOutputs));
-        System.out.println("  缩放后稀疏输入: " + Arrays.toString(scaledSparseInputs));
-        System.out.println("  缩放后稀疏输出: " + Arrays.toString(scaledSparseOutputs));
+        LOGGER.info("[extendedae_plus] 正在缩放样板： 目标物品: {}  请求数量: {}  缩放后输入: {}  缩放后输出: {}  缩放后稀疏输入: {}  缩放后稀疏输出: {}",
+                target,
+                requestedAmount,
+                Arrays.toString(scaledInputs),
+                Arrays.toString(scaledCondensedOutputs),
+                Arrays.toString(scaledSparseInputs),
+                Arrays.toString(scaledSparseOutputs));
 
 
         return new ScaledProcessingPattern(base,

@@ -20,7 +20,6 @@ public class CraftingServiceGetProvidersMixin {
         IPatternDetails base = null;
         if (original instanceof ScaledProcessingPattern scaledProcessingPattern) {
             base = scaledProcessingPattern.getOriginal();
-            System.out.println("[extendedae_plus] CraftingService.getProviders mixin invoked for: " + base);
         }
         return base == null ? original : base;
     }

@@ -103,7 +103,7 @@ dependencies {
     modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
 
     //mae2
-    modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6342203"
+//    modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6342203"
     modCompileOnly "curse.maven:modern-ae2-additions-1028068:6342203"
 }
 

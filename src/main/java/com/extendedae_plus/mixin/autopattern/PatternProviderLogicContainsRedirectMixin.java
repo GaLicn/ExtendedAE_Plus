@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.helpers.patternprovider.PatternProviderLogic;
@@ -26,7 +26,6 @@ public class PatternProviderLogicContainsRedirectMixin {
             if (o instanceof ScaledProcessingPattern scaled) {
                 IPatternDetails base = scaled.getOriginal();
                 if (base != null && list.indexOf(base) != -1) {
-                    System.out.println("[extendedae_plus] contains-redirect: matched base pattern for scaled pattern");
                     return true;
                 }
             }
