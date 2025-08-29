@@ -18,6 +18,12 @@ public class ModNetwork {
     private static int id = 0;
 
     public static void register() {
+        CHANNEL.messageBuilder(OpenProviderUiC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(OpenProviderUiC2SPacket::encode)
+                .decoder(OpenProviderUiC2SPacket::decode)
+                .consumerNetworkThread(OpenProviderUiC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(PickFromWirelessC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(PickFromWirelessC2SPacket::encode)
                 .decoder(PickFromWirelessC2SPacket::decode)
@@ -64,6 +70,18 @@ public class ModNetwork {
                 .encoder(AdvancedBlockingSyncS2CPacket::encode)
                 .decoder(AdvancedBlockingSyncS2CPacket::decode)
                 .consumerNetworkThread(AdvancedBlockingSyncS2CPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(CraftingMonitorJumpC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CraftingMonitorJumpC2SPacket::encode)
+                .decoder(CraftingMonitorJumpC2SPacket::decode)
+                .consumerNetworkThread(CraftingMonitorJumpC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(CraftingMonitorOpenProviderC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CraftingMonitorOpenProviderC2SPacket::encode)
+                .decoder(CraftingMonitorOpenProviderC2SPacket::decode)
+                .consumerNetworkThread(CraftingMonitorOpenProviderC2SPacket::handle)
                 .add();
     }
 

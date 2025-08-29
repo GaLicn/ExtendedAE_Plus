@@ -7,7 +7,6 @@
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
-    "accessor.ScreenInvoker",
     "ae2.AEBaseScreenMixin",
     "ae2.PatternEncodingTermScreenMixin",
     "ae2.PatternProviderScreenMixin",
