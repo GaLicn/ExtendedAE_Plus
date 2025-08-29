@@ -58,19 +58,21 @@ public abstract class CraftingTreeProcessMixin {
             CraftingService craftingService = (CraftingService) cc;
             Iterable<ICraftingProvider> providers = craftingService.getProviders(original);
 
-            // 计算 provider 数量；优先使用 mixin accessor 以避免消费迭代器
+            // 计算 provider 数量；尝试用反射读取内部 providers 列表以避免消费迭代器
             int size;
-            if (providers instanceof CraftingProviderListAccessor acc) {
-                List<?> list = acc.eap$getProviders();
+            try {
+                var cls = providers.getClass();
+                var f = cls.getDeclaredField("providers"); // private ArrayList<ICraftingProvider>
+                f.setAccessible(true);
+                List<?> list = (List<?>) f.get(providers);
                 size = list == null ? 0 : list.size();
-            } else {
-                // 回退为遍历计数（会消费迭代器）
+            } catch (Exception ex) {
+                // 反射失败回退为遍历计数（会消费迭代器）
                 size = (int) StreamSupport.stream(providers.spliterator(), false).count();
             }
-
-            // 将 requested 在 providers 间均分：仅在 providers 数量大于1时均分，保证整数且总量不少于 requested
-            long perProvider = requested;
-            if (size > 1) {
+            // 将 requested 在 providers 间均分，向上取整保证每个 provider 分配整数且总量不少于 requested
+            long perProvider = 1L;
+            if (size > 0) {
                 perProvider = requested / size + ((requested % size) == 0 ? 0 : 1);
                 if (perProvider <= 0) perProvider = 1L;
             }
