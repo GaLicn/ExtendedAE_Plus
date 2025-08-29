@@ -39,8 +39,6 @@ public abstract class CraftingTreeProcessMixin {
             CraftingTreeNodeAccessor parentAcc = (CraftingTreeNodeAccessor) craftingTreeNode;
             AEKey parentTarget = parentAcc.extendedae_plus$getWhat();
             long requested = RequestedAmountHolder.get();
-            // 记录所使用的请求数量和当前线程堆栈快照，便于诊断 PatternScaler.scale 使用了哪个值以及何时清理
-            LOGGER.info("[extendedae_plus] 在 CraftingTreeProcess 构造中使用请求数量: {} ; stackDepth={} ; stackSnapshot={}", requested, RequestedAmountHolder.depth(), RequestedAmountHolder.snapshot());
             // 使用当前线程栈顶的值进行缩放，不在此处清理；构造完成后应该由调用方的 pop 恢复状态
             return PatternScaler.scale(proc, parentTarget, requested);
         } catch (Exception e) {

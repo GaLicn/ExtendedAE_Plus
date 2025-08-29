@@ -23,56 +23,49 @@ public final class PatternScaler {
         IInput[] baseInputs = base.getInputs();
         GenericStack[] baseOutputs = base.getOutputs();
 
-        // 计算每个压缩输入槽位的总量（per operation）: multiplier * template.amount
-        long[] inputsCounts = new long[baseInputs.length];
-        for (int i = 0; i < baseInputs.length; i++) {
-            var in = baseInputs[i];
-            var first = in.getPossibleInputs()[0];
-            inputsCounts[i] = in.getMultiplier() * first.amount();
-        }
-
-        // 计算每个输出的数量（per operation）
-        long[] outputsCounts = new long[baseOutputs.length];
-        for (int i = 0; i < baseOutputs.length; i++) {
-            var out = baseOutputs[i];
-            outputsCounts[i] = out == null ? 0L : out.amount();
-        }
-
-        // 合并为一个数组并计算 gcd（使用早期退出优化）
-        long[] combined = ArraySimplifier.combine(inputsCounts, outputsCounts);
-        long gcd = ArraySimplifier.findGCDWithEarlyExit(combined);
-        if (gcd <= 0) gcd = 1;
-
-        // 如果 gcd == 1，则无需分配新的数组，直接使用 combined 作为 simplified 视图
-        long[] simplified = ArraySimplifier.simplifyByGcd(combined, gcd);
-
-        // 找到目标输出在 outputs 中的索引
+        // 新逻辑：不再对样板进行单位化处理
+        // 找到目标输出在 outputs 中的索引（尝试匹配 target，否则取第一个非空输出）
         int targetOutIndex = -1;
         for (int i = 0; i < baseOutputs.length; i++) {
-            if (baseOutputs[i] != null) {
+            var out = baseOutputs[i];
+            if (out != null && target != null && out.what() != null && out.what().equals(target)) {
                 targetOutIndex = i;
                 break;
             }
         }
+        if (targetOutIndex == -1) {
+            for (int i = 0; i < baseOutputs.length; i++) {
+                if (baseOutputs[i] != null) {
+                    targetOutIndex = i;
+                    break;
+                }
+            }
+        }
         if (targetOutIndex == -1 && baseOutputs.length > 0) targetOutIndex = 0;
 
-        long simplifiedTargetPerUnit = simplified[inputsCounts.length + Math.max(0, targetOutIndex)];
-        if (simplifiedTargetPerUnit <= 0) simplifiedTargetPerUnit = 1;
+        long perOperationTarget = 1L;
+        if (targetOutIndex >= 0 && baseOutputs[targetOutIndex] != null) {
+            long amt = baseOutputs[targetOutIndex].amount();
+            if (amt > 0) perOperationTarget = amt;
+        }
 
-        // 单位数：需要多少 "最简约单位" 才能满足 requestedAmount（向上取整）
-        long units = (requestedAmount + simplifiedTargetPerUnit - 1) / simplifiedTargetPerUnit;
+        // 使用最小整数倍（ceil）策略：直接选择满足请求的最小倍数
+        long multiplier = 1L;
+        if (requestedAmount > 0) {
+            long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
+            multiplier = needed <= 1L ? 1L : needed;
+        }
 
-        // 构建压缩输入（ScaledInput）——模板数量为 simplifiedInputs, multiplier 为 units
+        // 构建压缩输入（将每个输入的 multiplier 翻倍，保留每个模板的原始数量）
         IInput[] scaledInputs = new IInput[baseInputs.length];
         for (int i = 0; i < baseInputs.length; i++) {
             var in = baseInputs[i];
             var template = in.getPossibleInputs();
             GenericStack[] scaledTemplates = new GenericStack[template.length];
-            long simplifiedInputAmount = simplified[i];
             for (int j = 0; j < template.length; j++) {
-                scaledTemplates[j] = new GenericStack(template[j].what(), simplifiedInputAmount);
+                scaledTemplates[j] = new GenericStack(template[j].what(), template[j].amount());
             }
-            scaledInputs[i] = new ScaledProcessingPattern.Input(scaledTemplates, units);
+            scaledInputs[i] = new ScaledProcessingPattern.Input(scaledTemplates, in.getMultiplier() * multiplier);
         }
 
         /* 4. 构建压缩输出 */
@@ -80,26 +73,23 @@ public final class PatternScaler {
         for (int i = 0; i < baseOutputs.length; i++) {
             GenericStack out = baseOutputs[i];
             if (out != null) {
-                long simplifiedOutAmount = simplified[inputsCounts.length + i];
-                scaledCondensedOutputs[i] = new GenericStack(out.what(), simplifiedOutAmount * units);
+                scaledCondensedOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
             }
         }
 
-        // 构建并打印稀疏表示（按 unit * simplified / gcd 映射回原稀疏槽）
+        // 构建并打印稀疏表示（直接按 multiplier 放大）
         GenericStack[] scaledSparseInputs = new GenericStack[baseSparseInputs.length];
         for (int i = 0; i < baseSparseInputs.length; i++) {
             var in = baseSparseInputs[i];
             if (in != null) {
-                long scaledAmount = in.amount() * units / gcd;
-                scaledSparseInputs[i] = new GenericStack(in.what(), scaledAmount);
+                scaledSparseInputs[i] = new GenericStack(in.what(), in.amount() * multiplier);
             }
         }
         GenericStack[] scaledSparseOutputs = new GenericStack[baseSparseOutputs.length];
         for (int i = 0; i < baseSparseOutputs.length; i++) {
             var out = baseSparseOutputs[i];
             if (out != null) {
-                long scaledAmount = out.amount() * units / gcd;
-                scaledSparseOutputs[i] = new GenericStack(out.what(), scaledAmount);
+                scaledSparseOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
             }
         }
 
