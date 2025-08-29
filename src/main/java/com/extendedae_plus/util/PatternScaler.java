@@ -7,7 +7,6 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
 
-import java.util.Arrays;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
@@ -21,7 +20,6 @@ public final class PatternScaler {
 
         // 双保险：若样板标记为不允许缩放，直接放弃缩放（返回 null 表示调用方应保持原样板）
         if (base instanceof SmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
-            LOGGER.info("[extendedae_plus] PatternScaler: 智能翻倍禁用，跳过缩放 target={} requested={}", target, requestedAmount);
             return null;
         }
 
@@ -99,17 +97,6 @@ public final class PatternScaler {
                 scaledSparseOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
             }
         }
-
-
-        /* Debug 输出 */
-        LOGGER.info("[extendedae_plus] 正在缩放样板： 目标物品: {}  请求数量: {}  缩放后输入: {}  缩放后输出: {}  缩放后稀疏输入: {}  缩放后稀疏输出: {}",
-                target,
-                requestedAmount,
-                Arrays.toString(scaledInputs),
-                Arrays.toString(scaledCondensedOutputs),
-                Arrays.toString(scaledSparseInputs),
-                Arrays.toString(scaledSparseOutputs));
-
 
         return new ScaledProcessingPattern(base,
                 base.getDefinition(),

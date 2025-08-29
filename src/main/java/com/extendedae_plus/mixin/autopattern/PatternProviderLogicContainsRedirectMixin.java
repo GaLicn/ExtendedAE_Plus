@@ -32,7 +32,6 @@ public class PatternProviderLogicContainsRedirectMixin {
             // 使用 indexOf 避免再次触发对 List.contains 的 redirect（防止递归）
             return list.indexOf(o) != -1;
         } catch (Throwable t) {
-            t.printStackTrace();
             return list.indexOf(o) != -1;
         }
     }
