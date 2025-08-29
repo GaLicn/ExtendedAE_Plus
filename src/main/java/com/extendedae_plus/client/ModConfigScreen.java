@@ -1,0 +1,122 @@
+package com.extendedae_plus.client;
+
+import com.extendedae_plus.config.ModConfigs;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+
+public class ModConfigScreen extends Screen {
+    private final Screen parent;
+
+    // 输入控件
+    private EditBox pageMultiplierBox;
+    private EditBox wirelessMaxRangeBox;
+    private CycleButton<Boolean> crossDimToggle;
+
+    public ModConfigScreen(Screen parent) {
+        super(Component.translatable("screen.extendedae_plus.title"));
+        this.parent = parent;
+    }
+
+    @Override
+    protected void init() {
+        int centerX = this.width / 2;
+        int y = this.height / 6 + 24; // 起始高度，整体更上方
+        int row = 0;
+        int rowHeight = 26;
+        int boxWidth = 150;
+        // 左右两列：左侧标签起点，右侧输入控件起点
+        int leftX = centerX - 170;
+        int rightX = centerX + 20;
+
+        // pageMultiplier: Int 1-64
+        pageMultiplierBox = new EditBox(this.font, rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.pageMultiplier"));
+        pageMultiplierBox.setValue(String.valueOf(ModConfigs.PAGE_MULTIPLIER.get()));
+        pageMultiplierBox.setFilter(s -> s.matches("\\d*") && parseIntOrDefault(s, 1) >= 1 && parseIntOrDefault(s, 64) <= 64);
+        this.addRenderableWidget(pageMultiplierBox);
+        row++;
+
+        // wirelessMaxRange: Double 1-4096
+        wirelessMaxRangeBox = new EditBox(this.font, rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.wirelessMaxRange"));
+        wirelessMaxRangeBox.setValue(String.valueOf(ModConfigs.WIRELESS_MAX_RANGE.get()));
+        wirelessMaxRangeBox.setFilter(s -> s.isEmpty() || s.matches("\\d*(\\.\\d*)?"));
+        this.addRenderableWidget(wirelessMaxRangeBox);
+        row++;
+
+        // cross dim toggle
+        crossDimToggle = this.addRenderableWidget(
+                CycleButton.onOffBuilder(ModConfigs.WIRELESS_CROSS_DIM_ENABLE.get())
+                        .create(rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"),
+                                (b, v) -> {})
+        );
+        row++;
+
+        // 按钮：保存、返回
+        int btnW = 100;
+        int gap = 8;
+        int buttonsY = y + row * rowHeight + 18;
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> saveAndClose())
+                .pos(centerX - btnW - gap/2, buttonsY)
+                .size(btnW, 20)
+                .build());
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), b -> onClose())
+                .pos(centerX + gap/2, buttonsY)
+                .size(btnW, 20)
+                .build());
+    }
+
+    private void saveAndClose() {
+        // 读取与校验
+        int pageMul = clamp(parseIntOrDefault(pageMultiplierBox.getValue(), ModConfigs.PAGE_MULTIPLIER.get()), 1, 64);
+        double maxRange = clamp(parseDoubleOrDefault(wirelessMaxRangeBox.getValue(), ModConfigs.WIRELESS_MAX_RANGE.get()), 1.0, 4096.0);
+        boolean crossDim = crossDimToggle.getValue();
+
+        // 应用到 Forge 配置值
+        ModConfigs.PAGE_MULTIPLIER.set(pageMul);
+        ModConfigs.WIRELESS_MAX_RANGE.set(maxRange);
+        ModConfigs.WIRELESS_CROSS_DIM_ENABLE.set(crossDim);
+
+        // Forge 会在合适的时机写回到配置文件；部分改动可能需要重启游戏或世界才完全生效
+        onClose();
+    }
+
+    @Override
+    public void onClose() {
+        Minecraft.getInstance().setScreen(parent);
+    }
+
+    @Override
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(g);
+        super.render(g, mouseX, mouseY, partialTick);
+
+        int centerX = this.width / 2;
+        int y = this.height / 6 + 24;
+        int rowHeight = 26;
+        int labelColor = 0xFFFFFF;
+        int leftX = centerX - 170; // 标签左列位置
+
+        // 标题
+        g.drawCenteredString(this.font, this.title, centerX, y - 28, 0xFFFFFF);
+
+        // 每行标签
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.pageMultiplier_with_range"), leftX, y + 0 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessMaxRange_with_range"), leftX, y + 1 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"), leftX, y + 2 * rowHeight + 6, labelColor, false);
+    }
+
+    private static int parseIntOrDefault(String s, int def) {
+        try { return Integer.parseInt(s); } catch (Exception e) { return def; }
+    }
+
+    private static double parseDoubleOrDefault(String s, double def) {
+        try { return Double.parseDouble(s); } catch (Exception e) { return def; }
+    }
+
+    private static int clamp(int v, int min, int max) { return Math.max(min, Math.min(max, v)); }
+    private static double clamp(double v, double min, double max) { return Math.max(min, Math.min(max, v)); }
+}
