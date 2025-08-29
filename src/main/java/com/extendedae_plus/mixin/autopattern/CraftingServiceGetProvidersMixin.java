@@ -16,7 +16,7 @@ public class CraftingServiceGetProvidersMixin {
     @ModifyArg(method = "getProviders(Lappeng/api/crafting/IPatternDetails;)Ljava/lang/Iterable;",
             at = @At(value = "INVOKE", target = "Lappeng/me/service/helpers/NetworkCraftingProviders;getMediums(Lappeng/api/crafting/IPatternDetails;)Ljava/lang/Iterable;"),
             index = 0)
-    private IPatternDetails extendedae_plus$modifyGetProvidersArg(IPatternDetails original) {
+    private IPatternDetails eap$modifyGetProvidersArg(IPatternDetails original) {
         IPatternDetails base = null;
         if (original instanceof ScaledProcessingPattern scaledProcessingPattern) {
             base = scaledProcessingPattern.getOriginal();

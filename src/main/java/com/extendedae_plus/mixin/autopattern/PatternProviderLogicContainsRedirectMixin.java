@@ -21,7 +21,7 @@ public class PatternProviderLogicContainsRedirectMixin {
                     value = "INVOKE",
                     target = "Ljava/util/List;contains(Ljava/lang/Object;)Z")
     )
-    private boolean extendedae_plus$patternsContains(List<?> list, Object o) {
+    private boolean eap$patternsContains(List<?> list, Object o) {
         try {
             if (o instanceof ScaledProcessingPattern scaled) {
                 IPatternDetails base = scaled.getOriginal();
