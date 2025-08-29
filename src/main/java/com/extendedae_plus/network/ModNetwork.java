@@ -66,6 +66,12 @@ public class ModNetwork {
                 .consumerNetworkThread(ToggleAdvancedBlockingC2SPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(ToggleSmartDoublingC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ToggleSmartDoublingC2SPacket::encode)
+                .decoder(ToggleSmartDoublingC2SPacket::decode)
+                .consumerNetworkThread(ToggleSmartDoublingC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(AdvancedBlockingSyncS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(AdvancedBlockingSyncS2CPacket::encode)
                 .decoder(AdvancedBlockingSyncS2CPacket::decode)

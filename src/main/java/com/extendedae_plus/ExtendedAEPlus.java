@@ -19,7 +19,6 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraft.resources.ResourceLocation;
 
 import com.extendedae_plus.client.ClientProxy;
-import com.extendedae_plus.client.ModConfigScreen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 
@@ -60,14 +59,8 @@ public class ExtendedAEPlus {
         // 构造期在客户端再确保一次注册（幂等）
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::init);
 
-        // 在 Mods 菜单中注册配置界面入口（仅客户端）
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                ModLoadingContext.get().registerExtensionPoint(
-                        ConfigScreenHandler.ConfigScreenFactory.class,
-                        () -> new ConfigScreenHandler.ConfigScreenFactory(
-                                (mc, parent) -> new ModConfigScreen(parent))
-                )
-        );
+        // 在 Mods 菜单中注册配置界面入口（仅客户端，由 ClientProxy 执行以避免服务端类加载 Screen）
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::registerConfigScreen);
     }
     
     /**

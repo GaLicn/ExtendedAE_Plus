@@ -32,6 +32,8 @@
     "ae2.PatternEncodingTermMenuMixin",
     "ae2.PatternProviderLogicAdvancedMixin",
     "ae2.PatternProviderMenuAdvancedMixin",
+    "ae2.PatternProviderLogicDoublingMixin",
+    "ae2.PatternProviderMenuDoublingMixin",
     "ae2.accessor.MEStorageMenuAccessor",
     "ae2.accessor.PatternEncodingTermMenuAccessor",
     "ae2.accessor.PatternProviderLogicAccessor",
