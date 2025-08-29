@@ -5,6 +5,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.content.ScaledProcessingPattern;
+import com.extendedae_plus.api.SmartDoublingAwarePattern;
 
 import java.util.Arrays;
 
@@ -17,6 +18,12 @@ public final class PatternScaler {
     public static ScaledProcessingPattern scale(AEProcessingPattern base, AEKey target, long requestedAmount) {
         if (base == null) throw new IllegalArgumentException("base");
         if (target == null) throw new IllegalArgumentException("target");
+
+        // 双保险：若样板标记为不允许缩放，直接放弃缩放（返回 null 表示调用方应保持原样板）
+        if (base instanceof SmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
+            LOGGER.info("[extendedae_plus] PatternScaler: 智能翻倍禁用，跳过缩放 target={} requested={}", target, requestedAmount);
+            return null;
+        }
 
         GenericStack[] baseSparseInputs = base.getSparseInputs();
         GenericStack[] baseSparseOutputs = base.getSparseOutputs();
