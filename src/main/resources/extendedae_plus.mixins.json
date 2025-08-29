@@ -22,11 +22,12 @@
     "extendedae.HighlightButtonMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
-    "jei.EncodePatternTransferHandlerMixin",
-    "hooks.ModelBakeryMixin"
+    "hooks.ModelBakeryMixin",
+    "jei.EncodePatternTransferHandlerMixin"
   ],
   "mixins": [
     "ae2.ContainerPatternEncodingTermMenuMixin",
+    "ae2.CraftingCPUClusterMixin",
     "ae2.MEStorageMenuMixin",
     "ae2.PatternEncodingTermMenuMixin",
     "ae2.PatternProviderLogicAdvancedMixin",
@@ -37,10 +38,15 @@
     "ae2.accessor.PatternProviderLogicPatternInputsAccessor",
     "ae2.accessor.PatternProviderMenuAdvancedAccessor",
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
+    "autopattern.CraftingCalculationAccessor",
+    "autopattern.CraftingServiceGetProvidersMixin",
+    "autopattern.CraftingTreeNodeAccessor",
+    "autopattern.CraftingTreeNodeMixin",
+    "autopattern.CraftingTreeProcessMixin",
+    "autopattern.PatternProviderLogicContainsRedirectMixin",
     "extendedae.ContainerExPatternProviderMixin",
     "extendedae.ContainerExPatternTerminalMixin",
     "extendedae.ContainerWirelessExPatternTerminalMixin",
-    "ae2.CraftingCPUClusterMixin",
     "extendedae.PartExPatternProviderMixin",
     "extendedae.TileExPatternProviderMixin"
   ],
