@@ -28,6 +28,17 @@ public final class ModBlocks {
             )
     );
 
+    // AE2 网络模式控制器方块
+    public static final RegistryObject<Block> NETWORK_PATTERN_CONTROLLER = BLOCKS.register(
+            "network_pattern_controller",
+            () -> new com.extendedae_plus.content.controller.NetworkPatternControllerBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
     // Crafting Accelerators (reuse MAE2 textures/models)
     public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_4x = BLOCKS.register(
             "4x_crafting_accelerator",

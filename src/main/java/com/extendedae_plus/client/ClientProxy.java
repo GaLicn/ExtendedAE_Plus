@@ -3,10 +3,14 @@ package com.extendedae_plus.client;
 import appeng.client.render.crafting.CraftingCubeModel;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
+import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
+import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
@@ -39,6 +43,19 @@ public final class ClientProxy {
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2"),
                 new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_1024x)));
+
+        // 菜单 -> 屏幕 绑定
+        MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
+    }
+
+    /**
+     * 客户端设置阶段：延迟执行需要访问注册对象的客户端注册。
+     */
+    public static void onClientSetup(final FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            init();
+            registerConfigScreen();
+        });
     }
 
     /**
