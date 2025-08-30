@@ -1,9 +1,10 @@
-package com.extendedae_plus.mixin.ae2.autopattern;
+package com.extendedae_plus.mixin.ae2.autopattern.adaptation;
 
 import appeng.api.crafting.IPatternDetails;
-import appeng.helpers.patternprovider.PatternProviderLogic;
 import com.extendedae_plus.content.ScaledProcessingPattern;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
@@ -13,8 +14,9 @@ import java.util.List;
  * Redirect PatternProviderLogic.pushPattern 中对 List.contains 的调用，
  * 在遇到缩放样板时回退匹配到原始样板实例。
  */
-@Mixin(value = PatternProviderLogic.class, remap = false)
-public class PatternProviderLogicContainsRedirectMixin {
+@Pseudo
+@Mixin(value = AdvPatternProviderLogic.class, remap = false)
+public class AdvPatternProviderLogicContainsRedirectMixin {
 
     @Redirect(method = "pushPattern",
             at = @At(

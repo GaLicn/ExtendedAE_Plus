@@ -8,12 +8,12 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.service.CraftingService;
 import appeng.menu.AEBaseMenu;
-import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.menu.locator.MenuLocators;
+import appeng.menu.me.crafting.CraftingCPUMenu;
+import appeng.parts.AEBasePart;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -94,7 +94,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
                             // 部件与方块实体分别选择定位器
-                            if (host instanceof appeng.parts.AEBasePart part) {
+                            if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
@@ -112,4 +112,6 @@ public class CraftingMonitorOpenProviderC2SPacket {
         });
         context.setPacketHandled(true);
     }
+
+
 }
