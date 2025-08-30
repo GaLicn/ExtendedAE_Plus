@@ -1,6 +1,7 @@
 package com.extendedae_plus.mixin.ae2;
 
 import appeng.crafting.pattern.EncodedPatternItem;
+import com.extendedae_plus.config.ModConfigs;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -19,7 +20,7 @@ public class EncodedPatternItemMixin {
     // 客户端：在 HoverText 显示样板的编码玩家
     @Inject(method = "appendHoverText", at = @At("TAIL"))
     public void epp$appendHoverText(ItemStack stack, Level level, List<Component> lines, TooltipFlag advancedTooltips, CallbackInfo ci){
-        if (stack.hasTag()) {
+        if (stack.hasTag() && ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.get()) {
             CompoundTag tag = stack.getOrCreateTag();
             String name = tag.getString("encodePlayer");
             lines.add(Component.translatable("extendedae_plus.pattern.hovertext.player", name).withStyle(ChatFormatting.GRAY));

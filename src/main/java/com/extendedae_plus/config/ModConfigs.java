@@ -7,6 +7,7 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.IntValue PAGE_MULTIPLIER;
     public static final ForgeConfigSpec.DoubleValue WIRELESS_MAX_RANGE;
     public static final ForgeConfigSpec.BooleanValue WIRELESS_CROSS_DIM_ENABLE;
+    public static final ForgeConfigSpec.BooleanValue SHOW_ENCOD_PATTERN_PLAYER;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -32,6 +33,14 @@ public final class ModConfigs {
                         "是否允许无线收发器跨维度建立连接",
                         "开启后，从端可连接到不同维度的主端（忽略距离限制）")
                 .define("wirelessCrossDimEnable", true);
+
+        SHOW_ENCOD_PATTERN_PLAYER = builder
+                .comment(
+                        "是否显示样板编码玩家",
+                        "开启后将在样板 HoverText 上添加样板的编码玩家"
+                )
+                .define("showEncoderPatternPlayer", true);
+
         builder.pop();
         COMMON_SPEC = builder.build();
     }
