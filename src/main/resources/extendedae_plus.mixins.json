@@ -22,6 +22,9 @@
     "extendedae.HighlightButtonMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
+    "ae2.EncodePatternTransferHandlerMixin",
+    "ae2.EncodingHelperMixin",
+    "jei.accessor.BookmarkOverlayAccessor",
     "hooks.ModelBakeryMixin",
     "jei.EncodePatternTransferHandlerMixin"
   ],
