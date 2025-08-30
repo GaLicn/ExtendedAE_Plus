@@ -7,10 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(CraftingTreeNode.class)
 public interface CraftingTreeNodeAccessor {
-
     @Accessor("what")
-    AEKey extendedae_plus$getWhat();
-
-    @Accessor("amount")
-    long extendedae_plus$getAmount();
+    AEKey eap$getWhat();
 }
