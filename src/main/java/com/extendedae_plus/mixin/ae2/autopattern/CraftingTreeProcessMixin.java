@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.autopattern;
+package com.extendedae_plus.mixin.ae2.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
@@ -10,9 +10,9 @@ import appeng.crafting.CraftingTreeProcess;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.util.PatternScaler;
-import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.util.RequestedAmountHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -66,16 +66,15 @@ public abstract class CraftingTreeProcessMixin {
                 CraftingService craftingService = (CraftingService) cc;
                 Iterable<ICraftingProvider> providers = craftingService.getProviders(original);
 
-                // 计算 provider 数量；尝试用反射读取内部 providers 列表以避免消费迭代器
+                // 计算 provider 数量；避免直接反射目标类字段，优先使用 mixin Accessor 暴露的列表
                 int size;
                 try {
-                    var cls = providers.getClass();
-                    var f = cls.getDeclaredField("providers"); // private ArrayList<ICraftingProvider>
-                    f.setAccessible(true);
-                    List<?> list = (List<?>) f.get(providers);
+                    // 使用 NetworkCraftingProvidersAccessor（通过 Mixin 生成）来获取内部列表
+                    var acc = (NetworkCraftingProvidersAccessor) providers;
+                    var list = acc.eap$getProvidersList();
                     size = list == null ? 0 : list.size();
-                } catch (Exception ex) {
-                    // 反射失败回退为遍历计数（会消费迭代器）
+                } catch (ClassCastException ccx) {
+                    // 访问器不可用：回退为遍历计数（会消费迭代器）
                     size = (int) StreamSupport.stream(providers.spliterator(), false).count();
                 }
 

@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.energy.IEnergySource;

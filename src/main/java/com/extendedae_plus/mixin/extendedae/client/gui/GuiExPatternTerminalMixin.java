@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.client.gui;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.client.gui.AEBaseScreen;
@@ -9,23 +9,25 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,11 +39,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.Set;
 
 @Pseudo
 @Mixin(value = GuiExPatternTerminal.class)

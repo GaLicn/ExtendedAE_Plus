@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.helpers;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.IPatternDetails.IInput;

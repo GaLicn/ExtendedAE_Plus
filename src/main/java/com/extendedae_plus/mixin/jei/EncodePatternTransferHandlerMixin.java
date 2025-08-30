@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.jei;
 
 import appeng.integration.modules.jei.transfer.EncodePatternTransferHandler;
 import appeng.integration.modules.jeirei.EncodingHelper;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.container;
 
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.extendedae.common.me.itemhost.HostWirelessExPAT;

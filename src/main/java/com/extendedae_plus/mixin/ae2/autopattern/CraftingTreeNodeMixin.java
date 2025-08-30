@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.autopattern;
+package com.extendedae_plus.mixin.ae2.autopattern;
 
 import appeng.api.stacks.KeyCounter;
 import appeng.crafting.CraftingTreeNode;

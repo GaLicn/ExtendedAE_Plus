@@ -1,11 +1,11 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.helpers;
 
-import appeng.helpers.patternprovider.PatternProviderLogic;
-import com.extendedae_plus.api.SmartDoublingHolder;
-import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicPatternsAccessor;
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
+import appeng.helpers.patternprovider.PatternProviderLogic;
+import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicPatternsAccessor;
 import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
