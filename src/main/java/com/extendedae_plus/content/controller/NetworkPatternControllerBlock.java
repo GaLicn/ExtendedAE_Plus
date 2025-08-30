@@ -15,6 +15,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 
 public class NetworkPatternControllerBlock extends Block implements EntityBlock {
+
     public NetworkPatternControllerBlock(Properties props) {
         super(props);
     }
@@ -30,7 +31,6 @@ public class NetworkPatternControllerBlock extends Block implements EntityBlock 
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof MenuProvider provider && player instanceof ServerPlayer sp) {
                 NetworkHooks.openScreen(sp, provider, pos);
-                return InteractionResult.CONSUME;
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
