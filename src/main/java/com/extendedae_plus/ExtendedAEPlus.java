@@ -37,6 +37,9 @@ public class ExtendedAEPlus {
     public ExtendedAEPlus() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
+        // 在客户端尽早注册内置模型，保证首次资源加载前映射已建立（仿照 AE2 的 AppEngClient 构造期注册）
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::init);
+
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
         

@@ -43,9 +43,6 @@ public final class ClientProxy {
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2"),
                 new CraftingCubeModel(new EPlusCraftingCubeModelProvider(EPlusCraftingUnitType.ACCELERATOR_1024x)));
-
-        // 菜单 -> 屏幕 绑定
-        MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
     }
 
     /**
@@ -53,8 +50,12 @@ public final class ClientProxy {
      */
     public static void onClientSetup(final FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            // 确保在首次资源加载前完成内置模型注册（REGISTERED 保护避免重复）
             init();
+            // 仅在客户端设置阶段执行与 UI 相关的一次性绑定
             registerConfigScreen();
+            // 菜单 -> 屏幕 绑定
+            MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
         });
     }
 
