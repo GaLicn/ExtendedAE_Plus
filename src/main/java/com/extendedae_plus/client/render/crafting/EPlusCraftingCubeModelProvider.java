@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * 参照 MAE2 的 DynamicCraftingCubeModelProvider，实现形成态光照模型。
+ * 形成态光照模型。
  */
 public class EPlusCraftingCubeModelProvider
         extends AbstractCraftingUnitModelProvider<EPlusCraftingUnitType> {
@@ -29,13 +29,13 @@ public class EPlusCraftingCubeModelProvider
     public static final ChunkRenderTypeSet CUTOUT = ChunkRenderTypeSet.of(RenderType.cutout());
     private static final List<Material> MATERIALS = new ArrayList<>();
 
-    // 与 MAE2 一致：将环形边框与基础发光底图放在本模组命名空间
+    //将环形边框与基础发光底图放在本模组命名空间
     protected static final Material RING_CORNER = texture(ExtendedAEPlus.MODID, "ring_corner");
     protected static final Material RING_SIDE_HOR = texture(ExtendedAEPlus.MODID, "ring_side_hor");
     protected static final Material RING_SIDE_VER = texture(ExtendedAEPlus.MODID, "ring_side_ver");
     protected static final Material LIGHT_BASE = texture(ExtendedAEPlus.MODID, "light_base");
 
-    // 我们自己的亮面贴图（formed 时使用）
+    // 亮面贴图（formed 时使用）
     protected static final Material ACCELERATOR_4X_LIGHT = texture(ExtendedAEPlus.MODID,
             "4x_accelerator_light");
     protected static final Material ACCELERATOR_16X_LIGHT = texture(ExtendedAEPlus.MODID,

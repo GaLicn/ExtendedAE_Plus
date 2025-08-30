@@ -20,6 +20,7 @@ public final class ModCreativeTabs {
                     .displayItems((params, output) -> {
                         // 将本模组物品加入创造物品栏
                         output.accept(ModItems.WIRELESS_TRANSCEIVER.get());
+                        output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
                         output.accept(ModItems.ACCELERATOR_4x.get());
                         output.accept(ModItems.ACCELERATOR_16x.get());
                         output.accept(ModItems.ACCELERATOR_64x.get());

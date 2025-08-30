@@ -36,5 +36,22 @@
   "config.jade.plugin_extendedae_plus.wt_network_usable": "显示网络在线状态",
   "extendedae_plus.tooltip.frequency": "频率: %d",
   "extendedae_plus.tooltip.master_mode": "模式: %s",
-  "extendedae_plus.tooltip.locked": "锁定状态: %s"
+  "extendedae_plus.tooltip.locked": "锁定状态: %s",
+
+  "screen.extendedae_plus.title": "ExtendedAE Plus 配置",
+  "config.extendedae_plus.pageMultiplier": "扩展样板供应器槽位倍率",
+  "config.extendedae_plus.pageMultiplier_with_range": "扩展样板供应器槽位倍率 (1-64)",
+  "config.extendedae_plus.wirelessMaxRange": "无线最大距离",
+  "config.extendedae_plus.wirelessMaxRange_with_range": "无线最大距离 (1-4096)",
+  "config.extendedae_plus.wirelessCrossDimEnable": "无线收发器允许跨维度连接",
+  "config.extendedae_plus.providerRoundRobinEnable": "启用样板供应器轮询分配（智能翻倍）",
+  "config.extendedae_plus.state_on": "开",
+  "config.extendedae_plus.state_off": "关",
+  "block.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
+  "item.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
+  "gui.extendedae_plus.global.toggle_blocking": "切换阻挡模式",
+  "gui.extendedae_plus.global.toggle_adv_blocking": "切换高级阻挡",
+  "gui.extendedae_plus.global.toggle_smart_doubling": "切换智能翻倍",
+  "gui.extendedae_plus.global.all_on": "全部开启",
+  "gui.extendedae_plus.global.all_off": "全部关闭"
 }
