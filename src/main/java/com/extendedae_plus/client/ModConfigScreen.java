@@ -16,6 +16,7 @@ public class ModConfigScreen extends Screen {
     private EditBox pageMultiplierBox;
     private EditBox wirelessMaxRangeBox;
     private CycleButton<Boolean> crossDimToggle;
+    private CycleButton<Boolean> providerRoundRobinToggle;
 
     public ModConfigScreen(Screen parent) {
         super(Component.translatable("screen.extendedae_plus.title"));
@@ -48,11 +49,11 @@ public class ModConfigScreen extends Screen {
         row++;
 
         // cross dim toggle
-        crossDimToggle = this.addRenderableWidget(
-                CycleButton.onOffBuilder(ModConfigs.WIRELESS_CROSS_DIM_ENABLE.get())
-                        .create(rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"),
-                                (b, v) -> {})
-        );
+        crossDimToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.WIRELESS_CROSS_DIM_ENABLE.get()));
+        row++;
+
+        // provider round-robin toggle (smart doubling)
+        providerRoundRobinToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.get()));
         row++;
 
         // 按钮：保存、返回
@@ -74,14 +75,24 @@ public class ModConfigScreen extends Screen {
         int pageMul = clamp(parseIntOrDefault(pageMultiplierBox.getValue(), ModConfigs.PAGE_MULTIPLIER.get()), 1, 64);
         double maxRange = clamp(parseDoubleOrDefault(wirelessMaxRangeBox.getValue(), ModConfigs.WIRELESS_MAX_RANGE.get()), 1.0, 4096.0);
         boolean crossDim = crossDimToggle.getValue();
+        boolean providerRoundRobin = providerRoundRobinToggle.getValue();
 
         // 应用到 Forge 配置值
         ModConfigs.PAGE_MULTIPLIER.set(pageMul);
         ModConfigs.WIRELESS_MAX_RANGE.set(maxRange);
         ModConfigs.WIRELESS_CROSS_DIM_ENABLE.set(crossDim);
+        ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.set(providerRoundRobin);
 
         // Forge 会在合适的时机写回到配置文件；部分改动可能需要重启游戏或世界才完全生效
         onClose();
+    }
+
+    // Helper to create a boolean on/off CycleButton which shows localized on/off text
+    private CycleButton<Boolean> createToggle(int x, int y, int width, int height, boolean initial) {
+        CycleButton<Boolean> btn = CycleButton.onOffBuilder(initial)
+                .create(x, y, width, height, Component.empty(), (b, v) -> b.setMessage(Component.translatable(v ? "config.extendedae_plus.state_on" : "config.extendedae_plus.state_off")));
+        btn.setMessage(Component.translatable(initial ? "config.extendedae_plus.state_on" : "config.extendedae_plus.state_off"));
+        return btn;
     }
 
     @Override
@@ -107,6 +118,7 @@ public class ModConfigScreen extends Screen {
         g.drawString(this.font, Component.translatable("config.extendedae_plus.pageMultiplier_with_range"), leftX, y + 0 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessMaxRange_with_range"), leftX, y + 1 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"), leftX, y + 2 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.providerRoundRobinEnable"), leftX, y + 3 * rowHeight + 6, labelColor, false);
     }
 
     private static int parseIntOrDefault(String s, int def) {
