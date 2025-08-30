@@ -1,12 +1,17 @@
 package com.extendedae_plus.integration.jei;
 
+import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
+import mezz.jei.gui.bookmarks.BookmarkList;
+import mezz.jei.gui.overlay.elements.IElement;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -112,5 +117,19 @@ public final class JeiRuntimeProxy {
         } catch (Throwable ignored) {
         }
         return "";
+    }
+
+    /**
+     * 获取JEI书签列表
+     */
+    public static List<? extends ITypedIngredient<?>> getBookmarkList() {
+        IJeiRuntime rt = RUNTIME;
+        if (rt == null) return Collections.emptyList();
+        IBookmarkOverlay bookmarkOverlay = rt.getBookmarkOverlay();
+        if (bookmarkOverlay instanceof BookmarkOverlayAccessor accessor) {
+            BookmarkList bookmarkList = accessor.eap$getBookmarkList();
+            return bookmarkList.getElements().stream().map(IElement::getTypedIngredient).toList();
+        }
+        return Collections.emptyList();
     }
 }

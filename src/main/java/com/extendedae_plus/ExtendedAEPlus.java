@@ -6,8 +6,10 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModBlocks;
 import com.extendedae_plus.init.ModCreativeTabs;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.network.ModNetwork;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -20,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import com.extendedae_plus.client.ClientProxy;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 /**
  * ExtendedAE Plus 主mod类
@@ -29,17 +32,14 @@ public class ExtendedAEPlus {
 
     public static final String MODID = "extendedae_plus";
 
-    // 在类加载时（尽可能早）在客户端注册内置模型，避免首次资源加载时错过。
-    static {
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            System.out.println("[ExtendedAE_Plus] Static init: register built-in models");
-            ClientProxy.init();
-        });
-    }
+    // 注意：避免在静态初始化阶段访问注册对象，相关客户端注册改在 FMLClientSetupEvent 中执行。
 
     public ExtendedAEPlus() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
+        // 在客户端尽早注册内置模型，保证首次资源加载前映射已建立（仿照 AE2 的 AppEngClient 构造期注册）
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::init);
+
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
         
@@ -48,6 +48,7 @@ public class ExtendedAEPlus {
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
+        ModMenuTypes.MENUS.register(modEventBus);
         
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
@@ -55,8 +56,8 @@ public class ExtendedAEPlus {
         // 注册通用配置
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
 
-        // 构造期在客户端再确保一次注册（幂等）
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::init);
+        // 客户端侧延迟注册：在 FMLClientSetupEvent 阶段执行（包含 MenuScreens 绑定等）
+        modEventBus.addListener((FMLClientSetupEvent e) -> ClientProxy.onClientSetup(e));
     }
     
     /**

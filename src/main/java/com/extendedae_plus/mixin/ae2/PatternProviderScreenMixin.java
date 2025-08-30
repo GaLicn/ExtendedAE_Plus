@@ -9,8 +9,10 @@ import appeng.client.gui.widgets.SettingToggleButton;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
+import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -35,6 +37,12 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
     @Unique
     private boolean eap$AdvancedBlockingEnabled = false;
+
+    @Unique
+    private SettingToggleButton<YesNo> eap$SmartDoublingToggle;
+
+    @Unique
+    private boolean eap$SmartDoublingEnabled = false;
 
     public PatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -76,27 +84,62 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         this.eap$AdvancedBlockingToggle.set(this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
 
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
+
+        // 智能翻倍按钮：与高级阻挡同款样式，点击仅发送C2S，状态由@GuiSync驱动
+        try {
+            if (menu instanceof PatternProviderMenuDoublingSync sync2) {
+                this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
+            }
+        } catch (Throwable t) {
+            LOGGER.error("Error initializing smart doubling sync", t);
+        }
+
+        this.eap$SmartDoublingToggle = new SettingToggleButton<>(
+                Settings.BLOCKING_MODE,
+                this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
+                (btn, backwards) -> {
+                    LOGGER.debug("[EAP] Click smart doubling toggle: send C2S");
+                    ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket());
+                }
+        ) {
+            @Override
+            public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
+                boolean enabled = eap$SmartDoublingEnabled;
+                var title = net.minecraft.network.chat.Component.literal("智能翻倍");
+                var line = enabled
+                        ? net.minecraft.network.chat.Component.literal("已启用：根据请求量对处理样板进行智能缩放")
+                        : net.minecraft.network.chat.Component.literal("已禁用：按原始样板数量进行发配");
+                return java.util.List.of(title, line);
+            }
+        };
+
+        this.eap$SmartDoublingToggle.set(this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
+        this.addToLeftToolbar(this.eap$SmartDoublingToggle);
     }
 
     // 每帧刷新：仅从菜单(@GuiSync)同步布尔值，保持按钮状态一致
     @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
     private void eap$updateAdvancedBlocking(CallbackInfo ci) {
-        if (this.eap$AdvancedBlockingToggle == null) return;
-
-        boolean desired = this.eap$AdvancedBlockingEnabled;
-        if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
-            desired = sync.eap$getAdvancedBlockingSynced();
+        if (this.eap$AdvancedBlockingToggle != null) {
+            boolean desired = this.eap$AdvancedBlockingEnabled;
+            if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
+                desired = sync.eap$getAdvancedBlockingSynced();
+            }
+            LOGGER.debug("[EAP] updateBeforeRender tick (adv): desired={}", desired);
+            this.eap$AdvancedBlockingEnabled = desired;
+            this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
         }
 
-        // 与AE2一致：每帧无条件对齐按钮状态至@GuiSync（使用YesNo以获得原版图标与提示）
-        LOGGER.debug("[EAP] updateBeforeRender tick: desired={}", desired);
-        if (this.eap$AdvancedBlockingEnabled != desired) {
-            LOGGER.debug("[EAP] updateBeforeRender: desired changed {} -> {}", this.eap$AdvancedBlockingEnabled, desired);
+        if (this.eap$SmartDoublingToggle != null) {
+            boolean desired2 = this.eap$SmartDoublingEnabled;
+            if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
+                desired2 = sync2.eap$getSmartDoublingSynced();
+            }
+            LOGGER.debug("[EAP] updateBeforeRender tick (dbl): desired={}", desired2);
+            this.eap$SmartDoublingEnabled = desired2;
+            this.eap$SmartDoublingToggle.set(desired2 ? YesNo.YES : YesNo.NO);
         }
-        this.eap$AdvancedBlockingEnabled = desired;
-        this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
 
-        // 如果当前屏幕是 ExtendedAE 的 GuiExPatternProvider，则委托布局更新到 accessor
         if ((Object) this instanceof GuiExPatternProvider) {
             try {
                 ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();

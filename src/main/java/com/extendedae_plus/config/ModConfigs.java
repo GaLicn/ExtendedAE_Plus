@@ -8,6 +8,7 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.DoubleValue WIRELESS_MAX_RANGE;
     public static final ForgeConfigSpec.BooleanValue WIRELESS_CROSS_DIM_ENABLE;
     public static final ForgeConfigSpec.BooleanValue SHOW_ENCOD_PATTERN_PLAYER;
+    public static final ForgeConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -41,6 +42,14 @@ public final class ModConfigs {
                 )
                 .define("showEncoderPatternPlayer", true);
 
+        // 智能倍增后，是否在样板供应器间轮询分配请求量（开启：按 provider 均分；关闭：不拆分）
+        PROVIDER_ROUND_ROBIN_ENABLE = builder
+                .comment(
+                        "智能倍增时是否对样板供应器轮询分配",
+                        "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
+                        "注意：所有相关供应器需开启智能倍增，否则可能失效",
+                        "默认: true")
+                .define("providerRoundRobinEnable", true);
         builder.pop();
         COMMON_SPEC = builder.build();
     }

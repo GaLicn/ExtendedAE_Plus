@@ -14,5 +14,25 @@
   "gui.extendedae_plus.group_header.choice": "Toggle Group Choice",
   "gui.extendedae_plus.group_header.choiceable": "Group is choiceable",
   "gui.extendedae_plus.group_header.not_choiceable": "Group is not choiceable",
-  "itemGroup.extendedae_plus.main": "ExtendedAE Plus"
+  "itemGroup.extendedae_plus.main": "ExtendedAE Plus",
+
+  "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "Wireless Transceiver Info",
+  "config.jade.plugin_extendedae_plus.wt_frequency": "Show Frequency",
+  "config.jade.plugin_extendedae_plus.wt_master_mode": "Show Master/Slave Mode",
+  "config.jade.plugin_extendedae_plus.wt_master_location": "Show Master Position",
+  "config.jade.plugin_extendedae_plus.wt_locked": "Show Locked State",
+  "config.jade.plugin_extendedae_plus.wt_network_usable": "Show Network Online State",
+  "extendedae_plus.tooltip.frequency": "Frequency: %d",
+  "extendedae_plus.tooltip.master_mode": "Mode: %s",
+  "extendedae_plus.tooltip.locked": "Locked: %s"
+  ,
+  "screen.extendedae_plus.title": "ExtendedAE Plus Config",
+  "config.extendedae_plus.pageMultiplier": "Pattern Provider Page Multiplier",
+  "config.extendedae_plus.pageMultiplier_with_range": "Pattern Provider Page Multiplier (1-64)",
+  "config.extendedae_plus.wirelessMaxRange": "Wireless Max Range",
+  "config.extendedae_plus.wirelessMaxRange_with_range": "Wireless Max Range (1-4096)",
+  "config.extendedae_plus.wirelessCrossDimEnable": "Allow Wireless Cross-Dimension",
+  "config.extendedae_plus.providerRoundRobinEnable": "Enable Provider Round-Robin (Smart Doubling)",
+  "config.extendedae_plus.state_on": "On",
+  "config.extendedae_plus.state_off": "Off"
 }

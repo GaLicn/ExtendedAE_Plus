@@ -17,6 +17,11 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.WIRELESS_TRANSCEIVER.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
+            "network_pattern_controller",
+            () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
+    );
+
     // Crafting Accelerators
     public static final RegistryObject<Item> ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",
