@@ -548,8 +548,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 }
 
                 // 放置按钮：位于名称文本右侧，与原类 choiceButton 锚点相邻，向右偏移 20px
-                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 40;
-                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 3;
+                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 11;
+                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 2;
 
                 Button btn = eap$openUIButtons.get(rowIndex);
                 if (btn == null) {
