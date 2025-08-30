@@ -17,6 +17,7 @@ public class ModConfigScreen extends Screen {
     private EditBox wirelessMaxRangeBox;
     private CycleButton<Boolean> crossDimToggle;
     private CycleButton<Boolean> providerRoundRobinToggle;
+    private CycleButton<Boolean> showEncoderToggle;
 
     public ModConfigScreen(Screen parent) {
         super(Component.translatable("screen.extendedae_plus.title"));
@@ -56,6 +57,10 @@ public class ModConfigScreen extends Screen {
         providerRoundRobinToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.get()));
         row++;
 
+        // show encoder pattern player toggle
+        showEncoderToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.get()));
+        row++;
+
         // 按钮：保存、返回
         int btnW = 100;
         int gap = 8;
@@ -76,12 +81,14 @@ public class ModConfigScreen extends Screen {
         double maxRange = clamp(parseDoubleOrDefault(wirelessMaxRangeBox.getValue(), ModConfigs.WIRELESS_MAX_RANGE.get()), 1.0, 4096.0);
         boolean crossDim = crossDimToggle.getValue();
         boolean providerRoundRobin = providerRoundRobinToggle.getValue();
+        boolean showEncoder = showEncoderToggle.getValue();
 
         // 应用到 Forge 配置值
         ModConfigs.PAGE_MULTIPLIER.set(pageMul);
         ModConfigs.WIRELESS_MAX_RANGE.set(maxRange);
         ModConfigs.WIRELESS_CROSS_DIM_ENABLE.set(crossDim);
         ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.set(providerRoundRobin);
+        ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.set(showEncoder);
 
         // Forge 会在合适的时机写回到配置文件；部分改动可能需要重启游戏或世界才完全生效
         onClose();
@@ -119,6 +126,7 @@ public class ModConfigScreen extends Screen {
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessMaxRange_with_range"), leftX, y + 1 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"), leftX, y + 2 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.providerRoundRobinEnable"), leftX, y + 3 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.showEncoderPatternPlayer"), leftX, y + 4 * rowHeight + 6, labelColor, false);
     }
 
     private static int parseIntOrDefault(String s, int def) {
