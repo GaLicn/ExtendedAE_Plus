@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(value = CraftingCPUCluster.class, remap = false)
+@Mixin(value = CraftingCPUCluster.class, remap = false, priority = 2000)
 public abstract class CraftingCPUClusterMixin {
     // 1) 提升“单方块线程上限”的常量，避免抛出 IAE 的 IllegalArgumentException
     @ModifyConstant(
@@ -25,7 +25,8 @@ public abstract class CraftingCPUClusterMixin {
         method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
         at = @At(
             value = "INVOKE",
-            target = "Lappeng/blockentity/crafting/CraftingBlockEntity;getAcceleratorThreads()I"
+            target = "Lappeng/blockentity/crafting/CraftingBlockEntity;getAcceleratorThreads()I",
+            ordinal = 1
         )
     )
     private int extendedae_plus$onGetThreadsForLimitCheck(CraftingBlockEntity te) {
