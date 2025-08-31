@@ -2,7 +2,6 @@ package com.extendedae_plus.mixin.ae2.autopattern.adaptation;
 
 import appeng.api.crafting.IPatternDetails;
 import com.extendedae_plus.content.ScaledProcessingPattern;
-import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +14,7 @@ import java.util.List;
  * 在遇到缩放样板时回退匹配到原始样板实例。
  */
 @Pseudo
-@Mixin(value = AdvPatternProviderLogic.class, remap = false)
+@Mixin(targets = "net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic", remap = false)
 public class AdvPatternProviderLogicContainsRedirectMixin {
 
     @Redirect(method = "pushPattern",
