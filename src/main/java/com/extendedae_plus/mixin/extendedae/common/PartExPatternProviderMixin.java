@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.common;
 
 import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;

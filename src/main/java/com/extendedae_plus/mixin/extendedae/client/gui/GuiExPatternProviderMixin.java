@@ -1,22 +1,19 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.client.gui;
 
 import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
-import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
 import com.extendedae_plus.NewIcon;
-import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.config.ModConfigs;
+import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
-import java.util.List;
+
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(GuiExPatternProvider.class)

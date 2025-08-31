@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.client;
 
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;

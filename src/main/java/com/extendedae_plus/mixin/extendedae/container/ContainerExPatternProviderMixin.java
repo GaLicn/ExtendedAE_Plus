@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.container;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.stacks.GenericStack;

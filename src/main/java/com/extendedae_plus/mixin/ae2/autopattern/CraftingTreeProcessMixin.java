@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.autopattern;
+package com.extendedae_plus.mixin.ae2.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
@@ -10,9 +10,9 @@ import appeng.crafting.CraftingTreeProcess;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.util.PatternScaler;
-import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.util.RequestedAmountHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

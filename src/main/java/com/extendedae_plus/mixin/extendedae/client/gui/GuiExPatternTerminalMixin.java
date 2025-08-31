@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae;
+package com.extendedae_plus.mixin.extendedae.client.gui;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.client.gui.AEBaseScreen;
@@ -9,23 +9,26 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,11 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.Map;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.*;
 
 @Pseudo
 @Mixin(value = GuiExPatternTerminal.class)
@@ -218,12 +217,11 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     private void eap$tryOpenProviderUI(int rowIndex) {
         try {
             // 使用 Accessor 获取 rows，避免取到父类导致失败
-            com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor acc =
-                (com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor) (Object) this;
-            java.util.ArrayList<?> rows = acc.getRows();
+            GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) this;
+            ArrayList<?> rows = acc.getRows();
 
             // 找到该分组对应的第一个 PatternContainerRecord
-            Class<?> cls = com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal.class;
+            Class<?> cls = GuiExPatternTerminal.class;
             var byGroupField = cls.getDeclaredField("byGroup");
             byGroupField.setAccessible(true);
             Object byGroup = byGroupField.get(this); // HashMultimap<PatternContainerGroup, PatternContainerRecord>
@@ -234,7 +232,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             Object group = groupField.get(headerRow);
 
             // 调用 byGroup.get(group)，再取第一个元素
-            java.util.Collection<?> containers = (java.util.Collection<?>) byGroup.getClass().getMethod("get", Object.class).invoke(byGroup, group);
+            Collection<?> containers = (Collection<?>) byGroup.getClass().getMethod("get", Object.class).invoke(byGroup, group);
             if (containers == null || containers.isEmpty()) {
                 return;
             }
@@ -245,7 +243,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             var infoMapField = cls.getDeclaredField("infoMap");
             infoMapField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            java.util.HashMap<Long, Object> infoMap = (java.util.HashMap<Long, Object>) infoMapField.get(this);
+            HashMap<Long, Object> infoMap = (HashMap<Long, Object>) infoMapField.get(this);
             Object info = infoMap.get(serverId);
             if (info == null) {
                 // 无位置信息，提示
@@ -299,7 +297,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
             // 通过反射调用refreshList方法 - 先尝试当前类，失败后尝试父类
             try {
-                java.lang.reflect.Method refreshMethod = null;
+                Method refreshMethod = null;
                 try {
                     // 先尝试在当前类中查找
                     refreshMethod = this.getClass().getDeclaredMethod("refreshList");
@@ -514,13 +512,12 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         // 动态放置/创建每个组标题后的“打开UI”按钮
         try {
             // 使用 Accessor 获取必要的字段，避免反射失败
-            com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor acc =
-                (com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor) (Object) this;
+            GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) this;
             java.util.ArrayList<?> rows = acc.getRows();
             int currentScroll = acc.getScrollbar().getCurrentScroll();
 
             // 直接引用目标类以获取其静态常量
-            Class<?> cls = com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal.class;
+            Class<?> cls = GuiExPatternTerminal.class;
             int GUI_PADDING_X = getIntConst(cls, "GUI_PADDING_X", 22);
             int GUI_PADDING_Y = getIntConst(cls, "GUI_PADDING_Y", 6);
             int GUI_HEADER_HEIGHT = getIntConst(cls, "GUI_HEADER_HEIGHT", 51);
@@ -548,8 +545,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 }
 
                 // 放置按钮：位于名称文本右侧，与原类 choiceButton 锚点相邻，向右偏移 20px
-                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 40;
-                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 3;
+                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 11;
+                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 2;
 
                 Button btn = eap$openUIButtons.get(rowIndex);
                 if (btn == null) {

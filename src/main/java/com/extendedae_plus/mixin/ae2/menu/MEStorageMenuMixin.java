@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.api.config.Setting;
 import appeng.api.util.IConfigManager;

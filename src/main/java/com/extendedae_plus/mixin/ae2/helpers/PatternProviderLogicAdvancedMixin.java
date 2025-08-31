@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.helpers;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.IPatternDetails.IInput;
@@ -8,7 +8,9 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 
-@Mixin(PatternProviderLogic.class)
+@Mixin(value = PatternProviderLogic.class, remap = false)
 public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
     @Unique
     private static final String EPP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
@@ -35,12 +37,12 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
         this.eap$advancedBlocking = value;
     }
 
-    @Inject(method = "writeToNBT", at = @At("TAIL"), remap = false)
+    @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$writeAdvancedToNbt(CompoundTag tag, CallbackInfo ci) {
         tag.putBoolean(EPP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
-    @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
+    @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$readAdvancedFromNbt(CompoundTag tag, CallbackInfo ci) {
         if (tag.contains(EPP_ADV_BLOCKING_KEY)) {
             this.eap$advancedBlocking = tag.getBoolean(EPP_ADV_BLOCKING_KEY);
@@ -48,7 +50,7 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     }
 
     // 在 pushPattern 中，重定向对 adapter.containsPatternInput(...) 的调用
-    @Redirect(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"), remap = false)
+    @Redirect(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"))
     private boolean eap$redirectBlockingContains(PatternProviderTarget adapter,
                                                  java.util.Set<AEKey> patternInputs,
                                                  IPatternDetails patternDetails,
@@ -86,5 +88,22 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
             }
         }
         return true; // 每个输入槽都至少匹配了一个候选输入
+    }
+
+    @Shadow public void saveChanges() {}
+
+    @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
+    private void onExportSettings(CompoundTag output, CallbackInfo ci) {
+        System.out.println(this.eap$advancedBlocking);
+        output.putBoolean("eap_advanced_blocking", this.eap$advancedBlocking);
+    }
+
+    @Inject(method = "importSettings(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/entity/player/Player;)V", at = @At("TAIL"))
+    private void onImportSettings(CompoundTag input, Player player, CallbackInfo ci) {
+        if (input.contains("eap_advanced_blocking")) {
+            this.eap$advancedBlocking = input.getBoolean("eap_advanced_blocking");
+            // 持久化到 world
+            this.saveChanges();
+        }
     }
 }

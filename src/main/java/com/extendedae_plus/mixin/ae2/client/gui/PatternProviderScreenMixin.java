@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
