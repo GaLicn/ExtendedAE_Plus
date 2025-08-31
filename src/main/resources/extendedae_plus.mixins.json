@@ -42,6 +42,8 @@
     "ae2.autopattern.CraftingTreeProcessMixin",
     "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
     "ae2.autopattern.adaptation.AdvPatternProviderLogicContainsRedirectMixin",
+    "ae2.autopattern.gtceu.GTLCoreMEPatternBufferPartMachineMixin",
+    "ae2.autopattern.gtceu.MEPatternBufferPartMachineMixin",
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.PatternProviderLogicDoublingMixin",
     "ae2.menu.ContainerPatternEncodingTermMenuMixin",
