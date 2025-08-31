@@ -26,8 +26,7 @@
     "ae2.EncodePatternTransferHandlerMixin",
     "ae2.EncodingHelperMixin",
     "jei.accessor.BookmarkOverlayAccessor",
-    "hooks.ModelBakeryMixin",
-    "jei.EncodePatternTransferHandlerMixin"
+    "hooks.ModelBakeryMixin"
   ],
   "mixins": [
     "ae2.AEProcessingPatternMixin",
@@ -46,7 +45,6 @@
     "ae2.accessor.PatternProviderLogicPatternsAccessor",
     "ae2.accessor.PatternProviderMenuAdvancedAccessor",
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
-    "autopattern.CraftingProviderListAccessor",
     "autopattern.CraftingServiceGetProvidersMixin",
     "autopattern.CraftingTreeNodeAccessor",
     "autopattern.CraftingTreeNodeMixin",
