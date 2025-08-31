@@ -9,6 +9,7 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
@@ -55,7 +56,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     @Unique
     private IconButton eap$toggleSlotsButton;
     @Unique
-    private boolean eap$showSlots = false; // 默认显示槽位
+    private boolean eap$showSlots = false; // 默认由配置初始化
     @Unique
     private long eap$currentlyChoicePatterProvider = -1; // 当前选择的样板供应器ID
     @Unique
@@ -291,6 +292,11 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     private void injectConstructor(CallbackInfo ci) {
+        // 根据配置初始化默认显示/隐藏状态
+        try {
+            this.eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
+        } catch (Throwable ignored) {
+        }
         // 创建切换槽位显示的按钮
         this.eap$toggleSlotsButton = new IconButton((b) -> {
             this.eap$showSlots = !this.eap$showSlots; // 开关状态

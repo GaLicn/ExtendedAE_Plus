@@ -9,6 +9,7 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.BooleanValue WIRELESS_CROSS_DIM_ENABLE;
     public static final ForgeConfigSpec.BooleanValue SHOW_ENCOD_PATTERN_PLAYER;
     public static final ForgeConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
+    public static final ForgeConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -50,6 +51,15 @@ public final class ModConfigs {
                         "注意：所有相关供应器需开启智能倍增，否则可能失效",
                         "默认: true")
                 .define("providerRoundRobinEnable", true);
+
+        // 模式访问终端（ExtendedAE 图样终端）默认是否显示槽位渲染（SlotsRow）。
+        // true: 默认显示（可通过界面按钮临时隐藏）；false: 默认隐藏（可通过按钮显示）
+        PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT = builder
+                .comment(
+                        "样板终端默认是否显示槽位",
+                        "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
+                )
+                .define("patternTerminalShowSlotsDefault", true);
         builder.pop();
         COMMON_SPEC = builder.build();
     }
