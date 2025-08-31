@@ -348,8 +348,15 @@ public class ProviderSelectScreen extends Screen {
         boolean ok = com.extendedae_plus.util.ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
         if (ok) {
             if (player != null) player.sendSystemMessage(Component.literal("已添加/更新映射: " + key + " -> " + val));
+            // 将刚添加的中文名写入搜索框，作为当前查询
+            this.query = val;
+            if (this.searchBox != null) {
+                this.searchBox.setValue(val);
+            }
             // 更新本地过滤显示（若名称包含中文可被搜索）
             applyFilter();
+            // 回到第一页以展示最新筛选结果
+            page = 0;
             needsRefresh = true;
         } else {
             if (player != null) player.sendSystemMessage(Component.literal("写入映射失败"));
