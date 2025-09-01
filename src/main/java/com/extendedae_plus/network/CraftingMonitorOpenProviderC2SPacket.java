@@ -11,6 +11,7 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
+import com.extendedae_plus.content.PatternHighlightStore;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
@@ -99,6 +100,9 @@ public class CraftingMonitorOpenProviderC2SPacket {
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
                             }
+
+                            PatternHighlightStore.setHighlight(pattern, true);
+
                             context.setPacketHandled(true);
                             return;
                         } catch (Throwable t) {

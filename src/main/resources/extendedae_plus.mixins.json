@@ -15,6 +15,7 @@
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.client.gui.PatternProviderCloseMixin",
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
@@ -30,6 +31,7 @@
   "mixins": [
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCPUClusterMixin",
+    "ae2.IPatternDetailsMixin",
     "ae2.accessor.MEStorageMenuAccessor",
     "ae2.accessor.PatternEncodingTermMenuAccessor",
     "ae2.accessor.PatternProviderLogicAccessor",

@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
+import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.stacks.AEKey;
 import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
@@ -12,12 +13,14 @@ import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.ExPatternPageAccessor;
+import com.extendedae_plus.content.PatternHighlightStore;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.Rect2i;
@@ -150,40 +153,49 @@ public abstract class AEBaseScreenMixin {
     @Inject(method = "renderSlot", at = @At("TAIL"))
     private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
         Object self = this;
-        
+
         // 只处理AppEngSlot类型的槽位
         if (!(s instanceof AppEngSlot appEngSlot)) {
             return;
         }
-        
+
         // 检查槽位是否可见且有效
         if (!appEngSlot.isActive() || !appEngSlot.isSlotEnabled()) {
             return;
         }
-        
+
         // 获取槽位中的物品
         var itemStack = appEngSlot.getItem();
         if (itemStack.isEmpty()) {
             return;
         }
-        
+
         // 使用GuiUtil的格式化方法获取数量文本
         String amountText = GuiUtil.getPatternOutputText(itemStack);
         if (amountText.isEmpty()) {
             return;
         }
-        
+
         // 在槽位右下角绘制数量文本
         Font font = eap$getFont(self);
         GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
+
+        try {
+            var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
+            if (PatternHighlightStore.getHighlight(details)) {
+                try {
+                    GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignore) {}
     }
 
     // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
     @Inject(method = "drawText", at = @At("TAIL"), remap = false)
     private void eap$appendPageAfterPatternsLabel(GuiGraphics guiGraphics,
-                                                 Text text,
-                                                 @Nullable TextOverride override,
-                                                 CallbackInfo ci) {
+                                                  Text text,
+                                                  @Nullable TextOverride override,
+                                                  CallbackInfo ci) {
         Object self = this;
         if (!(self instanceof GuiExPatternProvider)) {
             return;
@@ -237,8 +249,10 @@ public abstract class AEBaseScreenMixin {
             if (!isPatterns) {
                 String label = content.getString();
                 if (label != null) {
-                    if (label.equals(Component.translatable("gui.pattern_provider.patterns").getString())) isPatterns = true;
-                    else if (label.equals(Component.translatable("gui.extendedae.patterns").getString())) isPatterns = true;
+                    if (label.equals(Component.translatable("gui.pattern_provider.patterns").getString()))
+                        isPatterns = true;
+                    else if (label.equals(Component.translatable("gui.extendedae.patterns").getString()))
+                        isPatterns = true;
                     else if (label.equals(Component.translatable("gui.ae2.patterns").getString())) isPatterns = true;
                 }
             }
@@ -263,16 +277,18 @@ public abstract class AEBaseScreenMixin {
                 if (v instanceof Integer i) {
                     max = Math.max(1, i);
                 }
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {
+            }
 
-            String pageText = "第"+cur+"页" + "/" + max + "页";
+            String pageText = "第" + cur + "页" + "/" + max + "页";
 
             ScreenStyle style = eap$getStyle(self);
             int color = 0xFFFFFFFF;
             if (style != null) {
                 try {
                     color = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
-                } catch (Throwable ignored) {}
+                } catch (Throwable ignored) {
+                }
             }
             int padding = 4;
             if (scale == 1.0f) {
@@ -284,6 +300,7 @@ public abstract class AEBaseScreenMixin {
                 guiGraphics.drawString(font, pageText, lineWidth + padding, 0, color, false);
                 guiGraphics.pose().popPose();
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
 }
