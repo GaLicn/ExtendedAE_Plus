@@ -13,7 +13,7 @@ import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.ExPatternPageAccessor;
-import com.extendedae_plus.content.PatternHighlightStore;
+import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.network.ModNetwork;
@@ -182,11 +182,16 @@ public abstract class AEBaseScreenMixin {
 
         try {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
-            if (PatternHighlightStore.getHighlight(details)) {
-                try {
-                    GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
-                } catch (Throwable ignored) {}
-            }
+            try {
+                if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
+                    AEKey key = details.getOutputs()[0].what();
+                    if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
+                        try {
+                            GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
+                        } catch (Throwable ignored) {}
+                    }
+                }
+            } catch (Throwable ignore) {}
         } catch (Throwable ignore) {}
     }
 

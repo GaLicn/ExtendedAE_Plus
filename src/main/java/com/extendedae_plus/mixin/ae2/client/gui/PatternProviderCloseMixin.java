@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.gui.implementations.PatternProviderScreen;
-import com.extendedae_plus.content.PatternHighlightStore;
+import com.extendedae_plus.content.ClientPatternHighlightStore;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,7 +20,7 @@ public class PatternProviderCloseMixin {
 	private void onRemoved(CallbackInfo ci) {
 		try {
 			if (((Object) this) instanceof PatternProviderScreen) {
-				PatternHighlightStore.clearAll();
+				ClientPatternHighlightStore.clearAll();
 			}
 		} catch (Throwable ignored) {
 		}

@@ -94,14 +94,18 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
+                            // 告知目标玩家客户端高亮该 AEKey（避免全局服务端状态污染）
+                            try {
+                                AEKey key = pattern.getOutputs()[0].what();
+                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                            } catch (Throwable t) {}
+
                             // 部件与方块实体分别选择定位器
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
                             }
-
-                            PatternHighlightStore.setHighlight(pattern, true);
 
                             context.setPacketHandled(true);
                             return;
