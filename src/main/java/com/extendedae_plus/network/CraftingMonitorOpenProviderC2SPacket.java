@@ -11,11 +11,12 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
-import com.extendedae_plus.content.PatternHighlightStore;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Collection;
@@ -95,18 +96,35 @@ public class CraftingMonitorOpenProviderC2SPacket {
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
                             // 告知目标玩家客户端高亮该 AEKey（避免全局服务端状态污染）
-                            try {
-                                AEKey key = pattern.getOutputs()[0].what();
-                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
-                            } catch (Throwable t) {}
+                            AEKey key = pattern.getOutputs()[0].what();
+                            ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
 
-                            // 部件与方块实体分别选择定位器
+                            // 部件与方块实体分别选择定位器并打开界面
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
                             }
 
+                            // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码
+                            int foundSlot = -1;
+                            var list = PatternProviderDataUtil.getAllPatternData(ppl);
+                            for (var pd : list) {
+
+                                if (pd != null && pd.getPatternDetails() != null
+                                        && pd.getPatternDetails().getDefinition().equals(pattern.getDefinition())) {
+                                    foundSlot = pd.getSlotIndex();
+                                    break;
+                                }
+
+                            }
+                            if (foundSlot >= 0) {
+                                int pageId = foundSlot / 36;
+                                if (pageId > 0) {
+                                    // 发送 S2C 包通知客户端切换到指定页（客户端会写入 mixin 字段并重排槽位）
+                                    ModNetwork.CHANNEL.sendTo(new SetProviderPageS2CPacket(pageId), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                                }
+                            }
                             context.setPacketHandled(true);
                             return;
                         } catch (Throwable t) {
