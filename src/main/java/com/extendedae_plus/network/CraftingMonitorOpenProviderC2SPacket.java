@@ -13,13 +13,25 @@ import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
+import com.glodblock.github.extendedae.util.FCClientUtil;
+import com.glodblock.github.glodium.util.GlodUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Supplier;
+
+import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.highlight;
 
 /**
  * 客户端从 CraftingCPUScreen 发送：鼠标下条目对应的 AEKey。
@@ -93,9 +105,14 @@ public class CraftingMonitorOpenProviderC2SPacket {
                             // 部件与方块实体分别选择定位器并打开界面
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
+                                highlightWithMessage(pbe.getBlockPos(), part.getSide(), Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
+                                highlightWithMessage(pbe.getBlockPos(), null, Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
                             }
+
+                            // 高亮打开的供应器位置并发送聊天提示
+
 
                             // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码（尽量早退出，按槽位逐个解码）
                             int foundSlot = PatternProviderDataUtil.findSlotForPattern(ppl, pattern.getDefinition());
@@ -121,5 +138,30 @@ public class CraftingMonitorOpenProviderC2SPacket {
             }
         });
         context.setPacketHandled(true);
+    }
+
+    private static void highlightWithMessage(BlockPos pos, Direction face, ResourceKey<Level> dim, double multiplier, Player player) {
+        if (pos == null || dim == null) {
+            return;
+        }
+        long endTime = System.currentTimeMillis() + (long) (6000 * GlodUtil.clamp(multiplier, 1, 30));
+        if (face == null) {
+            highlight(pos, dim, endTime);
+        } else {
+            var origin = new AABB(2 / 16D, 2 / 16D, 0, 14 / 16D, 14 / 16D, 2 / 16D).move(pos);
+            var center = new AABB(pos).getCenter();
+            switch (face) {
+                case WEST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (Math.PI / 2));
+                case SOUTH -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) Math.PI);
+                case EAST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (-Math.PI / 2));
+                case UP -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (-Math.PI / 2));
+                case DOWN -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (Math.PI / 2));
+            }
+            highlight(pos, face, dim, endTime, origin);
+        }
+
+        if (player != null) {
+            player.displayClientMessage(Component.translatable("chat.ex_pattern_access_terminal.pos", pos.toShortString(), dim.location().getPath()), false);
+        }
     }
 }
