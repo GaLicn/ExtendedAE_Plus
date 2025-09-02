@@ -17,6 +17,7 @@ public class ModConfigScreen extends Screen {
     private EditBox wirelessMaxRangeBox;
     private CycleButton<Boolean> crossDimToggle;
     private CycleButton<Boolean> providerRoundRobinToggle;
+    private EditBox smartScalingMaxMulBox;
     private CycleButton<Boolean> showEncoderToggle;
     private CycleButton<Boolean> patternTerminalShowSlotsToggle;
 
@@ -58,6 +59,13 @@ public class ModConfigScreen extends Screen {
         providerRoundRobinToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.get()));
         row++;
 
+        // smartScalingMaxMultiplier: Int 0-1048576 (0 means unlimited)
+        smartScalingMaxMulBox = new EditBox(this.font, rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.smartScalingMaxMultiplier"));
+        smartScalingMaxMulBox.setValue(String.valueOf(ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get()));
+        smartScalingMaxMulBox.setFilter(s -> s.matches("\\d*") && parseIntOrDefault(s, 0) >= 0 && parseIntOrDefault(s, 1048576) <= 1048576);
+        this.addRenderableWidget(smartScalingMaxMulBox);
+        row++;
+
         // show encoder pattern player toggle
         showEncoderToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.get()));
         row++;
@@ -86,6 +94,7 @@ public class ModConfigScreen extends Screen {
         double maxRange = clamp(parseDoubleOrDefault(wirelessMaxRangeBox.getValue(), ModConfigs.WIRELESS_MAX_RANGE.get()), 1.0, 4096.0);
         boolean crossDim = crossDimToggle.getValue();
         boolean providerRoundRobin = providerRoundRobinToggle.getValue();
+        int smartMaxMul = clamp(parseIntOrDefault(smartScalingMaxMulBox.getValue(), ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get()), 0, 1048576);
         boolean showEncoder = showEncoderToggle.getValue();
         boolean patternShowSlots = patternTerminalShowSlotsToggle.getValue();
 
@@ -94,6 +103,7 @@ public class ModConfigScreen extends Screen {
         ModConfigs.WIRELESS_MAX_RANGE.set(maxRange);
         ModConfigs.WIRELESS_CROSS_DIM_ENABLE.set(crossDim);
         ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.set(providerRoundRobin);
+        ModConfigs.SMART_SCALING_MAX_MULTIPLIER.set(smartMaxMul);
         ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.set(showEncoder);
         ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.set(patternShowSlots);
 
@@ -133,8 +143,9 @@ public class ModConfigScreen extends Screen {
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessMaxRange_with_range"), leftX, y + 1 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"), leftX, y + 2 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.providerRoundRobinEnable"), leftX, y + 3 * rowHeight + 6, labelColor, false);
-        g.drawString(this.font, Component.translatable("config.extendedae_plus.showEncoderPatternPlayer"), leftX, y + 4 * rowHeight + 6, labelColor, false);
-        g.drawString(this.font, Component.translatable("config.extendedae_plus.patternTerminalShowSlotsDefault"), leftX, y + 5 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.smartScalingMaxMultiplier_with_range"), leftX, y + 4 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.showEncoderPatternPlayer"), leftX, y + 5 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.patternTerminalShowSlotsDefault"), leftX, y + 6 * rowHeight + 6, labelColor, false);
     }
 
     private static int parseIntOrDefault(String s, int def) {

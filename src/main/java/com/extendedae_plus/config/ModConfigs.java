@@ -10,6 +10,7 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.BooleanValue SHOW_ENCOD_PATTERN_PLAYER;
     public static final ForgeConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
     public static final ForgeConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
+    public static final ForgeConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -51,6 +52,14 @@ public final class ModConfigs {
                         "注意：所有相关供应器需开启智能倍增，否则可能失效",
                         "默认: true")
                 .define("providerRoundRobinEnable", true);
+
+        // 智能倍增的最大倍数（以单次样板产出为单位）。
+        // 0 表示不限制；>0 表示最大倍增倍数上限，例如 64 表示最多放大到 64 倍。
+        SMART_SCALING_MAX_MULTIPLIER = builder
+                .comment(
+                        "智能倍增的最大倍数（0 表示不限制）",
+                        "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模")
+                .defineInRange("smartScalingMaxMultiplier", 0, 0, 1048576);
 
         // 模式访问终端（ExtendedAE 图样终端）默认是否显示槽位渲染（SlotsRow）。
         // true: 默认显示（可通过界面按钮临时隐藏）；false: 默认隐藏（可通过按钮显示）

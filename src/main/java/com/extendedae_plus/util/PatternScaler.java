@@ -6,6 +6,7 @@ import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.config.ModConfigs;
 
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
@@ -59,6 +60,15 @@ public final class PatternScaler {
         if (requestedAmount > 0) {
             long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
             multiplier = needed <= 1L ? 1L : needed;
+        }
+        // 应用配置的最大倍数上限（0 表示不限制）
+        try {
+            int maxMul = ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get();
+            if (maxMul > 0 && multiplier > maxMul) {
+                multiplier = maxMul;
+            }
+        } catch (Throwable ignore) {
+            // 配置读取异常时不施加上限
         }
 
         // 构建压缩输入（将每个输入的 multiplier 翻倍，保留每个模板的原始数量）
