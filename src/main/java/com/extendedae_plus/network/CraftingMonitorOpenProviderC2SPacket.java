@@ -85,31 +85,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
                         var pbe = host.getBlockEntity();
                         if (pbe == null) continue;
 
-                        // 跳过未连接到网格或不活跃的 provider（例如缺少频道/通道）
-                        try {
-                            var providerGrid = ppl.getGrid();
-                            if (providerGrid == null || !providerGrid.equals(grid)) {
-                                continue;
-                            }
-                            // 如果 provider 自身对外提供的通道/频道信息不可用或不活跃，跳过
-                            try {
-                                // 尝试通过 provider 的主节点判断是否有 channel
-                                var mainNodeField = ppl.getClass().getDeclaredField("mainNode");
-                                mainNodeField.setAccessible(true);
-                                var mainNode = mainNodeField.get(ppl);
-                                if (mainNode == null) continue;
-                                var getChannelsMethod = mainNode.getClass().getMethod("getChannels");
-                                Object channels = null;
-                                channels = getChannelsMethod.invoke(mainNode);
-                                if (channels instanceof java.util.Collection) {
-                                    if (((java.util.Collection<?>) channels).isEmpty()) continue;
-                                }
-                            } catch (Exception ignored) {
-                                // 无法判断 channel 时继续：不因反射失败而阻止正常 provider
-                            }
-                        } catch (Exception e) {
-                            continue;
-                        }
+                        // 跳过未连接到网格或不活跃的 provider（使用 util 判断并传入当前 grid）
+                        if (!PatternProviderDataUtil.isProviderAvailable(ppl, grid)) continue;
 
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
@@ -121,7 +98,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
                             }
 
                             // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码（尽量早退出，按槽位逐个解码）
-                            int foundSlot = findSlotIndexInProvider(ppl, pattern);
+                            int foundSlot = PatternProviderDataUtil.findSlotForPattern(ppl, pattern.getDefinition());
                             if (foundSlot >= 0) {
                                 int pageId = foundSlot / 36;
                                 if (pageId > 0) {
@@ -145,20 +122,4 @@ public class CraftingMonitorOpenProviderC2SPacket {
         });
         context.setPacketHandled(true);
     }
-
-    private static int findSlotIndexInProvider(PatternProviderLogic ppl, IPatternDetails pattern) {
-        try {
-            // 通过逐槽位解码并在找到匹配定义时立即返回索引，避免分配大量对象
-            var list = PatternProviderDataUtil.getAllPatternData(ppl);
-            for (var pd : list) {
-                if (pd != null && pd.getPatternDetails() != null && pd.getPatternDetails().getDefinition().equals(pattern.getDefinition())) {
-                    return pd.getSlotIndex();
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return -1;
-    }
-
-
 }
