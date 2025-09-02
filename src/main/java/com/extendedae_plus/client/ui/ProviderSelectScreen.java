@@ -318,6 +318,28 @@ public class ProviderSelectScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 右键点击搜索框区域时，清空搜索框内容并刷新
+        if (button == 1 && this.searchBox != null) {
+            int x = this.searchBox.getX();
+            int y = this.searchBox.getY();
+            int w = this.searchBox.getWidth();
+            int h = this.searchBox.getHeight();
+            if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+                if (!this.searchBox.getValue().isEmpty()) {
+                    this.searchBox.setValue("");
+                }
+                this.query = "";
+                this.page = 0;
+                applyFilter();
+                this.needsRefresh = true;
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     public void tick() {
         super.tick();
         if (searchBox != null) {

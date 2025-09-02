@@ -56,5 +56,7 @@
   "gui.extendedae_plus.global.toggle_adv_blocking": "切换高级阻挡",
   "gui.extendedae_plus.global.toggle_smart_doubling": "切换智能翻倍",
   "gui.extendedae_plus.global.all_on": "全部开启",
-  "gui.extendedae_plus.global.all_off": "全部关闭"
+  "gui.extendedae_plus.global.all_off": "全部关闭",
+  "config.extendedae_plus.smartScalingMaxMultiplier": "智能倍增最大倍数",
+  "config.extendedae_plus.smartScalingMaxMultiplier_with_range": "智能倍增最大倍数 (0为不限制)"
 }

@@ -34,5 +34,7 @@
   "config.extendedae_plus.wirelessCrossDimEnable": "Allow Wireless Cross-Dimension",
   "config.extendedae_plus.providerRoundRobinEnable": "Enable Provider Round-Robin (Smart Doubling)",
   "config.extendedae_plus.state_on": "On",
-  "config.extendedae_plus.state_off": "Off"
+  "config.extendedae_plus.state_off": "Off",
+  "config.extendedae_plus.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
+  "config.extendedae_plus.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier (0 = Unlimited)"
 }
