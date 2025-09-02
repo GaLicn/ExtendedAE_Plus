@@ -6,6 +6,7 @@ import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.StackWithBounds;
 import appeng.client.gui.TextOverride;
+import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
@@ -29,6 +30,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -307,5 +309,22 @@ public abstract class AEBaseScreenMixin {
             }
         } catch (Throwable ignored) {
         }
+    }
+
+
+    @Shadow
+    protected void setTextContent(String id, Component content) {};
+
+    @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
+    private void onUpdateBeforeRender(CallbackInfo ci) {
+        try {
+            AEBaseScreen<?> self = (AEBaseScreen<?>) (Object) this;
+            if (self instanceof PatternProviderScreen screen){
+                Component t = screen.getTitle();
+                if (t != null && !t.getString().isEmpty()) {
+                    this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 }
