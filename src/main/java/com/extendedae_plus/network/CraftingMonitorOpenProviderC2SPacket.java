@@ -13,7 +13,6 @@ import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
-import com.mojang.logging.LogUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
@@ -49,11 +48,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null) return;
 
-            LogUtils.getLogger().info("EAP[S]: recv CraftingMonitorOpenProviderC2SPacket key={} from {}", msg.what, player.getGameProfile().getName());
-
             // 必须在 CraftingCPU 界面内
             if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
-                LogUtils.getLogger().info("EAP[S]: not in CraftingCPUMenu, abort");
                 return;
             }
 
@@ -64,19 +60,16 @@ public class CraftingMonitorOpenProviderC2SPacket {
                 grid = host.getActionableNode().getGrid();
             }
             if (grid == null) {
-                LogUtils.getLogger().info("EAP[S]: grid is null, abort");
                 return;
             }
 
             var cs = grid.getCraftingService();
             if (!(cs instanceof CraftingService craftingService)) {
-                LogUtils.getLogger().info("EAP[S]: craftingService is null/unsupported, abort");
                 return;
             }
 
             // 1) 根据 AEKey 找到可能的样板（pattern）
             Collection<IPatternDetails> patterns = craftingService.getCraftingFor(msg.what);
-            LogUtils.getLogger().info("EAP[S]: patterns found={} for key={}", patterns.size(), msg.what);
             if (patterns.isEmpty()) {
                 return;
             }
@@ -91,14 +84,35 @@ public class CraftingMonitorOpenProviderC2SPacket {
                         if (host == null) continue;
                         var pbe = host.getBlockEntity();
                         if (pbe == null) continue;
-                        // 在服务端上下文中执行，pbe 仅用于构造菜单定位器
+
+                        // 跳过未连接到网格或不活跃的 provider（例如缺少频道/通道）
+                        try {
+                            var providerGrid = ppl.getGrid();
+                            if (providerGrid == null || !providerGrid.equals(grid)) {
+                                continue;
+                            }
+                            // 如果 provider 自身对外提供的通道/频道信息不可用或不活跃，跳过
+                            try {
+                                // 尝试通过 provider 的主节点判断是否有 channel
+                                var mainNodeField = ppl.getClass().getDeclaredField("mainNode");
+                                mainNodeField.setAccessible(true);
+                                var mainNode = mainNodeField.get(ppl);
+                                if (mainNode == null) continue;
+                                var getChannelsMethod = mainNode.getClass().getMethod("getChannels");
+                                Object channels = null;
+                                channels = getChannelsMethod.invoke(mainNode);
+                                if (channels instanceof java.util.Collection) {
+                                    if (((java.util.Collection<?>) channels).isEmpty()) continue;
+                                }
+                            } catch (Exception ignored) {
+                                // 无法判断 channel 时继续：不因反射失败而阻止正常 provider
+                            }
+                        } catch (Exception e) {
+                            continue;
+                        }
 
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
-                            // 告知目标玩家客户端高亮该 AEKey（避免全局服务端状态污染）
-                            AEKey key = pattern.getOutputs()[0].what();
-                            ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
-
                             // 部件与方块实体分别选择定位器并打开界面
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
@@ -106,18 +120,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
                             }
 
-                            // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码
-                            int foundSlot = -1;
-                            var list = PatternProviderDataUtil.getAllPatternData(ppl);
-                            for (var pd : list) {
-
-                                if (pd != null && pd.getPatternDetails() != null
-                                        && pd.getPatternDetails().getDefinition().equals(pattern.getDefinition())) {
-                                    foundSlot = pd.getSlotIndex();
-                                    break;
-                                }
-
-                            }
+                            // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码（尽量早退出，按槽位逐个解码）
+                            int foundSlot = findSlotIndexInProvider(ppl, pattern);
                             if (foundSlot >= 0) {
                                 int pageId = foundSlot / 36;
                                 if (pageId > 0) {
@@ -125,18 +129,35 @@ public class CraftingMonitorOpenProviderC2SPacket {
                                     ModNetwork.CHANNEL.sendTo(new SetProviderPageS2CPacket(pageId), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                                 }
                             }
-                            context.setPacketHandled(true);
+
+                            // 最后发送高亮包，保证界面已打开
+                            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                                AEKey key = pattern.getOutputs()[0].what();
+                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                            }
+
                             return;
-                        } catch (Throwable t) {
-                            LogUtils.getLogger().error("EAP[S]: open provider UI failed at {}", pbe.getBlockPos(), t);
+                        } catch (Exception ignored) {
                         }
                     }
                 }
             }
-
-            LogUtils.getLogger().info("EAP[S]: no provider UI opened for key={}", msg.what);
         });
         context.setPacketHandled(true);
+    }
+
+    private static int findSlotIndexInProvider(PatternProviderLogic ppl, IPatternDetails pattern) {
+        try {
+            // 通过逐槽位解码并在找到匹配定义时立即返回索引，避免分配大量对象
+            var list = PatternProviderDataUtil.getAllPatternData(ppl);
+            for (var pd : list) {
+                if (pd != null && pd.getPatternDetails() != null && pd.getPatternDetails().getDefinition().equals(pattern.getDefinition())) {
+                    return pd.getSlotIndex();
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return -1;
     }
 
 

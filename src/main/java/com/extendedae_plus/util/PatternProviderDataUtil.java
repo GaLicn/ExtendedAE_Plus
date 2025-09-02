@@ -6,8 +6,11 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderLogic;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -230,26 +233,8 @@ public class PatternProviderDataUtil {
         if (patternInventory == null) {
             return patternDataList;
         }
-
-        // 通过反射安全地访问host字段获取Level
-        Level level = null;
-        try {
-            var hostField = patternProvider.getClass().getDeclaredField("host");
-            hostField.setAccessible(true);
-            var host = hostField.get(patternProvider);
-            if (host != null) {
-                var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
-                var blockEntity = getBlockEntityMethod.invoke(host);
-                if (blockEntity != null) {
-                    var getLevelMethod = blockEntity.getClass().getMethod("getLevel");
-                    level = (Level) getLevelMethod.invoke(blockEntity);
-                }
-            }
-        } catch (Exception e) {
-            // 如果反射失败，返回空列表
-            return patternDataList;
-        }
-        
+        // 获取 Level（使用 mixin accessor 替代反射）
+        Level level = getPatternProviderLevel(patternProvider);
         if (level == null) {
             return patternDataList;
         }
@@ -353,24 +338,7 @@ public class PatternProviderDataUtil {
             return null;
         }
 
-        // 通过反射安全地访问host字段获取Level
-        Level level = null;
-        try {
-            var hostField = patternProvider.getClass().getDeclaredField("host");
-            hostField.setAccessible(true);
-            var host = hostField.get(patternProvider);
-            if (host != null) {
-                var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
-                var blockEntity = getBlockEntityMethod.invoke(host);
-                if (blockEntity != null) {
-                    var getLevelMethod = blockEntity.getClass().getMethod("getLevel");
-                    level = (Level) getLevelMethod.invoke(blockEntity);
-                }
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        
+        Level level = getPatternProviderLevel(patternProvider);
         if (level == null) {
             return null;
         }
@@ -862,50 +830,30 @@ public class PatternProviderDataUtil {
             // 1. 设置物品到库存
             patternInventory.setItemDirect(slot, newPattern);
             
-            // 2. 标记数据为脏数据，确保保存到磁盘
+            // 2. 标记数据为脏数据，确保保存到磁盘（尝试使用 mixin accessor 替代反射）
             try {
-                // 通过反射获取host并标记为脏数据
-                var hostField = patternProvider.getClass().getDeclaredField("host");
-                hostField.setAccessible(true);
-                var host = hostField.get(patternProvider);
-                
-                if (host != null) {
-                    // 获取BlockEntity并标记为脏数据
-                    var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
-                    var blockEntity = getBlockEntityMethod.invoke(host);
-                    
-                    if (blockEntity != null) {
-                        // 调用setChanged()方法标记为脏数据
-                        var setChangedMethod = blockEntity.getClass().getMethod("setChanged");
-                        setChangedMethod.invoke(blockEntity);
-                        
-                        // 尝试触发网络同步
-                        try {
-                            var levelField = blockEntity.getClass().getSuperclass().getDeclaredField("level");
-                            levelField.setAccessible(true);
-                            Level level = (Level) levelField.get(blockEntity);
-                            
-                            if (level != null && !level.isClientSide()) {
-                                // 服务器端：强制同步到客户端
-                                var getBlockPosMethod = blockEntity.getClass().getMethod("getBlockPos");
-                                var blockPos = getBlockPosMethod.invoke(blockEntity);
-                                
-                                if (blockPos != null) {
-                                    // 通知客户端方块状态变更
-                                    var getBlockStateMethod = blockEntity.getClass().getMethod("getBlockState");
-                                    var blockState = getBlockStateMethod.invoke(blockEntity);
-                                    level.sendBlockUpdated((net.minecraft.core.BlockPos) blockPos, 
-                                                         (net.minecraft.world.level.block.state.BlockState) blockState, 
-                                                         (net.minecraft.world.level.block.state.BlockState) blockState, 3);
-                                }
+                if (patternProvider instanceof PatternProviderLogicAccessor accessor) {
+                    var host = accessor.eap$host();
+                    if (host != null) {
+                        BlockEntity be = host.getBlockEntity();
+                        if (be != null) {
+                            try {
+                                be.setChanged();
+                            } catch (Exception ignored) {
                             }
-                        } catch (Exception syncException) {
-                            // 网络同步失败不影响主要功能
+                            try {
+                                Level level = be.getLevel();
+                                if (level != null && !level.isClientSide()) {
+                                    var pos = be.getBlockPos();
+                                    var state = be.getBlockState();
+                                    level.sendBlockUpdated(pos, state, state, 3);
+                                }
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
                 }
-            } catch (Exception e) {
-                // 如果反射失败，使用备用方案
+            } catch (Exception ignored) {
             }
             
             // 3. 强制更新样板缓存
@@ -920,20 +868,18 @@ public class PatternProviderDataUtil {
      * ExtendedAE风格：安全获取样板供应器的Level对象
      */
     private static Level getPatternProviderLevel(PatternProviderLogic patternProvider) {
+        if (patternProvider == null) return null;
         try {
-            var hostField = patternProvider.getClass().getDeclaredField("host");
-            hostField.setAccessible(true);
-            var host = hostField.get(patternProvider);
-            if (host != null) {
-                var getBlockEntityMethod = host.getClass().getMethod("getBlockEntity");
-                var blockEntity = getBlockEntityMethod.invoke(host);
-                if (blockEntity != null) {
-                    var getLevelMethod = blockEntity.getClass().getMethod("getLevel");
-                    return (Level) getLevelMethod.invoke(blockEntity);
+            if (patternProvider instanceof PatternProviderLogicAccessor accessor) {
+                var host = accessor.eap$host();
+                if (host != null) {
+                    BlockEntity be = host.getBlockEntity();
+                    if (be != null) {
+                        return be.getLevel();
+                    }
                 }
             }
-        } catch (Exception e) {
-            // 静默处理异常，返回null让调用者处理
+        } catch (Exception ignored) {
         }
         return null;
     }
