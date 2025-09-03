@@ -1,15 +1,11 @@
 package com.extendedae_plus.util;
 
-import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfigs;
-
-
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import com.extendedae_plus.content.ScaledProcessingPattern;
 
 public final class PatternScaler {
     private PatternScaler() {
@@ -24,9 +20,6 @@ public final class PatternScaler {
             return null;
         }
 
-        GenericStack[] baseSparseInputs = base.getSparseInputs();
-        GenericStack[] baseSparseOutputs = base.getSparseOutputs();
-        IInput[] baseInputs = base.getInputs();
         GenericStack[] baseOutputs = base.getOutputs();
 
         // 新逻辑：不再对样板进行单位化处理
@@ -60,6 +53,15 @@ public final class PatternScaler {
         if (requestedAmount > 0) {
             long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
             multiplier = needed <= 1L ? 1L : needed;
+        }
+        // 小请求绕过：若请求量小且不会带来收益，则不启用缩放（返回 null）
+        try {
+            int minBenefit = ModConfigs.SMART_SCALING_MIN_BENEFIT_FACTOR.get();
+            if (minBenefit > 1 && requestedAmount > 0 && requestedAmount < perOperationTarget * (long) minBenefit) {
+                return null;
+            }
+        } catch (Throwable ignore) {
+            // 配置读取异常时保持默认行为（不绕过）
         }
         // 应用配置的最大倍数上限（0 表示不限制）
         try {
