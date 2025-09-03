@@ -80,13 +80,14 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
-        modCompileOnly "curse.maven:applied-flux-965012:${applied_flux_version}"
+    modCompileOnly "curse.maven:applied-flux-965012:${applied_flux_version}"
     modCompileOnly "curse.maven:mega-cells-622112:${mega_cells_version}"
     modCompileOnly "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
     modCompileOnly "curse.maven:ldlib-626676:${ldlib_version}"
+    modCompileOnly files('libs/gtlcore-1.2.2.1-fix5.jar')
 
     //curios
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"

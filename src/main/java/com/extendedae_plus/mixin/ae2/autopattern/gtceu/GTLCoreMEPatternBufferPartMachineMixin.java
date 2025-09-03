@@ -1,19 +1,46 @@
 package com.extendedae_plus.mixin.ae2.autopattern.gtceu;
 
 import appeng.api.crafting.IPatternDetails;
+import appeng.crafting.pattern.AEProcessingPattern;
+import com.extendedae_plus.api.SmartDoublingAwarePattern;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.google.common.collect.BiMap;
+import org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 @Pseudo
-@Mixin(targets = "org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine",remap = false)
+@Mixin(value = MEPatternBufferPartMachine.class, remap = false)
 public class GTLCoreMEPatternBufferPartMachineMixin {
+
+    @Final
+    @Shadow
+    private BiMap<IPatternDetails, Integer> patternSlotMap;
+
+    // 设置样板总成是否翻倍
+    @Inject(method = "getAvailablePatterns", at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;toList()Ljava/util/List;", shift = At.Shift.BEFORE))
+    private void beforeToList(CallbackInfoReturnable<List<IPatternDetails>> cir) {
+        if (patternSlotMap == null) return;
+        for (Map.Entry<IPatternDetails, Integer> entry : patternSlotMap.entrySet()) {
+            IPatternDetails key = entry.getKey();
+            if (key instanceof AEProcessingPattern proc && proc instanceof SmartDoublingAwarePattern aware) {
+                aware.eap$setAllowScaling(true);
+                LOGGER.info("设置true，{}", aware);
+            }
+        }
+    }
 
     // 重定向containsKey检查
     @Redirect(method = "pushPattern(Lappeng/api/crafting/IPatternDetails;[Lappeng/api/stacks/KeyCounter;)Z",
