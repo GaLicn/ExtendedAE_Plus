@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(value = AEProcessingPattern.class, remap = false)
 public class AEProcessingPatternMixin implements SmartDoublingAwarePattern {
     @Unique
-    private boolean eap$allowScaling = true; // 默认允许缩放
+    private boolean eap$allowScaling = false; // 默认不允许缩放
 
     @Override
     public boolean eap$allowScaling() {

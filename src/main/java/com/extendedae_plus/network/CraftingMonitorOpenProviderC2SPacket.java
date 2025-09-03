@@ -12,13 +12,26 @@ import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.mojang.logging.LogUtils;
+import com.extendedae_plus.util.PatternProviderDataUtil;
+import com.glodblock.github.extendedae.util.FCClientUtil;
+import com.glodblock.github.glodium.util.GlodUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Supplier;
+
+import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.highlight;
 
 /**
  * 客户端从 CraftingCPUScreen 发送：鼠标下条目对应的 AEKey。
@@ -47,11 +60,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null) return;
 
-            LogUtils.getLogger().info("EAP[S]: recv CraftingMonitorOpenProviderC2SPacket key={} from {}", msg.what, player.getGameProfile().getName());
-
             // 必须在 CraftingCPU 界面内
             if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
-                LogUtils.getLogger().info("EAP[S]: not in CraftingCPUMenu, abort");
                 return;
             }
 
@@ -62,19 +72,16 @@ public class CraftingMonitorOpenProviderC2SPacket {
                 grid = host.getActionableNode().getGrid();
             }
             if (grid == null) {
-                LogUtils.getLogger().info("EAP[S]: grid is null, abort");
                 return;
             }
 
             var cs = grid.getCraftingService();
             if (!(cs instanceof CraftingService craftingService)) {
-                LogUtils.getLogger().info("EAP[S]: craftingService is null/unsupported, abort");
                 return;
             }
 
             // 1) 根据 AEKey 找到可能的样板（pattern）
             Collection<IPatternDetails> patterns = craftingService.getCraftingFor(msg.what);
-            LogUtils.getLogger().info("EAP[S]: patterns found={} for key={}", patterns.size(), msg.what);
             if (patterns.isEmpty()) {
                 return;
             }
@@ -89,29 +96,72 @@ public class CraftingMonitorOpenProviderC2SPacket {
                         if (host == null) continue;
                         var pbe = host.getBlockEntity();
                         if (pbe == null) continue;
-                        // 在服务端上下文中执行，pbe 仅用于构造菜单定位器
+
+                        // 跳过未连接到网格或不活跃的 provider（使用 util 判断并传入当前 grid）
+                        if (!PatternProviderDataUtil.isProviderAvailable(ppl, grid)) continue;
 
                         // 直接打开供应器自身的 UI（调用 Host 默认方法）
                         try {
-                            // 部件与方块实体分别选择定位器
+                            // 部件与方块实体分别选择定位器并打开界面
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
+                                highlightWithMessage(pbe.getBlockPos(), part.getSide(), Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
+                                highlightWithMessage(pbe.getBlockPos(), null, Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
                             }
-                            context.setPacketHandled(true);
+
+                            // 高亮打开的供应器位置并发送聊天提示
+
+
+                            // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码（尽量早退出，按槽位逐个解码）
+                            int foundSlot = PatternProviderDataUtil.findSlotForPattern(ppl, pattern.getDefinition());
+                            if (foundSlot >= 0) {
+                                int pageId = foundSlot / 36;
+                                if (pageId > 0) {
+                                    // 发送 S2C 包通知客户端切换到指定页（客户端会写入 mixin 字段并重排槽位）
+                                    ModNetwork.CHANNEL.sendTo(new SetProviderPageS2CPacket(pageId), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                                }
+                            }
+
+                            // 最后发送高亮包，保证界面已打开
+                            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                                AEKey key = pattern.getOutputs()[0].what();
+                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                            }
+
                             return;
-                        } catch (Throwable t) {
-                            LogUtils.getLogger().error("EAP[S]: open provider UI failed at {}", pbe.getBlockPos(), t);
+                        } catch (Exception ignored) {
                         }
                     }
                 }
             }
-
-            LogUtils.getLogger().info("EAP[S]: no provider UI opened for key={}", msg.what);
         });
         context.setPacketHandled(true);
     }
 
+    private static void highlightWithMessage(BlockPos pos, Direction face, ResourceKey<Level> dim, double multiplier, Player player) {
+        if (pos == null || dim == null) {
+            return;
+        }
+        long endTime = System.currentTimeMillis() + (long) (6000 * GlodUtil.clamp(multiplier, 1, 30));
+        if (face == null) {
+            highlight(pos, dim, endTime);
+        } else {
+            var origin = new AABB(2 / 16D, 2 / 16D, 0, 14 / 16D, 14 / 16D, 2 / 16D).move(pos);
+            var center = new AABB(pos).getCenter();
+            switch (face) {
+                case WEST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (Math.PI / 2));
+                case SOUTH -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) Math.PI);
+                case EAST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (-Math.PI / 2));
+                case UP -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (-Math.PI / 2));
+                case DOWN -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (Math.PI / 2));
+            }
+            highlight(pos, face, dim, endTime, origin);
+        }
 
+        if (player != null) {
+            player.displayClientMessage(Component.translatable("chat.ex_pattern_access_terminal.pos", pos.toShortString(), dim.location().getPath()), false);
+        }
+    }
 }
