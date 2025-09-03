@@ -18,6 +18,7 @@ public class ModConfigScreen extends Screen {
     private CycleButton<Boolean> crossDimToggle;
     private CycleButton<Boolean> providerRoundRobinToggle;
     private EditBox smartScalingMaxMulBox;
+    private EditBox smartScalingMinBenefitBox;
     private CycleButton<Boolean> showEncoderToggle;
     private CycleButton<Boolean> patternTerminalShowSlotsToggle;
 
@@ -66,6 +67,13 @@ public class ModConfigScreen extends Screen {
         this.addRenderableWidget(smartScalingMaxMulBox);
         row++;
 
+        // smartScalingMinBenefitFactor: Int 1-1024
+        smartScalingMinBenefitBox = new EditBox(this.font, rightX, y + row * rowHeight, boxWidth, 20, Component.translatable("config.extendedae_plus.smartScalingMinBenefitFactor"));
+        smartScalingMinBenefitBox.setValue(String.valueOf(ModConfigs.SMART_SCALING_MIN_BENEFIT_FACTOR.get()));
+        smartScalingMinBenefitBox.setFilter(s -> s.matches("\\d*") && parseIntOrDefault(s, 1) >= 1 && parseIntOrDefault(s, 1024) <= 1024);
+        this.addRenderableWidget(smartScalingMinBenefitBox);
+        row++;
+
         // show encoder pattern player toggle
         showEncoderToggle = this.addRenderableWidget(createToggle(rightX, y + row * rowHeight, boxWidth, 20, ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.get()));
         row++;
@@ -95,6 +103,7 @@ public class ModConfigScreen extends Screen {
         boolean crossDim = crossDimToggle.getValue();
         boolean providerRoundRobin = providerRoundRobinToggle.getValue();
         int smartMaxMul = clamp(parseIntOrDefault(smartScalingMaxMulBox.getValue(), ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get()), 0, 1048576);
+        int smartMinBenefit = clamp(parseIntOrDefault(smartScalingMinBenefitBox.getValue(), ModConfigs.SMART_SCALING_MIN_BENEFIT_FACTOR.get()), 1, 1024);
         boolean showEncoder = showEncoderToggle.getValue();
         boolean patternShowSlots = patternTerminalShowSlotsToggle.getValue();
 
@@ -104,6 +113,7 @@ public class ModConfigScreen extends Screen {
         ModConfigs.WIRELESS_CROSS_DIM_ENABLE.set(crossDim);
         ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.set(providerRoundRobin);
         ModConfigs.SMART_SCALING_MAX_MULTIPLIER.set(smartMaxMul);
+        ModConfigs.SMART_SCALING_MIN_BENEFIT_FACTOR.set(smartMinBenefit);
         ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.set(showEncoder);
         ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.set(patternShowSlots);
 
@@ -144,8 +154,9 @@ public class ModConfigScreen extends Screen {
         g.drawString(this.font, Component.translatable("config.extendedae_plus.wirelessCrossDimEnable"), leftX, y + 2 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.providerRoundRobinEnable"), leftX, y + 3 * rowHeight + 6, labelColor, false);
         g.drawString(this.font, Component.translatable("config.extendedae_plus.smartScalingMaxMultiplier_with_range"), leftX, y + 4 * rowHeight + 6, labelColor, false);
-        g.drawString(this.font, Component.translatable("config.extendedae_plus.showEncoderPatternPlayer"), leftX, y + 5 * rowHeight + 6, labelColor, false);
-        g.drawString(this.font, Component.translatable("config.extendedae_plus.patternTerminalShowSlotsDefault"), leftX, y + 6 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.smartScalingMinBenefitFactor"), leftX, y + 5 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.showEncoderPatternPlayer"), leftX, y + 6 * rowHeight + 6, labelColor, false);
+        g.drawString(this.font, Component.translatable("config.extendedae_plus.patternTerminalShowSlotsDefault"), leftX, y + 7 * rowHeight + 6, labelColor, false);
     }
 
     private static int parseIntOrDefault(String s, int def) {
