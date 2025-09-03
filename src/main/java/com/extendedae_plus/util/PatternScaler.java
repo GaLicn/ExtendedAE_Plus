@@ -71,48 +71,7 @@ public final class PatternScaler {
             // 配置读取异常时不施加上限
         }
 
-        // 构建压缩输入（将每个输入的 multiplier 翻倍，保留每个模板的原始数量）
-        IInput[] scaledInputs = new IInput[baseInputs.length];
-        for (int i = 0; i < baseInputs.length; i++) {
-            var in = baseInputs[i];
-            var template = in.getPossibleInputs();
-            GenericStack[] scaledTemplates = new GenericStack[template.length];
-            for (int j = 0; j < template.length; j++) {
-                scaledTemplates[j] = new GenericStack(template[j].what(), template[j].amount());
-            }
-            scaledInputs[i] = new ScaledProcessingPattern.Input(scaledTemplates, in.getMultiplier() * multiplier);
-        }
-
-        /* 4. 构建压缩输出 */
-        GenericStack[] scaledCondensedOutputs = new GenericStack[baseOutputs.length];
-        for (int i = 0; i < baseOutputs.length; i++) {
-            GenericStack out = baseOutputs[i];
-            if (out != null) {
-                scaledCondensedOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
-            }
-        }
-
-        // 构建并打印稀疏表示（直接按 multiplier 放大）
-        GenericStack[] scaledSparseInputs = new GenericStack[baseSparseInputs.length];
-        for (int i = 0; i < baseSparseInputs.length; i++) {
-            var in = baseSparseInputs[i];
-            if (in != null) {
-                scaledSparseInputs[i] = new GenericStack(in.what(), in.amount() * multiplier);
-            }
-        }
-        GenericStack[] scaledSparseOutputs = new GenericStack[baseSparseOutputs.length];
-        for (int i = 0; i < baseSparseOutputs.length; i++) {
-            var out = baseSparseOutputs[i];
-            if (out != null) {
-                scaledSparseOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
-            }
-        }
-
-        return new ScaledProcessingPattern(base,
-                base.getDefinition(),
-                scaledSparseInputs,
-                scaledSparseOutputs,
-                scaledInputs,
-                scaledCondensedOutputs);
+        // 仅使用 multiplier 构建轻量化 ScaledProcessingPattern（具体视图按需计算）
+        return new ScaledProcessingPattern(base, base.getDefinition(), multiplier);
     }
 }
