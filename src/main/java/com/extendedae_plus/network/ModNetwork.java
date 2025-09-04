@@ -60,6 +60,18 @@ public class ModNetwork {
                 .consumerNetworkThread(ProvidersListS2CPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(SetPatternHighlightS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SetPatternHighlightS2CPacket::encode)
+                .decoder(SetPatternHighlightS2CPacket::decode)
+                .consumerNetworkThread(SetPatternHighlightS2CPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SetProviderPageS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SetProviderPageS2CPacket::encode)
+                .decoder(SetProviderPageS2CPacket::decode)
+                .consumerNetworkThread(SetProviderPageS2CPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(ToggleAdvancedBlockingC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(ToggleAdvancedBlockingC2SPacket::encode)
                 .decoder(ToggleAdvancedBlockingC2SPacket::decode)

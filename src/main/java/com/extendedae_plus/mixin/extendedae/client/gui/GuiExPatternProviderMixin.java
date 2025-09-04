@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
@@ -49,8 +50,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         super(menu, playerInventory, title, style);
     }
 
-    
-    
+
+
     // 移除手动挪动 Slot 坐标，交由 SlotGridLayout + 原生布局控制
 
     @Unique
@@ -144,7 +145,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                     ContainerExPatternProvider menu1 = this.getMenu();
                     // 尝试调用 setPage
                     try {
-                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
+                        Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
                         setPageMethod.invoke(menu1, newPage);
                     } catch (Throwable ignored2) {}
                     // 直接写入 page 字段，确保生效

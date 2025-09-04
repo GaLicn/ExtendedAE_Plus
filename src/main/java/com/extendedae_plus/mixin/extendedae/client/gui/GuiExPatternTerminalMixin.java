@@ -4,7 +4,6 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
-import appeng.client.gui.me.patternaccess.PatternSlot;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
@@ -13,6 +12,7 @@ import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
+import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -76,41 +76,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         super(menu, playerInventory, title, style);
     }
 
-    @Unique
-    private static int eap$withAlpha(int rgb, int alpha255) {
-        return ((alpha255 & 0xFF) << 24) | (rgb & 0x00FFFFFF);
-    }
-
-    /**
-     * 将 HSV 转换为 RGB（返回 0xRRGGBB，不含 alpha）。
-     * h: 0.0~1.0，s: 0.0~1.0，v: 0.0~1.0
-     */
-    @Unique
-    private static int eap$hsvToRgb(float h, float s, float v) {
-        if (s <= 0.0f) {
-            int g = Math.round(v * 255.0f);
-            return (g << 16) | (g << 8) | g;
-        }
-        float hh = (h - (float) Math.floor(h)) * 6.0f;
-        int sector = (int) Math.floor(hh);
-        float f = hh - sector;
-        float p = v * (1.0f - s);
-        float q = v * (1.0f - s * f);
-        float t = v * (1.0f - s * (1.0f - f));
-        float r, g, b;
-        switch (sector) {
-            case 0: r = v; g = t; b = p; break;
-            case 1: r = q; g = v; b = p; break;
-            case 2: r = p; g = v; b = t; break;
-            case 3: r = p; g = q; b = v; break;
-            case 4: r = t; g = p; b = v; break;
-            default: r = v; g = p; b = q; break;
-        }
-        int ri = Math.round(r * 255.0f);
-        int gi = Math.round(g * 255.0f);
-        int bi = Math.round(b * 255.0f);
-        return (ri << 16) | (gi << 8) | bi;
-    }
 
     /**
      * 获取当前选择的样板供应器ID
@@ -579,53 +544,9 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             return;
         }
 
-        // 彩虹色的流转：基于时间在 HSV 色环上循环（4 秒为一周期）
-        long now = System.currentTimeMillis();
-        final long rainbowPeriodMs = 4000L;
-        float hue = (now % rainbowPeriodMs) / (float) rainbowPeriodMs; // 0.0 ~ 1.0
-        int rainbowRgb = eap$hsvToRgb(hue, 1.0f, 1.0f);
+        // 使用 GuiUtil 的通用绘制方法绘制槽位高亮（包含彩虹流转效果）
+        GuiUtil.drawPatternSlotHighlights(guiGraphics, this.menu.slots, this.matchedStack, this.matchedProvider);
 
-        for (Slot slot : this.menu.slots) {
-            if (!(slot instanceof PatternSlot ps)) {
-                continue;
-            }
-
-            int sx = slot.x;
-            int sy = slot.y;
-
-            boolean isMatchedSlot = this.matchedStack != null && this.matchedStack.contains(slot.getItem());
-            boolean isMatchedProvider = false;
-            try {
-                PatternContainerRecord container = ps.getMachineInv();
-                isMatchedProvider = this.matchedProvider != null && this.matchedProvider.contains(container);
-            } catch (Throwable ignored) {
-            }
-
-            // 依据命中状态选择颜色方案
-            int borderColor;
-            int backgroundColor;
-
-            if (isMatchedSlot) {
-                // 命中槽位：使用彩虹色边框与浅底色（固定透明度，呈现色相流转效果）
-                borderColor = eap$withAlpha(rainbowRgb, 0xA0);
-                backgroundColor = eap$withAlpha(rainbowRgb, 0x3C);
-            } else if (!isMatchedProvider) {
-                borderColor = eap$withAlpha(0xFFFFFF, 0x40);
-                backgroundColor = eap$withAlpha(0x000000, 0x18);
-            } else {
-                borderColor = eap$withAlpha(0xFFFFFF, 0x30);
-                backgroundColor = eap$withAlpha(0xFFFFFF, 0x14);
-            }
-
-            // 绘制 18x18 边框（1px 宽）
-            eap$fill(guiGraphics, new Rect2i(sx - 1, sy - 1, 18, 1), borderColor);
-            eap$fill(guiGraphics, new Rect2i(sx - 1, sy + 16, 18, 1), borderColor);
-            eap$fill(guiGraphics, new Rect2i(sx - 1, sy, 1, 16), borderColor);
-            eap$fill(guiGraphics, new Rect2i(sx + 16, sy, 1, 16), borderColor);
-
-            // 绘制 16x16 浅底色（半透明，叠加在槽位上方）
-            eap$fill(guiGraphics, new Rect2i(sx, sy, 16, 16), backgroundColor);
-        }
     }
 
     @Unique
