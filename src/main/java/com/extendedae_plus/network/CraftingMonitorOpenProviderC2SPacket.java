@@ -15,6 +15,8 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.glodblock.github.extendedae.util.FCClientUtil;
 import com.glodblock.github.glodium.util.GlodUtil;
+import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -131,6 +133,41 @@ public class CraftingMonitorOpenProviderC2SPacket {
                             }
 
                             return;
+                        } catch (Exception ignored) {
+                        }
+                    } else if (provider instanceof com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine machine) {
+                        // 处理 MEPatternBufferPartMachine：打开其界面并高亮位置，尽量反射获取槽位页码
+                        try {
+                            BlockPos pos = machine.getPos();
+                            Level level = machine.getLevel();
+                            if (pos == null || level == null) continue;
+                            if (!level.isClientSide) { // 确保在服务器端执行
+                                MachineUIFactory.INSTANCE.openUI(MetaMachine.getMachine(level, pos), player);
+                            }
+
+                            // 最后发送高亮包，保证界面已打开
+                            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                                AEKey key = pattern.getOutputs()[0].what();
+                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                            }
+
+                        } catch (Exception ignored) {
+                        }
+                    } else if (provider instanceof org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine machine) {
+                        // 处理 MEPatternBufferPartMachine：打开其界面并高亮位置，尽量反射获取槽位页码
+                        try {
+                            BlockPos pos = machine.getPos();
+                            Level level = machine.getLevel();
+                            if (pos == null || level == null) continue;
+                            if (!level.isClientSide) { // 确保在服务器端执行
+                                MachineUIFactory.INSTANCE.openUI(MetaMachine.getMachine(level, pos), player);
+                            }
+
+                            // 最后发送高亮包，保证界面已打开
+                            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                                AEKey key = pattern.getOutputs()[0].what();
+                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                            }
                         } catch (Exception ignored) {
                         }
                     }

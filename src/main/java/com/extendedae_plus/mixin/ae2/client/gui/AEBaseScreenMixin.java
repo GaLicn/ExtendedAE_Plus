@@ -41,13 +41,46 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class AEBaseScreenMixin {
 
     @Unique
+    private static int eap$getIntField(Object self, String name, int def) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Integer i) return i;
+            } catch (Throwable ignored) {
+            }
+            c = c.getSuperclass();
+        }
+        return def;
+    }
+
+    @Unique
+    private static Font eap$getFont(Object self) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField("font");
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Font font) return font;
+            } catch (Throwable ignored) {
+            }
+            c = c.getSuperclass();
+        }
+        return net.minecraft.client.Minecraft.getInstance().font;
+    }
+
+    @Unique
     private ScreenStyle eap$getStyle(Object self) {
         try {
             var f = self.getClass().getDeclaredField("style");
             f.setAccessible(true);
             Object v = f.get(self);
             if (v instanceof ScreenStyle s) return s;
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
         return null;
     }
 
@@ -78,7 +111,8 @@ public abstract class AEBaseScreenMixin {
             // Debug: 标记一次发送
             try {
                 LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
-            } catch (Throwable ignored2) {}
+            } catch (Throwable ignored2) {
+            }
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
@@ -112,41 +146,12 @@ public abstract class AEBaseScreenMixin {
             // Debug: 标记一次发送（打开供应器UI）
             try {
                 LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
-            } catch (Throwable ignored2) {}
+            } catch (Throwable ignored2) {
+            }
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
-    }
-
-    @Unique
-    private static int eap$getIntField(Object self, String name, int def) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField(name);
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Integer i) return i;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return def;
-    }
-
-    @Unique
-    private static Font eap$getFont(Object self) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField("font");
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Font font) return font;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return net.minecraft.client.Minecraft.getInstance().font;
     }
 
     /**
@@ -184,17 +189,14 @@ public abstract class AEBaseScreenMixin {
 
         try {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
-            try {
-                if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
-                    AEKey key = details.getOutputs()[0].what();
-                    if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
-                        try {
-                            GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
-                        } catch (Throwable ignored) {}
-                    }
+            if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
+                AEKey key = details.getOutputs()[0].what();
+                if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
+                    GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
                 }
-            } catch (Throwable ignore) {}
-        } catch (Throwable ignore) {}
+            }
+        } catch (Throwable ignore) {
+        }
     }
 
     // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
@@ -313,18 +315,22 @@ public abstract class AEBaseScreenMixin {
 
 
     @Shadow
-    protected void setTextContent(String id, Component content) {};
+    protected void setTextContent(String id, Component content) {
+    }
+
+    ;
 
     @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
     private void onUpdateBeforeRender(CallbackInfo ci) {
         try {
             AEBaseScreen<?> self = (AEBaseScreen<?>) (Object) this;
-            if (self instanceof PatternProviderScreen screen){
+            if (self instanceof PatternProviderScreen screen) {
                 Component t = screen.getTitle();
                 if (t != null && !t.getString().isEmpty()) {
                     this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
     }
 }

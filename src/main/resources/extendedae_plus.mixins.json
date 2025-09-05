@@ -23,6 +23,8 @@
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
+    "gtceu.AEPatternViewSlotWidgetMixin",
+    "gtceu.SlotWidgetMixin",
     "hooks.ModelBakeryMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
@@ -56,7 +58,8 @@
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "gtceu.ModularUIContainerCloseMixin"
   ],
   "injectors": {
     "defaultRequire": 1
