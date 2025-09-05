@@ -19,6 +19,28 @@ group = mod_group_id
 
 repositories {
     // Add here additional repositories if required by some of the dependencies below.
+    maven {
+        name = "TerraformersMC"
+        url = uri("https://maven.terraformersmc.com/")
+    }
+    maven {
+        name = 'cursemaven'
+        url = uri("https://www.cursemaven.com")
+    }
+    maven {
+        name = "Modmaven"
+        url = uri("https://modmaven.dev/")
+    }
+    maven {
+        url = uri("https://maven.shedaniel.me/")
+    }
+    maven {
+        url = uri("https://maven.architectury.dev/")
+    }
+    maven {
+        url = uri("https://maven.latvian.dev/releases/")
+    }
+    mavenCentral()
 }
 
 base {
@@ -133,6 +155,52 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // --- Added dependencies for target mods ---
+    implementation "curse.maven:glodium-957920:5821676"
+    implementation "org.appliedenergistics:appliedenergistics2:19.2.8"
+    implementation "org.appliedenergistics:guideme:2.5.1"
+    // jarJar configuration not set in this build; use implementation for API for now
+    implementation "de.mari_023:ae2wtlib_api:19.2.0"
+    implementation "curse.maven:ex-pattern-provider-892005:6863556"
+
+    compileOnly "curse.maven:applied-flux-965012:5614830"
+    compileOnly "dev.emi:emi-neoforge:1.1.10+1.21"
+    compileOnly "curse.maven:mega-cells-622112:6005043"
+    compileOnly "curse.maven:jade-324717:5427817"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
+    compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+    compileOnly "curse.maven:applied-mekanistics-574300:5978711"
+    compileOnly "dev.latvian.mods:kubejs-neoforge:2101.7.1-build.188"
+    compileOnly "dev.latvian.mods:rhino:2101.2.5-build.54"
+    compileOnly "curse.maven:framedblocks-441647:6127891"
+    compileOnly "curse.maven:advancedae-1084104:6225993"
+    compileOnly "curse.maven:functional-storage-556861:6467726"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
+    compileOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+
+    // runtime test
+    runtimeOnly "curse.maven:applied-flux-965012:5614830"
+    runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
+    runtimeOnly "curse.maven:jade-324717:5427817"
+    runtimeOnly "curse.maven:mega-cells-622112:6005043"
+    runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+
+    // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
+    switch (project.findProperty('use_Xei') ?: 'emi') {
+        case 'emi':
+            runtimeOnly "dev.emi:emi-neoforge:1.1.10+1.21"
+            break
+        case 'rei':
+            runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
+            runtimeOnly "dev.architectury:architectury-neoforge:13.0.1"
+            runtimeOnly "curse.maven:cloth-config-348521:5424576"
+            break
+        case 'jei':
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
+            runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+            break
+    }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
