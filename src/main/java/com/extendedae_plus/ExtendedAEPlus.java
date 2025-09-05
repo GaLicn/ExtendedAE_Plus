@@ -3,7 +3,10 @@ package com.extendedae_plus;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.network.ModNetwork;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -56,7 +59,7 @@ public class ExtendedAEPlus {
 
     // Creates a creative tab with the id "extendedaeplus:example_tab" for the example item, that is placed after the combat tab
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.extendedaeplus")) //The language key for the title of your CreativeModeTab
+            .title(Component.translatable("itemGroup.extendedae_plus")) //The language key for the title of your CreativeModeTab
             .withTabsBefore(CreativeModeTabs.COMBAT)
             .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
             .displayItems((parameters, output) -> {
@@ -84,21 +87,23 @@ public class ExtendedAEPlus {
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
 
-        // Register our mod's ModConfigSpec so that FML can create and load the config file for us
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        // 注册配置：接入自定义的 ModConfigs
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+    }
+
+    // 便捷 ResourceLocation 工具
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
+        // 示例日志，避免引用不存在的模板 Config 字段
+        LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
 
-        if (Config.LOG_DIRT_BLOCK.getAsBoolean()) {
-            LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-        }
-
-        LOGGER.info("{}{}", Config.MAGIC_NUMBER_INTRODUCTION.get(), Config.MAGIC_NUMBER.getAsInt());
-
-        Config.ITEM_STRINGS.get().forEach((item) -> LOGGER.info("ITEM >> {}", item));
+        // 注册网络通道
+        event.enqueueWork(ModNetwork::register);
     }
 
     // Add the example block item to the building blocks tab
@@ -115,3 +120,4 @@ public class ExtendedAEPlus {
         LOGGER.info("HELLO from server starting");
     }
 }
+

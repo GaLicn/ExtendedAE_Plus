@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "extendedae_plus:block/wireless_transceiver" }
+  }
+}
