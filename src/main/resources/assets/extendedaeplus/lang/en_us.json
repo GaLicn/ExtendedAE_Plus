@@ -1,0 +1,13 @@
+{
+  "itemGroup.extendedaeplus": "Example Mod Tab",
+  "block.extendedaeplus.example_block": "Example Block",
+  "item.extendedaeplus.example_item": "Example Item",
+
+  "extendedaeplus.configuration.title": "ExtendedAE-Plus Configs",
+  "extendedaeplus.configuration.section.extendedaeplus.common.toml": "ExtendedAE-Plus Configs",
+  "extendedaeplus.configuration.section.extendedaeplus.common.toml.title": "ExtendedAE-Plus Configs",
+  "extendedaeplus.configuration.items": "Item List",
+  "extendedaeplus.configuration.logDirtBlock": "Log Dirt Block",
+  "extendedaeplus.configuration.magicNumberIntroduction": "Magic Number Text",
+  "extendedaeplus.configuration.magicNumber": "Magic Number"
+}
