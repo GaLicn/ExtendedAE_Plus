@@ -1,19 +1,13 @@
 package com.extendedae_plus.network;
 
-/**
- * 临时的网络通道占位实现，仅用于让 GUI 方案A 最小子集通过编译。
- * 后续将替换为 NeoForge SimpleChannel 正式实现。
- */
+import com.extendedae_plus.ExtendedAEPlus;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+
 public class ModNetwork {
-    public static final DummyChannel CHANNEL = new DummyChannel();
-
-    public static void register() {
-        // TODO: 后续接入 NeoForge SimpleChannel 正式注册
-    }
-
-    public static class DummyChannel {
-        public void sendToServer(Object any) {
-            // no-op 占位
-        }
+    // 在 Mod 构造中通过 modEventBus.addListener(ModNetwork::registerPayloadHandlers) 注册
+    public static void registerPayloadHandlers(final RegisterPayloadHandlersEvent event) {
+        var registrar = event.registrar(ExtendedAEPlus.MODID);
+        registrar.playToServer(ToggleAdvancedBlockingC2SPacket.TYPE, ToggleAdvancedBlockingC2SPacket.STREAM_CODEC, ToggleAdvancedBlockingC2SPacket::handle);
+        registrar.playToServer(ToggleSmartDoublingC2SPacket.TYPE, ToggleSmartDoublingC2SPacket.STREAM_CODEC, ToggleSmartDoublingC2SPacket::handle);
     }
 }

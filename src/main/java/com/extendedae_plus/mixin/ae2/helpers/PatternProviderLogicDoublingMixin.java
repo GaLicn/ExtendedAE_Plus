@@ -46,12 +46,12 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeSmartDoublingToNbt(CompoundTag tag, CallbackInfo ci) {
+    private void eap$writeSmartDoublingToNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         tag.putBoolean(EPP_SMART_DOUBLING_KEY, this.eap$smartDoubling);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readSmartDoublingFromNbt(CompoundTag tag, CallbackInfo ci) {
+    private void eap$readSmartDoublingFromNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         if (tag.contains(EPP_SMART_DOUBLING_KEY)) {
             this.eap$smartDoubling = tag.getBoolean(EPP_SMART_DOUBLING_KEY);
         }
@@ -73,19 +73,4 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
 
     @Shadow
     public void saveChanges() {}
-
-    @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
-    private void onExportSettings(CompoundTag output, CallbackInfo ci) {
-        System.out.println(this.eap$smartDoubling);
-        output.putBoolean("eap_smart_doubling", this.eap$smartDoubling);
-    }
-
-    @Inject(method = "importSettings(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/entity/player/Player;)V", at = @At("TAIL"))
-    private void onImportSettings(CompoundTag input, Player player, CallbackInfo ci) {
-        if (input.contains("eap_smart_doubling")) {
-            this.eap$smartDoubling = input.getBoolean("eap_smart_doubling");
-            // 持久化到 world
-            this.saveChanges();
-        }
-    }
 }

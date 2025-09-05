@@ -10,11 +10,11 @@ import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -65,7 +65,8 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 (btn, backwards) -> {
                     // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
                     ExtendedAELogger.LOGGER.debug("[EAP] Click advanced blocking toggle: send C2S");
-                    ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket());
+                    var conn = Minecraft.getInstance().getConnection();
+                    if (conn != null) conn.send(ToggleAdvancedBlockingC2SPacket.INSTANCE);
                 }
         ) {
             @Override
@@ -98,7 +99,8 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
                     ExtendedAELogger.LOGGER.debug("[EAP] Click smart doubling toggle: send C2S");
-                    ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket());
+                    var conn = Minecraft.getInstance().getConnection();
+                    if (conn != null) conn.send(ToggleSmartDoublingC2SPacket.INSTANCE);
                 }
         ) {
             @Override

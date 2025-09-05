@@ -144,6 +144,8 @@ sourceSets.main.java {
     // 仅保留 mixin 中的 accessor 参与编译
     // 解除对 accessor 的屏蔽
     include 'com/extendedae_plus/mixin/ae2/accessor/**'
+    // 启用对 PatternProviderLogic 的功能混入（高级阻挡/智能翻倍开关的持久化与逻辑）
+    include 'com/extendedae_plus/mixin/ae2/helpers/**'
     // GUI 方案A：解禁最小 GUI 混入
     include 'com/extendedae_plus/mixin/ae2/client/gui/PatternProviderScreenMixin.java'
     include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuAdvancedMixin.java'

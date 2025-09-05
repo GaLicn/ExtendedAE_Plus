@@ -3,13 +3,13 @@
   "package": "com.extendedae_plus.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    // AE2 accessors
     "ae2.accessor.PatternProviderLogicAccessor",
     "ae2.accessor.PatternProviderMenuAdvancedAccessor",
-    // GUI mixins for Pattern Provider
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
-    "ae2.menu.PatternProviderMenuDoublingMixin"
+    "ae2.menu.PatternProviderMenuDoublingMixin",
+    "ae2.helpers.PatternProviderLogicAdvancedMixin",
+    "ae2.helpers.PatternProviderLogicDoublingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

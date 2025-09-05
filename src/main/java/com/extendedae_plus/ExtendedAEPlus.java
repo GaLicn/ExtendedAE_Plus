@@ -71,6 +71,8 @@ public class ExtendedAEPlus {
     public ExtendedAEPlus(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+        // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
+        modEventBus.addListener(ModNetwork::registerPayloadHandlers);
 
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);
@@ -101,9 +103,6 @@ public class ExtendedAEPlus {
         LOGGER.info("HELLO FROM COMMON SETUP");
         // 示例日志，避免引用不存在的模板 Config 字段
         LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-
-        // 注册网络通道
-        event.enqueueWork(ModNetwork::register);
     }
 
     // Add the example block item to the building blocks tab

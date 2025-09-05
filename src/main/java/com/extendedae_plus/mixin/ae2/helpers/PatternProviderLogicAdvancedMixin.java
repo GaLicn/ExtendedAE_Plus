@@ -38,12 +38,12 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeAdvancedToNbt(CompoundTag tag, CallbackInfo ci) {
+    private void eap$writeAdvancedToNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         tag.putBoolean(EPP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readAdvancedFromNbt(CompoundTag tag, CallbackInfo ci) {
+    private void eap$readAdvancedFromNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         if (tag.contains(EPP_ADV_BLOCKING_KEY)) {
             this.eap$advancedBlocking = tag.getBoolean(EPP_ADV_BLOCKING_KEY);
         }
@@ -91,19 +91,4 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     }
 
     @Shadow public void saveChanges() {}
-
-    @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
-    private void onExportSettings(CompoundTag output, CallbackInfo ci) {
-        System.out.println(this.eap$advancedBlocking);
-        output.putBoolean("eap_advanced_blocking", this.eap$advancedBlocking);
-    }
-
-    @Inject(method = "importSettings(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/entity/player/Player;)V", at = @At("TAIL"))
-    private void onImportSettings(CompoundTag input, Player player, CallbackInfo ci) {
-        if (input.contains("eap_advanced_blocking")) {
-            this.eap$advancedBlocking = input.getBoolean("eap_advanced_blocking");
-            // 持久化到 world
-            this.saveChanges();
-        }
-    }
 }
