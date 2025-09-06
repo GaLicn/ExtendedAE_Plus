@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -50,24 +51,25 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         super.attack(state, level, pos, player);
     }
 
+    // 1.21+: 拆分为 useItemOn 与 useWithoutItem
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (level.isClientSide) {
-            return InteractionResult.SUCCESS;
-        }
+    protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack heldItem, BlockState state, Level level, BlockPos pos,
+                                              Player player, InteractionHand hand, BlockHitResult hit) {
         BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof WirelessTransceiverBlockEntity te) {
-            boolean sneaking = player.isShiftKeyDown();
-            if (sneaking) {
-                if (te.isLocked()) {
+        if (!(be instanceof WirelessTransceiverBlockEntity te)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+
+        boolean sneaking = player.isShiftKeyDown();
+        if (sneaking) {
+            if (te.isLocked()) {
+                if (!level.isClientSide) {
                     player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
-                    return InteractionResult.CONSUME;
                 }
-                // 频率调节：主手 +1（或 +10），副手 -1（或 -10）
+            } else {
                 int step = 1;
-                // 手持红石火把：加10；手持木棍：减10（仅改变步长，不改变加/减方向）
-                if (player.getItemInHand(hand).is(Items.REDSTONE_TORCH)) step = 10;
-                if (player.getItemInHand(hand).is(Items.STICK)) step = 10;
+                if (heldItem.is(Items.REDSTONE_TORCH)) step = 10;
+                if (heldItem.is(Items.STICK)) step = 10;
 
                 long f = te.getFrequency();
                 if (hand == InteractionHand.MAIN_HAND) {
@@ -77,18 +79,61 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     if (f < 0) f = 0;
                 }
                 te.setFrequency(f);
-                player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
-            } else {
-                if (te.isLocked()) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
-                    return InteractionResult.CONSUME;
+                if (!level.isClientSide) {
+                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
                 }
-                te.setMasterMode(!te.isMasterMode());
+            }
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        } else {
+            if (te.isLocked()) {
+                if (!level.isClientSide) {
+                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
+                }
+                return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            }
+            te.setMasterMode(!te.isMasterMode());
+            if (!level.isClientSide) {
                 player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
             }
-            return InteractionResult.CONSUME;
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
-        return InteractionResult.PASS;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof WirelessTransceiverBlockEntity te)) {
+            return InteractionResult.PASS;
+        }
+        boolean sneaking = player.isShiftKeyDown();
+        if (sneaking) {
+            if (te.isLocked()) {
+                if (!level.isClientSide) {
+                    player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                }
+            } else {
+                long f = te.getFrequency();
+                // 空手交互：按主手逻辑 +1
+                f += 1;
+                te.setFrequency(f);
+                if (!level.isClientSide) {
+                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                }
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        } else {
+            if (te.isLocked()) {
+                if (!level.isClientSide) {
+                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
+            te.setMasterMode(!te.isMasterMode());
+            if (!level.isClientSide) {
+                player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
     }
 
     @Override

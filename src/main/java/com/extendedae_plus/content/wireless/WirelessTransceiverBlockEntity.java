@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -170,8 +171,8 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
 
     /* ===================== NBT ===================== */
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
         tag.putBoolean("locked", locked);
@@ -181,8 +182,8 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");

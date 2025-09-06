@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -25,11 +26,22 @@ public class NetworkPatternControllerBlock extends Block implements EntityBlock 
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide) {
+    protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack heldItem, BlockState state, Level level,
+                                              BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!level.isClientSide && player instanceof ServerPlayer sp) {
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof MenuProvider provider && player instanceof ServerPlayer sp) {
-                // 使用原生 API 打开界面；如需自定义数据传输，请在 Menu 构造中使用 BlockPos/Access 读取
+            if (be instanceof MenuProvider provider) {
+                sp.openMenu(provider);
+            }
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!level.isClientSide && player instanceof ServerPlayer sp) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof MenuProvider provider) {
                 sp.openMenu(provider);
             }
         }
