@@ -15,6 +15,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,7 +41,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         }
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
-            eap$uploadBtn = new IconButton(btn -> ModNetwork.CHANNEL
+            eap$uploadBtn = new IconButton(btn -> PacketDistributor
                     .sendToServer(new com.extendedae_plus.network.RequestProvidersListC2SPacket())) {
                 private final float eap$scale = 0.75f; // 约 12x12
 

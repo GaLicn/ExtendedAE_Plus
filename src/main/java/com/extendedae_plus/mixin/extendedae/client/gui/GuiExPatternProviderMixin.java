@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
-@Mixin(GuiExPatternProvider.class)
+@Mixin(value = GuiExPatternProvider.class, remap = false)
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements ExPatternButtonsAccessor, com.extendedae_plus.api.ExPatternPageAccessor {
 
     @Unique

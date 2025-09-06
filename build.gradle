@@ -135,21 +135,13 @@ sourceSets.main.java {
     // 允许 accessor
     include 'com/extendedae_plus/mixin/**/accessor/**'
     // 排除具体的非 accessor mixin 目录
-    // AE2 相关非 accessor
-    exclude 'com/extendedae_plus/mixin/ae2/helpers/**'
-    exclude 'com/extendedae_plus/mixin/ae2/autopattern/**'
-    exclude 'com/extendedae_plus/mixin/ae2/client/**'
-    exclude 'com/extendedae_plus/mixin/ae2/menu/**'
-    exclude 'com/extendedae_plus/mixin/ae2/AEProcessingPatternMixin.java'
-    // 排除 ae2 根目录下的普通 mixin（保留 accessor 子目录）
-    exclude 'com/extendedae_plus/mixin/ae2/*.java'
+    // AE2 相关非 accessor（已启用，需要参与编译与运行）
     // 其他模块的非 accessor mixin
     exclude 'com/extendedae_plus/mixin/ae2WTlib/**'
     // 保留 mixin/jei/accessor，但排除其余
     exclude 'com/extendedae_plus/mixin/jei/*.java'
     // 排除顶层 mixin 文件
     exclude 'com/extendedae_plus/mixin/PickFromWirelessMixin.java'
-    exclude 'com/extendedae_plus/mixin/extendedae/**'
 }
 
 configurations {

@@ -10,24 +10,22 @@ import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
-import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
-import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 
-@Mixin(value = ContainerExPatternProvider.class, priority = 3000)
-public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu implements IActionHolder {
+@Pseudo
+@Mixin(value = ContainerExPatternProvider.class, priority = 3000, remap = false)
+public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu {
 
     // 使用高位唯一ID，避免与其他模组在同一类上的 @GuiSync 冲突
     @GuiSync(31415)
@@ -40,8 +38,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
-    @Unique
-    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
+    // glodium IActionHolder 已移除，相关 actionMap 由专用网络包替代。
 
     public ContainerExPatternProviderMixin(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host) {
         super(menuType, id, playerInventory, host);
@@ -72,18 +69,10 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         }
     }
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    public void init(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"), remap = false, require = 0)
+    private void eap$initPages(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
         this.eap$maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
-
-        // 注册通用动作（供 CGenericPacket 分发）
-        this.eap$actions.put("multiply2", p -> { eap$modifyPatterns(2, false); });
-        this.eap$actions.put("divide2", p -> { eap$modifyPatterns(2, true);  });
-        this.eap$actions.put("multiply5", p -> { eap$modifyPatterns(5, false); });
-        this.eap$actions.put("divide5", p -> { eap$modifyPatterns(5, true);  });
-        this.eap$actions.put("multiply10", p -> { eap$modifyPatterns(10, false);});
-        this.eap$actions.put("divide10", p -> { eap$modifyPatterns(10, true); });
     }
 
     @Unique
@@ -102,15 +91,13 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         for (var slot : this.getSlots(SlotSemantics.ENCODED_PATTERN)) {
             var stack = slot.getItem();
             if (stack.getItem() instanceof EncodedPatternItem pattern) {
-                var detail = pattern.decode(stack, this.getPlayer().level(), false);
+                var detail = PatternDetailsHelper.decodePattern(stack, this.getPlayer().level());
                 if (detail instanceof AEProcessingPattern process) {
-                    var input = process.getSparseInputs();
-                    var output = process.getOutputs();
+                    var input = process.getSparseInputs(); // List<GenericStack>
+                    var output = process.getOutputs();      // List<GenericStack>
                     if (eap$checkModify(input, scale, div) && eap$checkModify(output, scale, div)) {
-                        var mulInput = new GenericStack[input.length];
-                        var mulOutput = new GenericStack[output.length];
-                        eap$modifyStacks(input, mulInput, scale, div);
-                        eap$modifyStacks(output, mulOutput, scale, div);
+                        var mulInput = eap$modifyStacks(input, scale, div);
+                        var mulOutput = eap$modifyStacks(output, scale, div);
                         var newPattern = PatternDetailsHelper.encodeProcessingPattern(mulInput, mulOutput);
                         slot.set(newPattern);
                     }
@@ -120,7 +107,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private boolean eap$checkModify(GenericStack[] stacks, int scale, boolean div) {
+    private boolean eap$checkModify(java.util.List<GenericStack> stacks, int scale, boolean div) {
         if (stacks == null) return false;
         if (div) {
             for (var stack : stacks) {
@@ -145,22 +132,17 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private void eap$modifyStacks(GenericStack[] src, GenericStack[] dst, int scale, boolean div) {
-        for (int i = 0; i < src.length; i++) {
-            var stack = src[i];
+    private java.util.List<GenericStack> eap$modifyStacks(java.util.List<GenericStack> src, int scale, boolean div) {
+        var dst = new java.util.ArrayList<GenericStack>(src.size());
+        for (var stack : src) {
             if (stack != null) {
                 long amt = stack.amount();
                 long newAmt = div ? (amt / scale) : (amt * scale);
-                dst[i] = new GenericStack(stack.what(), newAmt);
+                dst.add(new GenericStack(stack.what(), newAmt));
             } else {
-                dst[i] = null;
+                dst.add(null);
             }
         }
-    }
-
-    @NotNull
-    @Override
-    public Map<String, Consumer<Paras>> getActionMap() {
-        return this.eap$actions;
+        return dst;
     }
 }

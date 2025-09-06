@@ -5,12 +5,14 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
-import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,7 +32,7 @@ import java.util.function.Consumer;
 public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder {
 
     @Unique
-    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
+    private final ActionMap eap$actions = ActionMap.create();
 
     @Unique
     private Player epp$player;
@@ -75,7 +77,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
 
     @NotNull
     @Override
-    public Map<String, Consumer<Paras>> getActionMap() {
+    public ActionMap getActionMap() {
         return this.eap$actions;
     }
 
@@ -117,7 +119,11 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @Inject(method = "encodePattern", at = @At("TAIL"), remap = false, cancellable = true)
     private void eap$writeEncodePlayerToPattern(CallbackInfoReturnable<ItemStack> cir) {
         ItemStack itemStack = cir.getReturnValue();
-        itemStack.getOrCreateTag().putString("encodePlayer", this.epp$player.getGameProfile().getName());
-        cir.setReturnValue(itemStack);
+        if (itemStack != null && !itemStack.isEmpty()) {
+            CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> {
+                tag.putString("encodePlayer", this.epp$player.getGameProfile().getName());
+            });
+            cir.setReturnValue(itemStack);
+        }
     }
 }

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.network.ModNetwork;
 
 import net.minecraft.resources.ResourceLocation;
@@ -80,6 +81,8 @@ public class ExtendedAEPlus {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+        // Register the Deferred Register to the mod event bus so menu types get registered
+        ModMenuTypes.MENUS.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.

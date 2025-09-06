@@ -57,7 +57,7 @@ public abstract class PatternEncodingTermMenuMixin {
             var current = blankInv.getStackInSlot(0);
             int limit = blankInv.getSlotLimit(0);
             int space = Math.max(0, limit - current.getCount());
-            space = Math.min(space, AEItems.BLANK_PATTERN.asItem().getMaxStackSize());
+            space = Math.min(space, AEItems.BLANK_PATTERN.stack(1).getMaxStackSize());
             if (space <= 0) {
                 return; // 已满，无需填充
             }
@@ -126,7 +126,7 @@ public abstract class PatternEncodingTermMenuMixin {
         var current = blankInv.getStackInSlot(0);
         int limit = blankInv.getSlotLimit(0);
         int space = Math.max(0, limit - current.getCount());
-        space = Math.min(space, AEItems.BLANK_PATTERN.asItem().getMaxStackSize());
+        space = Math.min(space, AEItems.BLANK_PATTERN.stack(1).getMaxStackSize());
         if (space <= 0) {
             this.eap$blankAutoFilled = true;
             return;

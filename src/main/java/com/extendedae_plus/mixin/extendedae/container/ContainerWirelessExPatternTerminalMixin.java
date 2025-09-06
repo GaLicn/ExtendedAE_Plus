@@ -1,57 +1,25 @@
 package com.extendedae_plus.mixin.extendedae.container;
 
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
-import com.glodblock.github.extendedae.common.me.itemhost.HostWirelessExPAT;
-import com.glodblock.github.extendedae.container.ContainerWirelessExPAT;
-import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
-import com.glodblock.github.glodium.network.packet.sync.Paras;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import org.jetbrains.annotations.NotNull;
+import com.glodblock.github.extendedae.xmod.wt.ContainerWirelessExPAT;
+import com.glodblock.github.extendedae.xmod.wt.HostWirelessExPAT;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * 为无线样板访问终端容器注册通用动作（CGenericPacket 分发）
  */
 @Pseudo
-@Mixin(ContainerWirelessExPAT.class)
-public abstract class ContainerWirelessExPatternTerminalMixin implements IActionHolder {
+@Mixin(value = ContainerWirelessExPAT.class, remap = false)
+public abstract class ContainerWirelessExPatternTerminalMixin {
+    // 1.21 版本中 ExtendedAE 不再使用 glodium IActionHolder。
+    // 保留空混入以便后续需要时扩展。
 
-    @Unique
-    private final Map<String, Consumer<Paras>> eap$actions = createHolder();
-
-    @Unique
-    private Player epp$player;
-
-    // 明确目标构造签名：<init>(int, Inventory, HostWirelessExPAT)
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0)
-    private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostWirelessExPAT host, CallbackInfo ci) {
-        this.epp$player = playerInventory.player;
-        // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致
-        this.eap$actions.put("upload", p -> {
-            try {
-                Object o0 = p.get(0);
-                Object o1 = p.get(1);
-                int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
-                long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
-                var sp = (ServerPlayer) this.epp$player;
-                ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
-            } catch (Throwable ignored) {
-            }
-        });
-    }
-
-    @NotNull
-    @Override
-    public Map<String, Consumer<Paras>> getActionMap() {
-        return this.eap$actions;
+    // 构造方法注入（显式签名），与 ExtendedAE 源码保持一致
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0, remap = false)
+    private void init$eap(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostWirelessExPAT host, CallbackInfo ci) {
+        // no-op
     }
 }

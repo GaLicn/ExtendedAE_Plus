@@ -28,6 +28,7 @@ import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -79,7 +80,7 @@ public abstract class AEBaseScreenMixin {
             try {
                 LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
             } catch (Throwable ignored2) {}
-            ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
+            PacketDistributor.sendToServer(new CraftingMonitorJumpC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
@@ -113,7 +114,7 @@ public abstract class AEBaseScreenMixin {
             try {
                 LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
             } catch (Throwable ignored2) {}
-            ModNetwork.CHANNEL.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
+            PacketDistributor.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
@@ -183,10 +184,10 @@ public abstract class AEBaseScreenMixin {
         GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
 
         try {
-            var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
+            var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level);
             try {
-                if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
-                    AEKey key = details.getOutputs()[0].what();
+                if (details != null && details.getOutputs() != null && !details.getOutputs().isEmpty()) {
+                    AEKey key = details.getOutputs().get(0).what();
                     if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
                         try {
                             GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);

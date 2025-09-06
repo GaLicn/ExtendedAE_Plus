@@ -10,7 +10,6 @@ import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
@@ -28,6 +27,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,12 +39,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.*;
 
 @Pseudo
-@Mixin(value = GuiExPatternTerminal.class)
+@Mixin(value = GuiExPatternTerminal.class, remap = false)
 public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> {
 
     @Unique
@@ -187,7 +191,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             ArrayList<?> rows = acc.getRows();
 
             // 找到该分组对应的第一个 PatternContainerRecord
-            Class<?> cls = GuiExPatternTerminal.class;
+            Class<?> cls = this.getClass();
             var byGroupField = cls.getDeclaredField("byGroup");
             byGroupField.setAccessible(true);
             Object byGroup = byGroupField.get(this); // HashMultimap<PatternContainerGroup, PatternContainerRecord>
@@ -236,7 +240,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             try {
                 var dimRl = net.minecraft.resources.ResourceLocation.parse(dimStr);
                 if (dimRl != null) {
-                    ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
+                    PacketDistributor.sendToServer(new OpenProviderUiC2SPacket(
                             posLong,
                             dimRl,
                             faceOrd
@@ -258,8 +262,12 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.eap$currentlyChoicePatterProvider = -1;
     }
 
-    @Inject(method = "<init>", at = @At("TAIL"), remap = false)
-    private void injectConstructor(CallbackInfo ci) {
+    @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false)
+    private void injectConstructor(com.glodblock.github.extendedae.container.ContainerExPatternTerminal menu,
+                                   Inventory playerInventory,
+                                   Component title,
+                                   ScreenStyle style,
+                                   CallbackInfo ci) {
         // 根据配置初始化默认显示/隐藏状态
         try {
             this.eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();

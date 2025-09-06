@@ -97,6 +97,9 @@ public abstract class MEStorageMenuMixin {
         }
         Setting<T> typedSetting = (Setting<T>) setting;
         T typedValue = (T) value;
-        client.registerSetting(typedSetting, typedValue);
+        // 仅当具体实现为 ConfigManager 时，才能调用 registerSetting
+        if (client instanceof appeng.util.ConfigManager cm) {
+            cm.registerSetting(typedSetting, typedValue);
+        }
     }
 }
