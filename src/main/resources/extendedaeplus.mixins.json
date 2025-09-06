@@ -20,7 +20,8 @@
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
     "ae2.menu.PatternEncodingTermMenuMixin",
-    "ae2.accessor.MEStorageMenuAccessor"
+    "ae2.accessor.MEStorageMenuAccessor",
+    "ae2.accessor.PatternEncodingTermMenuAccessor"
   ],
   "client": [
     "ae2.client.gui.PatternEncodingTermScreenMixin",
