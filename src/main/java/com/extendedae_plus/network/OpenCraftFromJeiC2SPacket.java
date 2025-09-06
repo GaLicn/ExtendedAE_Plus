@@ -6,7 +6,6 @@ import appeng.api.stacks.GenericStack;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -50,15 +49,7 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
             var located = WirelessTerminalLocator.find(player);
             if (located.isEmpty()) return;
 
-            // 若为 Curios 槽位：跳过 AE2 基类的距离/电量前置校验，直接打开数量界面，
-            // 让菜单与宿主（WirelessTerminalMenuHost）以及 ae2wtlib 自身处理量子卡跨维/跨距逻辑。
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                int initial = 1;
-                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
-                return;
-            }
+            // Curios 槽位暂不直接作为菜单宿主处理；仅处理原版手持/背包场景。
 
             // 非 Curios（主手/副手/背包）仍按原先流程做前置校验，保持行为一致。
             if (!(located.stack.getItem() instanceof WirelessTerminalItem wt)) return;

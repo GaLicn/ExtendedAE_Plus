@@ -12,7 +12,6 @@ import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -90,18 +89,12 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
             var craftingService = grid.getCraftingService();
             if (!craftingService.isCraftable(what)) return;
 
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, 1);
-            } else {
-                var hand = located.getHand();
-                int slot = located.getSlotIndex();
-                if (hand != null) {
-                    CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), what, 1);
-                } else if (slot >= 0) {
-                    CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, 1);
-                }
+            var hand = located.getHand();
+            int slot = located.getSlotIndex();
+            if (hand != null) {
+                CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), what, 1);
+            } else if (slot >= 0) {
+                CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, 1);
             }
         });
     }

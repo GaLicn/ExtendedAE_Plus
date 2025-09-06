@@ -4,7 +4,7 @@ import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
@@ -93,9 +93,9 @@ public final class WirelessTerminalLocator {
         // 3) Curios 饰品槽（若已加载）
         if (ModList.get().isLoaded("curios")) {
             try {
-                var resolved = CuriosApi.getCuriosInventory(player).resolve();
-                if (resolved.isPresent()) {
-                    ICuriosItemHandler handler = resolved.get();
+                var opt = CuriosApi.getCuriosInventory(player);
+                if (opt.isPresent()) {
+                    ICuriosItemHandler handler = opt.get();
                     for (var entry : handler.getCurios().entrySet()) {
                         String slotId = entry.getKey();
                         ICurioStacksHandler stacksHandler = entry.getValue();

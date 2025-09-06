@@ -145,6 +145,8 @@ sourceSets.main.java {
     include 'com/extendedae_plus/util/RequestedAmountHolder.java'
     // util needed by network payloads (providers listing / upload helpers)
     include 'com/extendedae_plus/util/ExtendedAEPatternUploadUtil.java'
+    // util for wireless terminal discovery used by new payloads
+    include 'com/extendedae_plus/util/WirelessTerminalLocator.java'
 
     // content（最小集）
     include 'com/extendedae_plus/content/ClientPatternHighlightStore.java'
@@ -169,6 +171,10 @@ sourceSets.main.java {
     include 'com/extendedae_plus/network/OpenProviderUiC2SPacket.java'
     include 'com/extendedae_plus/network/GlobalToggleProviderModesC2SPacket.java'
     include 'com/extendedae_plus/network/UploadEncodedPatternToProviderC2SPacket.java'
+    // newly added custom payloads (NeoForge 1.21)
+    include 'com/extendedae_plus/network/OpenCraftFromJeiC2SPacket.java'
+    include 'com/extendedae_plus/network/PickFromWirelessC2SPacket.java'
+    include 'com/extendedae_plus/network/PullFromJeiOrCraftC2SPacket.java'
 
     // AE2 mixin：accessor/helpers/autopattern/gui/menu
     include 'com/extendedae_plus/mixin/ae2/accessor/**'
@@ -182,6 +188,11 @@ sourceSets.main.java {
     // ExtendedAE GUI 混入（右侧外列按钮与翻页），以及其依赖的 NewIcon 类
     include 'com/extendedae_plus/mixin/extendedae/client/gui/GuiExPatternProviderMixin.java'
     include 'com/extendedae_plus/NewIcon.java'
+
+    // Note: 暂时不编译 Curios 专用宿主/定位器（依赖 ae2wtlib API 的签名差异未完成适配）
+    // include 'com/extendedae_plus/menu/locator/CuriosItemLocator.java'
+    // include 'com/extendedae_plus/menu/host/CuriosWirelessTerminalMenuHost.java'
+    // include 'com/extendedae_plus/menu/host/CuriosWTMenuHost.java'
 }
 
 configurations {

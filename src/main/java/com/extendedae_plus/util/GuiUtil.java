@@ -31,12 +31,15 @@ public class GuiUtil {
             return "";
         }
 
-        var details = PatternDetailsHelper.decodePattern(pattern, Minecraft.getInstance().level, false);
-        if (details == null || details.getOutputs().length == 0) {
+        var details = PatternDetailsHelper.decodePattern(pattern, Minecraft.getInstance().level);
+        if (details == null) {
             return "";
         }
-
-        GenericStack out = details.getOutputs()[0];
+        java.util.List<GenericStack> outputs = details.getOutputs();
+        if (outputs == null || outputs.isEmpty()) {
+            return "";
+        }
+        GenericStack out = outputs.get(0);
         long amount = out.amount();
         long perUnit = out.what().getAmountPerUnit();
         if (amount <= 0 || perUnit <= 0) {
