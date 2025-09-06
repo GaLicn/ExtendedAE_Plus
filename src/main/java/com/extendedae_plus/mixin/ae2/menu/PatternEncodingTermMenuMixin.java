@@ -35,7 +35,6 @@ public abstract class PatternEncodingTermMenuMixin {
     private void eap$tryFill(IPatternTerminalMenuHost host, Inventory ip) {
         try {
             var self = (PatternEncodingTermMenu) (Object) this;
-            var player = ip.player;
             // 仅在服务器端执行
             if (ip.player.level().isClientSide()) {
                 return;
@@ -43,9 +42,8 @@ public abstract class PatternEncodingTermMenuMixin {
             // 必须可与网络交互
             var acc = (MEStorageMenuAccessor) (Object) ((MEStorageMenu) self);
             MEStorage storage = acc.getStorage();
-            IEnergySource power = acc.getPowerSource();
-            boolean hasPower = acc.getHasPower();
-            boolean canInteract = storage != null && power != null && hasPower; // 等价于 canInteractWithGrid()
+            IEnergySource power = acc.getEnergySource();
+            boolean canInteract = storage != null && power != null && ((MEStorageMenu) self).getLinkStatus().connected();
             if (!canInteract) {
                 return;
             }
@@ -108,15 +106,14 @@ public abstract class PatternEncodingTermMenuMixin {
         }
         // 仅在服务器端执行
         var self = (PatternEncodingTermMenu) (Object) this;
-        var player = self.getPlayerInventory().player;
         var acc = (MEStorageMenuAccessor) (Object) ((MEStorageMenu) self);
         MEStorage storage = acc.getStorage();
-        IEnergySource power = acc.getPowerSource();
-        boolean hasPower = acc.getHasPower();
+        IEnergySource power = acc.getEnergySource();
+        var player = self.getPlayerInventory().player;
         if (player.level().isClientSide()) {
             return;
         }
-        boolean canInteract = storage != null && power != null && hasPower;
+        boolean canInteract = storage != null && power != null && ((MEStorageMenu) self).getLinkStatus().connected();
         if (!canInteract) {
             return;
         }

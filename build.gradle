@@ -163,7 +163,7 @@ dependencies {
     compileOnly "curse.maven:mega-cells-622112:6005043"
     compileOnly "curse.maven:jade-324717:5427817"
     compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
-    compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+  //  compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
     compileOnly "curse.maven:applied-mekanistics-574300:5978711"
     compileOnly "dev.latvian.mods:kubejs-neoforge:2101.7.1-build.188"
     compileOnly "dev.latvian.mods:rhino:2101.2.5-build.54"
@@ -178,7 +178,7 @@ dependencies {
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
     runtimeOnly "curse.maven:jade-324717:5427817"
     runtimeOnly "curse.maven:mega-cells-622112:6005043"
-    runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+   // runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
     runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'

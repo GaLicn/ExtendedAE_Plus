@@ -14,12 +14,9 @@ public interface MEStorageMenuAccessor {
     @Nullable
     MEStorage getStorage();
 
-    @Accessor("powerSource")
+    @Accessor("energySource")
     @Nullable
-    IEnergySource getPowerSource();
-
-    @Accessor("hasPower")
-    boolean getHasPower();
+    IEnergySource getEnergySource();
 
     // Access client-side config manager mirror used for syncing settings
     @Accessor("clientCM")

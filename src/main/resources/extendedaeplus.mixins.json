@@ -12,17 +12,21 @@
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.PatternProviderLogicDoublingMixin",
     "ae2.AEProcessingPatternMixin",
-    
     "ae2.autopattern.CraftingTreeNodeAccessor",
     "ae2.autopattern.CraftingTreeProcessMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "ae2.menu.PatternEncodingTermMenuMixin",
+    "ae2.accessor.MEStorageMenuAccessor"
   ],
   "client": [
-    
+    "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.accessor.AEBaseScreenAccessor",
+    "accessor.AbstractContainerScreenAccessor",
+    "accessor.ScreenAccessor",
     "extendedae.accessor.GuiExPatternTerminalAccessor"
   ],
   "injectors": {
