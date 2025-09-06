@@ -14,7 +14,7 @@ import snownee.jade.api.IServerDataProvider;
 public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = new ResourceLocation("extendedae_plus", "wireless_transceiver_info");
+    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "wireless_transceiver_info");
     // 此类仅用于同步服务端数据，不再包含客户端选项键
 
     @Override

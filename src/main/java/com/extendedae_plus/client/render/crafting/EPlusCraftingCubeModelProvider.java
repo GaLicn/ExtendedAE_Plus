@@ -82,7 +82,7 @@ public class EPlusCraftingCubeModelProvider
 
     private static Material texture(String namespace, String name) {
         var mat = new Material(TextureAtlas.LOCATION_BLOCKS,
-                new ResourceLocation(namespace, "block/crafting/" + name));
+                ResourceLocation.fromNamespaceAndPath(namespace, "block/crafting/" + name));
         MATERIALS.add(mat);
         return mat;
     }

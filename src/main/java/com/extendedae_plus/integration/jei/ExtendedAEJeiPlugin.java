@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 
 @JeiPlugin
 public class ExtendedAEJeiPlugin implements IModPlugin {
-    private static final ResourceLocation UID = new ResourceLocation(ExtendedAEPlus.MODID, "jei_plugin");
+    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
 
     @Override
     public ResourceLocation getPluginUid() {

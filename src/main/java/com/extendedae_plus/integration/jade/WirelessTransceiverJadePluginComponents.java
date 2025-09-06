@@ -66,7 +66,7 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
     private final ResourceLocation uid;
 
     WirelessTransceiverJadePluginComponents(String path) {
-        this.uid = new ResourceLocation("extendedae_plus", path);
+        this.uid = ResourceLocation.fromNamespaceAndPath("extendedae_plus", path);
     }
 
     @Override
