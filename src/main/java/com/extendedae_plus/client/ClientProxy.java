@@ -17,7 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
  */
-@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class ClientProxy {
     private ClientProxy() {}
 
@@ -60,8 +60,20 @@ public final class ClientProxy {
 
     @SubscribeEvent
     public static void onRegisterScreens(RegisterMenuScreensEvent event) {
-        // 菜单 -> 屏幕 绑定
-        event.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
-                (menu, inv, title) -> new GlobalProviderModesScreen(menu, inv, title));
+        // 菜单 -> 屏幕 绑定（显式 ScreenConstructor，避免泛型推断问题）
+        event.register(
+                ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
+                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
+                        com.extendedae_plus.menu.NetworkPatternControllerMenu,
+                        com.extendedae_plus.client.screen.GlobalProviderModesScreen>() {
+                    @Override
+                    public com.extendedae_plus.client.screen.GlobalProviderModesScreen create(
+                            com.extendedae_plus.menu.NetworkPatternControllerMenu menu,
+                            net.minecraft.world.entity.player.Inventory inv,
+                            net.minecraft.network.chat.Component title) {
+                        return new com.extendedae_plus.client.screen.GlobalProviderModesScreen(menu, inv, title);
+                    }
+                }
+        );
     }
 }
