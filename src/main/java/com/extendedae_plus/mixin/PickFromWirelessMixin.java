@@ -1,6 +1,5 @@
 package com.extendedae_plus.mixin;
 
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.PickFromWirelessC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -10,13 +9,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-// no client-side WCT gating; server will check presence (including Curios)
 
+// no client-side WCT gating; server will check presence (including Curios)
 
 @Mixin(Minecraft.class)
 public class PickFromWirelessMixin {
@@ -46,7 +46,7 @@ public class PickFromWirelessMixin {
                     }
                     if (!picked.isEmpty()) {
                         // 若主手已拿同一物品（含标签），则仍然走 AE 拉取逻辑进行补充/合并
-                        if (!ItemStack.isSameItemSameTags(picked, this.player.getMainHandItem())) {
+                        if (!ItemStack.isSameItemSameComponents(picked, this.player.getMainHandItem())) {
                             int slot = this.player.getInventory().findSlotMatchingItem(picked);
                             if (slot != -1) {
                                 return; // 交给原版 pickBlock 处理
@@ -63,7 +63,7 @@ public class PickFromWirelessMixin {
         // 不在客户端检查是否持有无线合成终端，由服务端权威校验（含 Curios 支持），以避免整合包环境下的软依赖与槽位问题
         // 背包没有：发送到服务端处理（从 AE2 网络拉取）并拦截原版
         Vec3 loc = bhr.getLocation();
-        ModNetwork.CHANNEL.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
+        PacketDistributor.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
         ci.cancel();
     }
 }
