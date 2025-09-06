@@ -17,27 +17,21 @@ import java.util.Objects;
  */
 public final class ScaledProcessingPattern implements IPatternDetails {
 
-    private final AEProcessingPattern original;        // 原始样板引用
-    private final AEItemKey definition;                // 样板物品
-    private final GenericStack[] sparseInputs;         // 缩放后的稀疏输入
-    private final GenericStack[] sparseOutputs;        // 缩放后的稀疏输出
-    private final IInput[] inputs;                     // 缩放后的压缩输入
-    private final GenericStack[] condensedOutputs;     // 缩放后的压缩输出
+    // 最小化实例字段：只保留原始样板引用、定义和倍数
+    private final AEProcessingPattern original; // 原始样板引用
+    private final AEItemKey definition;         // 样板物品（直接委托自 original）
+    private final long multiplier;              // 乘数（外部可视为视图参数）
 
-    public ScaledProcessingPattern(
-            AEProcessingPattern original,
-            AEItemKey definition,
-            GenericStack[] sparseInputs,
-            GenericStack[] sparseOutputs,
-            IInput[] inputs,
-            GenericStack[] condensedOutputs
-    ) {
+    // 延迟计算缓存（轻量化实例时避免在构造器中分配大数组）
+    private transient volatile IInput[] inputsCache;
+    private transient volatile GenericStack[] outputsCache;
+    private transient volatile GenericStack[] sparseInputsCache;
+    private transient volatile GenericStack[] sparseOutputsCache;
+
+    public ScaledProcessingPattern(AEProcessingPattern original, AEItemKey definition, long multiplier) {
         this.original = Objects.requireNonNull(original);
         this.definition = Objects.requireNonNull(definition);
-        this.sparseInputs = Objects.requireNonNull(sparseInputs);
-        this.sparseOutputs = Objects.requireNonNull(sparseOutputs);
-        this.inputs = Objects.requireNonNull(inputs);
-        this.condensedOutputs = Objects.requireNonNull(condensedOutputs);
+        this.multiplier = multiplier <= 0 ? 1L : multiplier;
     }
 
     /* -------------------- API 实现 -------------------- */
@@ -53,25 +47,91 @@ public final class ScaledProcessingPattern implements IPatternDetails {
 
     @Override
     public IInput[] getInputs() {
-        return inputs;
+        IInput[] cached = this.inputsCache;
+        if (cached == null) {
+            synchronized (this) {
+                cached = this.inputsCache;
+                if (cached == null) {
+                    var base = original.getInputs();
+                    IInput[] arr = new IInput[base.length];
+                    for (int i = 0; i < base.length; i++) {
+                        var in = base[i];
+                        // 不复制 template 数组，直接复用原始的 possible inputs；仅放大 multiplier
+                        arr[i] = new Input(in.getPossibleInputs(), in.getMultiplier() * this.multiplier);
+                    }
+                    this.inputsCache = arr;
+                    cached = arr;
+                }
+            }
+        }
+        return cached;
     }
 
     @Override
     public GenericStack[] getOutputs() {
-        return condensedOutputs;
+        GenericStack[] cached = this.outputsCache;
+        if (cached == null) {
+            synchronized (this) {
+                cached = this.outputsCache;
+                if (cached == null) {
+                    var baseOutputs = original.getOutputs();
+                    GenericStack[] arr = new GenericStack[baseOutputs.length];
+                    for (int i = 0; i < baseOutputs.length; i++) {
+                        var o = baseOutputs[i];
+                        if (o != null) arr[i] = new GenericStack(o.what(), o.amount() * this.multiplier);
+                    }
+                    this.outputsCache = arr;
+                    cached = arr;
+                }
+            }
+        }
+        return cached;
     }
 
     public GenericStack[] getSparseInputs() {
-        return sparseInputs;
+        GenericStack[] cached = this.sparseInputsCache;
+        if (cached == null) {
+            synchronized (this) {
+                cached = this.sparseInputsCache;
+                if (cached == null) {
+                    var base = original.getSparseInputs();
+                    GenericStack[] arr = new GenericStack[base.length];
+                    for (int i = 0; i < base.length; i++) {
+                        var v = base[i];
+                        if (v != null) arr[i] = new GenericStack(v.what(), v.amount() * this.multiplier);
+                    }
+                    this.sparseInputsCache = arr;
+                    cached = arr;
+                }
+            }
+        }
+        return cached;
     }
 
     public GenericStack[] getSparseOutputs() {
-        return sparseOutputs;
+        GenericStack[] cached = this.sparseOutputsCache;
+        if (cached == null) {
+            synchronized (this) {
+                cached = this.sparseOutputsCache;
+                if (cached == null) {
+                    var base = original.getSparseOutputs();
+                    GenericStack[] arr = new GenericStack[base.length];
+                    for (int i = 0; i < base.length; i++) {
+                        var v = base[i];
+                        if (v != null) arr[i] = new GenericStack(v.what(), v.amount() * this.multiplier);
+                    }
+                    this.sparseOutputsCache = arr;
+                    cached = arr;
+                }
+            }
+        }
+        return cached;
     }
 
     @Override
     public GenericStack getPrimaryOutput() {
-        if (condensedOutputs.length > 0) return condensedOutputs[0];
+        var outs = getOutputs();
+        if (outs.length > 0 && outs[0] != null) return outs[0];
         return original.getPrimaryOutput();
     }
 
@@ -82,26 +142,29 @@ public final class ScaledProcessingPattern implements IPatternDetails {
 
     @Override
     public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink inputSink) {
-        // 保持和 AEProcessingPattern 一致，用 sparseInputs 驱动
-        if (sparseInputs.length == inputs.length) {
+        // 使用 lazy 计算的 sparseInputs 与 inputs 来驱动；当两者长度一致时直接委托
+        GenericStack[] sInputs = getSparseInputs();
+        IInput[] ins = getInputs();
+        if (sInputs.length == ins.length) {
             IPatternDetails.super.pushInputsToExternalInventory(inputHolder, inputSink);
-        } else {
-            KeyCounter allInputs = new KeyCounter();
-            for (KeyCounter counter : inputHolder) {
-                allInputs.addAll(counter);
-            }
-            for (GenericStack sparseInput : sparseInputs) {
-                if (sparseInput != null) {
-                    AEKey key = sparseInput.what();
-                    long amount = sparseInput.amount();
-                    long available = allInputs.get(key);
-                    if (available < amount) {
-                        throw new RuntimeException("Expected at least %d of %s when pushing scaled pattern, but only %d available"
-                                .formatted(amount, key, available));
-                    }
-                    inputSink.pushInput(key, amount);
-                    allInputs.remove(key, amount);
+            return;
+        }
+
+        KeyCounter allInputs = new KeyCounter();
+        for (KeyCounter counter : inputHolder) {
+            allInputs.addAll(counter);
+        }
+        for (GenericStack sparseInput : sInputs) {
+            if (sparseInput != null) {
+                AEKey key = sparseInput.what();
+                long amount = sparseInput.amount();
+                long available = allInputs.get(key);
+                if (available < amount) {
+                    throw new RuntimeException("Expected at least %d of %s when pushing scaled pattern, but only %d available"
+                            .formatted(amount, key, available));
                 }
+                inputSink.pushInput(key, amount);
+                allInputs.remove(key, amount);
             }
         }
     }
@@ -117,18 +180,22 @@ public final class ScaledProcessingPattern implements IPatternDetails {
             this.multiplier = multiplier;
         }
 
+        @Override
         public GenericStack[] getPossibleInputs() {
             return this.template;
         }
 
+        @Override
         public long getMultiplier() {
             return this.multiplier;
         }
 
+        @Override
         public boolean isValid(AEKey input, Level level) {
             return input.matches(this.template[0]);
         }
 
+        @Override
         public @Nullable AEKey getRemainingKey(AEKey template) {
             return null;
         }

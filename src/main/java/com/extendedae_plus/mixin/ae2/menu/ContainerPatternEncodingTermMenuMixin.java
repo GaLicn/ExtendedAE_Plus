@@ -113,11 +113,12 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         }
     }
 
-    // 服务器端：在构造样板返回前插入编码玩家的名称
-    @Inject(method = "encodePattern", at = @At("TAIL"), remap = false, cancellable = true)
-    private void eap$writeEncodePlayerToPattern(CallbackInfoReturnable<ItemStack> cir) {
+    @Inject(method = "encodePattern", at = @At("RETURN"), remap = false, cancellable = true)
+    private void onEncodePatternReturn(CallbackInfoReturnable<ItemStack> cir) {
         ItemStack itemStack = cir.getReturnValue();
-        itemStack.getOrCreateTag().putString("encodePlayer", this.epp$player.getGameProfile().getName());
-        cir.setReturnValue(itemStack);
+        if (itemStack != null && !itemStack.isEmpty()) {
+            itemStack.getOrCreateTag().putString("encodePlayer", this.epp$player.getGameProfile().getName());
+            cir.setReturnValue(itemStack);
+        }
     }
 }

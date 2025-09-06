@@ -37,4 +37,5 @@
   "config.extendedae_plus.state_off": "Off",
   "config.extendedae_plus.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
   "config.extendedae_plus.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier (0 = Unlimited)"
+  ,"config.extendedae_plus.smartScalingMinBenefitFactor": "Smart Scaling Min Benefit Factor (default 4)"
 }
