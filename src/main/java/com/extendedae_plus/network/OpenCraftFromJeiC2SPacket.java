@@ -8,36 +8,39 @@ import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * C2S：从 JEI 中键点击请求打开 AE 的下单界面。
  * 负载为一个 GenericStack（物品或流体）。
  */
-public class OpenCraftFromJeiC2SPacket {
+public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
+    public static final Type<OpenCraftFromJeiC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "open_craft_from_jei"));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, OpenCraftFromJeiC2SPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> GenericStack.writeBuffer(pkt.stack, buf),
+            buf -> new OpenCraftFromJeiC2SPacket(GenericStack.readBuffer(buf))
+    );
     private final GenericStack stack;
 
     public OpenCraftFromJeiC2SPacket(GenericStack stack) {
         this.stack = stack;
     }
 
-    public static void encode(OpenCraftFromJeiC2SPacket msg, FriendlyByteBuf buf) {
-        GenericStack.writeBuffer(msg.stack, buf);
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static OpenCraftFromJeiC2SPacket decode(FriendlyByteBuf buf) {
-        var gs = GenericStack.readBuffer(buf);
-        return new OpenCraftFromJeiC2SPacket(gs);
-    }
-
-    public static void handle(OpenCraftFromJeiC2SPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        var context = ctx.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
+    public static void handle(final OpenCraftFromJeiC2SPacket msg, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (player == null || msg.stack == null) return;
 
             // 仅支持 AEKey 为可合成的种类
@@ -61,7 +64,7 @@ public class OpenCraftFromJeiC2SPacket {
             if (!(located.stack.getItem() instanceof WirelessTerminalItem wt)) return;
 
             // 基本前置校验：联网、电量
-            IGrid grid = wt.getLinkedGrid(located.stack, player.level(), player);
+            IGrid grid = wt.getLinkedGrid(located.stack, player.level(), null);
             if (grid == null) return;
             if (!wt.hasPower(player, 0.5, located.stack)) return;
 
@@ -82,6 +85,5 @@ public class OpenCraftFromJeiC2SPacket {
                 // 未知宿主（回退忽略）
             }
         });
-        context.setPacketHandled(true);
     }
 }

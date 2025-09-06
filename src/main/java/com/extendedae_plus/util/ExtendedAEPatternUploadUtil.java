@@ -296,7 +296,6 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
-     * 逻辑与 {@link #mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe)} 等价。
      */
     public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
         if (gtRecipeObj == null) return null;

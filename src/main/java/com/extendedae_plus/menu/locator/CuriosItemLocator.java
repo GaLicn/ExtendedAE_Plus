@@ -5,7 +5,7 @@ import appeng.api.implementations.menuobjects.ItemMenuHost;
 import appeng.helpers.WirelessTerminalMenuHost;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.MenuOpener;
-import appeng.menu.locator.MenuLocator;
+import appeng.menu.locator.MenuHostLocator;
 import appeng.menu.me.common.MEStorageMenu;
 import com.extendedae_plus.menu.host.CuriosWTMenuHost;
 import com.extendedae_plus.menu.host.CuriosWirelessTerminalMenuHost;
@@ -23,7 +23,7 @@ import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
  * 适配 Curios 槽位的自定义 MenuLocator：
  * 通过 slotId + index 在两端查找 Curios 实际物品引用，确保 NBT 变化（如耗电）能持久化。
  */
-public record CuriosItemLocator(String slotId, int index) implements MenuLocator {
+public record CuriosItemLocator(String slotId, int index) implements MenuHostLocator {
     @Override
     @Nullable
     public <T> T locate(Player player, Class<T> hostInterface) {

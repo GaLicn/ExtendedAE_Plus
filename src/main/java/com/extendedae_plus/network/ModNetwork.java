@@ -20,5 +20,9 @@ public class ModNetwork {
         registrar.playToServer(CraftingMonitorOpenProviderC2SPacket.TYPE, CraftingMonitorOpenProviderC2SPacket.STREAM_CODEC, CraftingMonitorOpenProviderC2SPacket::handle);
         registrar.playToServer(OpenProviderUiC2SPacket.TYPE, OpenProviderUiC2SPacket.STREAM_CODEC, OpenProviderUiC2SPacket::handle);
         registrar.playToServer(UploadEncodedPatternToProviderC2SPacket.TYPE, UploadEncodedPatternToProviderC2SPacket.STREAM_CODEC, UploadEncodedPatternToProviderC2SPacket::handle);
+        // 新增：JEI 中键打开合成界面 & 无线终端拾取方块物品
+        registrar.playToServer(OpenCraftFromJeiC2SPacket.TYPE, OpenCraftFromJeiC2SPacket.STREAM_CODEC, OpenCraftFromJeiC2SPacket::handle);
+        registrar.playToServer(PickFromWirelessC2SPacket.TYPE, PickFromWirelessC2SPacket.STREAM_CODEC, PickFromWirelessC2SPacket::handle);
+        registrar.playToServer(PullFromJeiOrCraftC2SPacket.TYPE, PullFromJeiOrCraftC2SPacket.STREAM_CODEC, PullFromJeiOrCraftC2SPacket::handle);
     }
 }
