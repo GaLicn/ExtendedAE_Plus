@@ -8,6 +8,8 @@ import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfigs;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
@@ -24,34 +26,34 @@ public final class PatternScaler {
             return null;
         }
 
-        GenericStack[] baseSparseInputs = base.getSparseInputs();
-        GenericStack[] baseSparseOutputs = base.getSparseOutputs();
+        List<GenericStack> baseSparseInputs = base.getSparseInputs();
+        List<GenericStack> baseSparseOutputs = base.getSparseOutputs();
         IInput[] baseInputs = base.getInputs();
-        GenericStack[] baseOutputs = base.getOutputs();
+        List<GenericStack> baseOutputs = base.getOutputs();
 
         // 新逻辑：不再对样板进行单位化处理
         // 找到目标输出在 outputs 中的索引（尝试匹配 target，否则取第一个非空输出）
         int targetOutIndex = -1;
-        for (int i = 0; i < baseOutputs.length; i++) {
-            var out = baseOutputs[i];
+        for (int i = 0; i < baseOutputs.size(); i++) {
+            var out = baseOutputs.get(i);
             if (out != null && target != null && out.what() != null && out.what().equals(target)) {
                 targetOutIndex = i;
                 break;
             }
         }
         if (targetOutIndex == -1) {
-            for (int i = 0; i < baseOutputs.length; i++) {
-                if (baseOutputs[i] != null) {
+            for (int i = 0; i < baseOutputs.size(); i++) {
+                if (baseOutputs.get(i) != null) {
                     targetOutIndex = i;
                     break;
                 }
             }
         }
-        if (targetOutIndex == -1 && baseOutputs.length > 0) targetOutIndex = 0;
+        if (targetOutIndex == -1 && !baseOutputs.isEmpty()) targetOutIndex = 0;
 
         long perOperationTarget = 1L;
-        if (targetOutIndex >= 0 && baseOutputs[targetOutIndex] != null) {
-            long amt = baseOutputs[targetOutIndex].amount();
+        if (targetOutIndex >= 0 && baseOutputs.get(targetOutIndex) != null) {
+            long amt = baseOutputs.get(targetOutIndex).amount();
             if (amt > 0) perOperationTarget = amt;
         }
 
@@ -83,28 +85,34 @@ public final class PatternScaler {
             scaledInputs[i] = new ScaledProcessingPattern.Input(scaledTemplates, in.getMultiplier() * multiplier);
         }
 
-        /* 4. 构建压缩输出 */
-        GenericStack[] scaledCondensedOutputs = new GenericStack[baseOutputs.length];
-        for (int i = 0; i < baseOutputs.length; i++) {
-            GenericStack out = baseOutputs[i];
+        // 构建压缩输出（List）
+        List<GenericStack> scaledCondensedOutputs = new ArrayList<>(baseOutputs.size());
+        for (int i = 0; i < baseOutputs.size(); i++) {
+            GenericStack out = baseOutputs.get(i);
             if (out != null) {
-                scaledCondensedOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
+                scaledCondensedOutputs.add(new GenericStack(out.what(), out.amount() * multiplier));
+            } else {
+                scaledCondensedOutputs.add(null);
             }
         }
 
-        // 构建并打印稀疏表示（直接按 multiplier 放大）
-        GenericStack[] scaledSparseInputs = new GenericStack[baseSparseInputs.length];
-        for (int i = 0; i < baseSparseInputs.length; i++) {
-            var in = baseSparseInputs[i];
+        // 构建稀疏表示（List，直接按 multiplier 放大）
+        List<GenericStack> scaledSparseInputs = new ArrayList<>(baseSparseInputs.size());
+        for (int i = 0; i < baseSparseInputs.size(); i++) {
+            var in = baseSparseInputs.get(i);
             if (in != null) {
-                scaledSparseInputs[i] = new GenericStack(in.what(), in.amount() * multiplier);
+                scaledSparseInputs.add(new GenericStack(in.what(), in.amount() * multiplier));
+            } else {
+                scaledSparseInputs.add(null);
             }
         }
-        GenericStack[] scaledSparseOutputs = new GenericStack[baseSparseOutputs.length];
-        for (int i = 0; i < baseSparseOutputs.length; i++) {
-            var out = baseSparseOutputs[i];
+        List<GenericStack> scaledSparseOutputs = new ArrayList<>(baseSparseOutputs.size());
+        for (int i = 0; i < baseSparseOutputs.size(); i++) {
+            var out = baseSparseOutputs.get(i);
             if (out != null) {
-                scaledSparseOutputs[i] = new GenericStack(out.what(), out.amount() * multiplier);
+                scaledSparseOutputs.add(new GenericStack(out.what(), out.amount() * multiplier));
+            } else {
+                scaledSparseOutputs.add(null);
             }
         }
 

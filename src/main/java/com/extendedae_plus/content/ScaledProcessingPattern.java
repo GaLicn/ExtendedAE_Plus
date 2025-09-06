@@ -9,6 +9,9 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -19,25 +22,25 @@ public final class ScaledProcessingPattern implements IPatternDetails {
 
     private final AEProcessingPattern original;        // 原始样板引用
     private final AEItemKey definition;                // 样板物品
-    private final GenericStack[] sparseInputs;         // 缩放后的稀疏输入
-    private final GenericStack[] sparseOutputs;        // 缩放后的稀疏输出
+    private final List<GenericStack> sparseInputs;     // 缩放后的稀疏输入（List 以适配 1.21 API）
+    private final List<GenericStack> sparseOutputs;    // 缩放后的稀疏输出（List 以适配 1.21 API）
     private final IInput[] inputs;                     // 缩放后的压缩输入
-    private final GenericStack[] condensedOutputs;     // 缩放后的压缩输出
+    private final List<GenericStack> condensedOutputs; // 缩放后的压缩输出（List 以适配 1.21 API）
 
     public ScaledProcessingPattern(
             AEProcessingPattern original,
             AEItemKey definition,
-            GenericStack[] sparseInputs,
-            GenericStack[] sparseOutputs,
+            List<GenericStack> sparseInputs,
+            List<GenericStack> sparseOutputs,
             IInput[] inputs,
-            GenericStack[] condensedOutputs
+            List<GenericStack> condensedOutputs
     ) {
         this.original = Objects.requireNonNull(original);
         this.definition = Objects.requireNonNull(definition);
-        this.sparseInputs = Objects.requireNonNull(sparseInputs);
-        this.sparseOutputs = Objects.requireNonNull(sparseOutputs);
+        this.sparseInputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseInputs)));
+        this.sparseOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseOutputs)));
         this.inputs = Objects.requireNonNull(inputs);
-        this.condensedOutputs = Objects.requireNonNull(condensedOutputs);
+        this.condensedOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(condensedOutputs)));
     }
 
     /* -------------------- API 实现 -------------------- */
@@ -57,21 +60,21 @@ public final class ScaledProcessingPattern implements IPatternDetails {
     }
 
     @Override
-    public GenericStack[] getOutputs() {
+    public List<GenericStack> getOutputs() {
         return condensedOutputs;
     }
 
-    public GenericStack[] getSparseInputs() {
+    public List<GenericStack> getSparseInputs() {
         return sparseInputs;
     }
 
-    public GenericStack[] getSparseOutputs() {
+    public List<GenericStack> getSparseOutputs() {
         return sparseOutputs;
     }
 
     @Override
     public GenericStack getPrimaryOutput() {
-        if (condensedOutputs.length > 0) return condensedOutputs[0];
+        if (!condensedOutputs.isEmpty()) return condensedOutputs.get(0);
         return original.getPrimaryOutput();
     }
 
@@ -83,7 +86,7 @@ public final class ScaledProcessingPattern implements IPatternDetails {
     @Override
     public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink inputSink) {
         // 保持和 AEProcessingPattern 一致，用 sparseInputs 驱动
-        if (sparseInputs.length == inputs.length) {
+        if (sparseInputs.size() == inputs.length) {
             IPatternDetails.super.pushInputsToExternalInventory(inputHolder, inputSink);
         } else {
             KeyCounter allInputs = new KeyCounter();

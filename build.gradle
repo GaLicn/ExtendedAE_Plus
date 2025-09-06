@@ -136,7 +136,6 @@ sourceSets.main.java {
     exclude 'com/extendedae_plus/client/**'
     // 包含配置包
     include 'com/extendedae_plus/config/**'
-    exclude 'com/extendedae_plus/content/**'
     exclude 'com/extendedae_plus/hooks/**'
     exclude 'com/extendedae_plus/init/**'
     exclude 'com/extendedae_plus/integration/**'
@@ -150,6 +149,8 @@ sourceSets.main.java {
     include 'com/extendedae_plus/mixin/ae2/helpers/**'
     // 启用 AEProcessingPattern 的 mixin（提供可缩放标记）
     include 'com/extendedae_plus/mixin/ae2/AEProcessingPatternMixin.java'
+    // 自动样板缩放注入（CraftingTreeProcess + 其 accessor）
+    include 'com/extendedae_plus/mixin/ae2/autopattern/**'
     // GUI 方案A：解禁最小 GUI 混入
     include 'com/extendedae_plus/mixin/ae2/client/gui/PatternProviderScreenMixin.java'
     include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuAdvancedMixin.java'
@@ -162,14 +163,22 @@ sourceSets.main.java {
     // 仅解禁样板倍增核心所需的两个 util 文件
     include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
     include 'com/extendedae_plus/util/PatternProviderUIHelper.java'
+    // 自动样板缩放所需工具类
+    include 'com/extendedae_plus/util/PatternScaler.java'
+    include 'com/extendedae_plus/util/RequestedAmountHolder.java'
     // GUI 与网络最小依赖
     // 全量包含 api 包，防止个别接口遗漏
     include 'com/extendedae_plus/api/**'
     include 'com/extendedae_plus/util/ExtendedAELogger.java'
+    // 客户端高亮存储（单文件启用，保持 content 其余文件不参与编译）
+    include 'com/extendedae_plus/content/ClientPatternHighlightStore.java'
+    // 自动样板缩放所需内容类
+    include 'com/extendedae_plus/content/ScaledProcessingPattern.java'
     include 'com/extendedae_plus/network/ModNetwork.java'
     include 'com/extendedae_plus/network/ToggleAdvancedBlockingC2SPacket.java'
     include 'com/extendedae_plus/network/ToggleSmartDoublingC2SPacket.java'
     include 'com/extendedae_plus/network/ScalePatternsC2SPacket.java'
+    include 'com/extendedae_plus/network/SetPatternHighlightS2CPacket.java'
     // 仅 include 需要的 util 文件（不再对 util/** 做全局排除，以免误伤）
     include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
     include 'com/extendedae_plus/util/PatternProviderUIHelper.java'
