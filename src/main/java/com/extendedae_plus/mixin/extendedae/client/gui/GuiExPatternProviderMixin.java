@@ -4,8 +4,10 @@ import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
+import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.NewIcon;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.extendedae_plus.api.ExPatternPageAccessor;
 import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -162,6 +164,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
+                // 更新当前页可见状态
+                eap$updatePageSlotActivity();
             }, Icon.ARROW_LEFT);
 
             this.nextPage = new ActionEPPButton((b) -> {
@@ -189,6 +193,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
+                // 更新当前页可见状态
+                eap$updatePageSlotActivity();
             }, Icon.ARROW_RIGHT);
 
             // 恢复到 AE2 左侧工具栏
@@ -361,9 +367,33 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.x10Button.setX(bx);
             this.x10Button.setY(by + spacing * 5);
         }
+
+        // 每帧确保当前页槽位处于启用状态，非当前页禁用
+        eap$updatePageSlotActivity();
     }
 
     // 本文件原包含本地样板缩放实现（单机模式）和 ExtendedAE 网络派发，已移除以兼容 1.21.1 与最小可构建集。
     
+
+    @Unique
+    private void eap$updatePageSlotActivity() {
+        try {
+            if (!(((Object) this) instanceof GuiExPatternProvider)) return;
+            var list = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN);
+            if (list == null || list.isEmpty()) return;
+
+            int currentPage = getCurrentPage();
+            int base = currentPage * SLOTS_PER_PAGE;
+            int end = Math.min(list.size(), base + SLOTS_PER_PAGE);
+
+            for (int i = 0; i < list.size(); i++) {
+                var slot = list.get(i);
+                if (slot instanceof AppEngSlot s) {
+                    boolean enabled = i >= base && i < end;
+                    s.setActive(enabled);
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
 
 }
