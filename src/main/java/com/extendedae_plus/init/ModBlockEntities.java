@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
+import appeng.blockentity.crafting.CraftingBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -23,4 +24,22 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("network_pattern_controller",
                     () -> BlockEntityType.Builder.of(NetworkPatternControllerBlockEntity::new,
                             ModBlocks.NETWORK_PATTERN_CONTROLLER.get()).build(null));
+
+    // 提供一个 CraftingBlockEntity 的类型，允许附着在本模组自定义加速器方块上，绕过 AE2 默认类型的“有效方块列表”校验
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CraftingBlockEntity>> EPLUS_CRAFTING_UNIT_BE =
+            BLOCK_ENTITY_TYPES.register("eplus_crafting_unit",
+                    () -> {
+                        java.util.concurrent.atomic.AtomicReference<BlockEntityType<CraftingBlockEntity>> ref = new java.util.concurrent.atomic.AtomicReference<>();
+                        BlockEntityType.BlockEntitySupplier<CraftingBlockEntity> supplier = (pos, state) -> new CraftingBlockEntity(ref.get(), pos, state);
+                        BlockEntityType<CraftingBlockEntity> type = BlockEntityType.Builder.of(
+                                supplier,
+                                ModBlocks.ACCELERATOR_4x.get(),
+                                ModBlocks.ACCELERATOR_16x.get(),
+                                ModBlocks.ACCELERATOR_64x.get(),
+                                ModBlocks.ACCELERATOR_256x.get(),
+                                ModBlocks.ACCELERATOR_1024x.get()
+                        ).build(null);
+                        ref.set(type);
+                        return type;
+                    });
 }

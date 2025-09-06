@@ -2,6 +2,7 @@ package com.extendedae_plus.menu;
 
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -16,8 +17,8 @@ public class NetworkPatternControllerMenu extends AbstractContainerMenu {
         this.bePos = bePos;
     }
 
-    public NetworkPatternControllerMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, buf.readBlockPos());
+    public NetworkPatternControllerMenu(int id, Inventory inv, @Nullable FriendlyByteBuf buf) {
+        this(id, inv, buf != null ? buf.readBlockPos() : BlockPos.ZERO);
     }
 
     public BlockPos getBlockEntityPos() { return bePos; }

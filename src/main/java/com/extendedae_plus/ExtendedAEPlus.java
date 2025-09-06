@@ -4,6 +4,10 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModCreativeTabs;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.network.ModNetwork;
 
@@ -11,12 +15,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -30,10 +28,10 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import appeng.block.AEBaseEntityBlock;
+import appeng.blockentity.crafting.CraftingBlockEntity;
+import appeng.core.definitions.AEBlockEntities;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ExtendedAEPlus.MODID)
@@ -42,30 +40,7 @@ public class ExtendedAEPlus {
     public static final String MODID = "extendedaeplus";
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
-    // Create a Deferred Register to hold Blocks which will all be registered under the "extendedaeplus" namespace
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MODID);
-    // Create a Deferred Register to hold Items which will all be registered under the "extendedaeplus" namespace
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MODID);
-    // Create a Deferred Register to hold CreativeModeTabs which will all be registered under the "extendedaeplus" namespace
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
-
-    // Creates a new Block with the id "extendedaeplus:example_block", combining the namespace and path
-    public static final DeferredBlock<Block> EXAMPLE_BLOCK = BLOCKS.registerSimpleBlock("example_block", BlockBehaviour.Properties.of().mapColor(MapColor.STONE));
-    // Creates a new BlockItem with the id "extendedaeplus:example_block", combining the namespace and path
-    public static final DeferredItem<BlockItem> EXAMPLE_BLOCK_ITEM = ITEMS.registerSimpleBlockItem("example_block", EXAMPLE_BLOCK);
-
-    // Creates a new food item with the id "extendedaeplus:example_id", nutrition 1 and saturation 2
-    public static final DeferredItem<Item> EXAMPLE_ITEM = ITEMS.registerSimpleItem("example_item", new Item.Properties().food(new FoodProperties.Builder()
-            .alwaysEdible().nutrition(1).saturationModifier(2f).build()));
-
-    // Creates a creative tab with the id "extendedaeplus:example_tab" for the example item, that is placed after the combat tab
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
-            .title(Component.translatable("itemGroup.extendedae_plus")) //The language key for the title of your CreativeModeTab
-            .withTabsBefore(CreativeModeTabs.COMBAT)
-            .icon(() -> EXAMPLE_ITEM.get().getDefaultInstance())
-            .displayItems((parameters, output) -> {
-                output.accept(EXAMPLE_ITEM.get()); // Add the example item to the tab. For your own tabs, this method is preferred over the event
-            }).build());
+    // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
@@ -75,12 +50,11 @@ public class ExtendedAEPlus {
         // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
 
-        // Register the Deferred Register to the mod event bus so blocks get registered
-        BLOCKS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so items get registered
-        ITEMS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so tabs get registered
-        CREATIVE_MODE_TABS.register(modEventBus);
+        // 注册本模组方块/物品/创造物品栏
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so menu types get registered
         ModMenuTypes.MENUS.register(modEventBus);
 
@@ -89,8 +63,7 @@ public class ExtendedAEPlus {
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
 
-        // Register the item to a creative tab
-        modEventBus.addListener(this::addCreative);
+        // 由 ModCreativeTabs#MAIN 的 displayItems 负责填充创造物品栏，无需额外事件注入
 
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
@@ -106,14 +79,32 @@ public class ExtendedAEPlus {
         LOGGER.info("HELLO FROM COMMON SETUP");
         // 示例日志，避免引用不存在的模板 Config 字段
         LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
+
+        // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
+        event.enqueueWork(() -> {
+            try {
+                AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b256 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_256x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b1024 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_1024x.get();
+
+                // 使用我们自定义的 CraftingBlockEntity 类型，它的有效方块列表包含自定义加速器
+                var type = ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get();
+                // 不提供专用 ticker（AE2 会在其注册时按接口注入），此处传 null 即可
+                b4.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+                b16.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+                b64.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+                b256.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+                b1024.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+                LOGGER.info("Bound AE2 CraftingBlockEntity to ExtendedAE Plus accelerators.");
+            } catch (Throwable t) {
+                LOGGER.warn("Failed to bind CraftingBlockEntity to accelerators: {}", t.toString());
+            }
+        });
     }
 
-    // Add the example block item to the building blocks tab
-    private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
-            event.accept(EXAMPLE_BLOCK_ITEM);
-        }
-    }
+    // 移除示例 addCreative 事件，避免将示例物品加入原版标签
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent

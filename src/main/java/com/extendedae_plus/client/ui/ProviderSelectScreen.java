@@ -259,15 +259,6 @@ public class ProviderSelectScreen extends Screen {
                 fCount.add(gCount.get(i));
             }
         }
-        // 若查询不为空但没有任何匹配，则回退为显示全部，避免“空列表”误导用户
-        if (!q.isEmpty() && fIds.isEmpty()) {
-            for (int i = 0; i < gIds.size(); i++) {
-                fIds.add(gIds.get(i));
-                fNames.add(gNames.get(i));
-                fTotalSlots.add(gTotalSlots.get(i));
-                fCount.add(gCount.get(i));
-            }
-        }
     }
 
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
