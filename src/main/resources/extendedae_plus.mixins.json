@@ -35,7 +35,8 @@
     "accessor.ScreenAccessor",
     "ae2.accessor.PatternAccessTermScreenAccessor",
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
-    "extendedae.accessor.GuiExPatternTerminalAccessor"
+    "extendedae.accessor.GuiExPatternTerminalAccessor",
+    "extendedae.client.gui.GuiExPatternProviderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

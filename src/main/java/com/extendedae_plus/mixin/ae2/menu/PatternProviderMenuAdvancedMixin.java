@@ -35,7 +35,7 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
-                ExtendedAELogger.LOGGER.debug("[EAP] Menu broadcastChanges HEAD: eap$AdvancedBlocking={}", this.eap$AdvancedBlocking);
+                // debug removed
             }
         }
     }
@@ -54,4 +54,3 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     private void eap$debug_getShowInAccessTerminal(CallbackInfoReturnable<?> cir) {
     }
 }
- 

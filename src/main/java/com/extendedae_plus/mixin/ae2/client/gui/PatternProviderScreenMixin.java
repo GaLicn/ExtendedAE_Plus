@@ -64,7 +64,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
                     // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
-                    ExtendedAELogger.LOGGER.debug("[EAP] Click advanced blocking toggle: send C2S");
+                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleAdvancedBlockingC2SPacket.INSTANCE);
                 }
@@ -80,7 +80,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             }
         };
         // 初始化后立刻对齐当前@GuiSync状态，避免首帧显示不一致
-        ExtendedAELogger.LOGGER.debug("[EAP] Screen init: initial synced={} -> set button", this.eap$AdvancedBlockingEnabled);
+        // debug removed
         this.eap$AdvancedBlockingToggle.set(this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
 
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
@@ -98,7 +98,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 Settings.BLOCKING_MODE,
                 this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
-                    ExtendedAELogger.LOGGER.debug("[EAP] Click smart doubling toggle: send C2S");
+                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleSmartDoublingC2SPacket.INSTANCE);
                 }
@@ -126,7 +126,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
                 desired = sync.eap$getAdvancedBlockingSynced();
             }
-            ExtendedAELogger.LOGGER.debug("[EAP] updateBeforeRender tick (adv): desired={}", desired);
+            // debug removed
             this.eap$AdvancedBlockingEnabled = desired;
             this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
         }
@@ -136,7 +136,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
                 desired2 = sync2.eap$getSmartDoublingSynced();
             }
-            ExtendedAELogger.LOGGER.debug("[EAP] updateBeforeRender tick (dbl): desired={}", desired2);
+            // debug removed
             this.eap$SmartDoublingEnabled = desired2;
             this.eap$SmartDoublingToggle.set(desired2 ? YesNo.YES : YesNo.NO);
         }
@@ -145,7 +145,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             try {
                 ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
             } catch (Throwable t) {
-                ExtendedAELogger.LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
+                // debug removed
             }
         }
     }

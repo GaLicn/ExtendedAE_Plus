@@ -30,7 +30,7 @@ public abstract class PatternProviderMenuDoublingMixin implements PatternProvide
             var l = this.logic;
             if (l instanceof SmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
-                ExtendedAELogger.LOGGER.debug("[EAP] Menu broadcastChanges HEAD: eap$SmartDoubling={}", this.eap$SmartDoubling);
+                // debug removed
             }
         }
     }
