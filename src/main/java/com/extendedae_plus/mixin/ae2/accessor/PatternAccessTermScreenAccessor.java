@@ -13,11 +13,11 @@ import java.util.ArrayList;
 @Mixin(value = PatternAccessTermScreen.class, remap = false)
 public interface PatternAccessTermScreenAccessor {
 	@Accessor("scrollbar")
-	Scrollbar getScrollbar();
+	Scrollbar eap$getScrollbar();
 
 	@Accessor("visibleRows")
-	int getVisibleRows();
+	int eap$getVisibleRows();
 
 	@Accessor("rows")
-	ArrayList<?> getRows();
+	ArrayList<?> eap$getRows();
 } 

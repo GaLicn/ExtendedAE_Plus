@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(targets = "appeng.client.gui.me.patternaccess.PatternAccessTermScreen$SlotsRow", remap = false)
 public interface PatternAccessTermScreenSlotsRowAccessor {
     @Accessor("container")
-    PatternContainerRecord getContainer();
+    PatternContainerRecord eap$getContainer();
 
     @Accessor("offset")
-    int getOffset();
+    int eap$getOffset();
 
     @Accessor("slots")
-    int getSlots();
+    int eap$getSlots();
 }

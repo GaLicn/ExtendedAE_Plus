@@ -38,7 +38,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(AEBaseScreen.class)
+@Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class AEBaseScreenMixin {
 
     @Unique
@@ -56,7 +56,7 @@ public abstract class AEBaseScreenMixin {
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+左键，
      * 读取鼠标下的 AEKey 并发送 CraftingMonitorJumpC2SPacket。
      */
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
     private void eap$craftingCpuShiftLeftClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         // 仅处理 CraftingCPUScreen 实例
         Object self = this;
@@ -90,7 +90,7 @@ public abstract class AEBaseScreenMixin {
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+右键，
      * 读取鼠标下的 AEKey 并发送 CraftingMonitorOpenProviderC2SPacket（打开样板供应器UI）。
      */
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
     private void eap$craftingCpuShiftRightClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         // 仅处理 CraftingCPUScreen 实例
         Object self = this;
@@ -153,7 +153,7 @@ public abstract class AEBaseScreenMixin {
     /**
      * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
      */
-    @Inject(method = "renderSlot", at = @At("TAIL"))
+    @Inject(method = "renderSlot", at = @At("TAIL"), remap = false)
     private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
         Object self = this;
 

@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
-@Mixin(PatternProviderScreen.class)
+@Mixin(value = PatternProviderScreen.class, remap = false)
 public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
 
     @Unique
@@ -47,7 +47,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         super(menu, playerInventory, title, style);
     }
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+    @Inject(method = "<init>", at = @At("RETURN"), remap = false)
     private void eap$initAdvancedBlocking(C menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 使用 @GuiSync 初始化
         try {

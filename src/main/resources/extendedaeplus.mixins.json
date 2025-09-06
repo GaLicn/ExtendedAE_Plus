@@ -6,7 +6,6 @@
     "ae2.accessor.PatternProviderLogicAccessor",
     "ae2.accessor.PatternProviderLogicPatternsAccessor",
     "ae2.accessor.PatternProviderMenuAdvancedAccessor",
-    "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
@@ -14,6 +13,7 @@
     "ae2.AEProcessingPatternMixin",
     "ae2.autopattern.CraftingTreeNodeAccessor",
     "ae2.autopattern.CraftingTreeProcessMixin",
+    "ae2.accessor.PatternProviderLogicPatternInputsAccessor",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
@@ -24,10 +24,15 @@
     "ae2.accessor.PatternEncodingTermMenuAccessor"
   ],
   "client": [
+    "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.accessor.AEBaseScreenAccessor",
+    "ae2.accessor.MEStorageScreenAccessor",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
+    "ae2.accessor.PatternAccessTermScreenAccessor",
+    "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "extendedae.accessor.GuiExPatternTerminalAccessor"
   ],
   "injectors": {

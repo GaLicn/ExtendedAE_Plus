@@ -27,13 +27,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 点击后把当前“已编码样板”上传到任意可用的样板供应器（服务端自动选择）。
  * 通过解析 AE2 样式中 encodePattern 的坐标，将按钮放在其左侧紧挨位置。
  */
-@Mixin(AEBaseScreen.class)
+@Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
     @Unique
     private IconButton eap$uploadBtn;
 
-    @Inject(method = "init", at = @At("TAIL"))
+    @Inject(method = "init", at = @At("TAIL"), remap = false)
     private void eap$addUploadButton(CallbackInfo ci) {
         // 仅在图样编码终端界面中添加按钮
         if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
@@ -139,7 +139,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         }
     }
 
-    @Inject(method = "containerTick", at = @At("TAIL"))
+    @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
     private void eap$ensureUploadButton(CallbackInfo ci) {
         if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
             return;
