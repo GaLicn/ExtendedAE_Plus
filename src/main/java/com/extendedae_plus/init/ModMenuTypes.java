@@ -6,6 +6,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 
 public final class ModMenuTypes {
     private ModMenuTypes() {}
@@ -15,5 +16,5 @@ public final class ModMenuTypes {
 
     public static final DeferredHolder<MenuType<?>, MenuType<NetworkPatternControllerMenu>> NETWORK_PATTERN_CONTROLLER =
             MENUS.register("network_pattern_controller",
-                    () -> new MenuType<>(NetworkPatternControllerMenu::new));
+                    () -> IMenuTypeExtension.create((id, inv, buf) -> new NetworkPatternControllerMenu(id, inv, buf)));
 }

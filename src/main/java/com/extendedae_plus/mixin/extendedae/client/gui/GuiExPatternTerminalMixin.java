@@ -234,11 +234,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
             // 发送我们自己的 C2S 包：OpenProviderUiC2SPacket
             try {
-                ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
-                        posLong,
-                        new ResourceLocation(dimStr),
-                        faceOrd
-                ));
+                var dimRl = net.minecraft.resources.ResourceLocation.parse(dimStr);
+                if (dimRl != null) {
+                    ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
+                            posLong,
+                            dimRl,
+                            faceOrd
+                    ));
+                }
             } catch (Throwable t) {
                 // 静默失败：不提示玩家
             }
