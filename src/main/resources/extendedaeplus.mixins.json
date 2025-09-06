@@ -27,6 +27,8 @@
     "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
     "ae2.client.gui.PatternProviderScreenMixin",
+    "jei.EncodePatternTransferHandlerMixin",
+    "jei.AE2JeiEncodePatternTransferHandlerMixin",
     "ae2.accessor.AEBaseScreenAccessor",
     "ae2.accessor.MEStorageScreenAccessor",
     "accessor.AbstractContainerScreenAccessor",

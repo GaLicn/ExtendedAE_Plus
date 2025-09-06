@@ -138,8 +138,7 @@ sourceSets.main.java {
     // AE2 相关非 accessor（已启用，需要参与编译与运行）
     // 其他模块的非 accessor mixin
     exclude 'com/extendedae_plus/mixin/ae2WTlib/**'
-    // 保留 mixin/jei/accessor，但排除其余
-    exclude 'com/extendedae_plus/mixin/jei/*.java'
+    // 允许 JEI/REI 捕获混入参与编译（用于记录 lastProcessingName）
     // 排除顶层 mixin 文件
     exclude 'com/extendedae_plus/mixin/PickFromWirelessMixin.java'
 }
