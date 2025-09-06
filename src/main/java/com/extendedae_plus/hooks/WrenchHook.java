@@ -25,7 +25,8 @@ public final class WrenchHook {
 
     @SubscribeEvent
     public static void onPlayerUseBlockEvent(PlayerInteractEvent.RightClickBlock event) {
-        if (event.getUseBlock() == Event.Result.DENY) {
+        // 1.21 NeoForge: 避免依赖 Event.Result，使用 isCanceled() 进行早退检查
+        if (event.isCanceled()) {
             return;
         }
         var player = event.getEntity();
