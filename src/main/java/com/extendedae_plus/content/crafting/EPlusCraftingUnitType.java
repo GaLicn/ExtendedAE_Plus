@@ -27,8 +27,10 @@ public enum EPlusCraftingUnitType implements ICraftingUnitType {
 
     @Override
     public int getAcceleratorThreads() {
-        // 返回真实线程值，单块可能超过 16。上限校验已由 mixin 绕过。
-        return this.threads;
+        // AE2 在 CraftingCPUCluster.addBlockEntity 中对单块线程数做了上限 16 的硬校验。
+        // 这里先进行夹取，避免形成结构时抛出 IllegalArgumentException 导致崩溃。
+        // 后续如需突破上限，应通过 Mixin/扩展在集群层面增加“额外并行度”的实现。
+        return Math.min(this.threads, 16);
     }
 
     @Override

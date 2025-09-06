@@ -37,7 +37,7 @@ import appeng.core.definitions.AEBlockEntities;
 @Mod(ExtendedAEPlus.MODID)
 public class ExtendedAEPlus {
     // Define mod id in a common place for everything to reference
-    public static final String MODID = "extendedaeplus";
+    public static final String MODID = "extendedae_plus";
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
