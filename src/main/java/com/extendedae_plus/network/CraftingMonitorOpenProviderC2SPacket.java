@@ -113,9 +113,6 @@ public class CraftingMonitorOpenProviderC2SPacket {
                                 highlightWithMessage(pbe.getBlockPos(), null, Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
                             }
 
-                            // 高亮打开的供应器位置并发送聊天提示
-
-
                             // 先在该 provider 中定位 pattern 的槽位索引，以便计算页码（尽量早退出，按槽位逐个解码）
                             int foundSlot = PatternProviderDataUtil.findSlotForPattern(ppl, pattern.getDefinition());
                             if (foundSlot >= 0) {
@@ -151,6 +148,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
                                 ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                             }
 
+                            highlightWithMessage(pos, null, level.dimension(), 1.0, player);
+
                         } catch (Exception ignored) {
                         }
                     } else if (provider instanceof org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine machine) {
@@ -168,6 +167,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
                                 AEKey key = pattern.getOutputs()[0].what();
                                 ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                             }
+
+                            highlightWithMessage(pos, null, level.dimension(), 1.0, player);
                         } catch (Exception ignored) {
                         }
                     }

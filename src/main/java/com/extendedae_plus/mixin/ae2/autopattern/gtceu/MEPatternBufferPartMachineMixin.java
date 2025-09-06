@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
-
 @Pseudo
 @Mixin(value = MEPatternBufferPartMachine.class, remap = false)
 public class MEPatternBufferPartMachineMixin {
@@ -37,7 +35,6 @@ public class MEPatternBufferPartMachineMixin {
             IPatternDetails key = entry.getKey();
             if (key instanceof AEProcessingPattern proc && proc instanceof SmartDoublingAwarePattern aware) {
                 aware.eap$setAllowScaling(true);
-                LOGGER.info("设置true，{}", aware);
             }
         }
     }

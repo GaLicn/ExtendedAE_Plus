@@ -20,7 +20,6 @@ import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -108,11 +107,6 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            // Debug: 标记一次发送
-            try {
-                LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
-            } catch (Throwable ignored2) {
-            }
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
@@ -142,11 +136,6 @@ public abstract class AEBaseScreenMixin {
             AEKey key = hovered.stack().what();
             if (key == null) {
                 return;
-            }
-            // Debug: 标记一次发送（打开供应器UI）
-            try {
-                LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
-            } catch (Throwable ignored2) {
             }
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
@@ -315,10 +304,7 @@ public abstract class AEBaseScreenMixin {
 
 
     @Shadow
-    protected void setTextContent(String id, Component content) {
-    }
-
-    ;
+    protected void setTextContent(String id, Component content) {}
 
     @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
     private void onUpdateBeforeRender(CallbackInfo ci) {
