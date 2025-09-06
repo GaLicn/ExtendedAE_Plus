@@ -54,3 +54,4 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     private void eap$debug_getShowInAccessTerminal(CallbackInfoReturnable<?> cir) {
     }
 }
+ 

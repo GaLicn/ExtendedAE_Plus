@@ -1,12 +1,29 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.ClientAdvancedBlockingState;
-import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.neoforge.network.NetworkEvent;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+/**
+ * S2C：同步某个 Provider 的高级阻挡状态到客户端（本地存储）。
+ */
+public class AdvancedBlockingSyncS2CPacket implements CustomPacketPayload {
+    public static final Type<AdvancedBlockingSyncS2CPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "adv_blocking_sync"));
 
-public class AdvancedBlockingSyncS2CPacket {
+    public static final StreamCodec<RegistryFriendlyByteBuf, AdvancedBlockingSyncS2CPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> {
+                buf.writeUtf(pkt.dimensionId);
+                buf.writeLong(pkt.blockPosLong);
+                buf.writeBoolean(pkt.enabled);
+            },
+            buf -> new AdvancedBlockingSyncS2CPacket(buf.readUtf(), buf.readLong(), buf.readBoolean())
+    );
+
     private final String dimensionId;
     private final long blockPosLong;
     private final boolean enabled;
@@ -17,25 +34,15 @@ public class AdvancedBlockingSyncS2CPacket {
         this.enabled = enabled;
     }
 
-    public static void encode(AdvancedBlockingSyncS2CPacket msg, FriendlyByteBuf buf) {
-        buf.writeUtf(msg.dimensionId);
-        buf.writeLong(msg.blockPosLong);
-        buf.writeBoolean(msg.enabled);
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static AdvancedBlockingSyncS2CPacket decode(FriendlyByteBuf buf) {
-        String dim = buf.readUtf();
-        long pos = buf.readLong();
-        boolean en = buf.readBoolean();
-        return new AdvancedBlockingSyncS2CPacket(dim, pos, en);
-    }
-
-    public static void handle(AdvancedBlockingSyncS2CPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        var ctx = ctxSupplier.get();
+    public static void handle(final AdvancedBlockingSyncS2CPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             String key = ClientAdvancedBlockingState.key(msg.dimensionId, msg.blockPosLong);
             ClientAdvancedBlockingState.set(key, msg.enabled);
         });
-        ctx.setPacketHandled(true);
     }
 }

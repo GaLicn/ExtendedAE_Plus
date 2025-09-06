@@ -194,7 +194,10 @@ public class ProviderSelectScreen extends Screen {
     private void onChoose(int idx) {
         if (idx < 0 || idx >= fIds.size()) return;
         long providerId = fIds.get(idx);
-        ModNetwork.CHANNEL.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId));
+        var conn = Minecraft.getInstance().getConnection();
+        if (conn != null) {
+            conn.send(new UploadEncodedPatternToProviderC2SPacket(providerId));
+        }
         this.onClose();
     }
 
@@ -342,12 +345,6 @@ public class ProviderSelectScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
-        if (searchBox != null) {
-            searchBox.tick();
-        }
-        if (cnInput != null) {
-            cnInput.tick();
-        }
         if (needsRefresh) {
             needsRefresh = false;
             // 重新构建当前屏幕内容

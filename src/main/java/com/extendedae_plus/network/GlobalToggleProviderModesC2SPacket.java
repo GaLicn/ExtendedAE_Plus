@@ -7,18 +7,21 @@ import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import com.extendedae_plus.api.SmartDoublingHolder;
-import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
+import appeng.api.networking.IInWorldGridNodeHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Set;
 import java.util.HashSet;
-import java.util.function.Supplier;
 
 /**
  * C2S：全网批量切换样板供应器的三种模式：
@@ -28,7 +31,19 @@ import java.util.function.Supplier;
  *
  * 负载为三个操作码（各1字节），分别对应：blocking、advancedBlocking、smartDoubling。
  */
-public class GlobalToggleProviderModesC2SPacket {
+public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
+    public static final Type<GlobalToggleProviderModesC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "global_toggle_provider_modes"));
+
+    public static final StreamCodec<FriendlyByteBuf, GlobalToggleProviderModesC2SPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> {
+                buf.writeByte(pkt.opBlocking.id);
+                buf.writeByte(pkt.opAdvancedBlocking.id);
+                buf.writeByte(pkt.opSmartDoubling.id);
+                buf.writeBlockPos(pkt.controllerPos);
+            },
+            buf -> new GlobalToggleProviderModesC2SPacket(Op.byId(buf.readByte()), Op.byId(buf.readByte()), Op.byId(buf.readByte()), buf.readBlockPos())
+    );
     public enum Op {
         NOOP((byte) 0),
         SET_TRUE((byte) 1),
@@ -58,32 +73,21 @@ public class GlobalToggleProviderModesC2SPacket {
         this.controllerPos = controllerPos;
     }
 
-    public static void encode(GlobalToggleProviderModesC2SPacket msg, FriendlyByteBuf buf) {
-        buf.writeByte(msg.opBlocking.id);
-        buf.writeByte(msg.opAdvancedBlocking.id);
-        buf.writeByte(msg.opSmartDoubling.id);
-        buf.writeBlockPos(msg.controllerPos);
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static GlobalToggleProviderModesC2SPacket decode(FriendlyByteBuf buf) {
-        Op b = Op.byId(buf.readByte());
-        Op ab = Op.byId(buf.readByte());
-        Op sd = Op.byId(buf.readByte());
-        BlockPos pos = buf.readBlockPos();
-        return new GlobalToggleProviderModesC2SPacket(b, ab, sd, pos);
-    }
-
-    public static void handle(GlobalToggleProviderModesC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        var ctx = ctxSupplier.get();
+    public static void handle(final GlobalToggleProviderModesC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            ServerPlayer player = ctx.getSender();
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (player == null) return;
 
             // 从控制方块实体的 AE2 节点确定 AE 网络上下文
             var level = player.serverLevel();
             var be = level.getBlockEntity(msg.controllerPos);
-            if (!(be instanceof NetworkPatternControllerBlockEntity controller)) return;
-            var node = controller.getGridNode(null);
+            if (!(be instanceof IInWorldGridNodeHost host)) return;
+            var node = host.getGridNode(null);
             if (node == null) return;
             IGrid grid = node.getGrid();
             if (grid == null) return;
@@ -92,7 +96,6 @@ public class GlobalToggleProviderModesC2SPacket {
             // 向发起玩家反馈影响数量，便于判断按钮是否生效
             player.displayClientMessage(Component.literal("E+ 全局切换已应用到 " + affected + " 个样板供应器"), true);
         });
-        ctx.setPacketHandled(true);
     }
 
     private static int applyToAllProviders(IGrid grid, GlobalToggleProviderModesC2SPacket msg) {

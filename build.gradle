@@ -127,96 +127,68 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 // 暂时排除缺少依赖的可选联动源码，待补齐依赖后再启用
 sourceSets.main.java {
-    // 让编译期能解析 ExtendedAE 的类（如 GuiExPatternProvider、ActionEPPButton 等），仅作编译期源引用
+    // 让编译期能解析 ExtendedAE 的类（如 GuiExPatternProvider、ActionEPPButton 等），作为编译期源引用
     // 运行期仍由 CurseMaven 依赖提供真实模组 Jar
     srcDir 'othermods/ExtendedAE-1.21-2.2.21-neoforge/src/main/java'
-    // 广泛屏蔽迁移中的旧源码，仅保留模板核心类（ExtendedAEPlus、ExtendedAEPlusClient、Config）
-    // 注意：不要屏蔽 api/**，我们有选择性 include 的接口文件需要参与编译
-    include 'com/extendedae_plus/api/**'
-    exclude 'com/extendedae_plus/client/**'
-    // 包含配置包
-    include 'com/extendedae_plus/config/**'
-    exclude 'com/extendedae_plus/hooks/**'
-    exclude 'com/extendedae_plus/init/**'
-    exclude 'com/extendedae_plus/integration/**'
-    exclude 'com/extendedae_plus/menu/**'
-    // 包含主 Mod 类
+
+    // 分阶段迁移：仅编译样板倍增与必要 GUI/网络相关的核心代码，屏蔽未迁移联动与旧版 Forge API 代码
     include 'com/extendedae_plus/ExtendedAEPlus.java'
-    // 仅保留 mixin 中的 accessor 参与编译
-    // 解除对 accessor 的屏蔽
-    include 'com/extendedae_plus/mixin/ae2/accessor/**'
-    // 启用对 PatternProviderLogic 的功能混入（高级阻挡/智能翻倍开关的持久化与逻辑）
-    include 'com/extendedae_plus/mixin/ae2/helpers/**'
-    // 启用 AEProcessingPattern 的 mixin（提供可缩放标记）
-    include 'com/extendedae_plus/mixin/ae2/AEProcessingPatternMixin.java'
-    // 自动样板缩放注入（CraftingTreeProcess + 其 accessor）
-    include 'com/extendedae_plus/mixin/ae2/autopattern/**'
-    // GUI 方案A：解禁最小 GUI 混入
-    include 'com/extendedae_plus/mixin/ae2/client/gui/PatternProviderScreenMixin.java'
-    include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuAdvancedMixin.java'
-    include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuDoublingMixin.java'
-    // ExtendedAE GUI 混入（右侧外列按钮与翻页），以及其依赖的 NewIcon 类
-    // 仅包含 Provider GUI 混入（不要使用广域 exclude，以免覆盖 include）
-    include 'com/extendedae_plus/mixin/extendedae/client/gui/GuiExPatternProviderMixin.java'
-    include 'com/extendedae_plus/NewIcon.java'
-    // 注意：不要屏蔽 network/**，我们已选择性 include 需要的网络文件
-    // 仅解禁样板倍增核心所需的两个 util 文件
+    include 'com/extendedae_plus/ExtendedAEPlusClient.java'
+    include 'com/extendedae_plus/config/**'
+    include 'com/extendedae_plus/api/**'
+
+    // util
+    include 'com/extendedae_plus/util/ExtendedAELogger.java'
     include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
     include 'com/extendedae_plus/util/PatternProviderUIHelper.java'
-    // 自动样板缩放所需工具类
     include 'com/extendedae_plus/util/PatternScaler.java'
     include 'com/extendedae_plus/util/RequestedAmountHolder.java'
-    // GUI 与网络最小依赖
-    // 全量包含 api 包，防止个别接口遗漏
-    include 'com/extendedae_plus/api/**'
-    include 'com/extendedae_plus/util/ExtendedAELogger.java'
-    // 客户端高亮存储（单文件启用，保持 content 其余文件不参与编译）
+    // util needed by network payloads (providers listing / upload helpers)
+    include 'com/extendedae_plus/util/ExtendedAEPatternUploadUtil.java'
+
+    // content（最小集）
     include 'com/extendedae_plus/content/ClientPatternHighlightStore.java'
-    // 自动样板缩放所需内容类
     include 'com/extendedae_plus/content/ScaledProcessingPattern.java'
+
+    // client-side helpers needed by S2C payloads
+    include 'com/extendedae_plus/client/ClientAdvancedBlockingState.java'
+    include 'com/extendedae_plus/client/ui/ProviderSelectScreen.java'
+
+    // 网络（NeoForge 1.21 Payload API版本）
     include 'com/extendedae_plus/network/ModNetwork.java'
     include 'com/extendedae_plus/network/ToggleAdvancedBlockingC2SPacket.java'
     include 'com/extendedae_plus/network/ToggleSmartDoublingC2SPacket.java'
     include 'com/extendedae_plus/network/ScalePatternsC2SPacket.java'
     include 'com/extendedae_plus/network/SetPatternHighlightS2CPacket.java'
-    // 仅 include 需要的 util 文件（不再对 util/** 做全局排除，以免误伤）
-    include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
-    include 'com/extendedae_plus/util/PatternProviderUIHelper.java'
-    include 'com/extendedae_plus/util/ExtendedAELogger.java'
-    exclude 'com/extendedae_plus/wireless/**'
+    include 'com/extendedae_plus/network/AdvancedBlockingSyncS2CPacket.java'
+    include 'com/extendedae_plus/network/ProvidersListS2CPacket.java'
+    include 'com/extendedae_plus/network/RequestProvidersListC2SPacket.java'
+    include 'com/extendedae_plus/network/SetProviderPageS2CPacket.java'
+    include 'com/extendedae_plus/network/CraftingMonitorJumpC2SPacket.java'
+    include 'com/extendedae_plus/network/CraftingMonitorOpenProviderC2SPacket.java'
+    include 'com/extendedae_plus/network/OpenProviderUiC2SPacket.java'
+    include 'com/extendedae_plus/network/GlobalToggleProviderModesC2SPacket.java'
+    include 'com/extendedae_plus/network/UploadEncodedPatternToProviderC2SPacket.java'
+
+    // AE2 mixin：accessor/helpers/autopattern/gui/menu
+    include 'com/extendedae_plus/mixin/ae2/accessor/**'
+    include 'com/extendedae_plus/mixin/ae2/helpers/**'
+    include 'com/extendedae_plus/mixin/ae2/AEProcessingPatternMixin.java'
+    include 'com/extendedae_plus/mixin/ae2/autopattern/**'
+    include 'com/extendedae_plus/mixin/ae2/client/gui/PatternProviderScreenMixin.java'
+    include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuAdvancedMixin.java'
+    include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuDoublingMixin.java'
+
+    // ExtendedAE GUI 混入（右侧外列按钮与翻页），以及其依赖的 NewIcon 类
+    include 'com/extendedae_plus/mixin/extendedae/client/gui/GuiExPatternProviderMixin.java'
+    include 'com/extendedae_plus/NewIcon.java'
 }
 
-// Sets up a dependency configuration called 'localRuntime'.
-// This configuration should be used instead of 'runtimeOnly' to declare
-// a dependency that will be present for runtime testing but that is
-// "optional", meaning it will not be pulled by dependents of this mod.
 configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
 dependencies {
-    // Example optional mod dependency with JEI
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
-    // compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${jei_version}"
-    // We add the full version to localRuntime, not runtimeOnly, so that we do not publish a dependency on it
-    // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
-
-    // Example mod dependency using a mod jar from ./libs with a flat dir repository
-    // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
-    // The group id is ignored when searching -- in this case, it is "blank"
-    // implementation "blank:coolmod-${mc_version}:${coolmod_version}"
-
-    // Example mod dependency using a file as dependency
-    // implementation files("libs/coolmod-${mc_version}-${coolmod_version}.jar")
-
-    // Example project dependency using a sister or child project:
-    // implementation project(":myproject")
-
-    // For more info:
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
     // --- Added dependencies for target mods ---
     implementation "curse.maven:glodium-957920:5821676"
     implementation "org.appliedenergistics:appliedenergistics2:19.2.8"

@@ -18,18 +18,20 @@ import com.glodblock.github.glodium.util.GlodUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Collection;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.highlight;
 
@@ -38,27 +40,28 @@ import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.
  * 服务端在当前打开的 CraftingCPUMenu 所属网络中，定位匹配该 AEKey 的样板供应器，
  * 打开该供应器自身的 UI（不是目标机器的 UI）。
  */
-public class CraftingMonitorOpenProviderC2SPacket {
+public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload {
+    public static final Type<CraftingMonitorOpenProviderC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "crafting_monitor_open_provider"));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, CraftingMonitorOpenProviderC2SPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> AEKey.writeKey(buf, pkt.what),
+            buf -> new CraftingMonitorOpenProviderC2SPacket(AEKey.readKey(buf))
+    );
     private final AEKey what;
 
     public CraftingMonitorOpenProviderC2SPacket(AEKey what) {
         this.what = what;
     }
 
-    public static void encode(CraftingMonitorOpenProviderC2SPacket msg, FriendlyByteBuf buf) {
-        AEKey.writeKey(buf, msg.what);
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static CraftingMonitorOpenProviderC2SPacket decode(FriendlyByteBuf buf) {
-        AEKey key = AEKey.readKey(buf);
-        return new CraftingMonitorOpenProviderC2SPacket(key);
-    }
-
-    public static void handle(CraftingMonitorOpenProviderC2SPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+    public static void handle(final CraftingMonitorOpenProviderC2SPacket msg, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
 
             // 必须在 CraftingCPU 界面内
             if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
@@ -119,15 +122,16 @@ public class CraftingMonitorOpenProviderC2SPacket {
                             if (foundSlot >= 0) {
                                 int pageId = foundSlot / 36;
                                 if (pageId > 0) {
-                                    // 发送 S2C 包通知客户端切换到指定页（客户端会写入 mixin 字段并重排槽位）
-                                    ModNetwork.CHANNEL.sendTo(new SetProviderPageS2CPacket(pageId), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                                    // 发送 S2C：切换到指定页
+                                    player.connection.send(new SetProviderPageS2CPacket(pageId));
                                 }
                             }
 
                             // 最后发送高亮包，保证界面已打开
-                            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
-                                AEKey key = pattern.getOutputs()[0].what();
-                                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                            var outs = pattern.getOutputs();
+                            if (outs != null && !outs.isEmpty() && outs.get(0) != null) {
+                                AEKey key = outs.get(0).what();
+                                player.connection.send(new SetPatternHighlightS2CPacket(key, true));
                             }
 
                             return;
@@ -137,7 +141,6 @@ public class CraftingMonitorOpenProviderC2SPacket {
                 }
             }
         });
-        context.setPacketHandled(true);
     }
 
     private static void highlightWithMessage(BlockPos pos, Direction face, ResourceKey<Level> dim, double multiplier, Player player) {

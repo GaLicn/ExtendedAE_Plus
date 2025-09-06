@@ -3,6 +3,8 @@ package com.extendedae_plus.network;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.BlockHitResult;
@@ -15,12 +17,20 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.function.Supplier;
+public class OpenProviderUiC2SPacket implements CustomPacketPayload {
+    public static final Type<OpenProviderUiC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "open_provider_ui"));
 
-public class OpenProviderUiC2SPacket {
+    public static final StreamCodec<FriendlyByteBuf, OpenProviderUiC2SPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> {
+                buf.writeLong(pkt.posLong);
+                buf.writeResourceLocation(pkt.dimId);
+                buf.writeVarInt(pkt.faceOrd);
+            },
+            buf -> new OpenProviderUiC2SPacket(buf.readLong(), buf.readResourceLocation(), buf.readVarInt())
+    );
     private final long posLong;
     private final ResourceLocation dimId;
     private final int faceOrd; // 目前保留，若目标需要可用
@@ -31,26 +41,14 @@ public class OpenProviderUiC2SPacket {
         this.faceOrd = faceOrd;
     }
 
-    public static void encode(OpenProviderUiC2SPacket msg, FriendlyByteBuf buf) {
-        buf.writeLong(msg.posLong);
-        buf.writeResourceLocation(msg.dimId);
-        buf.writeVarInt(msg.faceOrd);
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
-    public static OpenProviderUiC2SPacket decode(FriendlyByteBuf buf) {
-        long posLong = buf.readLong();
-        ResourceLocation dimId = buf.readResourceLocation();
-        int faceOrd = buf.readVarInt();
-        return new OpenProviderUiC2SPacket(posLong, dimId, faceOrd);
-        
-    }
-
-    public static void handle(OpenProviderUiC2SPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
-            
+    public static void handle(final OpenProviderUiC2SPacket msg, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
 
             // 校验维度与方块
             ResourceKey<Level> levelKey = ResourceKey.create(Registries.DIMENSION, msg.dimId);
@@ -76,58 +74,19 @@ public class OpenProviderUiC2SPacket {
                 BlockPos targetPos = pos.relative(dir);
                 BlockEntity tbe = level.getBlockEntity(targetPos);
                 if (tbe instanceof MenuProvider provider) {
-                    NetworkHooks.openScreen(player, provider, targetPos);
+                    player.openMenu(provider, targetPos);
                     return;
                 }
                 var tstate = level.getBlockState(targetPos);
                 MenuProvider provider2 = tstate.getMenuProvider(level, targetPos);
                 if (provider2 != null) {
-                    NetworkHooks.openScreen(player, provider2, targetPos);
+                    player.openMenu(provider2, targetPos);
                     return;
                 }
             }
 
-            // 如果邻居也未提供 MenuProvider，则兜底：尽量模拟一次徒手右键相邻方块
-            boolean anyHandEmpty = player.getMainHandItem().isEmpty() || player.getOffhandItem().isEmpty();
-            if (anyHandEmpty) {
-                InteractionHand hand = player.getMainHandItem().isEmpty() ? InteractionHand.MAIN_HAND : InteractionHand.OFF_HAND;
-                if (msg.faceOrd >= 0 && msg.faceOrd < Direction.values().length) {
-                    Direction dir = Direction.values()[msg.faceOrd];
-                    BlockPos targetPos = pos.relative(dir);
-                    var state2 = level.getBlockState(targetPos);
-                    var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), dir.getOpposite(), targetPos, false);
-                    InteractionResult r = state2.use(level, player, hand, hit);
-                    if (r.consumesAction()) {
-                        return;
-                    }
-                } else {
-                    // 无明确朝向：优先挑选有方块实体的邻居，否则挑选非空气方块
-                    Direction chosen = null;
-                    for (Direction d : Direction.values()) {
-                        if (level.getBlockEntity(pos.relative(d)) != null) { chosen = d; break; }
-                    }
-                    if (chosen == null) {
-                        for (Direction d : Direction.values()) {
-                            if (!level.getBlockState(pos.relative(d)).isAir()) { chosen = d; break; }
-                        }
-                    }
-                    if (chosen != null) {
-                        BlockPos targetPos = pos.relative(chosen);
-                        var state2 = level.getBlockState(targetPos);
-                        var hit = new BlockHitResult(Vec3.atCenterOf(targetPos), chosen.getOpposite(), targetPos, false);
-                        InteractionResult r = state2.use(level, player, hand, hit);
-                        if (r.consumesAction()) {
-                            return;
-                        }
-                    } else {
-                        // 无可选邻居
-                    }
-                }
-            } else {
-                // 双手占用则跳过兜底交互
-            }
+            // 若邻居未提供 MenuProvider，则跳过兜底交互（1.21 API 变更，避免不兼容的 use 调用）
 
-            context.setPacketHandled(true);
         });
     }
 }

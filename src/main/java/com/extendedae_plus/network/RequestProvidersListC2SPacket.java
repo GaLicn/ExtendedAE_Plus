@@ -3,30 +3,40 @@ package com.extendedae_plus.network;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * C2S: 请求当前终端可见的样板供应器列表（用于弹窗选择）。
  */
-public class RequestProvidersListC2SPacket {
+public class RequestProvidersListC2SPacket implements CustomPacketPayload {
+    public static final Type<RequestProvidersListC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
+
+    public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket();
+
+    public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC =
+            StreamCodec.unit(INSTANCE);
+
     public RequestProvidersListC2SPacket() {}
 
-    public static void encode(RequestProvidersListC2SPacket msg, FriendlyByteBuf buf) {}
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 
-    public static RequestProvidersListC2SPacket decode(FriendlyByteBuf buf) { return new RequestProvidersListC2SPacket(); }
-
-    public static void handle(RequestProvidersListC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        var ctx = ctxSupplier.get();
+    public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            ServerPlayer player = ctx.getSender();
-            if (player == null) return;
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
@@ -47,7 +57,7 @@ public class RequestProvidersListC2SPacket {
                     slots.add(empty);
                 }
 
-                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(filteredIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                player.connection.send(new ProvidersListS2CPacket(filteredIds, names, slots));
                 return;
             }
 
@@ -66,8 +76,7 @@ public class RequestProvidersListC2SPacket {
                 names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(c));
                 slots.add(empty);
             }
-            ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+            player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
         });
-        ctx.setPacketHandled(true);
     }
 }

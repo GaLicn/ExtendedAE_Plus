@@ -6,6 +6,8 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.core.definitions.AEItems;
+import appeng.menu.AEBaseMenu;
+import appeng.api.networking.security.IActionHost;
 import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
@@ -27,9 +29,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.items.IItemHandler;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -102,8 +102,10 @@ public class ExtendedAEPatternUploadUtil {
                         if (k.contains(":")) {
                             // 形如 namespace:path
                             try {
-                                ResourceLocation rl = new ResourceLocation(k);
-                                map.put(rl, name);
+                                var rl = ResourceLocation.tryParse(k);
+                                if (rl != null) {
+                                    map.put(rl, name);
+                                }
                             } catch (Exception ignored) {}
                         } else {
                             // 视为别名：最终搜索关键字（大小写不敏感）
@@ -163,8 +165,10 @@ public class ExtendedAEPatternUploadUtil {
             // 更新内存映射
             if (key.contains(":")) {
                 try {
-                    ResourceLocation rl = new ResourceLocation(key);
-                    CUSTOM_NAMES.put(rl, cnValue);
+                    var rl = ResourceLocation.tryParse(key);
+                    if (rl != null) {
+                        CUSTOM_NAMES.put(rl, cnValue);
+                    }
                 } catch (Exception ignored) {}
             } else {
                 CUSTOM_ALIASES.put(key.toLowerCase(), cnValue);
@@ -216,11 +220,12 @@ public class ExtendedAEPatternUploadUtil {
             for (String k : toRemove) {
                 if (k.contains(":")) {
                     try {
-                        ResourceLocation rl = new ResourceLocation(k);
-                        // 仅当值匹配才移除（双重保险）
-                        String cur = CUSTOM_NAMES.get(rl);
-                        if (target.equals(cur)) {
-                            CUSTOM_NAMES.remove(rl);
+                        var rl = ResourceLocation.tryParse(k);
+                        if (rl != null) {
+                            String cur = CUSTOM_NAMES.get(rl);
+                            if (target.equals(cur)) {
+                                CUSTOM_NAMES.remove(rl);
+                            }
                         }
                     } catch (Exception ignored) {}
                 } else {
@@ -287,32 +292,7 @@ public class ExtendedAEPatternUploadUtil {
         return key.getPath();
     }
 
-    /**
-     * GTCEu 的 GTRecipe -> 搜索关键字
-     * 优先自定义中文映射；其次使用注册ID的 path；最后回退到完整ID字符串。
-     */
-    public static String mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe gtRecipe) {
-        if (gtRecipe == null) return null;
-        try {
-            // GTRecipeType.toString() 返回 registryName.toString() 即 namespace:path
-            String idStr = String.valueOf(gtRecipe.getType());
-            if (idStr == null || idStr.isBlank()) return null;
-            ResourceLocation rl = new ResourceLocation(idStr);
-            // 1) 先查别名（使用 path 作为最终搜索关键字）
-            String path = rl.getPath();
-            if (path != null) {
-                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
-                if (alias != null && !alias.isBlank()) return alias;
-            }
-            // 2) 再查完整ID映射
-            String custom = CUSTOM_NAMES.get(rl);
-            if (custom != null && !custom.isBlank()) return custom;
-            // 3) 默认返回 path 作为搜索关键字
-            return (path != null && !path.isBlank()) ? path : idStr;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
+    // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
 
     /**
      * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
@@ -326,15 +306,15 @@ public class ExtendedAEPatternUploadUtil {
             Object typeObj = mGetType.invoke(gtRecipeObj);
             String idStr = String.valueOf(typeObj);
             if (idStr == null || idStr.isBlank()) return null;
-            ResourceLocation rl = new ResourceLocation(idStr);
+            var rl = ResourceLocation.tryParse(idStr);
             // 1) 别名优先（使用 path 作为最终搜索关键字）
-            String path = rl.getPath();
+            String path = rl != null ? rl.getPath() : null;
             if (path != null) {
                 String alias = CUSTOM_ALIASES.get(path.toLowerCase());
                 if (alias != null && !alias.isBlank()) return alias;
             }
             // 2) 再查完整ID映射
-            String custom = CUSTOM_NAMES.get(rl);
+            String custom = rl != null ? CUSTOM_NAMES.get(rl) : null;
             if (custom != null && !custom.isBlank()) return custom;
             // 3) 默认返回 path 作为搜索关键字
             return (path != null && !path.isBlank()) ? path : idStr;
@@ -445,12 +425,15 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 获取 AE 网络
-        IGridNode node = menu.getNetworkNode();
-        if (node == null) {
-            sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
-            return false;
-        }
-        IGrid grid = node.getGrid();
+        IGrid grid = null;
+        try {
+            if (menu instanceof AEBaseMenu abm) {
+                Object target = abm.getTarget();
+                if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                    grid = host.getActionableNode().getGrid();
+                }
+            }
+        } catch (Throwable ignored) {}
         if (grid == null) {
             sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
             return false;
@@ -506,7 +489,7 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
-        List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
+        List<?> handlers = findAllMatrixPatternHandlers(grid);
         if (!handlers.isEmpty()) {
             for (int i = 0; i < handlers.size(); i++) {
                 var cap = handlers.get(i);
@@ -559,44 +542,11 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 在给定 AE Grid 中收集所有已成型的装配矩阵的聚合图样仓 IItemHandler（若可用）。
      */
-    private static List<IItemHandler> findAllMatrixPatternHandlers(IGrid grid) {
-        List<IItemHandler> result = new ArrayList<>();
-        try {
-            Set<TileAssemblerMatrixBase> matrices = grid.getMachines(TileAssemblerMatrixBase.class);
-            int idx = 0;
-            for (TileAssemblerMatrixBase tile : matrices) {
-                if (tile != null && tile.isFormed()) {
-                    var capOpt = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, null);
-                    if (capOpt != null) {
-                        var handler = capOpt.orElse(null);
-                        if (handler != null) {
-                            result.add(handler);
-                        }
-                    }
-                }
-                idx++;
-            }
-        } catch (Throwable ignored) {
-        }
-        return result;
+    private static List<?> findAllMatrixPatternHandlers(IGrid grid) {
+        // NeoForge 1.21 能力系统与 API 变更，此处先返回空列表，避免编译期依赖旧能力系统
+        return java.util.Collections.emptyList();
     }
 
-    /**
-     * 尝试将整个物品栈插入到 IItemHandler 的任意槽位，返回剩余物品。
-     */
-    private static ItemStack insertIntoAnySlot(IItemHandler handler, ItemStack stack) {
-        ItemStack remaining = stack.copy();
-        if (handler == null || remaining.isEmpty()) return remaining;
-        for (int i = 0; i < handler.getSlots(); i++) {
-            remaining = handler.insertItem(i, remaining, false);
-            if (remaining.isEmpty()) break;
-        }
-        return remaining;
-    }
-
-    /**
-     * 检查装配矩阵（所有已成型矩阵的图样仓）中是否已存在与给定样板完全相同的物品（含NBT）。
-     */
     private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
         if (grid == null || pattern == null || pattern.isEmpty()) return false;
         try {
@@ -606,29 +556,22 @@ public class ExtendedAEPatternUploadUtil {
                 if (inv == null) continue;
                 for (int i = 0; i < inv.size(); i++) {
                     ItemStack s = inv.getStackInSlot(i);
-                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameTags(s, pattern)) {
+                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameComponents(s, pattern)) {
                         return true;
                     }
                 }
             }
         } catch (Throwable t) {
         }
-        try {
-            // 再检查聚合能力视图
-            List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
-            for (IItemHandler h : handlers) {
-                if (h == null) continue;
-                int slots = h.getSlots();
-                for (int i = 0; i < slots; i++) {
-                    ItemStack s = h.getStackInSlot(i);
-                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameTags(s, pattern)) {
-                        return true;
-                    }
-                }
-            }
-        } catch (Throwable t) {
-        }
+        // 1.21 暂不检查聚合能力视图，能力系统适配后再补充
         return false;
+    }
+
+    /**
+     * 能力系统（IItemHandler）未迁移前的占位插入：直接返回原始栈，表示未能插入。
+     */
+    private static ItemStack insertIntoAnySlot(Object handler, ItemStack stack) {
+        return stack.copy();
     }
 
     /**
@@ -987,12 +930,16 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
 
-        // 获取 AE 网络
-        IGridNode node = menu.getNetworkNode();
-        if (node == null) {
-            return false;
-        }
-        IGrid grid = node.getGrid();
+        // 获取 AE 网络（1.21 经由 AEBaseMenu target + IActionHost）
+        IGrid grid = null;
+        try {
+            if (menu instanceof AEBaseMenu abm) {
+                Object target = abm.getTarget();
+                if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                    grid = host.getActionableNode().getGrid();
+                }
+            }
+        } catch (Throwable ignored) {}
         if (grid == null) {
             return false;
         }
@@ -1131,10 +1078,14 @@ public class ExtendedAEPatternUploadUtil {
         List<PatternContainer> list = new ArrayList<>();
         if (menu == null) return list;
         try {
-            IGridNode node = menu.getNetworkNode();
-            if (node == null) return list;
-            IGrid grid = node.getGrid();
-            if (grid == null) return list;
+        IGrid grid = null;
+        if (menu instanceof AEBaseMenu abm) {
+            Object target = abm.getTarget();
+            if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                grid = host.getActionableNode().getGrid();
+            }
+        }
+        if (grid == null) return list;
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
                     @SuppressWarnings("unchecked")
