@@ -17,7 +17,7 @@ public abstract class ContainerWirelessExPatternTerminalMixin {
 
     // 构造方法注入（显式签名），与 ExtendedAE 源码保持一致
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/xmod/wt/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0, remap = false)
-    private void init$eap(int id, net.minecraft.world.entity.player.Inventory playerInventory, Object host, CallbackInfo ci) {
+    private void init$eap(int id, net.minecraft.world.entity.player.Inventory playerInventory, com.glodblock.github.extendedae.xmod.wt.HostWirelessExPAT host, CallbackInfo ci) {
         // no-op
     }
 }
