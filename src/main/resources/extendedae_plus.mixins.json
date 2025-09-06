@@ -42,7 +42,10 @@
     "ae2.accessor.PatternAccessTermScreenAccessor",
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
-    "extendedae.client.gui.GuiExPatternProviderMixin"
+    "extendedae.client.gui.GuiExPatternProviderMixin",
+    "ae2.client.gui.PatternProviderCloseMixin",
+    "extendedae.client.gui.GuiExPatternTerminalMixin",
+    "hooks.ModelBakeryMixin"
   ],
   "injectors": {
     "defaultRequire": 1
