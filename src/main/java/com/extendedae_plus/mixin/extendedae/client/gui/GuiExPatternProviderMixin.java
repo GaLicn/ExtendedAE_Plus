@@ -10,9 +10,9 @@ import com.extendedae_plus.config.ModConfigs;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
-import com.glodblock.github.extendedae.network.EPPNetworkHandler;
-import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.Minecraft;
+import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -196,34 +196,40 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.addToLeftToolbar(this.prevPage);
         }
 
-        // 倍增/除法按钮，通过 ExtendedAE 的通用包派发
+        // 倍增/除法按钮：使用自有 C2S 包发送到服务端执行样板缩放
         this.x2Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply2"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.MUL2));
         }, NewIcon.MULTIPLY2);
         this.x2Button.setVisibility(true);
 
         this.divideBy2Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide2"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.DIV2));
         }, NewIcon.DIVIDE2);
         this.divideBy2Button.setVisibility(true);
 
         this.x10Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply10"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.MUL10));
         }, NewIcon.MULTIPLY10);
         this.x10Button.setVisibility(true);
 
         this.divideBy10Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide10"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.DIV10));
         }, NewIcon.DIVIDE10);
         this.divideBy10Button.setVisibility(true);
 
         this.divideBy5Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("divide5"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.DIV5));
         }, NewIcon.DIVIDE5);
         this.divideBy5Button.setVisibility(true);
 
         this.x5Button = new ActionEPPButton((b) -> {
-            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("multiply5"));
+            var conn = Minecraft.getInstance().getConnection();
+            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.MUL5));
         }, NewIcon.MULTIPLY5);
         this.x5Button.setVisibility(true);
 
@@ -357,119 +363,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         }
     }
 
-    /**
-     * 在服务器端执行样板缩放操作（单机模式）
-     */
-    @Unique
-    private void executePatternScalingOnServer(net.minecraft.server.level.ServerPlayer serverPlayer, String scalingType, double scaleFactor) {
-        try {
-            // 将实际逻辑切换到服务端主线程执行，避免跨线程访问导致读取到空库存
-            serverPlayer.getServer().execute(() -> {
-                try {
-                    // 直接基于容器槽位操作，完全绕开 PatternProviderLogic 及其内部字段
-                    if (!(serverPlayer.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExPatternProvider exMenu)) {
-                        return;
-                    }
-
-                    int scaled = 0;
-                    int failed = 0;
-                    int total = 0;
-                    final int scale = (int) Math.round(scaleFactor);
-                    final boolean div = !"MULTIPLY".equals(scalingType);
-
-                    java.util.List<net.minecraft.world.inventory.Slot> slots = exMenu.getSlots(appeng.menu.SlotSemantics.ENCODED_PATTERN);
-                    for (var slot : slots) {
-                        var stack = slot.getItem();
-                        if (stack.getItem() instanceof appeng.crafting.pattern.EncodedPatternItem patternItem) {
-                            total++;
-                            var detail = patternItem.decode(stack, serverPlayer.level(), false);
-                            if (detail instanceof appeng.crafting.pattern.AEProcessingPattern process) {
-                                var input = process.getSparseInputs();
-                                var output = process.getOutputs();
-
-                                // 检查是否可修改（来源：ExtendedAE ContainerPatternModifier.checkModify）
-                                if (checkModifyLikeExtendedAE(input, scale, div) && checkModifyLikeExtendedAE(output, scale, div)) {
-                                    var mulInput = new appeng.api.stacks.GenericStack[input.length];
-                                    var mulOutput = new appeng.api.stacks.GenericStack[output.length];
-                                    modifyStacksLikeExtendedAE(input, mulInput, scale, div);
-                                    modifyStacksLikeExtendedAE(output, mulOutput, scale, div);
-                                    var newPattern = appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(mulInput, mulOutput);
-                                    if (slot instanceof appeng.menu.slot.AppEngSlot as) {
-                                        as.set(newPattern);
-                                    } else {
-                                        slot.set(newPattern);
-                                    }
-                                    scaled++;
-                                } else {
-                                    failed++;
-                                }
-                            } else {
-                                // 非处理样板：跳过
-                                failed++;
-                            }
-                        }
-                    }
-
-                    // 构造结果并回显
-                    String message;
-                    if (scaled == 0) {
-                        message = String.format(
-                            "ℹ️ ExtendedAE Plus: 样板%s完成，但未处理任何样板。共发现 %d 个样板，失败 %d 个（可能全为合成样板或数量不满足条件）",
-                            div ? "除法" : "倍增", total, failed);
-                    } else if (failed > 0) {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s完成！处理了 %d 个，跳过 %d 个", div ? "除法" : "倍增", scaled, failed);
-                    } else {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个", div ? "除法" : "倍增", scaled);
-                    }
-
-                    var minecraft = net.minecraft.client.Minecraft.getInstance();
-                    if (minecraft.player != null) {
-                        minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
-                    }
-
-                } catch (Exception ignored) {
-                }
-            });
-
-        } catch (Exception ignored) {
-        }
-    }
-
-    @Unique
-    private boolean checkModifyLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks, int scale, boolean div) {
-        if (div) {
-            for (var stack : stacks) {
-                if (stack != null) {
-                    if (stack.amount() % scale != 0) {
-                        return false;
-                    }
-                }
-            }
-        } else {
-            for (var stack : stacks) {
-                if (stack != null) {
-                    long upper = 999999L * stack.what().getAmountPerUnit();
-                    if (stack.amount() * scale > upper) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    @Unique
-    private void modifyStacksLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks,
-                                            appeng.api.stacks.GenericStack[] des,
-                                            int scale,
-                                            boolean div) {
-        for (int i = 0; i < stacks.length; i++) {
-            if (stacks[i] != null) {
-                long amt = div ? stacks[i].amount() / scale : stacks[i].amount() * scale;
-                des[i] = new appeng.api.stacks.GenericStack(stacks[i].what(), amt);
-            }
-        }
-    }
+    // 本文件原包含本地样板缩放实现（单机模式）和 ExtendedAE 网络派发，已移除以兼容 1.21.1 与最小可构建集。
     
 
 }

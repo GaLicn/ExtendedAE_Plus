@@ -5,7 +5,9 @@ import net.minecraft.resources.ResourceLocation;
 
 public class NewIcon {
     @SuppressWarnings("all")
-    private static final ResourceLocation TEXTURE = new ResourceLocation(ExtendedAEPlus.MODID,"textures/gui/nicons.png");
+    // 贴图当前存放于 assets/extendedae_plus/textures/gui/nicons.png
+    // 与 MODID (extendedaeplus) 不同，因此这里直接指定贴图所在命名空间
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "textures/gui/nicons.png");
 
 
 

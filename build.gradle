@@ -127,8 +127,10 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 // 暂时排除缺少依赖的可选联动源码，待补齐依赖后再启用
 sourceSets.main.java {
+    // 让编译期能解析 ExtendedAE 的类（如 GuiExPatternProvider、ActionEPPButton 等），仅作编译期源引用
+    // 运行期仍由 CurseMaven 依赖提供真实模组 Jar
+    srcDir 'othermods/ExtendedAE-1.21-2.2.21-neoforge/src/main/java'
     // 广泛屏蔽迁移中的旧源码，仅保留模板核心类（ExtendedAEPlus、ExtendedAEPlusClient、Config）
-    exclude 'com/extendedae_plus/NewIcon.java'
     // 注意：不要屏蔽 api/**，我们有选择性 include 的接口文件需要参与编译
     include 'com/extendedae_plus/api/**'
     exclude 'com/extendedae_plus/client/**'
@@ -146,10 +148,16 @@ sourceSets.main.java {
     include 'com/extendedae_plus/mixin/ae2/accessor/**'
     // 启用对 PatternProviderLogic 的功能混入（高级阻挡/智能翻倍开关的持久化与逻辑）
     include 'com/extendedae_plus/mixin/ae2/helpers/**'
+    // 启用 AEProcessingPattern 的 mixin（提供可缩放标记）
+    include 'com/extendedae_plus/mixin/ae2/AEProcessingPatternMixin.java'
     // GUI 方案A：解禁最小 GUI 混入
     include 'com/extendedae_plus/mixin/ae2/client/gui/PatternProviderScreenMixin.java'
     include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuAdvancedMixin.java'
     include 'com/extendedae_plus/mixin/ae2/menu/PatternProviderMenuDoublingMixin.java'
+    // ExtendedAE GUI 混入（右侧外列按钮与翻页），以及其依赖的 NewIcon 类
+    // 仅包含 Provider GUI 混入（不要使用广域 exclude，以免覆盖 include）
+    include 'com/extendedae_plus/mixin/extendedae/client/gui/GuiExPatternProviderMixin.java'
+    include 'com/extendedae_plus/NewIcon.java'
     // 注意：不要屏蔽 network/**，我们已选择性 include 需要的网络文件
     // 仅解禁样板倍增核心所需的两个 util 文件
     include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
@@ -161,6 +169,7 @@ sourceSets.main.java {
     include 'com/extendedae_plus/network/ModNetwork.java'
     include 'com/extendedae_plus/network/ToggleAdvancedBlockingC2SPacket.java'
     include 'com/extendedae_plus/network/ToggleSmartDoublingC2SPacket.java'
+    include 'com/extendedae_plus/network/ScalePatternsC2SPacket.java'
     // 仅 include 需要的 util 文件（不再对 util/** 做全局排除，以免误伤）
     include 'com/extendedae_plus/util/PatternProviderDataUtil.java'
     include 'com/extendedae_plus/util/PatternProviderUIHelper.java'
@@ -205,9 +214,9 @@ dependencies {
     implementation "org.appliedenergistics:guideme:2.5.1"
     // jarJar configuration not set in this build; use implementation for API for now
     implementation "de.mari_023:ae2wtlib_api:19.2.0"
-    implementation "curse.maven:ex-pattern-provider-892005:6863556"
     implementation "curse.maven:curios-309927:6529130"
 
+    compileOnly "curse.maven:ex-pattern-provider-892005:6863556"
     compileOnly "curse.maven:applied-flux-965012:5614830"
     compileOnly "dev.emi:emi-neoforge:1.1.10+1.21"
     compileOnly "curse.maven:mega-cells-622112:6005043"
@@ -229,6 +238,7 @@ dependencies {
     runtimeOnly "curse.maven:jade-324717:5427817"
     runtimeOnly "curse.maven:mega-cells-622112:6005043"
     runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+    runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
     switch (project.findProperty('use_Xei') ?: 'emi') {

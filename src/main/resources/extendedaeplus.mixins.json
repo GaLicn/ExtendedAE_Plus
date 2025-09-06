@@ -4,12 +4,15 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ae2.accessor.PatternProviderLogicAccessor",
+    "ae2.accessor.PatternProviderLogicPatternsAccessor",
     "ae2.accessor.PatternProviderMenuAdvancedAccessor",
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
-    "ae2.helpers.PatternProviderLogicDoublingMixin"
+    "ae2.helpers.PatternProviderLogicDoublingMixin",
+    "ae2.AEProcessingPatternMixin",
+    "extendedae.client.gui.GuiExPatternProviderMixin"
   ],
   "injectors": {
     "defaultRequire": 1
