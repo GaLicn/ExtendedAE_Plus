@@ -79,12 +79,10 @@ public class ModConfigScreen extends Screen {
         int gap = 8;
         int buttonsY = y + row * rowHeight + 18;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> saveAndClose())
-                .pos(centerX - btnW - gap/2, buttonsY)
-                .size(btnW, 20)
+                .bounds(centerX - btnW - gap/2, buttonsY, btnW, 20)
                 .build());
         this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), b -> onClose())
-                .pos(centerX + gap/2, buttonsY)
-                .size(btnW, 20)
+                .bounds(centerX + gap/2, buttonsY, btnW, 20)
                 .build());
     }
 
@@ -126,7 +124,7 @@ public class ModConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(g);
+        this.renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
 
         int centerX = this.width / 2;

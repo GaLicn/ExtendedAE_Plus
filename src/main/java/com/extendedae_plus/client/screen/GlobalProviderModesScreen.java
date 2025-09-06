@@ -2,11 +2,11 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
-import com.extendedae_plus.network.ModNetwork;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPatternControllerMenu> {
     private static final Component CUSTOM_TITLE = Component.literal("样板供应器状态控制器");
@@ -29,7 +29,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
         // 行1：三个单项切换
         addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_blocking"), b ->
-                ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
@@ -37,7 +37,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 ))).bounds(x, y, w, h).build());
 
         addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_adv_blocking"), b ->
-                ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
@@ -45,7 +45,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 ))).bounds(x + w + s, y, w, h).build());
 
         addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_smart_doubling"), b ->
-                ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.NOOP,
                         GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
@@ -58,7 +58,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int totalW2 = w * 2 + s;
         int x2 = this.leftPos + (this.imageWidth - totalW2) / 2;
         addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_on"), b ->
-                ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
                         GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
                         GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
@@ -66,7 +66,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
                 ))).bounds(x2, y2, w, h).build());
 
         addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_off"), b ->
-                ModNetwork.CHANNEL.sendToServer(new GlobalToggleProviderModesC2SPacket(
+                PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
                         GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
                         GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
                         GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
@@ -95,7 +95,7 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
 
     @Override
     public void render(net.minecraft.client.gui.GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(gfx);
+        this.renderBackground(gfx, mouseX, mouseY, partialTicks);
         super.render(gfx, mouseX, mouseY, partialTicks);
         gfx.drawString(this.font, CUSTOM_TITLE, this.leftPos + 10, this.topPos + 8, 0xFFFFFF, false);
     }

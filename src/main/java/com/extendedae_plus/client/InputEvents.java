@@ -5,7 +5,6 @@ import appeng.client.gui.me.common.MEStorageScreen;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -16,6 +15,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
@@ -61,7 +61,7 @@ public final class InputEvents {
                 GenericStack stack = toGenericStack(typed);
                 if (stack != null) {
                     // 发送到服务端：若网络有库存则拉取一组到空槽，否则若可合成则打开下单界面
-                    ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+                    PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
                     // 消费此次点击，避免 JEI/原版对左键的其它处理
                     event.setCanceled(true);
                     return;
@@ -89,7 +89,7 @@ public final class InputEvents {
             if (stack == null) return;
 
             // 发送到服务端，让其验证并打开 CraftAmountMenu
-            ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+            PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
 
             // 消费此次点击，避免 JEI/原版对中键的其它处理
             event.setCanceled(true);

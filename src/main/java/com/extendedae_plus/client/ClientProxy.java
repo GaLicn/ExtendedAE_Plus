@@ -9,10 +9,15 @@ import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
  */
+@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class ClientProxy {
     private ClientProxy() {}
 
@@ -50,8 +55,13 @@ public final class ClientProxy {
         event.enqueueWork(() -> {
             // 确保在首次资源加载前完成内置模型注册（REGISTERED 保护避免重复）
             init();
-            // 菜单 -> 屏幕 绑定
-            MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
         });
+    }
+
+    @SubscribeEvent
+    public static void onRegisterScreens(RegisterMenuScreensEvent event) {
+        // 菜单 -> 屏幕 绑定
+        event.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
+                (menu, inv, title) -> new GlobalProviderModesScreen(menu, inv, title));
     }
 }
