@@ -13,6 +13,9 @@
     "ae2.AEProcessingPatternMixin",
     "ae2.autopattern.CraftingTreeNodeAccessor",
     "ae2.autopattern.CraftingTreeProcessMixin",
+    "ae2.autopattern.CraftingTreeNodeMixin",
+    "ae2.autopattern.CraftingServiceGetProvidersMixin",
+    "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
     "ae2.accessor.PatternProviderLogicPatternInputsAccessor",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
@@ -20,6 +23,8 @@
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
     "ae2.menu.PatternEncodingTermMenuMixin",
+    "ae2.menu.ContainerPatternEncodingTermMenuMixin",
+    "ae2.menu.MEStorageMenuMixin",
     "ae2.accessor.MEStorageMenuAccessor",
     "ae2.accessor.PatternEncodingTermMenuAccessor"
   ],

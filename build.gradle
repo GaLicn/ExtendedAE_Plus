@@ -134,13 +134,8 @@ sourceSets.main.java {
     include 'com/extendedae_plus/**'
     // 允许 accessor
     include 'com/extendedae_plus/mixin/**/accessor/**'
-    // 排除具体的非 accessor mixin 目录
-    // AE2 相关非 accessor（已启用，需要参与编译与运行）
-    // 其他模块的非 accessor mixin
-    exclude 'com/extendedae_plus/mixin/ae2WTlib/**'
-    // 允许 JEI/REI 捕获混入参与编译（用于记录 lastProcessingName）
-    // 排除顶层 mixin 文件
-    exclude 'com/extendedae_plus/mixin/PickFromWirelessMixin.java'
+    // 放开此前被排除的 mixin 源码，便于完整移植功能；是否实际注入由 mixins.json 决定
+    // 注意：可选联动（如 ae2WTlib）未在 mixins.json 注册时不会注入，避免运行期崩溃
 }
 
 configurations {
