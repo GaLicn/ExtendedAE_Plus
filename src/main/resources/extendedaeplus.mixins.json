@@ -27,7 +27,8 @@
     "ae2.accessor.AEBaseScreenAccessor",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
-    "extendedae.accessor.GuiExPatternTerminalAccessor"
+    "extendedae.accessor.GuiExPatternTerminalAccessor",
+    "ae2WTlib.WETScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

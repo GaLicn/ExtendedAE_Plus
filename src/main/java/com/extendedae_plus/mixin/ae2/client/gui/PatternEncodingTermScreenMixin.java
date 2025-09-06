@@ -42,7 +42,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> PacketDistributor
-                    .sendToServer(new com.extendedae_plus.network.RequestProvidersListC2SPacket())) {
+                    .sendToServer(com.extendedae_plus.network.RequestProvidersListC2SPacket.INSTANCE)) {
                 private final float eap$scale = 0.75f; // 约 12x12
 
                 @Override
