@@ -14,29 +14,17 @@ public final class ModConfigs {
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
-        builder.push("extendedae_plus");
+
+        // General settings
+        builder.push("general");
         PAGE_MULTIPLIER = builder
                 .comment(
-                        "扩展样板供应器总槽位容量的倍率。",
-                        "基础为36，每页仍显示36格，倍率会增加总页数/总容量。",
+                        "扩展样板供应器总槽位容量的倍率",
+                        "基础为36，每页仍显示36格，倍率会增加总页数/总容量",
                         "建议范围 1-16")
                 .defineInRange("pageMultiplier", 1, 1, 64);
 
-        // 无线收发器：最大连接距离（单位：方块）。
-        // 一对多从端连接主端时，将以该值作为范围限制。
-        WIRELESS_MAX_RANGE = builder
-                .comment(
-                        "无线收发器最大连接距离（单位：方块）",
-                        "从端与主端的直线距离需小于等于该值才会建立连接。")
-                .defineInRange("wirelessMaxRange", 256.0D, 1.0D, 4096.0D);
-
-        // 是否允许跨维度连接（忽略维度差异进行频道传输）。
-        WIRELESS_CROSS_DIM_ENABLE = builder
-                .comment(
-                        "是否允许无线收发器跨维度建立连接",
-                        "开启后，从端可连接到不同维度的主端（忽略距离限制）")
-                .define("wirelessCrossDimEnable", true);
-
+        // 是否显示样板编码玩家（通用）
         SHOW_ENCOD_PATTERN_PLAYER = builder
                 .comment(
                         "是否显示样板编码玩家",
@@ -44,7 +32,21 @@ public final class ModConfigs {
                 )
                 .define("showEncoderPatternPlayer", true);
 
-        // 智能倍增后，是否在样板供应器间轮询分配请求量（开启：按 provider 均分；关闭：不拆分）
+        // 模式访问终端（ExtendedAE 图样终端）默认是否显示槽位渲染（SlotsRow）。
+        // true: 默认显示（可通过界面按钮临时隐藏）；false: 默认隐藏（可通过按钮显示）
+        PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT = builder
+                .comment(
+                        "样板终端默认是否显示槽位",
+                        "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
+                )
+                .define("patternTerminalShowSlotsDefault", true);
+
+        // end general
+        builder.pop();
+
+        // Smart-scaling group
+        builder.push("smartScaling");
+        // 智能倍增：是否在样板供应器间轮询分配请求量（开启：按 provider 均分；关闭：不拆分）
         PROVIDER_ROUND_ROBIN_ENABLE = builder
                 .comment(
                         "智能倍增时是否对样板供应器轮询分配",
@@ -61,15 +63,28 @@ public final class ModConfigs {
                         "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模")
                 .defineInRange("smartScalingMaxMultiplier", 0, 0, 1048576);
 
-        // 模式访问终端（ExtendedAE 图样终端）默认是否显示槽位渲染（SlotsRow）。
-        // true: 默认显示（可通过界面按钮临时隐藏）；false: 默认隐藏（可通过按钮显示）
-        PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT = builder
+        builder.pop(); // pop smart
+
+        // Wireless settings
+        builder.push("wireless");
+        // 无线收发器：最大连接距离（单位：方块）。
+        // 一对多从端连接主端时，将以该值作为范围限制。
+        WIRELESS_MAX_RANGE = builder
                 .comment(
-                        "样板终端默认是否显示槽位",
-                        "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
-                )
-                .define("patternTerminalShowSlotsDefault", true);
-        builder.pop();
+                        "无线收发器最大连接距离（单位：方块）",
+                        "从端与主端的直线距离需小于等于该值才会建立连接。")
+                .defineInRange("wirelessMaxRange", 256.0D, 1.0D, 4096.0D);
+
+        // 是否允许跨维度连接（忽略维度差异进行频道传输）。
+        WIRELESS_CROSS_DIM_ENABLE = builder
+                .comment(
+                        "是否允许无线收发器跨维度建立连接",
+                        "开启后，从端可连接到不同维度的主端（忽略距离限制）")
+                .define("wirelessCrossDimEnable", true);
+
+        builder.pop(); // pop wireless
+
+//        builder.pop(); // pop extendedae_plus
         COMMON_SPEC = builder.build();
     }
 
