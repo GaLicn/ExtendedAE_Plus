@@ -189,8 +189,9 @@ sourceSets.main.java {
     include 'com/extendedae_plus/mixin/extendedae/client/gui/GuiExPatternProviderMixin.java'
     include 'com/extendedae_plus/NewIcon.java'
 
-    // Note: 暂时不编译 Curios 专用宿主/定位器（依赖 ae2wtlib API 的签名差异未完成适配）
-    // include 'com/extendedae_plus/menu/locator/CuriosItemLocator.java'
+    // 重新启用已适配的 Curios 定位器（基于 wtlib API 包）
+    include 'com/extendedae_plus/menu/locator/CuriosItemLocator.java'
+    // 仍然暂不编译自定义宿主，等待完全适配后再启用
     // include 'com/extendedae_plus/menu/host/CuriosWirelessTerminalMenuHost.java'
     // include 'com/extendedae_plus/menu/host/CuriosWTMenuHost.java'
 }

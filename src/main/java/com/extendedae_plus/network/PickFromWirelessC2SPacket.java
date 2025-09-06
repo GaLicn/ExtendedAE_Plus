@@ -8,8 +8,11 @@ import appeng.api.storage.StorageHelper;
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator;
 import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
+import de.mari_023.ae2wtlib.api.registration.WTDefinition;
+import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -73,13 +76,36 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             if (terminal.isEmpty()) return;
 
             IGrid grid;
-            // 统一走 AE2 原生路径处理（包含 Curios 情况）：
-            WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-            WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-            if (wt == null) return;
-            grid = wt.getLinkedGrid(terminal, level, null);
-            if (grid == null) return;
-            if (!wt.hasPower(player, 0.5, terminal)) return;
+            boolean usedWtHost = false;
+            String curiosSlotId = located.getCuriosSlotId();
+            int curiosIndex = located.getCuriosIndex();
+            if (curiosSlotId != null && curiosIndex >= 0) {
+                WTDefinition def = WTDefinition.ofOrNull(terminal);
+                if (def != null) {
+                    WTMenuHost wtHost = def.wTMenuHostFactory().create(
+                            def.item(),
+                            player,
+                            new CuriosItemLocator(curiosSlotId, curiosIndex),
+                            (p, sub) -> {}
+                    );
+                    if (wtHost != null && wtHost.getActionableNode() != null && wtHost.getActionableNode().getGrid() != null) {
+                        grid = wtHost.getActionableNode().getGrid();
+                        usedWtHost = true;
+                    } else {
+                        return;
+                    }
+                } else {
+                    return;
+                }
+            } else {
+                // AE2 原生路径
+                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
+                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
+                if (wt == null) return;
+                grid = wt.getLinkedGrid(terminal, level, null);
+                if (grid == null) return;
+                if (!wt.hasPower(player, 0.5, terminal)) return;
+            }
 
             // 计算 pick 对应的物品：使用客户端实际命中位置，保证多部件方块能返回正确克隆物品
             BlockHitResult bhr = new BlockHitResult(msg.hitLoc, msg.face, msg.pos, true);
@@ -134,10 +160,12 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
                 inv.setItem(free, targetKey.toStack((int) extracted));
             }
 
-            WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-            WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-            if (wt2 != null) {
-                wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
+            if (!usedWtHost) {
+                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
+                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
+                if (wt2 != null) {
+                    wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
+                }
             }
             located.commit();
             player.containerMenu.broadcastChanges();
