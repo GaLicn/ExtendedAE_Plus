@@ -44,7 +44,6 @@
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "ae2.client.gui.PatternProviderCloseMixin",
-    "extendedae.client.gui.GuiExPatternTerminalMixin",
     "hooks.ModelBakeryMixin"
   ],
   "injectors": {
