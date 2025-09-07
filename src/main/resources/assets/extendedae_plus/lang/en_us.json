@@ -27,14 +27,22 @@
   "extendedae_plus.tooltip.locked": "Locked: %s"
   ,
   "screen.extendedae_plus.title": "ExtendedAE Plus Config",
-  "config.extendedae_plus.pageMultiplier": "Pattern Provider Page Multiplier",
-  "config.extendedae_plus.pageMultiplier_with_range": "Pattern Provider Page Multiplier (1-64)",
-  "config.extendedae_plus.wirelessMaxRange": "Wireless Max Range",
-  "config.extendedae_plus.wirelessMaxRange_with_range": "Wireless Max Range (1-4096)",
-  "config.extendedae_plus.wirelessCrossDimEnable": "Allow Wireless Cross-Dimension",
-  "config.extendedae_plus.providerRoundRobinEnable": "Enable Provider Round-Robin (Smart Doubling)",
-  "config.extendedae_plus.state_on": "On",
-  "config.extendedae_plus.state_off": "Off",
-  "config.extendedae_plus.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
-  "config.extendedae_plus.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier (0 = Unlimited)"
+  "config.extendedae_plus": "ExtendedAE Plus",
+  "extendedae_plus.configuration.general": "General",
+  "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Page Multiplier",
+  "extendedae_plus.configuration.pageMultiplier_with_range": "Pattern Provider Page Multiplier (1-64)",
+  "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Encoder Player",
+  "extendedae_plus.configuration.providerRoundRobinEnable": "Enable Provider Round-Robin",
+  "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots by Default",
+
+  "extendedae_plus.configuration.smartScaling": "Smart Scaling",
+  "extendedae_plus.configuration.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
+  "extendedae_plus.configuration.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier (0 = Unlimited)",
+
+  "extendedae_plus.configuration.wireless": "WirelessTransceiverBlock",
+  "extendedae_plus.configuration.wirelessMaxRange": "Wireless Max Range",
+  "extendedae_plus.configuration.wirelessMaxRange_with_range": "Wireless Max Range (1-4096)",
+  "extendedae_plus.configuration.wirelessCrossDimEnable": "Allow Wireless Cross-Dimension",
+  "extendedae_plus.configuration.state_on": "On",
+  "extendedae_plus.configuration.state_off": "Off"
 }
