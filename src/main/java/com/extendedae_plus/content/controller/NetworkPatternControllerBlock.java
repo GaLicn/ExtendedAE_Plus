@@ -31,7 +31,8 @@ public class NetworkPatternControllerBlock extends Block implements EntityBlock 
         if (!level.isClientSide && player instanceof ServerPlayer sp) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof MenuProvider provider) {
-                sp.openMenu(provider);
+                // 关键：将方块位置写入缓冲，客户端菜单读取以便按钮发包附带正确坐标
+                sp.openMenu(provider, buf -> buf.writeBlockPos(pos));
             }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
@@ -42,7 +43,8 @@ public class NetworkPatternControllerBlock extends Block implements EntityBlock 
         if (!level.isClientSide && player instanceof ServerPlayer sp) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof MenuProvider provider) {
-                sp.openMenu(provider);
+                // 同上：无手持物品时也写入 BlockPos
+                sp.openMenu(provider, buf -> buf.writeBlockPos(pos));
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

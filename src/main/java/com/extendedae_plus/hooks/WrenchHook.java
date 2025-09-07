@@ -90,12 +90,26 @@ public final class WrenchHook {
             // 未潜行 + 扳手：切换锁定状态
             BlockEntity be = level.getBlockEntity(hit.getBlockPos());
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                boolean newLocked = !te.isLocked();
-                te.setLocked(newLocked);
-                // 提示玩家
-                player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
-                // 轻微反馈音效
-                level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
+                // 仅在服务端切换与同步，避免仅客户端生效导致看起来“无效果”
+                if (!level.isClientSide) {
+                    boolean newLocked = !te.isLocked();
+                    te.setLocked(newLocked);
+                    // 同步方块更新到客户端
+                    var pos = hit.getBlockPos();
+                    BlockState state = level.getBlockState(pos);
+                    try {
+                        level.sendBlockUpdated(pos, state, state, 3);
+                    } catch (Throwable t) {
+                        ExtendedAEPlus.LOGGER.debug("sendBlockUpdated failed: {}", t.toString());
+                    }
+                    // 提示玩家（服务端消息下发到客户端）
+                    player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
+                    // 轻微反馈音效
+                    level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
+                    ExtendedAEPlus.LOGGER.debug("Wrench toggle lock at {} -> {}", pos, newLocked);
+                } else {
+                    ExtendedAEPlus.LOGGER.debug("Client received wrench toggle intent (no-op on client)");
+                }
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));

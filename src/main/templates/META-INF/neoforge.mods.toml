@@ -86,6 +86,15 @@ config="${mod_id}.mixins.json"
     ordering="NONE"
     side="BOTH"
 
+# Require ExtendedAE (ExtendedAE-1.21-2.2.21-neoforge) to be present
+[[dependencies.${mod_id}]]
+    modId="extendedae"
+    type="required"
+    # Use a permissive range to tolerate upstream version string variations (e.g. 1.21-2.2.21-neoforge)
+    versionRange="*"
+    ordering="AFTER"
+    side="BOTH"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.
