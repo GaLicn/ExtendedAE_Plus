@@ -23,7 +23,7 @@ import java.util.Map;
  * 用于获取样板供应器中的所有样板数据，包括输入输出物品的数量信息
  */
 public class PatternProviderDataUtil {
-    private static final boolean DEBUG = true; // 临时诊断开关，发布可设为 false
+    private static final boolean DEBUG = false; // 临时诊断开关，发布可设为 false
 
     /**
      * 样板数据类，包含样板的输入输出信息
