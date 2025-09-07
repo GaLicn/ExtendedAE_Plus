@@ -141,22 +141,16 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
 
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                // 通过反射调用 ExtendedAE 的网络发送（软依赖）
+                // 改用我们自己的网络包，直接将玩家槽位与选择的供应器ID发送到服务器
                 try {
-                    Class<?> EPPNetworkHandlerClass = Class.forName("com.glodblock.github.extendedae.network.EPPNetworkHandler");
-                    Object handlerInstance = EPPNetworkHandlerClass.getField("INSTANCE").get(null);
-
-                    Class<?> packetClass = Class.forName("com.glodblock.github.glodium.network.packet.CGenericPacket");
-                    Constructor<?> constructor = packetClass.getConstructor(String.class, Object[].class);
-                    Object packet = constructor.newInstance("upload", new Object[]{playerSlotIndex, eap$currentlyChoicePatterProvider});
-
-                    Class<?> iMessage = Class.forName("com.glodblock.github.glodium.network.packet.IMessage");
-                    Method sendToServer = EPPNetworkHandlerClass.getMethod("sendToServer", iMessage);
-
-                    sendToServer.invoke(handlerInstance, packet);
+                    PacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
+                            playerSlotIndex,
+                            eap$currentlyChoicePatterProvider
+                    ));
                 } catch (Throwable t) {
+                    // 理论上不会失败，若失败则给出简要提示
                     this.minecraft.player.displayClientMessage(
-                            Component.literal("❌ ExtendedAE Plus: 未找到 ExtendedAE 网络支持（可能未安装或版本不兼容）"),
+                            Component.literal("❌ ExtendedAE Plus: 客户端发送上传请求失败"),
                             true
                     );
                 }

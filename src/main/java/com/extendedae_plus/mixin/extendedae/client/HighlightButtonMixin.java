@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.extendedae.client;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -55,7 +56,23 @@ public abstract class HighlightButtonMixin {
 						boolean posEqual = Objects.equals(btnPos, infoPos);
 						boolean faceEqual = (btnFace == null && infoFace == null) || Objects.equals(btnFace, infoFace);
 						if (posEqual && faceEqual) {
-							// 当前仅执行高亮和坐标提示功能，避免反射调用不存在的方法导致告警。
+							// 选中当前供应器：使用 mixin 新增的 setter（通过反射调用以兼容编译期）
+							try {
+								long serverId = (long) entry.getKey();
+								var setter = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
+								setter.setAccessible(true);
+								setter.invoke(terminal, serverId);
+
+								// 提示玩家已选择供应器
+								if (minecraft.player != null) {
+									minecraft.player.displayClientMessage(
+										Component.literal("ExtendedAE Plus: 已选择样板供应器 (ID=" + serverId + ")，可按住Shift左键快速上传样板"),
+										true
+									);
+								}
+							} catch (Throwable t2) {
+								LOGGER.warn("设置当前样板供应器ID失败", t2);
+							}
 							break;
 						}
 					}
@@ -66,4 +83,3 @@ public abstract class HighlightButtonMixin {
 		}
 	}
 }
- 
