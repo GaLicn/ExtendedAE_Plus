@@ -32,7 +32,6 @@ public abstract class HighlightButtonMixin {
 					if (btnPos == null) {
 						return;
 					}
-
 					var fFace = HighlightButton.class.getDeclaredField("face");
 					fFace.setAccessible(true);
 					Object btnFace = fFace.get(hb); // 允许为 null：方块形

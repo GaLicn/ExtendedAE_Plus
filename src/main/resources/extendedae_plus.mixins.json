@@ -26,7 +26,11 @@
     "ae2.menu.ContainerPatternEncodingTermMenuMixin",
     "ae2.menu.MEStorageMenuMixin",
     "ae2.accessor.MEStorageMenuAccessor",
-    "ae2.accessor.PatternEncodingTermMenuAccessor"
+    "ae2.accessor.PatternEncodingTermMenuAccessor",
+    "ae2.CraftingCPUClusterMixin",
+    "ae2.EncodedPatternItemMixin",
+    "ae2.QuartzCuttingKnifeItemMixin",
+    "ae2WTlib.ContainerUWirelessExPatternTerminalMixin"
   ],
   "client": [
     "ae2.client.gui.AEBaseScreenMixin",
@@ -44,7 +48,11 @@
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "ae2.client.gui.PatternProviderCloseMixin",
-    "hooks.ModelBakeryMixin"
+    "hooks.ModelBakeryMixin",
+    "ae2.accessor.AEBaseScreenInvoker",
+    "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
+    "extendedae.client.HighlightButtonMixin",
+    "PickFromWirelessMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.Item;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,7 +20,7 @@ import java.util.List;
 public class EncodedPatternItemMixin {
     // 客户端：在 HoverText 显示样板的编码玩家
     @Inject(method = "appendHoverText", at = @At("TAIL"))
-    public void epp$appendHoverText(ItemStack stack, Level level, List<Component> lines, TooltipFlag advancedTooltips, CallbackInfo ci){
+    public void epp$appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> lines, TooltipFlag advancedTooltips, CallbackInfo ci){
         if (ModConfigs.SHOW_ENCOD_PATTERN_PLAYER.get()) {
             var customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
             var tag = customData.copyTag();
