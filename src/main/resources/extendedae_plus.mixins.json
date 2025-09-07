@@ -39,6 +39,8 @@
     "ae2.client.gui.SlotGridLayoutMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.AE2JeiEncodePatternTransferHandlerMixin",
+    "jei.EncodingHelperMixin",
+    "jei.accessor.BookmarkOverlayAccessor",
     "ae2.accessor.AEBaseScreenAccessor",
     "ae2.accessor.MEStorageScreenAccessor",
     "accessor.AbstractContainerScreenAccessor",

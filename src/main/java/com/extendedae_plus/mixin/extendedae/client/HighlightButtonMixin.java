@@ -55,10 +55,7 @@ public abstract class HighlightButtonMixin {
 						boolean posEqual = Objects.equals(btnPos, infoPos);
 						boolean faceEqual = (btnFace == null && infoFace == null) || Objects.equals(btnFace, infoFace);
 						if (posEqual && faceEqual) {
-							long serverId = entry.getKey();
-							var setMethod = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
-							setMethod.setAccessible(true);
-							setMethod.invoke(terminal, serverId);
+							// 当前仅执行高亮和坐标提示功能，避免反射调用不存在的方法导致告警。
 							break;
 						}
 					}
@@ -68,4 +65,5 @@ public abstract class HighlightButtonMixin {
 			}
 		}
 	}
-} 
+}
+ 

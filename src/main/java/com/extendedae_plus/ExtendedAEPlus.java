@@ -9,6 +9,7 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModCreativeTabs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.init.ModCapabilities;
 import com.extendedae_plus.network.ModNetwork;
 
 import net.minecraft.resources.ResourceLocation;
@@ -49,6 +50,8 @@ public class ExtendedAEPlus {
         modEventBus.addListener(this::commonSetup);
         // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
+        // 注册能力：让 AE2 电缆识别我们的 In-World Grid Node Host
+        modEventBus.addListener(ModCapabilities::onRegisterCapabilities);
 
         // 注册本模组方块/物品/创造物品栏
         ModBlocks.BLOCKS.register(modEventBus);
