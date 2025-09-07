@@ -71,10 +71,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Unique
     private boolean eap$debugLoggedOnce = false;
-    @Shadow(remap = false) private AETextField searchOutField;
-    @Shadow(remap = false) private AETextField searchInField;
-    @Shadow(remap = false) private Set<ItemStack> matchedStack;
-    @Shadow(remap = false) private Set<PatternContainerRecord> matchedProvider;
+
 
     public GuiExPatternTerminalMixin(AEBaseMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -262,7 +259,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.eap$currentlyChoicePatterProvider = -1;
     }
 
-    @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false)
+    @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false, require = 0)
     private void injectConstructor(com.glodblock.github.extendedae.container.ContainerExPatternTerminal menu,
                                    Inventory playerInventory,
                                    Component title,
@@ -374,7 +371,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.eap$openUIButtons.clear();
     }
 
-    @Inject(method = "refreshList", at = @At("HEAD"), remap = false)
+    @Inject(method = "refreshList", at = @At("HEAD"), remap = false, require = 0)
     private void onRefreshListStart(CallbackInfo ci) {
         // 更新按钮图标
         if (this.eap$toggleSlotsButton != null) {
@@ -387,7 +384,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.eap$openUIButtons.clear();
     }
 
-    @Inject(method = "refreshList", at = @At("TAIL"), remap = false)
+    @Inject(method = "refreshList", at = @At("TAIL"), remap = false, require = 0)
     private void onRefreshListEnd(CallbackInfo ci) {
 
         // 在refreshList结束后，根据showSlots状态过滤SlotsRow
@@ -489,7 +486,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         }
     }
 
-    @Inject(method = "drawFG", at = @At("TAIL"), remap = false)
+    @Inject(method = "drawFG", at = @At("TAIL"), remap = false, require = 0)
     private void eap$afterDrawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, CallbackInfo ci) {
         // 动态放置/创建每个组标题后的“打开UI”按钮
         try {
@@ -498,13 +495,21 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             java.util.ArrayList<?> rows = acc.getRows();
             int currentScroll = acc.getScrollbar().getCurrentScroll();
 
-            // 直接引用目标类以获取其静态常量
-            Class<?> cls = GuiExPatternTerminal.class;
-            int GUI_PADDING_X = getIntConst(cls, "GUI_PADDING_X", 22);
-            int GUI_PADDING_Y = getIntConst(cls, "GUI_PADDING_Y", 6);
-            int GUI_HEADER_HEIGHT = getIntConst(cls, "GUI_HEADER_HEIGHT", 51);
-            int ROW_HEIGHT = getIntConst(cls, "ROW_HEIGHT", 18);
-            int TEXT_MAX_WIDTH = getIntConst(cls, "TEXT_MAX_WIDTH", 155);
+            // 通过反射获取目标类静态常量，避免直接依赖可选模组类
+            int GUI_PADDING_X = 22;
+            int GUI_PADDING_Y = 6;
+            int GUI_HEADER_HEIGHT = 51;
+            int ROW_HEIGHT = 18;
+            int TEXT_MAX_WIDTH = 155;
+            try {
+                Class<?> cls = Class.forName("com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal");
+                GUI_PADDING_X = getIntConst(cls, "GUI_PADDING_X", GUI_PADDING_X);
+                GUI_PADDING_Y = getIntConst(cls, "GUI_PADDING_Y", GUI_PADDING_Y);
+                GUI_HEADER_HEIGHT = getIntConst(cls, "GUI_HEADER_HEIGHT", GUI_HEADER_HEIGHT);
+                ROW_HEIGHT = getIntConst(cls, "ROW_HEIGHT", ROW_HEIGHT);
+                TEXT_MAX_WIDTH = getIntConst(cls, "TEXT_MAX_WIDTH", TEXT_MAX_WIDTH);
+            } catch (Throwable ignored) {
+            }
 
             int visibleRows = acc.getVisibleRows();
 
@@ -547,16 +552,78 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         } catch (Throwable ignored) {
         }
 
-        // 原有的搜索高亮逻辑
-        // 仅当任一搜索框非空时绘制叠加层（与原版行为保持一致）
-        boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue().isEmpty())
-                || (this.searchInField != null && !this.searchInField.getValue().isEmpty());
-        if (!searchActive) {
-            return;
-        }
+        // 原有的搜索高亮逻辑（使用反射以兼容不同版本的 ExtendedAE GUI）
+        try {
+            // 仅当任一搜索框非空时绘制叠加层
+            boolean searchActive = false;
+            try {
+                var fOut = this.getClass().getDeclaredField("searchOutField");
+                fOut.setAccessible(true);
+                Object outField = fOut.get(this);
+                if (outField != null) {
+                    var mGetVal = outField.getClass().getMethod("getValue");
+                    Object val = mGetVal.invoke(outField);
+                    if (val instanceof String s && !s.isEmpty()) {
+                        searchActive = true;
+                    }
+                }
+            } catch (NoSuchFieldException ignored) {
+            }
+            if (!searchActive) {
+                try {
+                    var fIn = this.getClass().getDeclaredField("searchInField");
+                    fIn.setAccessible(true);
+                    Object inField = fIn.get(this);
+                    if (inField != null) {
+                        var mGetVal = inField.getClass().getMethod("getValue");
+                        Object val = mGetVal.invoke(inField);
+                        if (val instanceof String s && !s.isEmpty()) {
+                            searchActive = true;
+                        }
+                    }
+                } catch (NoSuchFieldException ignored) {
+                }
+            }
 
-        // 使用 GuiUtil 的通用绘制方法绘制槽位高亮（包含彩虹流转效果）
-        GuiUtil.drawPatternSlotHighlights(guiGraphics, this.menu.slots, this.matchedStack, this.matchedProvider);
+            if (!searchActive) {
+                return;
+            }
+
+            // 读取 matchedStack 与 matchedProvider
+            Set<ItemStack> matchedStack = null;
+            Set<PatternContainerRecord> matchedProvider = null;
+            try {
+                var fMs = this.getClass().getDeclaredField("matchedStack");
+                fMs.setAccessible(true);
+                Object ms = fMs.get(this);
+                if (ms instanceof Set<?> s) {
+                    // 原始是 Set<ItemStack>
+                    @SuppressWarnings("unchecked")
+                    Set<ItemStack> cast = (Set<ItemStack>) (Set<?>) s;
+                    matchedStack = cast;
+                }
+            } catch (NoSuchFieldException ignored) {
+            }
+            try {
+                var fMp = this.getClass().getDeclaredField("matchedProvider");
+                fMp.setAccessible(true);
+                Object mp = fMp.get(this);
+                if (mp instanceof Set<?> s) {
+                    @SuppressWarnings("unchecked")
+                    Set<PatternContainerRecord> cast = (Set<PatternContainerRecord>) (Set<?>) s;
+                    matchedProvider = cast;
+                }
+            } catch (NoSuchFieldException ignored) {
+            }
+
+            if (matchedStack == null || matchedProvider == null) {
+                return; // 缺少必要数据则不绘制
+            }
+
+            // 使用 GuiUtil 的通用绘制方法绘制槽位高亮（包含彩虹流转效果）
+            GuiUtil.drawPatternSlotHighlights(guiGraphics, this.menu.slots, matchedStack, matchedProvider);
+        } catch (Throwable ignored) {
+        }
 
     }
 
