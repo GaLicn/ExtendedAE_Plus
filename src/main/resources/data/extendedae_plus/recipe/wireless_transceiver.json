@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "RRR",
+    "RLR",
+    "RRR"
+  ],
+  "key": {
+    "R": { "item": "ae2:quantum_ring" },
+    "L": { "item": "ae2:quantum_link" }
+  },
+  "result": {
+    "id": "extendedae_plus:wireless_transceiver",
+    "count": 1
+  }
+}
