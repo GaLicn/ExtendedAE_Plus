@@ -4,13 +4,12 @@ import appeng.client.render.crafting.CraftingCubeModel;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
-import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
+import com.extendedae_plus.init.ModMenuTypes;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
@@ -20,7 +19,10 @@ public final class ClientProxy {
 
     private static boolean REGISTERED = false;
 
-    public static void init() {
+    /**
+     * 注册内置模型（formed 模型等）。可被 ModelEvent 或启动阶段直接调用。
+     */
+    public static void initBuiltInModels() {
         if (REGISTERED) return;
         REGISTERED = true;
         // 注册四种形成态模型为内置模型
@@ -46,17 +48,10 @@ public final class ClientProxy {
     }
 
     /**
-     * 客户端设置阶段：延迟执行需要访问注册对象的客户端注册。
+     * 将菜单类型与对应的屏幕绑定。
      */
-    public static void onClientSetup(final FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            // 确保在首次资源加载前完成内置模型注册（REGISTERED 保护避免重复）
-            init();
-            // 仅在客户端设置阶段执行与 UI 相关的一次性绑定
-            registerConfigScreen();
-            // 菜单 -> 屏幕 绑定
-            MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
-        });
+    public static void registerMenuScreens() {
+        MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
     }
 
     /**
@@ -68,7 +63,7 @@ public final class ClientProxy {
         ModLoadingContext.get().registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, parent) -> new com.extendedae_plus.client.ModConfigScreen(parent))
+                        (mc, parent) -> new ModConfigScreen(parent))
         );
     }
 }
