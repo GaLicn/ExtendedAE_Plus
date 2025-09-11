@@ -1,11 +1,11 @@
-package com.extendedae_plus.menu;
+package com.extendedae_plus.ae.menu;
 
 import appeng.core.definitions.AEItems;
 import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
+import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.screen.EntitySpeedTickerScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
 

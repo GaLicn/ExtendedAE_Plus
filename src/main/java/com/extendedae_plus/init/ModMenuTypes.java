@@ -2,8 +2,8 @@ package com.extendedae_plus.init;
 
 import appeng.menu.implementations.MenuTypeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
-import com.extendedae_plus.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;

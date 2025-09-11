@@ -1,4 +1,4 @@
-package com.extendedae_plus.items;
+package com.extendedae_plus.ae.items;
 
 import appeng.items.parts.PartItem;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;

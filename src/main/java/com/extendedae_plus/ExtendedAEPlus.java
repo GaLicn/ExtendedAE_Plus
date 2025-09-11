@@ -2,13 +2,13 @@ package com.extendedae_plus;
 
 import appeng.init.client.InitScreens;
 import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.ClientProxy;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
-import com.extendedae_plus.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.network.ModNetwork;
-import com.extendedae_plus.screen.EntitySpeedTickerScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;

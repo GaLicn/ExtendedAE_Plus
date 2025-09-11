@@ -1,8 +1,8 @@
-package com.extendedae_plus.screen;
+package com.extendedae_plus.ae.screen;
 
 import appeng.client.gui.implementations.UpgradeableScreen;
 import appeng.client.gui.style.ScreenStyle;
-import com.extendedae_plus.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.util.PowerUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
