@@ -25,21 +25,21 @@
     },
     "speed": {
       "position": {
-        "top": 45,
+        "top": 35,
         "left": 88
       },
       "align": "CENTER"
     },
     "energy": {
       "position": {
-        "top": 60,
+        "top": 50,
         "left": 88
       },
       "align": "CENTER"
     },
     "power_ratio": {
       "position": {
-        "top": 75,
+        "top": 65,
         "left": 88
       },
       "align": "CENTER"
@@ -47,7 +47,7 @@
     ,
     "multiplier": {
       "position": {
-        "top": 90,
+        "top": 80,
         "left": 88
       },
       "align": "CENTER"
