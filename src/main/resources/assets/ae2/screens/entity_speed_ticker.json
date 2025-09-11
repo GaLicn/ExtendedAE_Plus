@@ -44,6 +44,14 @@
       },
       "align": "CENTER"
     }
+    ,
+    "multiplier": {
+      "position": {
+        "top": 90,
+        "left": 88
+      },
+      "align": "CENTER"
+    }
   },
   "widgets": {
     "toolbox": {

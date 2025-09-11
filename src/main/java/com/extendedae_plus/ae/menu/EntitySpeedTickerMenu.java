@@ -5,9 +5,13 @@ import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.util.ConfigParsingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.registries.ForgeRegistries;
 
 // 实体加速器菜单，负责与客户端界面同步数据
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
@@ -15,6 +19,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     public int speedCardCount;
     // 已安装的能量卡数量
     public int energyCardCount;
+    // 当前生效的倍率（从配置中读取并同步）
+    public double multiplier = 1.0;
 
     // 构造方法，初始化菜单并与部件绑定
     public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
@@ -30,6 +36,22 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         // 重新统计速度卡和能量卡数量
         this.speedCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.SPEED_CARD);
         this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+
+        // 计算当前面向方块的倍率（服务器端），并同步给客户端
+        double mult = 1.0;
+        try {
+            BlockEntity target = getHost().getLevel().getBlockEntity(getHost().getBlockEntity().getBlockPos().relative(getHost().getSide()));
+            if (target != null) {
+                String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
+                for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.EntitySpeedTickerMultipliers.get())) {
+                    if (me.pattern.matcher(blockId).matches()) {
+                        mult = Math.max(mult, me.multiplier);
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        this.multiplier = mult;
+
         // 如果在客户端，刷新界面
         if (isClientSide()) {
             if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {

@@ -37,7 +37,7 @@ public final class PowerUtils {
      * @return 原始能耗
      */
     public static double getRawPower(int speedCardCount) {
-        double base = ModConfigs.EntityTickerCost.get();
+        double base = ModConfigs.EntitySpeedTickerCost.get();
         return base * getGrowthFactor(speedCardCount);
     }
 

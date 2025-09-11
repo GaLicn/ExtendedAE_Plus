@@ -3,6 +3,7 @@
   "screen.extendedae_plus.entity_speed_ticker.energy": "Energy Usage: %s FE/t",
   "screen.extendedae_plus.entity_speed_ticker.power_ratio": "Power ratio: %s",
   "screen.extendedae_plus.entity_speed_ticker.speed": "Current speed multiplier: %d",
+  "screen.extendedae_plus.entity_speed_ticker.multiplier": "Extra consumption multiplier: %s",
 
   "gui.expatternprovider.toggle_slots": "Toggle Slots",
   "gui.expatternprovider.hide_slots": "Hide Slots",
@@ -29,8 +30,7 @@
   "config.jade.plugin_extendedae_plus.wt_network_usable": "Show Network Online State",
   "extendedae_plus.tooltip.frequency": "Frequency: %d",
   "extendedae_plus.tooltip.master_mode": "Mode: %s",
-  "extendedae_plus.tooltip.locked": "Locked: %s"
-  ,
+  "extendedae_plus.tooltip.locked": "Locked: %s",
   "screen.extendedae_plus.title": "ExtendedAE Plus Config",
 
   "config.extendedae_plus.pageMultiplier": "Pattern Provider Page Multiplier",

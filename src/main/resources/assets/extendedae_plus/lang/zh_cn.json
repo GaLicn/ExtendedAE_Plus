@@ -33,6 +33,7 @@
   "screen.extendedae_plus.entity_speed_ticker.energy": "能耗: %s FE/t",
   "screen.extendedae_plus.entity_speed_ticker.power_ratio": "功耗比例: %s",
   "screen.extendedae_plus.entity_speed_ticker.speed": "当前加速倍率: %d",
+  "screen.extendedae_plus.entity_speed_ticker.multiplier": "额外消耗倍率: %s",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
   "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",

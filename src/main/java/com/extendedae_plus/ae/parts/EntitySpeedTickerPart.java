@@ -19,7 +19,9 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.util.ConfigParsingUtils;
 import com.extendedae_plus.util.PowerUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -33,8 +35,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * EntitySpeedTickerPart 是一个可升级的 AE2 部件<p>
@@ -165,11 +172,18 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
             return;
         }
 
-//        String id = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(blockEntity.getBlockState().getBlock())).toString();
-
         // 获取方块实体的位置
         BlockPos pos = blockEntity.getBlockPos();
         if (blockEntity.getLevel() == null) return;
+
+        // 检查黑名单（支持通配符/正则）
+        String blockId = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(blockEntity.getBlockState().getBlock())).toString();
+
+        // 使用工具类的缓存接口（工具类内部负责懒加载/线程安全）
+        List<Pattern> compiledBlacklist = ConfigParsingUtils.getCachedBlacklist(ModConfigs.EntitySpeedTickerBlackList.get());
+        for (Pattern p : compiledBlacklist) {
+            if (p.matcher(blockId).matches()) return;
+        }
 
         // 获取该方块实体的 Ticker
         @SuppressWarnings("unchecked")
@@ -190,6 +204,15 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         //     7-8: 幂级数增长（极高）
         // 使用工具类统一计算增长因子与原始功耗，并从网络中抽取对应能量
         double requiredPower = PowerUtils.getFinalPower(speedCardCount, energyCardCount);
+
+        double multiplier = 1.0;
+        for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.EntitySpeedTickerMultipliers.get())) {
+            if (me.pattern.matcher(blockId).matches()) {
+                multiplier = Math.max(multiplier, me.multiplier);
+            }
+        }
+
+        requiredPower *= multiplier;
 
         // 先模拟提取以检查网络中是否有足够能量，再真正抽取
         double simulated = getMainNode().getGrid().getEnergyService()

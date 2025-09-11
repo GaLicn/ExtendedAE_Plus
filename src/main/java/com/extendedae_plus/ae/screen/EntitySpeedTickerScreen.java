@@ -27,6 +27,7 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
     private void textData() {
         int speedCardCount = getMenu().speedCardCount;
         int energyCardCount = getMenu().energyCardCount;
+        double multiplier = getMenu().multiplier;
 
         double finalPower = PowerUtils.getFinalPower(speedCardCount, energyCardCount);
         int speed = PowerUtils.getSpeedMultiplier(speedCardCount);
@@ -35,5 +36,6 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
         setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", speed));
         setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", PowerUtils.formatPower(finalPower)));
         setTextContent("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(remainingRatio)));
+        setTextContent("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", multiplier)));
     }
 }

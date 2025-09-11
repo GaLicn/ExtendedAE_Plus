@@ -12,7 +12,9 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ForgeConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
     public static final ForgeConfigSpec.IntValue SMART_SCALING_MIN_BENEFIT_FACTOR;
-    public static final ForgeConfigSpec.IntValue     EntityTickerCost;
+    public static final ForgeConfigSpec.IntValue EntitySpeedTickerCost;
+    public static final ForgeConfigSpec.ConfigValue<java.util.List<? extends String>> EntitySpeedTickerBlackList;
+    public static final ForgeConfigSpec.ConfigValue<java.util.List<? extends String>> EntitySpeedTickerMultipliers;
 
 
     static {
@@ -81,9 +83,25 @@ public final class ModConfigs {
                 .define("patternTerminalShowSlotsDefault", true);
 
 
-        EntityTickerCost = builder
+        builder.push("EntitySpeedTicker");
+        EntitySpeedTickerCost = builder
                 .comment("实体加速器的能量消耗基础值")
                 .defineInRange("EntityTickerCost", 512, 0, Integer.MAX_VALUE);
+
+        EntitySpeedTickerBlackList = builder
+                .comment(
+                        "实体加速器黑名单：匹配的方块将不会被加速。支持通配符/正则（例如：minecraft:*）",
+                        "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
+                )
+                .defineList("EntityTickerBlackList", java.util.List.of(), o -> o instanceof String);
+
+        EntitySpeedTickerMultipliers = builder
+                .comment(
+                        "额外消耗倍率配置：为某些方块设置额外能量倍率，格式 'modid:blockid multiplier'，例如 'minecraft:chest 2x'",
+                        "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
+                )
+                .defineList("EntityTickerMultipliers", java.util.List.of(), o -> o instanceof String);
+        builder.pop();
 
         builder.pop();
         COMMON_SPEC = builder.build();
