@@ -12,6 +12,8 @@ public final class ModConfigs {
     public static final ForgeConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ForgeConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
     public static final ForgeConfigSpec.IntValue SMART_SCALING_MIN_BENEFIT_FACTOR;
+    public static final ForgeConfigSpec.IntValue     EntityTickerCost;
+
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -77,6 +79,12 @@ public final class ModConfigs {
                         "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
                 )
                 .define("patternTerminalShowSlotsDefault", true);
+
+
+        EntityTickerCost = builder
+                .comment("实体加速器的能量消耗基础值")
+                .defineInRange("EntityTickerCost", 512, 0, Integer.MAX_VALUE);
+
         builder.pop();
         COMMON_SPEC = builder.build();
     }

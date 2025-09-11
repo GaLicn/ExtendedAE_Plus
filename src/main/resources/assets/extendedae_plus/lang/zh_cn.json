@@ -29,6 +29,11 @@
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
 
+  "item.extendedae_plus.entity_speed_ticker": "实体加速器",
+  "screen.extendedae_plus.entity_speed_ticker.energy": "能耗: %s FE/t",
+  "screen.extendedae_plus.entity_speed_ticker.power_ratio": "功耗比例: %s",
+  "screen.extendedae_plus.entity_speed_ticker.speed": "当前加速倍率: %d",
+
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
   "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",
   "config.jade.plugin_extendedae_plus.wt_master_mode": "显示主/从模式",

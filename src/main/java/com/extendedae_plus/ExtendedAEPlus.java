@@ -1,11 +1,14 @@
 package com.extendedae_plus;
 
+import appeng.init.client.InitScreens;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.client.ClientProxy;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
+import com.extendedae_plus.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.screen.EntitySpeedTickerScreen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
@@ -65,6 +68,8 @@ public class ExtendedAEPlus {
     private void commonSetup(final FMLCommonSetupEvent event) {
         // 注册本模组网络通道与数据包
         event.enqueueWork(() -> {
+            // 注册升级卡
+            new UpgradeCards(event);
             ModNetwork.register();
             // 注册自定义 Curios 宿主定位器，便于将菜单宿主信息在服务端与客户端间同步
             MenuLocators.register(CuriosItemLocator.class, CuriosItemLocator::writeToPacket, CuriosItemLocator::readFromPacket);
@@ -93,6 +98,11 @@ public class ExtendedAEPlus {
             // 直接在此处执行客户端一次性注册（UI/屏幕/渲染器绑定）
             // 注册客户端配置界面
             ClientProxy.registerConfigScreen();
+
+            InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
+                    EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
+                    "/screens/entity_speed_ticker.json");
+
             // 菜单 -> 屏幕 绑定
             ClientProxy.registerMenuScreens();
         }
@@ -101,6 +111,8 @@ public class ExtendedAEPlus {
         public static void onRegisterGeometryLoaders(final ModelEvent.RegisterGeometryLoaders evt) {
             try {
                 ClientProxy.initBuiltInModels();
+                // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法
+                ModItems.registerPartModels();
             } catch (Exception ignored) {}
         }
     }

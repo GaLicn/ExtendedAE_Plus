@@ -1,4 +1,9 @@
 {
+  "item.extendedae_plus.entity_speed_ticker": "Entity Speed Ticker",
+  "screen.extendedae_plus.entity_speed_ticker.energy": "Energy Usage: %s FE/t",
+  "screen.extendedae_plus.entity_speed_ticker.power_ratio": "Power ratio: %s",
+  "screen.extendedae_plus.entity_speed_ticker.speed": "Current speed multiplier: %d",
+
   "gui.expatternprovider.toggle_slots": "Toggle Slots",
   "gui.expatternprovider.hide_slots": "Hide Slots",
   "gui.expatternprovider.show_slots": "Show Slots",
@@ -27,6 +32,7 @@
   "extendedae_plus.tooltip.locked": "Locked: %s"
   ,
   "screen.extendedae_plus.title": "ExtendedAE Plus Config",
+
   "config.extendedae_plus.pageMultiplier": "Pattern Provider Page Multiplier",
   "config.extendedae_plus.pageMultiplier_with_range": "Pattern Provider Page Multiplier (1-64)",
   "config.extendedae_plus.wirelessMaxRange": "Wireless Max Range",
