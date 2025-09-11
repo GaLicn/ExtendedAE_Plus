@@ -53,20 +53,6 @@ public final class PowerUtils {
     }
 
     /**
-     * 计算最终能耗（取整，最小为 1）
-     * @param speedCardCount 加速卡数量
-     * @param energyCardCount 能源卡数量
-     * @return 最终能耗（int）
-     */
-    public static int getFinalPowerDraw(int speedCardCount, int energyCardCount) {
-        double raw = getRawPower(speedCardCount);
-        double reduction = getReductionPercent(energyCardCount);
-        // 与原始实现兼容：raw * (1 - reduction) 后按 0.5 的单位转换（与 AE/FE 换算保持一致）
-        double adjusted = raw * (1.0 - reduction) / 2.0;
-        return (int) Math.max(1, Math.round(adjusted));
-    }
-
-    /**
      * 计算最终能耗（浮点数）
      * @param speedCardCount 加速卡数量
      * @param energyCardCount 能源卡数量
@@ -86,34 +72,6 @@ public final class PowerUtils {
      */
     public static double getRemainingRatio(int energyCardCount) {
         return 1.0 - getReductionPercent(energyCardCount);
-    }
-
-    /**
-     * 将能耗数字按单位缩写（K/M/G/T/P/E）格式化为更短的字符串
-     * 例如 1500 -> "1.50K", 2000000 -> "2.00M"
-     */
-    public static String formatPower(double value) {
-        double abs = Math.abs(value);
-        if (abs >= 1e18) return formatWithSuffix(value, 1e18, "E");
-        if (abs >= 1e15) return formatWithSuffix(value, 1e15, "P");
-        if (abs >= 1e12) return formatWithSuffix(value, 1e12, "T");
-        if (abs >= 1e9) return formatWithSuffix(value, 1e9, "G");
-        if (abs >= 1e6) return formatWithSuffix(value, 1e6, "M");
-        if (abs >= 1e3) return formatWithSuffix(value, 1e3, "K");
-        // 小于 1000 直接返回整数形式
-        if (Math.floor(value) == value) {
-            return String.format("%d", (long) value);
-        }
-        return String.format("%.2f", value);
-    }
-
-    private static String formatWithSuffix(double value, double unit, String suffix) {
-        double v = value / unit;
-        // 如果 v 是整数则不显示小数
-        if (Math.abs(v - Math.round(v)) < 1e-9) {
-            return String.format("%d%s", Math.round(v), suffix);
-        }
-        return String.format("%.2f%s", v, suffix);
     }
 
     /**
