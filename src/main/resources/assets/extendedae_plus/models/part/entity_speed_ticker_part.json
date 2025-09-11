@@ -1,6 +1,6 @@
 {
-  "parent": "ae2:part/p2p/p2p_tunnel_base",
+  "parent": "ae2:part/interface_base",
   "textures": {
-    "type": "extendedae_plus:part/entity_speed_ticker"
+    "front": "extendedae_plus:part/entity_speed_ticker_font"
   }
 }

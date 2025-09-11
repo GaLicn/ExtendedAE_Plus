@@ -15,8 +15,8 @@ import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
+import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
-import appeng.parts.p2p.P2PModels;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.menu.EntitySpeedTickerMenu;
@@ -36,8 +36,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 /**
  * EntitySpeedTickerPart 是一个可升级的 AE2 部件<p>
  * 该部件可以加速目标方块实体的 tick 速率，消耗 AE 网络能量，并支持加速卡升级<p>
@@ -47,19 +45,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     // 当前打开的菜单实例（如果有）
     public EntitySpeedTickerMenu menu;
 
-    // P2P 模型，用于渲染部件的外观
-    private static final P2PModels MODELS = new P2PModels(
-            new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_part"));
+    public static final ResourceLocation MODEL_BASE = new ResourceLocation(
+            ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
 
-    /**
-     * 获取该部件的所有模型（用于渲染）
-     * @return 模型列表
-     */
     @PartModels
-    public static List<IPartModel> getModels() {
-        return MODELS.getModels();
+    public static final PartModel MODELS_OFF;
+    @PartModels
+    public static final PartModel MODELS_ON;
+    @PartModels
+    public static final PartModel MODELS_HAS_CHANNEL;
+    
+    static {
+        MODELS_OFF = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_off"));
+        MODELS_ON = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_on"));
+        MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
     }
-
+    
     /**
      * 构造函数，初始化部件并设置网络节点属性
      * @param partItem 部件物品
@@ -78,7 +79,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @return 当前状态的模型
      */
     public IPartModel getStaticModels() {
-        return MODELS.getModel(this.isPowered(), this.isActive());
+        if (this.isActive() && this.isPowered()) {
+            return MODELS_HAS_CHANNEL;
+        } else if (this.isPowered()) {
+            return MODELS_ON;
+        } else {
+            return MODELS_OFF;
+        }
     }
 
     /**
@@ -103,9 +110,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     @Override
     public void getBoxes(IPartCollisionHelper bch) {
-        bch.addBox(5, 5, 12, 11, 11, 13);
-        bch.addBox(3, 3, 13, 13, 13, 14);
         bch.addBox(2, 2, 14, 14, 14, 16);
+        bch.addBox(5, 5, 12, 11, 11, 14);
     }
 
     /**
