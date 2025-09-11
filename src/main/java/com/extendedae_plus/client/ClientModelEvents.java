@@ -22,6 +22,6 @@ public final class ClientModelEvents {
         event.register(ExtendedAEPlus.id("block/crafting/64x_accelerator_formed_v2"));
         event.register(ExtendedAEPlus.id("block/crafting/256x_accelerator_formed_v2"));
         event.register(ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2"));
-        ClientProxy.initBuiltInModels();
+        ClientRegistrar.initBuiltInModels();
     }
 }

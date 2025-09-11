@@ -1,7 +1,10 @@
 package com.extendedae_plus.client;
 
 import appeng.client.render.crafting.CraftingCubeModel;
+import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
@@ -14,8 +17,8 @@ import net.minecraftforge.fml.ModLoadingContext;
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
  */
-public final class ClientProxy {
-    private ClientProxy() {}
+public final class ClientRegistrar {
+    private ClientRegistrar() {}
 
     private static boolean REGISTERED = false;
 
@@ -52,6 +55,15 @@ public final class ClientProxy {
      */
     public static void registerMenuScreens() {
         MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
+    }
+
+    /**
+     * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
+     */
+    public static void registerInitScreens() {
+        InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
+                EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
+                "/screens/entity_speed_ticker.json");
     }
 
     /**

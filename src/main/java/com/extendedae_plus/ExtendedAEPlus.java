@@ -1,10 +1,7 @@
 package com.extendedae_plus;
 
-import appeng.init.client.InitScreens;
 import appeng.menu.locator.MenuLocators;
-import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
-import com.extendedae_plus.client.ClientProxy;
+import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
@@ -37,7 +34,7 @@ public class ExtendedAEPlus {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // 在客户端尽早注册内置模型，保证首次资源加载前映射已建立（仿照 AE2 的 AppEngClient 构造期注册）
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientProxy::initBuiltInModels);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientRegistrar::initBuiltInModels);
 
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
@@ -57,9 +54,6 @@ public class ExtendedAEPlus {
 
         // 注册通用配置
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
-
-        // 客户端侧延迟注册：在 FMLClientSetupEvent 阶段执行（包含 MenuScreens 绑定等）
-        // 由下面的 ClientModEvents 负责在客户端总线上接收事件并委派
     }
 
     /**
@@ -97,20 +91,19 @@ public class ExtendedAEPlus {
         public static void onClientSetup(final FMLClientSetupEvent event) {
             // 直接在此处执行客户端一次性注册（UI/屏幕/渲染器绑定）
             // 注册客户端配置界面
-            ClientProxy.registerConfigScreen();
+            ClientRegistrar.registerConfigScreen();
 
-            InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
-                    EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
-                    "/screens/entity_speed_ticker.json");
+            // 将 InitScreens 的注册委托给 ClientRegistrar，便于集中管理客户端注册逻辑
+            ClientRegistrar.registerInitScreens();
 
             // 菜单 -> 屏幕 绑定
-            ClientProxy.registerMenuScreens();
+            ClientRegistrar.registerMenuScreens();
         }
 
         @SubscribeEvent
         public static void onRegisterGeometryLoaders(final ModelEvent.RegisterGeometryLoaders evt) {
             try {
-                ClientProxy.initBuiltInModels();
+                ClientRegistrar.initBuiltInModels();
                 // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法
                 ModItems.registerPartModels();
             } catch (Exception ignored) {}
