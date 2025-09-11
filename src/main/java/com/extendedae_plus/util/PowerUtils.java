@@ -61,8 +61,8 @@ public final class PowerUtils {
     public static double getFinalPower(int speedCardCount, int energyCardCount) {
         double raw = getRawPower(speedCardCount);
         double reduction = getReductionPercent(energyCardCount);
-        // 返回与实际抽取值一致的浮点能耗（包含与原实现一致的 /2 单位转换）
-        return raw * (1.0 - reduction) / 2.0;
+        // 返回与实际抽取值一致的浮点能耗（在原实现基础上再除以 2，以降低能耗）
+        return raw * (1.0 - reduction) / 4.0;
     }
 
     /**
