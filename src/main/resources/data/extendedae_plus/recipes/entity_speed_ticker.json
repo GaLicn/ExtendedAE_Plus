@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SZS",
+    "QXQ",
+    "SIS"
+  ],
+  "key": {
+    "S": { "item": "ae2:speed_card" },
+    "Z": { "item": "ae2:dense_energy_cell" },
+    "Q": { "item": "ae2:singularity" },
+    "X": { "item": "minecraft:nether_star" },
+    "I": { "item": "expatternprovider:ex_io_port" }
+  },
+  "result": {
+    "item": "extendedae_plus:entity_speed_ticker",
+    "count": 1
+  }
+}
+
+
