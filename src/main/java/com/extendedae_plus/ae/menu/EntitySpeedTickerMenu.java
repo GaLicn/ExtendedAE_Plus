@@ -1,6 +1,7 @@
 package com.extendedae_plus.ae.menu;
 
 import appeng.core.definitions.AEItems;
+import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
@@ -22,11 +23,28 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     // 当前生效的倍率（从配置中读取并同步）
     public double multiplier = 1.0;
 
+    @GuiSync(716)
+    public boolean accelerateEnabled = true;
+
+
+    public boolean getAccelerateEnabled() {
+        return this.accelerateEnabled;
+    }
+
+    public void setAccelerateEnabled(boolean enabled) {
+        this.accelerateEnabled = enabled;
+    }
+
+
     // 构造方法，初始化菜单并与部件绑定
     public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
         super(ModMenuTypes.ENTITY_TICKER_MENU.get(), id, ip, host);
         // 让部件持有当前菜单实例，便于通信
         getHost().menu = this;
+        // 初始同步部件上的开关状态到菜单（服务器端构造时保证一致）
+        try {
+            this.accelerateEnabled = getHost().getAccelerateEnabled();
+        } catch (Exception ignored) {}
     }
 
     // 当服务器数据同步到客户端时调用

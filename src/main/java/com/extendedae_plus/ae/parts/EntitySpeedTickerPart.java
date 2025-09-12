@@ -81,6 +81,18 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                 .addService(IGridTickable.class, this);
     }
 
+    // 控制是否启用加速（默认启用）
+    private boolean accelerateEnabled = true;
+
+
+    public boolean getAccelerateEnabled() {
+        return this.accelerateEnabled;
+    }
+
+    public void setAccelerateEnabled(boolean accelerateEnabled) {
+        this.accelerateEnabled = accelerateEnabled;
+    }
+
     /**
      * 获取当前状态下的静态模型（用于渲染）
      * @return 当前状态的模型
@@ -151,6 +163,11 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
+        // 如果部件的加速开关被关闭，则不进行加速（提前返回）
+        if (!this.getAccelerateEnabled()) {
+            return TickRateModulation.IDLE;
+        }
+
         // 获取目标方块实体（本部件朝向的方块）
         BlockEntity target = getLevel().getBlockEntity(getBlockEntity().getBlockPos().relative(getSide()));
         // 仅在目标存在且部件处于激活状态时执行加速

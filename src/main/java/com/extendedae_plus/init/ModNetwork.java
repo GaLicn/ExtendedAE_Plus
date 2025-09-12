@@ -1,6 +1,7 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.network.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -88,6 +89,12 @@ public class ModNetwork {
                 .encoder(GlobalToggleProviderModesC2SPacket::encode)
                 .decoder(GlobalToggleProviderModesC2SPacket::decode)
                 .consumerNetworkThread(GlobalToggleProviderModesC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ToggleEntityTickerC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ToggleEntityTickerC2SPacket::encode)
+                .decoder(ToggleEntityTickerC2SPacket::decode)
+                .consumerNetworkThread(ToggleEntityTickerC2SPacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(AdvancedBlockingSyncS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)

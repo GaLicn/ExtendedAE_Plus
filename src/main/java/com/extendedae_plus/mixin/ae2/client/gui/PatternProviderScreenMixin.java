@@ -10,7 +10,7 @@ import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
-import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;

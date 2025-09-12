@@ -5,7 +5,6 @@ import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import com.extendedae_plus.network.ModNetwork;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;

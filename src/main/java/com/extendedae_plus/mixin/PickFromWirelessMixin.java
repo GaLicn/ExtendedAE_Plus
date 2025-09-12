@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin;
 
-import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.PickFromWirelessC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
