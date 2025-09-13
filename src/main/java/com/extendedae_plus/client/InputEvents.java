@@ -5,8 +5,10 @@ import appeng.client.gui.me.common.MEStorageScreen;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
+import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -121,6 +123,12 @@ public final class InputEvents {
                 return;
             } catch (Throwable ignored) {
             }
+        }else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+            try {
+                GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                acc.getSearchField().setValue(name);
+                event.setCanceled(true);
+            }catch (Throwable ignored) {}
         }
     }
 }
