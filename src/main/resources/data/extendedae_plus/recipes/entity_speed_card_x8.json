@@ -1,33 +1,34 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "SZS",
+    "SBS",
     "QXQ",
-    "SIS"
+    "SBS"
   ],
   "key": {
     "S": {
       "type": "forge:partial_nbt",
       "item": "extendedae_plus:entity_speed_card",
       "nbt": {
-        "EAS:mult": 2
+        "EAS:mult": 4
       }
     },
-    "Z": {
-      "item": "ae2:dense_energy_cell"
+    "B": {
+      "item": "extendedae_plus:1024x_crafting_accelerator"
     },
     "Q": {
-      "item": "ae2:singularity"
+      "item": "ae2:spatial_cell_component_128"
     },
     "X": {
       "item": "minecraft:nether_star"
-    },
-    "I": {
-      "item": "expatternprovider:ex_io_port"
     }
   },
   "result": {
-    "item": "extendedae_plus:entity_speed_ticker",
-    "count": 1
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:entity_speed_card",
+    "count": 1,
+    "nbt": {
+      "EAS:mult": 8
+    }
   }
 }
