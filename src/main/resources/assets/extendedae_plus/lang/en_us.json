@@ -50,6 +50,10 @@
   "screen.extendedae_plus.entity_speed_ticker.speed": "Current speed multiplier: %d",
   "screen.extendedae_plus.entity_speed_ticker.multiplier": "Extra consumption multiplier: %s",
 
+  "item.extendedae_plus.entity_speed_ticker.tip.requirement": "Requires Entity Acceleration Card(s) to enable acceleration",
+  "item.extendedae_plus.entity_speed_ticker.tip.max": "Maximum up to 1024x speed",
+  "item.extendedae_plus.entity_speed_ticker.tip.energy": "Acceleration consumes AE network power; insufficient power disables acceleration",
+
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "Wireless Transceiver Info",
   "config.jade.plugin_extendedae_plus.wt_frequency": "Show Frequency",
   "config.jade.plugin_extendedae_plus.wt_master_mode": "Show Master/Slave Mode",
