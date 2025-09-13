@@ -17,6 +17,13 @@
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
   "item.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
+  "item.extendedae_plus.entity_speed_card": "实体加速卡",
+  "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
+  "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
+  "item.extendedae_plus.entity_speed_card.x8": "实体加速卡 (x8)",
+  "item.extendedae_plus.entity_speed_card.x16": "实体加速卡 (x16)",
+  "tooltip.extendedae_plus.entity_speed_card.multiplier": "乘数: %s",
+  "tooltip.extendedae_plus.entity_speed_card.max": "最大生效: %s 倍",
 
   "block.extendedae_plus.wireless_transceiver": "无线收发器",
   "block.extendedae_plus.4x_crafting_accelerator": "4x并行处理单元",

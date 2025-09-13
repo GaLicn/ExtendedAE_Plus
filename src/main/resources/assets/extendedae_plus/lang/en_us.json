@@ -17,6 +17,13 @@
   "item.extendedae_plus.256x_crafting_accelerator": "256x Crafting Accelerator",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x Crafting Accelerator",
   "item.extendedae_plus.network_pattern_controller": "Pattern Supplier State Controller",
+  "item.extendedae_plus.entity_speed_card": "Entity Acceleration Card",
+  "item.extendedae_plus.entity_speed_card.x2": "Entity Acceleration Card (x2)",
+  "item.extendedae_plus.entity_speed_card.x4": "Entity Acceleration Card (x4)",
+  "item.extendedae_plus.entity_speed_card.x8": "Entity Acceleration Card (x8)",
+  "item.extendedae_plus.entity_speed_card.x16": "Entity Acceleration Card (x16)",
+  "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
+  "tooltip.extendedae_plus.entity_speed_card.max": "Max effective: %s x",
 
   "block.extendedae_plus.wireless_transceiver": "Wireless Transceiver",
   "block.extendedae_plus.4x_crafting_accelerator": "4x Crafting Accelerator",

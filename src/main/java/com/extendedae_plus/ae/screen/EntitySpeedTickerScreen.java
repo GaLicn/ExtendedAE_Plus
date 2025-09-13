@@ -76,15 +76,14 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
     }
 
     private void textData() {
-        int speedCardCount = getMenu().speedCardCount;
         int energyCardCount = getMenu().energyCardCount;
         double multiplier = getMenu().multiplier;
+        int effectiveSpeed = getMenu().effectiveSpeed;
 
-        double finalPower = PowerUtils.getFinalPower(speedCardCount, energyCardCount);
-        int speed = PowerUtils.getSpeedMultiplier(speedCardCount);
+        double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
         double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
 
-        setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", speed));
+        setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", effectiveSpeed));
         setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(finalPower, false)));
         setTextContent("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(remainingRatio)));
         setTextContent("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", multiplier)));

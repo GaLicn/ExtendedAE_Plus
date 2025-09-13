@@ -7,8 +7,10 @@ import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.ConfigParsingUtils;
+import com.extendedae_plus.util.PowerUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -16,16 +18,15 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 // 实体加速器菜单，负责与客户端界面同步数据
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
-    // 已安装的速度卡数量
-    public int speedCardCount;
+    @GuiSync(716) public boolean accelerateEnabled = true;
+    // 已安装的实体加速卡数量（用于能耗计算）
+    @GuiSync(717) public int entitySpeedCardCount;
     // 已安装的能量卡数量
-    public int energyCardCount;
-    // 当前生效的倍率（从配置中读取并同步）
-    public double multiplier = 1.0;
-
-    @GuiSync(716)
-    public boolean accelerateEnabled = true;
-
+    @GuiSync(718) public int energyCardCount;
+    // 当前生效的配置倍率（从配置中读取并同步）
+    // 当前计算出的生效速度（product of multipliers），同步给客户端用于显示
+    @GuiSync(719) public int effectiveSpeed = 1;
+    @GuiSync(720) public double multiplier = 1.0;
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
@@ -51,8 +52,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     @Override
     public void onServerDataSync() {
         super.onServerDataSync();
-        // 重新统计速度卡和能量卡数量
-        this.speedCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.SPEED_CARD);
+        // 重新统计实体加速卡和能量卡数量
+        this.entitySpeedCardCount = this.getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
         this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
 
         // 计算当前面向方块的倍率（服务器端），并同步给客户端
@@ -70,6 +71,9 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         } catch (Exception ignored) {}
         this.multiplier = mult;
 
+        // 计算生效速度：使用工具类从菜单直接计算 product with cap（最多 8 张）
+        this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
+
         // 如果在客户端，刷新界面
         if (isClientSide()) {
             if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
@@ -84,8 +88,10 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         super.onSlotChange(slot);
         // 客户端重新统计卡数量并刷新界面
         if (isClientSide()) {
-            this.speedCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.SPEED_CARD);
+            this.entitySpeedCardCount = this.getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
             this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+            // 立即在客户端计算生效速度以便界面即时反馈（使用与服务端相同的工具方法，最多 8 张卡）
+            this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
             if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
                 screen.refreshGui();
             }

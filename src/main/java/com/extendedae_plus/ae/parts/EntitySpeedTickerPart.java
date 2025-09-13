@@ -20,6 +20,7 @@ import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.ConfigParsingUtils;
 import com.extendedae_plus.util.PowerUtils;
@@ -209,18 +210,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                 .getTicker(this.getLevel(), (BlockEntityType<T>) blockEntity.getType());
         if (blockEntityTicker == null) return;
 
-        int speedCardCount = getUpgrades().getInstalledUpgrades(AEItems.SPEED_CARD);
+        // 使用集中定义的 CardDef 列表，支持以后添加等级或改倍率而无需修改此逻辑
         int energyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
 
-        // 计算本次 tick 所需能量
-        // - 基础消耗为 512
-        // - 加速卡的数量对能耗有分段增长：
-        //     0: 无增长
-        //     1: 翻倍
-        //     2-6: 指数增长（较快）
-        //     7-8: 幂级数增长（极高）
-        // 使用工具类统一计算增长因子与原始功耗，并从网络中抽取对应能量
-        double requiredPower = PowerUtils.getFinalPower(speedCardCount, energyCardCount);
+        // 使用已注册的单一 Item 计算已安装卡数量（总计，用于能耗计算）
+        int entitySpeedCardCount = getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
+
+        // 使用工具方法从槽位直接计算乘积并应用 cap（最多 8 张卡）
+        long product = PowerUtils.computeProductWithCapFromStacks(this.getUpgrades(), 8);
+
+        // 如果没有任何实体加速卡，则不进行加速且不消耗额外能量（只保留部件的被动功耗）
+        if (entitySpeedCardCount <= 0) return;
+
+        // 计算本次 tick 所需能量：使用工具类根据 product 计算最终能耗
+        double requiredPower = PowerUtils.computeFinalPowerForProduct(product, energyCardCount);
+
+        int speed = (int) product;
 
         double multiplier = 1.0;
         for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.EntitySpeedTickerMultipliers.get())) {
@@ -241,7 +246,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (extractedPower < requiredPower) return;
 
         // 计算加速倍数：基于 2 的次方，并把 8 张映射到最大 1024x（2^10）
-        int speed = PowerUtils.getSpeedMultiplier(speedCardCount);
+        // 已由 product 计算得到 speed；上面已在没有卡时提前返回
 
         // 执行 tick 操作
         for (int i = 0; i < speed - 1; i++) {
