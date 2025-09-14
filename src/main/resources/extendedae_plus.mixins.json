@@ -46,6 +46,7 @@
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.PatternProviderLogicDoublingMixin",
     "ae2.menu.ContainerPatternEncodingTermMenuMixin",
+    "ae2.menu.CraftConfirmMenuGoBackMixin",
     "ae2.menu.MEStorageMenuMixin",
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
