@@ -1,6 +1,7 @@
 {
   "parent": "ae2:item/cable_interface",
   "textures": {
-    "front": "extendedae_plus:part/entity_speed_ticker_font"
+    "front": "extendedae_plus:part/entity_speed_ticker_font",
+    "back": "extendedae_plus:part/entity_speed_ticker_back"
   }
 }

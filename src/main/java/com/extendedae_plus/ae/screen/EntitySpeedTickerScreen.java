@@ -2,6 +2,7 @@ package com.extendedae_plus.ae.screen;
 
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.UpgradeableScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.CommonButtons;
@@ -41,12 +42,38 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
         ) {
             @Override
             public List<Component> getTooltipMessage() {
+                // 如果目标在黑名单中，直接显示已禁用的提示
+                try {
+                    if (menu != null && menu.targetBlacklisted) {
+                        var title = Component.literal("实体加速");
+                        var stateLine = Component.literal("已禁用（目标在黑名单）");
+                        return List.of(title, stateLine);
+                    }
+                } catch (Exception ignored) {}
+
                 boolean enabled = eap$entitySpeedTickerEnabled;
                 var title = Component.literal("实体加速");
                 var stateLine = enabled
                         ? Component.literal("已启用: 将加速目标方块实体的tick")
                         : Component.literal("已关闭: 不会对目标方块实体进行加速");
                 return List.of(title, stateLine);
+            }
+
+            @Override
+            protected Icon getIcon() {
+                try {
+                    if (menu != null && menu.targetBlacklisted) {
+                        // 黑名单时显示禁用图标
+                        return Icon.INVALID;
+                    }
+                } catch (Exception ignored) {}
+
+                // 根据当前值显示不同图标（可按需替换 Icon 常量）
+                if (this.getCurrentValue() == YesNo.YES) {
+                    return Icon.VALID;
+                } else {
+                    return Icon.INVALID;
+                }
             }
         };
         // 初始化后立刻对齐当前@GuiSync状态，避免首帧显示不一致
@@ -66,7 +93,14 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
             }
 
             this.eap$entitySpeedTickerEnabled = desired;
-            this.eap$entitySpeedTickerToggle.set(desired ? YesNo.YES : YesNo.NO);
+            // 如果目标在黑名单中，禁用切换并强制显示为关闭
+            if (this.menu != null && this.menu.targetBlacklisted) {
+                this.eap$entitySpeedTickerToggle.set(YesNo.NO);
+                this.eap$entitySpeedTickerToggle.active = false;
+            } else {
+                this.eap$entitySpeedTickerToggle.set(desired ? YesNo.YES : YesNo.NO);
+                this.eap$entitySpeedTickerToggle.active =  true;
+            }
         }
         textData();
     }
@@ -76,6 +110,16 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
     }
 
     private void textData() {
+        // 如果目标被黑名单禁止，则显示禁用状态并把数值显示为 0
+        if (getMenu().targetBlacklisted) {
+            setTextContent("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.enable"));
+            setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", 0));
+            setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(0.0, false)));
+            setTextContent("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(0.0)));
+            setTextContent("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", 0.0)));
+            return;
+        }
+
         int energyCardCount = getMenu().energyCardCount;
         double multiplier = getMenu().multiplier;
         int effectiveSpeed = getMenu().effectiveSpeed;

@@ -23,6 +23,13 @@
         "top": 6
       }
     },
+    "enable": {
+      "position": {
+        "top": 20,
+        "left": 88
+      },
+      "align": "CENTER"
+    },
     "speed": {
       "position": {
         "top": 35,

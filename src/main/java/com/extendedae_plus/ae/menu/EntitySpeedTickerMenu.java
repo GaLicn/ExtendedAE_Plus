@@ -29,6 +29,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     // 当前计算出的生效速度（product of multipliers），同步给客户端用于显示
     @GuiSync(719) public int effectiveSpeed = 1;
     @GuiSync(720) public double multiplier = 1.0;
+    @GuiSync(721) public boolean targetBlacklisted = false;
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
@@ -73,8 +74,28 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         } catch (Exception ignored) {}
         this.multiplier = mult;
 
-        // 计算生效速度：使用工具类从菜单直接计算 product with cap（最多 8 张）
-        this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
+        // 检查目标是否在黑名单中，如果是则标记并将生效速度设为 0（服务器端计算）
+        boolean blacklisted = false;
+        try {
+            BlockEntity target = getHost().getLevel().getBlockEntity(getHost().getBlockEntity().getBlockPos().relative(getHost().getSide()));
+            if (target != null) {
+                String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
+                for (java.util.regex.Pattern p : ConfigParsingUtils.getCachedBlacklist(List.of(ModConfig.INSTANCE.entityTickerBlackList))) {
+                    if (p.matcher(blockId).matches()) {
+                        blacklisted = true;
+                        break;
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        this.targetBlacklisted = blacklisted;
+
+        // 计算生效速度：如果被黑名单则为 0，否则进行正常计算（使用工具类从菜单直接计算 product with cap，最多 8 张）
+        if (this.targetBlacklisted) {
+            this.effectiveSpeed = 0;
+        } else {
+            this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
+        }
 
         // 如果在客户端，刷新界面
         if (isClientSide()) {
