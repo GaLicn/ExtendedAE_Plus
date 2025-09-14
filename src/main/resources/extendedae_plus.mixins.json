@@ -30,6 +30,7 @@
   ],
   "mixins": [
     "ae2.AEProcessingPatternMixin",
+    "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",
     "ae2.EncodedPatternItemMixin",
     "ae2.accessor.MEStorageMenuAccessor",

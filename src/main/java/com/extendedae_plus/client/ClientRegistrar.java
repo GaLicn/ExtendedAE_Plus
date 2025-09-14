@@ -14,8 +14,6 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.fml.ModLoadingContext;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
@@ -76,12 +74,12 @@ public final class ClientRegistrar {
      * 仅客户端：在 Mods 菜单注册配置界面入口。
      * 将对 Screen 的引用限制在客户端侧，避免服务端类加载。
      */
-    public static void registerConfigScreen() {
-        // 将 ModConfigScreen 的引用放在此处，确保仅在 Dist.CLIENT 下解析该类
-        ModLoadingContext.get().registerExtensionPoint(
-                ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, parent) -> new ModConfigScreen(parent))
-        );
-    }
+//    public static void registerConfigScreen() {
+//        // 将 ModConfigScreen 的引用放在此处，确保仅在 Dist.CLIENT 下解析该类
+//        ModLoadingContext.get().registerExtensionPoint(
+//                ConfigScreenHandler.ConfigScreenFactory.class,
+//                () -> new ConfigScreenHandler.ConfigScreenFactory(
+//                        (mc, parent) -> new ModConfigScreen(parent))
+//        );
+//    }
 }

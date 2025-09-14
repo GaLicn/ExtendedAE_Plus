@@ -19,7 +19,7 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.ConfigParsingUtils;
@@ -198,7 +198,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         String blockId = Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(blockEntity.getBlockState().getBlock())).toString();
 
         // 使用工具类的缓存接口（工具类内部负责懒加载/线程安全）
-        List<Pattern> compiledBlacklist = ConfigParsingUtils.getCachedBlacklist(ModConfigs.EntitySpeedTickerBlackList.get());
+        List<Pattern> compiledBlacklist = ConfigParsingUtils.getCachedBlacklist(List.of(ModConfig.INSTANCE.entityTickerBlackList));
         for (Pattern p : compiledBlacklist) {
             if (p.matcher(blockId).matches()) return;
         }
@@ -228,7 +228,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         int speed = (int) product;
 
         double multiplier = 1.0;
-        for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.EntitySpeedTickerMultipliers.get())) {
+        for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(List.of(ModConfig.INSTANCE.entityTickerMultipliers))) {
             if (me.pattern.matcher(blockId).matches()) {
                 multiplier = Math.max(multiplier, me.multiplier);
             }

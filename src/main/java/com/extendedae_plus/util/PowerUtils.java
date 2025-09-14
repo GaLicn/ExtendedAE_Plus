@@ -1,7 +1,7 @@
 package com.extendedae_plus.util;
 
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 
 /**
  * 用于计算实体加速器的能耗与加速倍率的工具类
@@ -90,7 +90,7 @@ public final class PowerUtils {
      */
     public static double computeFinalPowerForProduct(long product, int energyCardCount) {
         if (product <= 1L) return 0.0;
-        double base = ModConfigs.EntitySpeedTickerCost.get();
+        double base = ModConfig.INSTANCE.entityTickerCost;
 
         // 计算以2为底的对数（用于分档与公式）
         double log2 = Math.log(product) / Math.log(2.0);
@@ -121,7 +121,7 @@ public final class PowerUtils {
     }
 
     public static double getRawPower(int speedCardCount) {
-        double base = ModConfigs.EntitySpeedTickerCost.get();
+        double base = ModConfig.INSTANCE.entityTickerCost;
         return base * getGrowthFactor(speedCardCount);
     }
 

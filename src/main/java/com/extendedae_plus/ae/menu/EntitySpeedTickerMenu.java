@@ -6,7 +6,7 @@ import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.ConfigParsingUtils;
@@ -15,6 +15,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
 
 // 实体加速器菜单，负责与客户端界面同步数据
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
@@ -62,7 +64,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
             BlockEntity target = getHost().getLevel().getBlockEntity(getHost().getBlockEntity().getBlockPos().relative(getHost().getSide()));
             if (target != null) {
                 String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
-                for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.EntitySpeedTickerMultipliers.get())) {
+                for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(List.of(ModConfig.INSTANCE.entityTickerMultipliers))) {
                     if (me.pattern.matcher(blockId).matches()) {
                         mult = Math.max(mult, me.multiplier);
                     }

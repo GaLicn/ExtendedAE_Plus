@@ -2,7 +2,7 @@ package com.extendedae_plus;
 
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.client.ClientRegistrar;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import net.minecraft.resources.ResourceLocation;
@@ -11,10 +11,7 @@ import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -49,9 +46,9 @@ public class ExtendedAEPlus {
 
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
-
         // 注册通用配置
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+        ModConfig.init();
+//        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
     }
 
     /**
@@ -89,7 +86,7 @@ public class ExtendedAEPlus {
         public static void onClientSetup(final FMLClientSetupEvent event) {
             // 直接在此处执行客户端一次性注册（UI/屏幕/渲染器绑定）
             // 注册客户端配置界面
-            ClientRegistrar.registerConfigScreen();
+//            ClientRegistrar.registerConfigScreen();
 
             // 将 InitScreens 的注册委托给 ClientRegistrar，便于集中管理客户端注册逻辑
             ClientRegistrar.registerInitScreens();
