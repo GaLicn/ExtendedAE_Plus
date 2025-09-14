@@ -81,5 +81,6 @@
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "Smart Scaling Min Benefit Factor",
   "config.extendedae_plus.option.entityTickerCost": "Entity Ticker Base Energy Cost",
   "config.extendedae_plus.option.entityTickerBlackList": "Entity Ticker Blacklist",
-  "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers"
+  "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
+  "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold"
 }

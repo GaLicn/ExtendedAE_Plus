@@ -81,5 +81,6 @@
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "智能倍增最小收益因子",
   "config.extendedae_plus.option.entityTickerCost": "实体加速器能量消耗基础值",
   "config.extendedae_plus.option.entityTickerBlackList": "实体加速器黑名单",
-  "config.extendedae_plus.option.entityTickerMultipliers": "实体加速器额外消耗倍率"
+  "config.extendedae_plus.option.entityTickerMultipliers": "实体加速器额外消耗倍率",
+  "config.extendedae_plus.option.craftingPauseThreshold": "AE合成计算暂停检查阈值"
 }

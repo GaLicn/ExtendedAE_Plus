@@ -117,4 +117,12 @@ public final class ModConfig {
 
     };
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "值越大将减少AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
+    })
+    @Configurable.Synchronized
+    @Configurable.Range(min = 100, max = Integer.MAX_VALUE)
+    public int craftingPauseThreshold = 100000;
+
 }
