@@ -7,6 +7,8 @@
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
+    "advancedae.client.gui.AdvPatternProviderScreenMixin",
+    "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",
     "ae2.QuartzCuttingKnifeItemMixin",
     "ae2.accessor.AEBaseScreenAccessor",
     "ae2.accessor.AEBaseScreenInvoker",
@@ -29,6 +31,13 @@
     "jei.accessor.BookmarkOverlayAccessor"
   ],
   "mixins": [
+    "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
+    "advancedae.accessor.AdvPatternProviderLogicPatternsAccessor",
+    "advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor",
+    "advancedae.helpers.AdvPatternProviderLogicAdvancedMixin",
+    "advancedae.helpers.AdvPatternProviderLogicDoublingMixin",
+    "advancedae.menu.AdvPatternProviderMenuAdvancedMixin",
+    "advancedae.menu.AdvPatternProviderMenuDoublingMixin",
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",

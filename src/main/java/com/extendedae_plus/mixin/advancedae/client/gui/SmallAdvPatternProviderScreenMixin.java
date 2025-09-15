@@ -1,12 +1,10 @@
-package com.extendedae_plus.mixin.ae2.client.gui;
+package com.extendedae_plus.mixin.advancedae.client.gui;
 
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
-import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
@@ -16,6 +14,9 @@ import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.pedroksl.advanced_ae.client.gui.SmallAdvPatternProviderScreen;
+import net.pedroksl.advanced_ae.gui.advpatternprovider.SmallAdvPatternProviderMenu;
+import org.checkerframework.checker.units.qual.C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,12 +26,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 /**
- * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮。
+ * 为高级ae样板供应器界面添加“高级阻挡模式”按钮。
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
-@Mixin(PatternProviderScreen.class)
-public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
+@Mixin(SmallAdvPatternProviderScreen.class)
+public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<SmallAdvPatternProviderMenu> {
 
     @Unique
     private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
@@ -44,12 +45,12 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     @Unique
     private boolean eap$SmartDoublingEnabled = false;
 
-    public PatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
-        super(menu, playerInventory, title, style);
+    public SmallAdvPatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super((SmallAdvPatternProviderMenu) menu, playerInventory, title, style);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void eap$initAdvancedBlocking(C menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
+    private void eap$initAdvancedBlocking(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 使用 @GuiSync 初始化
         try {
             if (menu instanceof PatternProviderMenuAdvancedSync sync) {
@@ -69,12 +70,12 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 }
         ) {
             @Override
-            public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
+            public java.util.List<Component> getTooltipMessage() {
                 boolean enabled = eap$AdvancedBlockingEnabled;
-                var title = net.minecraft.network.chat.Component.literal("智能阻挡");
+                var title = Component.literal("智能阻挡");
                 var line = enabled
-                        ? net.minecraft.network.chat.Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
-                        : net.minecraft.network.chat.Component.literal("已禁用：这么好的功能为什么不打开呢");
+                        ? Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
+                        : Component.literal("已禁用：这么好的功能为什么不打开呢");
                 return java.util.List.of(title, line);
             }
         };
@@ -100,12 +101,12 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 }
         ) {
             @Override
-            public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
+            public java.util.List<Component> getTooltipMessage() {
                 boolean enabled = eap$SmartDoublingEnabled;
-                var title = net.minecraft.network.chat.Component.literal("智能翻倍");
+                var title = Component.literal("智能翻倍");
                 var line = enabled
-                        ? net.minecraft.network.chat.Component.literal("已启用：根据请求量对处理样板进行智能缩放")
-                        : net.minecraft.network.chat.Component.literal("已禁用：按原始样板数量进行发配");
+                        ? Component.literal("已启用：根据请求量对处理样板进行智能缩放")
+                        : Component.literal("已禁用：按原始样板数量进行发配");
                 return java.util.List.of(title, line);
             }
         };
