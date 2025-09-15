@@ -2,6 +2,7 @@ package com.extendedae_plus.content.wireless;
 
 import appeng.api.networking.*;
 import appeng.api.util.AECableType;
+import appeng.blockentity.AEBaseBlockEntity;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.IWirelessEndpoint;
@@ -12,7 +13,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +26,7 @@ import java.util.Objects;
  * - 集成 AE2 节点；
  * - 集成无线主/从逻辑。
  */
-public class WirelessTransceiverBlockEntity extends BlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
+public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
     private IManagedGridNode managedNode;
 
@@ -187,7 +187,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
 
     /* ===================== NBT ===================== */
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
@@ -198,15 +198,15 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void loadTag(CompoundTag tag) {
+        super.loadTag(tag);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");
+
         if (managedNode != null) {
             managedNode.loadFromNBT(tag);
         }
-        // 应用到链接器
         if (masterMode) {
             masterLink.setFrequency(frequency);
         } else {
