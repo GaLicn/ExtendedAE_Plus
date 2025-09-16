@@ -2,13 +2,16 @@ package com.extendedae_plus.util.storage;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * InfinityStorageManager
@@ -26,9 +29,9 @@ public class InfinityStorageManager extends SavedData {
      */
     public static final String FILE_NAME = "eap_infinity_biginteger_cells";
     /**
-     * 全局单例实例（在世界加载时由 InfiniteBigIntegerStorageCell.onLevelLoad 填充）
+     * Per-world instances to avoid cross-world leakage. Keyed by world ResourceKey<Level>.
      */
-    public static InfinityStorageManager INSTANCE = null;
+    private static final Map<ResourceKey<Level>, InfinityStorageManager> INSTANCES = new ConcurrentHashMap<>();
     /**
      * UUID -> 数据 的内存映射
      */
@@ -54,10 +57,29 @@ public class InfinityStorageManager extends SavedData {
      * 根据给定的 ServerLevel 获取或创建该世界对应的 SavedData 实例并缓存到 INSTANCE
      */
     public static InfinityStorageManager getForLevel(ServerLevel level) {
-        if (INSTANCE == null && level != null) {
-            INSTANCE = level.getDataStorage().computeIfAbsent(InfinityStorageManager::new, InfinityStorageManager::new, FILE_NAME);
+        if (level == null) return null;
+        ResourceKey<Level> key = level.dimension();
+        InfinityStorageManager mgr = INSTANCES.get(key);
+        if (mgr == null) {
+            mgr = level.getDataStorage().computeIfAbsent(InfinityStorageManager::new, InfinityStorageManager::new, FILE_NAME);
+            INSTANCES.put(key, mgr);
         }
-        return INSTANCE;
+        return mgr;
+    }
+
+    /**
+     * 返回任何现有实例，作为无法访问 ServerLevel 的代码路径的安全回退。
+     */
+    public static InfinityStorageManager getAnyInstance() {
+        return INSTANCES.values().stream().findFirst().orElse(null);
+    }
+
+    /**
+     * 删除世界的实例（在世界卸载时调用）
+     */
+    public static void removeForLevel(ServerLevel level) {
+        if (level == null) return;
+        INSTANCES.remove(level.dimension());
     }
 
     @Override
@@ -98,8 +120,8 @@ public class InfinityStorageManager extends SavedData {
     public void modifyCell(UUID cellID, ListTag stackKeys, ListTag stackAmounts) {
         InfinityDataStorage cellToModify = getOrCreateCell(cellID);
         if (stackKeys != null && stackAmounts != null) {
-            cellToModify.keys = stackKeys;
-            cellToModify.amounts = stackAmounts;
+            cellToModify.setKeys(stackKeys);
+            cellToModify.setAmounts(stackAmounts);
         }
         updateCell(cellID, cellToModify);
     }

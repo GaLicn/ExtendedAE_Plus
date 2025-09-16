@@ -18,17 +18,17 @@ import net.minecraft.nbt.Tag;
  */
 public class InfinityDataStorage {
 
-    /** 空实例（表示没有数据） */
-    public static final InfinityDataStorage EMPTY = new InfinityDataStorage();
+    // 不再暴露可变的共享实例，避免多个调用方修改同一 ListTag 导致交叉污染
+    private static final InfinityDataStorage TRUE_EMPTY = new InfinityDataStorage(new ListTag(), new ListTag());
 
     /** 序列化的键列表（NBT ListTag，元素为 CompoundTag） */
-    public ListTag keys;
+    private ListTag keys;
     /**
      * 与 keys 对应的数量列表（NBT ListTag，元素为 CompoundTag）：
      * - 若数量能放入 long，则 CompoundTag 包含键 "l"(long)
      * - 否则包含键 "s"(String) 存放 BigInteger 的字符串形式
      */
-    public ListTag amounts;
+    private ListTag amounts;
 
     public InfinityDataStorage() {
         this(new ListTag(), new ListTag());
@@ -37,6 +37,14 @@ public class InfinityDataStorage {
     private InfinityDataStorage(ListTag keys, ListTag amounts) {
         this.keys = keys;
         this.amounts = amounts;
+    }
+
+    /**
+     * 返回一个空的不可共享实例（调用方若需要可变副本请自行复制）
+     */
+    public static InfinityDataStorage empty() {
+        // 返回一个新的实例以避免共享可变对象被篡改
+        return new InfinityDataStorage(new ListTag(), new ListTag());
     }
 
     /**
@@ -57,5 +65,21 @@ public class InfinityDataStorage {
         // amounts 以 CompoundTag 列表存储，每个 CompoundTag 内含 long 或 String
         ListTag stackAmounts = nbt.getList("amounts", Tag.TAG_COMPOUND);
         return new InfinityDataStorage(stackKeys, stackAmounts);
+    }
+
+    public ListTag getKeys() {
+        return keys;
+    }
+
+    public ListTag getAmounts() {
+        return amounts;
+    }
+
+    public void setKeys(ListTag keys) {
+        this.keys = keys;
+    }
+
+    public void setAmounts(ListTag amounts) {
+        this.amounts = amounts;
     }
 }
