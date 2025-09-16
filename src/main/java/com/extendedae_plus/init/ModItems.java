@@ -6,6 +6,7 @@ import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
+import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.registries.DeferredRegister;
@@ -64,6 +65,11 @@ public final class ModItems {
             "entity_speed_card",
             () -> new EntitySpeedCardItem(new Item.Properties())
     );
+
+    public static final RegistryObject<Item> INFINITY_BIGINT_ITEM_CELL = ITEMS.register(
+            "infinity_item_cell", InfinityBigIntegerCellItem::new
+    );
+
 
     /**
      * 为 PartItem 注册 AE2 部件模型。
