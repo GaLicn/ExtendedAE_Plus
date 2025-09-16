@@ -26,7 +26,6 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * InfinityBigIntegerCellInventory
@@ -92,9 +91,9 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return null;
     }
 
-    // 获取全局存储实例（尽量安全地获取任意已注册的世界实例）
+    // 获取全局存储实例
     private static InfinityStorageManager getStorageInstance() {
-        return InfinityStorageManager.getAnyInstance();
+        return InfinityStorageManager.INSTANCE;
     }
 
     // 服务器 tick 回调：合并并执行待持久化项
@@ -134,12 +133,10 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private InfinityDataStorage getCellStorage() {
         if (this.getUUID() == null) {
             // 如果没有UUID，返回空存储
-            return InfinityDataStorage.empty();
+            return InfinityDataStorage.EMPTY;
         } else {
-            // 否则获取或创建对应UUID的存储，若管理器不可用则返回空存储以避免 NPE
-            InfinityStorageManager mgr = getStorageInstance();
-            if (mgr == null) return InfinityDataStorage.empty();
-            return mgr.getOrCreateCell(getUUID());
+            // 否则获取或创建对应UUID的存储
+            return getStorageInstance().getOrCreateCell(getUUID());
         }
     }
 
@@ -190,11 +187,8 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private void loadCellStoredMap() {
         boolean corruptedTag = false; // 标记数据是否损坏
         if (!stack.hasTag()) return;
-        // 在加载前重置缓存，避免重复累计
-        totalStored = BigInteger.ZERO;
-        InfinityDataStorage storage = this.getCellStorage();
-        ListTag keys = storage.getKeys();
-        ListTag amounts = storage.getAmounts();
+        ListTag keys = this.getCellStorage().keys;
+        ListTag amounts = this.getCellStorage().amounts;
         int len = Math.min(keys.size(), amounts.size());
         for (int i = 0; i < len; i++) {
             AEKey key = AEKey.fromTagGeneric(keys.getCompound(i));
@@ -229,8 +223,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     }
 
     // 标记数据需要保存，并通知容器或直接持久化
-    private final AtomicBoolean queued = new AtomicBoolean(false);
-
     private void saveChanges() {
         // 标记为未持久化，交由容器或延迟任务合并写入以减少 I/O
         isPersisted = false;
@@ -239,7 +231,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             container.saveChanges();
         } else {
             // 如果没有容器，入队等待服务器 tick 在主线程统一持久化，避免频繁 I/O
-            if (queued.compareAndSet(false, true)) {
+            if (!PENDING_PERSIST.contains(this)) {
                 PENDING_PERSIST.offer(this);
             }
         }
@@ -266,21 +258,13 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (map.isEmpty()) {
             // 如果存储为空，移除UUID和全局存储中的数据
             if (this.hasUUID()) {
-                InfinityStorageManager mgr = getStorageInstance();
-                if (mgr != null) mgr.removeCell(getUUID());
+                getStorageInstance().removeCell(getUUID());
                 if (stack.getTag() != null) {
                     stack.getTag().remove("uuid");
                     // 移除缓存的 total 字段
                     stack.getTag().remove("total");
                 }
-                // 清理 queued 标志并标记已持久化
-                queued.set(false);
-                isPersisted = true;
-                return;
             }
-            // 无 UUID 且为空，不需要做额外操作，但确保已标记为已持久化
-            queued.set(false);
-            isPersisted = true;
             return;
         }
         // 构建要保存的Key和数量列表（混合表示：long 或 string）
@@ -300,16 +284,11 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             }
         }
         // 如果没有Key，更新为空存储，否则保存数据
-        InfinityStorageManager mgr = getStorageInstance();
-        if (mgr == null) {
-            // 无可用存储管理器，跳过持久化（保留内存状态）
+        if (keys.isEmpty()) {
+            getStorageInstance().updateCell(this.getUUID(), new InfinityDataStorage());
         } else {
-            if (keys.isEmpty()) {
-                mgr.updateCell(this.getUUID(), new InfinityDataStorage());
-            } else {
-                // amounts 现在为 CompoundTag 列表
-                mgr.modifyCell(this.getUUID(), keys, amountTags);
-            }
+            // amounts 现在为 CompoundTag 列表
+            getStorageInstance().modifyCell(this.getUUID(), keys, amountTags);
         }
         // 将缓存的 totalStored 同步到 ItemStack 的 NBT，优先使用 long
         if (stack.getOrCreateTag() != null) {
@@ -320,8 +299,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             }
         }
         isPersisted = true;
-        // 持久化完成后，清除 queued 标志
-        queued.set(false);
     }
 
     // 插入物品到存储单元
