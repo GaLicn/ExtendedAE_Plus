@@ -36,6 +36,8 @@ public class InfinityBigIntegerCellItem extends Item {
                                 @Nullable Level world,
                                 @NotNull List<Component> tooltip,
                                 @NotNull TooltipFlag context) {
+        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon"));
+
         Preconditions.checkArgument(stack.getItem() == this);
         // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑
         CompoundTag tag = stack.getTag();

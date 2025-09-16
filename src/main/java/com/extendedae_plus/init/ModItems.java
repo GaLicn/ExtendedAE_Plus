@@ -66,8 +66,8 @@ public final class ModItems {
             () -> new EntitySpeedCardItem(new Item.Properties())
     );
 
-    public static final RegistryObject<Item> INFINITY_BIGINT_ITEM_CELL = ITEMS.register(
-            "infinity_item_cell", InfinityBigIntegerCellItem::new
+    public static final RegistryObject<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+            "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
     );
 
 
