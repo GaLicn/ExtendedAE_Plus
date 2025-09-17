@@ -240,12 +240,40 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取所有可用的物品堆栈及其数量
     @Override
     public void getAvailableStacks(KeyCounter out) {
+        // 使用饱和（saturating）加法将 BigInteger 值转换为 long 并安全地累加到 KeyCounter 中。
+        // 问题背景：当同一物品存在于多个 cell 中，AE2 的 KeyCounter 使用 long 来记录数量，
+        // 若简单将单个 cell 的超长值截断为 Long.MAX_VALUE 并直接 add，多个 cell 的合并会导致
+        // 原本代表 "大于 long" 的值被重复添加而导致读取异常。解决方案：每次向 KeyCounter 添加前，
+        // 先读取当前计数器中的已有值（long），并使用 BigInteger 做饱和加法后再写回为 long，避免中间溢出。
+
         BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
         Object2ObjectMap<AEKey, BigInteger> map = getCellStoredMap();
         for (Object2ObjectMap.Entry<AEKey, BigInteger> entry : map.object2ObjectEntrySet()) {
-            BigInteger v = entry.getValue();
-            long toAdd = v.compareTo(maxLong) > 0 ? Long.MAX_VALUE : v.longValue();
-            out.add(entry.getKey(), toAdd);
+            AEKey key = entry.getKey();
+            BigInteger value = entry.getValue();
+
+            // 当前 KeyCounter 中已有的值（long）
+            long existing = out.get(key);
+
+            // 将 existing 与当前 value 做 BigInteger 累加并饱和到 Long.MAX_VALUE
+            BigInteger sum = BigInteger.valueOf(existing).add(value);
+            long toSet = sum.compareTo(maxLong) > 0 ? Long.MAX_VALUE : sum.longValue();
+
+            // KeyCounter 没有 set(key,long) 的统一接口暴露（只有 add/remove），所以先移除已存在的值再设置。
+            // 为避免读取-写入竞争，我们计算出要新增的 delta 并调用 add(key, delta)
+            if (existing == Long.MAX_VALUE) {
+                // 已经饱和，无需再添加
+                continue;
+            }
+            long delta;
+            if (toSet == Long.MAX_VALUE) {
+                delta = Long.MAX_VALUE - existing;
+            } else {
+                delta = toSet - existing;
+            }
+            if (delta != 0) {
+                out.add(key, delta);
+            }
         }
     }
 
