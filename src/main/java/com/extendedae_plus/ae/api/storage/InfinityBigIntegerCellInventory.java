@@ -297,6 +297,9 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             } else {
                 stack.getOrCreateTag().putString("total", totalStored.toString());
             }
+            // 将当前已存储的不同物品种类数缓存到 NBT（键名: "types"），用于客户端 tooltip 显示
+            int typesCount = this.getCellStoredMap().size();
+            stack.getOrCreateTag().putInt("types", typesCount);
         }
         isPersisted = true;
     }

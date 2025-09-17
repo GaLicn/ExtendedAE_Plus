@@ -36,7 +36,8 @@ public class InfinityBigIntegerCellItem extends Item {
                                 @Nullable Level world,
                                 @NotNull List<Component> tooltip,
                                 @NotNull TooltipFlag context) {
-        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon"));
+        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon1"));
+        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon2"));
 
         Preconditions.checkArgument(stack.getItem() == this);
         // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑
@@ -46,6 +47,17 @@ public class InfinityBigIntegerCellItem extends Item {
             tooltip.add(
                     Component.literal("UUID: ").withStyle(ChatFormatting.GRAY).append(Component.literal(uuidStr).withStyle(ChatFormatting.YELLOW))
             );
+            // 读取并显示已缓存的种类数量（types），表示当前存储了多少种不同的 AEKey
+            if (tag.contains("types")) {
+                try {
+                    int types = tag.getInt("types");
+                    tooltip.add(
+                            Component.literal("Types: ").withStyle(ChatFormatting.GRAY).append(Component.literal(String.valueOf(types)).withStyle(ChatFormatting.GREEN))
+                    );
+                } catch (Exception ignored) {
+                    // ignore malformed value
+                }
+            }
             // 读取并显示已缓存的 total（支持 long 或 string），使用格式化函数展示友好单位
             if (tag.contains("total")) {
                 BigInteger total = BigInteger.ZERO;

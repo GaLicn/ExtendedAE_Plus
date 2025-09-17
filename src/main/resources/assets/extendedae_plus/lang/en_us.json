@@ -23,7 +23,8 @@
   "item.extendedae_plus.entity_speed_card.x8": "Entity Acceleration Card (x8)",
   "item.extendedae_plus.entity_speed_card.x16": "Entity Acceleration Card (x16)",
   "item.extendedae_plus.infinity_biginteger_cell": "§cI§6n§ef§ai§bn§di§9t§fy §cS§6t§eo§ar§ba§dg§9e §fC§co§6m§ep§ao§bn§de§9n§ft",
-  "tooltip.extendedae_plus.infinity_biginteger_cell.summon": "§7Through the sacrifice of nine rare materials, you summon Iava, who bestows upon the summoner an §cI§6n§ef§ai§bn§di§9t§fy §cS§6t§eo§ar§ba§dg§9e §fC§co§6m§ep§ao§bn§de§9n§ft§7 forged from the endless void.",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon1": "§7Through the sacrifice of nine rare materials, you summon Iava, who grants the summoner an §4all-consuming§csilence§6.",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b——§4Within §ca §6small §espace§a, §bthere §dare §4a §cthousand §6realms",
   "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
   "tooltip.extendedae_plus.entity_speed_card.max": "Max effective: %s x",
 
