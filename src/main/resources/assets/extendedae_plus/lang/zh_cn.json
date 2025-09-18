@@ -28,6 +28,9 @@
   "item.extendedae_plus.64x_crafting_accelerator": "64x并行处理单元",
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
+  "item.extendedae_plus.infinity_biginteger_cell": "§4吞§c噬§6万§e籁§a的§b寂§d静",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon1": "§6九重献祭, 终得虚空回响§r——觐见§8虚空之主Iava§r, 赐汝此物",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b——§4方§d寸§c之§e间§a, §6自§b有§5千§9寰",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
   "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",

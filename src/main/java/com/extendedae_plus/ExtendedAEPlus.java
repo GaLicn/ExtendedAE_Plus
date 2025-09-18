@@ -1,38 +1,29 @@
 package com.extendedae_plus;
 
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-import com.extendedae_plus.config.ModConfigs;
-import com.extendedae_plus.init.ModBlocks;
-import com.extendedae_plus.init.ModBlockEntities;
-import com.extendedae_plus.init.ModCreativeTabs;
-import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.init.ModCapabilities;
-import com.extendedae_plus.network.ModNetwork;
-
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.core.definitions.AEBlockEntities;
+import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.*;
+import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.util.storage.InfinityStorageManager;
+import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ExtendedAEPlus.MODID)
@@ -65,8 +56,10 @@ public class ExtendedAEPlus {
         // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
 
-        // 由 ModCreativeTabs#MAIN 的 displayItems 负责填充创造物品栏，无需额外事件注入
+        NeoForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
+        NeoForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
 
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
@@ -82,7 +75,7 @@ public class ExtendedAEPlus {
         LOGGER.info("HELLO FROM COMMON SETUP");
         // 示例日志，避免引用不存在的模板 Config 字段
         LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-
+        StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
         // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
         event.enqueueWork(() -> {
             try {
@@ -114,6 +107,14 @@ public class ExtendedAEPlus {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+
+    // 在世界加载时注册/加载 SavedData
+    private static void onLevelLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            InfinityStorageManager.getForLevel(serverLevel);
+        }
     }
 }
 

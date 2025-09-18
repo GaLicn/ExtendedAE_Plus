@@ -1,6 +1,7 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -46,4 +47,9 @@ public final class ModItems {
             "1024x_crafting_accelerator",
             () -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), new Item.Properties())
     );
+
+    public static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+            "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
+    );
+
 }
