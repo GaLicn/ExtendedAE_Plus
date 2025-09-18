@@ -44,8 +44,8 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void eap$addScaleButtons(CallbackInfo ci) {
-        // 仅在 InterfaceScreen 实例中添加
-        if (!(((Object) this) instanceof InterfaceScreen)) {
+        // 仅在 AE2 接口界面或 ExtendedAE 扩展接口界面中添加
+        if (!eap$isSupportedInterfaceScreen()) {
             return;
         }
         try { LogUtils.getLogger().info("[EAP][InterfaceMixin] init tail reached, preparing scale buttons."); } catch (Throwable ignored) {}
@@ -115,7 +115,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
 
     @Inject(method = "containerTick", at = @At("TAIL"))
     private void eap$ensureButtons(CallbackInfo ci) {
-        if (!(((Object) this) instanceof InterfaceScreen)) {
+        if (!eap$isSupportedInterfaceScreen()) {
             return;
         }
         var accessor = (ScreenAccessor) (Object) this;
@@ -171,7 +171,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
     private void eap$sendAdjustForHoveredConfig(boolean divide, int factor) {
         try {
             // 仅在 InterfaceScreen 中生效
-            if (!(((Object) this) instanceof InterfaceScreen)) {
+            if (!eap$isSupportedInterfaceScreen()) {
                 return;
             }
             // 获取悬停槽位
@@ -229,12 +229,28 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
     @Unique
     private void eap$sendAdjustForAllConfigs(boolean divide, int factor) {
         try {
-            if (!(((Object) this) instanceof InterfaceScreen)) {
+            if (!eap$isSupportedInterfaceScreen()) {
                 return;
             }
             // 直接发送 -1 表示对所有 CONFIG 槽生效
             ModNetwork.CHANNEL.sendToServer(new InterfaceAdjustConfigAmountC2SPacket(-1, divide, factor));
         } catch (Throwable ignored) {}
+    }
+
+    @Unique
+    private boolean eap$isSupportedInterfaceScreen() {
+        // AE2 原版接口界面
+        if (((Object) this) instanceof InterfaceScreen) {
+            return true;
+        }
+        // ExtendedAE 扩展接口界面（使用类名判断避免编译期硬依赖）
+        try {
+            String cn = ((Object) this).getClass().getName();
+            if ("com.glodblock.github.extendedae.client.gui.GuiExInterface".equals(cn)) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     @Unique

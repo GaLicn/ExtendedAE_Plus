@@ -43,27 +43,24 @@ public class InterfaceAdjustConfigAmountC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
-            if (!(player.containerMenu instanceof InterfaceMenu menu)) return;
+            // 支持 AE2 原版接口和 ExtendedAE 扩展接口
+            InterfaceMenu menu = null;
+            com.glodblock.github.extendedae.container.ContainerExInterface exMenu = null;
+            if (player.containerMenu instanceof InterfaceMenu im) {
+                menu = im;
+            } else if (player.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExInterface cem) {
+                exMenu = cem;
+            } else {
+                return;
+            }
 
             try {
-                var logic = menu.getHost().getInterfaceLogic();
+                var logic = (menu != null ? menu.getHost() : exMenu.getHost()).getInterfaceLogic();
                 var config = logic.getConfig();
                 if (msg.slotIndex == -1) {
-                    // 对所有 CONFIG 槽位生效
-                    var configSlots = menu.getSlots(SlotSemantics.CONFIG);
-                    if (configSlots == null || configSlots.isEmpty()) return;
-                    for (var s : configSlots) {
-                        int idx = -1;
-                        try {
-                            var f = s.getClass().getDeclaredField("slot");
-                            f.setAccessible(true);
-                            Object v = f.get(s);
-                            if (v instanceof Integer i) idx = i;
-                        } catch (Throwable ignored) {}
-                        if (idx < 0) {
-                            idx = configSlots.indexOf(s);
-                        }
-
+                    // 对所有配置槽统一生效（不依赖槽位语义，直接按 config.size() 遍历）
+                    int size = config.size();
+                    for (int idx = 0; idx < size; idx++) {
                         var st = config.getStack(idx);
                         if (st == null) continue;
 
