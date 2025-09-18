@@ -1,8 +1,8 @@
 # Changelog
 
-## [Unreleased] / [未发布]
+## [Unreleased]
 
-## [1.4.2] / [未发布]
+## [1.4.2]
 ### Added / 新增
 - 添加实体加速器，最高可加速 1024 倍（配置文件可配置能耗、黑名单、额外消耗倍率名单）
   - Added Entity Accelerator block, capable of up to 1024× acceleration (configurable energy cost, blacklist, and extra consumption multiplier list).
@@ -26,6 +26,8 @@
   - Adjusted display limit for pattern output quantity.
 - 放宽扩展供应器样板手动倍增限制
   - Relaxed manual doubling restrictions for Extended Providers.
+- 为ME接口添加倍增按钮用于倍增标记物品数量
+  - Add a multiplier button to the ME interface for multiplying the marked item quantity
 ### Fixed / 修复
 - 修复无线收发器频道限制与渲染问题
   - Fixed channel limit and rendering issues for Wireless Repeater.
