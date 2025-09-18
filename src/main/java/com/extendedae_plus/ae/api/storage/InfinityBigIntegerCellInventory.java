@@ -17,8 +17,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -27,6 +27,7 @@ import java.text.DecimalFormat;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 /**
  * InfinityBigIntegerCellInventory
  * <p>
@@ -49,15 +50,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private static final ConcurrentLinkedQueue<InfinityBigIntegerCellInventory> PENDING_PERSIST = new ConcurrentLinkedQueue<>();
     // 数字格式化对象，保留两位小数（复用以减少对象分配）
     private static final DecimalFormat DF = new DecimalFormat("#.##");
-
-    static {
-        // 在类加载时注册服务器 tick 监听器，用于在主线程合并写入
-        try {
-            MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
-        } catch (Throwable ignored) {
-            // 保守降级：若注册失败，不阻塞实例化
-        }
-    }
 
     // 关联的 ItemStack（含可能的 uuid NBT）
     private final ItemStack stack;
@@ -97,7 +89,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     }
 
     // 服务器 tick 回调：合并并执行待持久化项
-    private static void onServerTick(TickEvent.ServerTickEvent event) {
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         InfinityBigIntegerCellInventory inv;
         // 处理本次 tick 中的全部待持久化项
@@ -107,8 +99,29 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
                     inv.persist();
                 }
             } catch (Throwable ignored) {
-                // 忽略单项错误，继续处理其余队列
+                LOGGER.info("InfinityBigIntegerCellInventory onServerTick error: {}", ignored.getMessage());
             }
+        }
+    }
+
+    // 在服务器停止时被调用，立即强制持久化队列中的所有实例
+    public static void onServerStopping(ServerStoppingEvent event) {
+        InfinityBigIntegerCellInventory inv;
+        while ((inv = PENDING_PERSIST.poll()) != null) {
+            try {
+                if (!inv.isPersisted) {
+                    inv.persist();
+                }
+            } catch (Throwable ignored) {
+                LOGGER.info("InfinityBigIntegerCellInventory onServerStopping error1: {}", ignored.getMessage());
+            }
+        }
+        // 额外尝试将全局存储管理器标记为脏以确保 SavedData 被写回（在单人模式下可能直接由系统触发）
+        try {
+            var stor = getStorageInstance();
+            if (stor != null) stor.setDirty();
+        } catch (Throwable ignored) {
+            LOGGER.info("InfinityBigIntegerCellInventory onServerStopping error2: {}", ignored.getMessage());
         }
     }
 
@@ -240,12 +253,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取所有可用的物品堆栈及其数量
     @Override
     public void getAvailableStacks(KeyCounter out) {
-        // 使用饱和（saturating）加法将 BigInteger 值转换为 long 并安全地累加到 KeyCounter 中。
-        // 问题背景：当同一物品存在于多个 cell 中，AE2 的 KeyCounter 使用 long 来记录数量，
-        // 若简单将单个 cell 的超长值截断为 Long.MAX_VALUE 并直接 add，多个 cell 的合并会导致
-        // 原本代表 "大于 long" 的值被重复添加而导致读取异常。解决方案：每次向 KeyCounter 添加前，
-        // 先读取当前计数器中的已有值（long），并使用 BigInteger 做饱和加法后再写回为 long，避免中间溢出。
-
         BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
         Object2ObjectMap<AEKey, BigInteger> map = getCellStoredMap();
         for (Object2ObjectMap.Entry<AEKey, BigInteger> entry : map.object2ObjectEntrySet()) {
