@@ -2,10 +2,12 @@ package com.extendedae_plus.network;
 
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
+import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
 
 import java.util.function.Supplier;
 
@@ -27,15 +29,25 @@ public class ToggleSmartDoublingC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
-            if (!(player.containerMenu instanceof PatternProviderMenu menu)) return;
-
-            var accessor = (PatternProviderMenuAdvancedAccessor) menu;
-            var logic = accessor.eap$logic();
-            if (logic instanceof SmartDoublingHolder holder) {
-                boolean current = holder.eap$getSmartDoubling();
-                boolean next = !current;
-                holder.eap$setSmartDoubling(next);
-                logic.saveChanges();
+            var containerMenu = player.containerMenu;
+            if (containerMenu instanceof PatternProviderMenu menu) {
+                var accessor = (PatternProviderMenuAdvancedAccessor) menu;
+                var logic = accessor.eap$logic();
+                if (logic instanceof SmartDoublingHolder holder) {
+                    boolean current = holder.eap$getSmartDoubling();
+                    boolean next = !current;
+                    holder.eap$setSmartDoubling(next);
+                    logic.saveChanges();
+                }
+            }else if (containerMenu instanceof AdvPatternProviderMenu menu){
+                var accessor = (AdvPatternProviderMenuAdvancedAccessor) menu;
+                var logic = accessor.eap$logic();
+                if (logic instanceof SmartDoublingHolder holder) {
+                    boolean current = holder.eap$getSmartDoubling();
+                    boolean next = !current;
+                    holder.eap$setSmartDoubling(next);
+                    logic.saveChanges();
+                }
             }
         });
         ctx.setPacketHandled(true);

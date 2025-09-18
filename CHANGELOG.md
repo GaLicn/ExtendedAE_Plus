@@ -2,6 +2,53 @@
 
 ## [Unreleased] / [未发布]
 
+## [1.4.2] / [未发布]
+### Added / 新增
+- 添加实体加速器，最高可加速 1024 倍（配置文件可配置能耗、黑名单、额外消耗倍率名单）
+  - Added Entity Accelerator block, capable of up to 1024× acceleration (configurable energy cost, blacklist, and extra consumption multiplier list).
+- 添加实体加速卡系列，用于设置实体加速器加速倍率
+  - Added Entity Acceleration Card series to configure acceleration multiplier for the Entity Accelerator.
+- 添加物品“吞噬万籁的寂静”，可存储 21 亿种不同的资源，每种资源存储数量无上限（气体等物品须安装对应附属 mod）
+  - Added item “Devourer of Cosmic Silence”: stores up to 2.1 billion distinct resources with unlimited quantity per type (gases and other types require respective addon mods).
+- eae扩展样板管理界面添加F键搜索支持
+  - Added F-key search support in Extended Pattern Management Terminal.
+- 合成计划界面支持 Shift+点击取消自动添加缺失材料至 JEI 书签
+  - Crafting Plan GUI: Shift-clicking cancel button auto-adds missing ingredients to JEI bookmarks.
+- AE 合成暂停检查阈值配置项（默认值 100000）
+  - Added config option for AE crafting pause threshold (default: 100000).
+- 智能系列支持高级 AE 供应器
+  - Smart series now supports Advanced AE Providers.
+- 无线收发器支持重命名，Jade 可以在从节点显示主节点名称
+  - Wireless Repeater supports renaming; Jade HUD displays master node name on slave terminals.
+- 智能阻挡开启时自动启用原版阻挡
+  - Enabling Smart Blocking now also activates Vanilla Blocking automatically.
+- 调整样板制作数量显示上限
+  - Adjusted display limit for pattern output quantity.
+- 放宽扩展供应器样板手动倍增限制
+  - Relaxed manual doubling restrictions for Extended Providers.
+### Fixed / 修复
+- 修复无线收发器频道限制与渲染问题
+  - Fixed channel limit and rendering issues for Wireless Repeater.
+
+## [1.4.1]
+### Added / 新增
+- 模组配置项：可设置智能倍增的最大倍数  
+  - Config option: set maximum multiplier for Smart Doubling.
+- 上传样板搜索框：右键点击可清空文本  
+  - Right-clicking the pattern upload search box clears the text.
+- 合成监控界面：打开样板供应器 UI 时自动跳转到该样板所在页数，并以彩虹高亮显示  
+  - Crafting monitor: auto-jumps to the page containing the pattern and highlights it with rainbow effect when opening the provider UI.
+- 样板供应器 UI 标题现在显示为玩家自定义名称  
+  - Pattern Provider UI now displays the player-customized name as its title.
+- 配置项：当产物数量达到指定值时启用智能倍增  
+  - Config option: enable Smart Doubling only when output amount reaches a specified threshold.
+
+### Fixed / 修复
+- 修复编码终端中空白配方无法覆盖已有编码样板的问题  
+  - Fixed issue where blank recipes couldn't overwrite existing encoded patterns in the Encoding Terminal.
+- 修复非 AE 与 ExtendedAE 样板供应器无法发配材料的问题  
+  - Fixed issue where non-AE2 and non-ExtendedAE pattern providers failed to dispatch materials.
+
 ## [1.4.0-fix]
 ### Added / 新增
 - JEI 书签优先用于编码样板匹配（书签越靠前，匹配优先级越高）

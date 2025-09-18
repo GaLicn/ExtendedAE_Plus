@@ -1,14 +1,14 @@
-package com.extendedae_plus.mixin.ae2.menu;
+package com.extendedae_plus.mixin.advancedae.menu;
 
-import appeng.helpers.patternprovider.PatternProviderLogic;
-import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
-import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
+import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,16 +16,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
-
-@Mixin(PatternProviderMenu.class)
-public abstract class PatternProviderMenuAdvancedMixin implements PatternProviderMenuAdvancedSync {
+@Mixin(AdvPatternProviderMenu.class)
+public abstract class AdvPatternProviderMenuAdvancedMixin implements PatternProviderMenuAdvancedSync {
     @Shadow
-    protected PatternProviderLogic logic;
+    protected AdvPatternProviderLogic logic;
 
-    // 选择一个未占用的 GUI 同步 id（AE2 已用到 7），这里使用 20 以避冲突
+    // 选择一个未占用的 GUI 同步 id（AE2 已用到 7），这里使用 21 以避冲突
     @Unique
-    @GuiSync(20)
+    @GuiSync(22)
     public boolean eap$AdvancedBlocking = false;
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
@@ -40,8 +38,8 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     }
 
     // 构造器尾注入（public ctor）
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"))
-    private void eap$initAdvancedSync_Public(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"))
+    private void eap$initAdvancedSync_Public(int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
@@ -51,16 +49,14 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     }
 
     // 构造器尾注入（protected ctor with MenuType）
-    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"))
-    private void eap$initAdvancedSync_Protected(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"))
+    private void eap$initAdvancedSync_Protected(MenuType menuType, int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
             if (l instanceof AdvancedBlockingHolder holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
             }
-        } catch (Throwable t) {
-            LOGGER.error("Error initializing advanced sync", t);
-        }
+        } catch (Throwable ignored) {}
     }
 
     @Override

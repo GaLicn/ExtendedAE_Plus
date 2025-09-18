@@ -1,14 +1,14 @@
-package com.extendedae_plus.mixin.ae2.helpers;
+package com.extendedae_plus.mixin.advancedae.helpers;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
-import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,8 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 
-@Mixin(value = PatternProviderLogic.class, remap = false)
-public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
+@Mixin(value = AdvPatternProviderLogic.class, remap = false)
+public class AdvPatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
     @Unique
     private static final String EAP_ADV_BLOCKING_KEY = "eap_advanced_blocking";
 
@@ -56,7 +56,7 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
                                                  IPatternDetails patternDetails,
                                                  appeng.api.stacks.KeyCounter[] inputHolder) {
         // 原版是否打开阻挡
-        boolean vanillaBlocking = ((PatternProviderLogic)(Object)this).isBlocking();
+        boolean vanillaBlocking = ((AdvPatternProviderLogic)(Object)this).isBlocking();
         if (!vanillaBlocking) {
             return adapter.containsPatternInput(patternInputs);
         }

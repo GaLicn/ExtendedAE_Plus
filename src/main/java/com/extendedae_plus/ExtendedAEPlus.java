@@ -1,14 +1,20 @@
 package com.extendedae_plus;
 
+import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import com.extendedae_plus.util.storage.InfinityStorageManager;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -46,8 +52,12 @@ public class ExtendedAEPlus {
 
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
         // 注册通用配置
         ModConfig.init();
+        // 注册 InfinityBigIntegerCellInventory 的事件监听（tick flush 与停止时 flush）
+        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
+        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
 //        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
     }
 
@@ -55,6 +65,8 @@ public class ExtendedAEPlus {
      * 通用初始化设置
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
+        StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
+
         // 注册本模组网络通道与数据包
         event.enqueueWork(() -> {
             // 注册升级卡
@@ -102,6 +114,13 @@ public class ExtendedAEPlus {
                 // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法
                 ModItems.registerPartModels();
             } catch (Exception ignored) {}
+        }
+    }
+
+    // 在世界加载时注册/加载 SavedData
+    private static void onLevelLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            InfinityStorageManager.getForLevel(serverLevel);
         }
     }
 }
