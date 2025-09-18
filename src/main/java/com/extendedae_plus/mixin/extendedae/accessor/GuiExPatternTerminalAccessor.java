@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.accessor;
 
+import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.Scrollbar;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.neoforged.api.distmarker.Dist;
@@ -20,4 +21,7 @@ public interface GuiExPatternTerminalAccessor {
 
     @Accessor("rows")
     ArrayList<?> getRows();
+
+    @Accessor("searchField")
+    AETextField getSearchField();
 }

@@ -10,7 +10,7 @@ import appeng.menu.AEBaseMenu;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
-import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
@@ -42,7 +42,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> PacketDistributor
-                    .sendToServer(com.extendedae_plus.network.RequestProvidersListC2SPacket.INSTANCE)) {
+                    .sendToServer(RequestProvidersListC2SPacket.INSTANCE)) {
                 private final float eap$scale = 0.75f; // 约 12x12
 
                 @Override
@@ -106,15 +106,15 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
             Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
             var pos = ws.resolve(bounds);
-            int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
-            int baseH = ws.getHeight() > 0 ? ws.getHeight() : 16;
+            int baseW = ws.getWidth() > 0 ? ws.getWidth() : 12;
+            int baseH = ws.getHeight() > 0 ? ws.getHeight() : 12;
             int targetW = Math.max(10, Math.round(baseW * 0.75f));
             int targetH = Math.max(10, Math.round(baseH * 0.75f));
             // 缩小为原尺寸的 0.75（稍微变大于 8x8）
             eap$uploadBtn.setWidth(targetW);
             eap$uploadBtn.setHeight(targetH);
             // 仍位于其左侧，但整体向右微移（减小间距）约 2px
-            eap$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
+            eap$uploadBtn.setX(pos.getX() - baseW - 2); // 原为 -targetW - 2，再右移 2px
             eap$uploadBtn.setY(pos.getY());
         } catch (Throwable t) {
             // 回退：放在界面右侧大致位置，避免不可见
