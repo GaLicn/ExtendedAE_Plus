@@ -54,42 +54,42 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             eap$x2Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(false, 2);
             }, NewIcon.MULTIPLY2);
-            eap$x2Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.multiply2")));
+            eap$x2Button.setTooltip(null);
             eap$x2Button.setVisibility(true);
         }
         if (eap$divideBy2Button == null) {
             eap$divideBy2Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(true, 2);
             }, NewIcon.DIVIDE2);
-            eap$divideBy2Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.divide2")));
+            eap$divideBy2Button.setTooltip(null);
             eap$divideBy2Button.setVisibility(true);
         }
         if (eap$x5Button == null) {
             eap$x5Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(false, 5);
             }, NewIcon.MULTIPLY5);
-            eap$x5Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.multiply5")));
+            eap$x5Button.setTooltip(null);
             eap$x5Button.setVisibility(true);
         }
         if (eap$divideBy5Button == null) {
             eap$divideBy5Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(true, 5);
             }, NewIcon.DIVIDE5);
-            eap$divideBy5Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.divide5")));
+            eap$divideBy5Button.setTooltip(null);
             eap$divideBy5Button.setVisibility(true);
         }
         if (eap$x10Button == null) {
             eap$x10Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(false, 10);
             }, NewIcon.MULTIPLY10);
-            eap$x10Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.multiply10")));
+            eap$x10Button.setTooltip(null);
             eap$x10Button.setVisibility(true);
         }
         if (eap$divideBy10Button == null) {
             eap$divideBy10Button = new ActionEPPButton((b) -> {
                 eap$sendAdjustForAllConfigs(true, 10);
             }, NewIcon.DIVIDE10);
-            eap$divideBy10Button.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.divide10")));
+            eap$divideBy10Button.setTooltip(null);
             eap$divideBy10Button.setVisibility(true);
         }
 
