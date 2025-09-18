@@ -97,6 +97,12 @@ public class ModNetwork {
                 .consumerNetworkThread(ToggleEntityTickerC2SPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(InterfaceAdjustConfigAmountC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(InterfaceAdjustConfigAmountC2SPacket::encode)
+                .decoder(InterfaceAdjustConfigAmountC2SPacket::decode)
+                .consumerNetworkThread(InterfaceAdjustConfigAmountC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(AdvancedBlockingSyncS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(AdvancedBlockingSyncS2CPacket::encode)
                 .decoder(AdvancedBlockingSyncS2CPacket::decode)
