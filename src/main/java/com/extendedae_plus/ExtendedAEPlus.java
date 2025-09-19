@@ -74,6 +74,14 @@ public class ExtendedAEPlus {
             ModNetwork.register();
             // 注册自定义 Curios 宿主定位器，便于将菜单宿主信息在服务端与客户端间同步
             MenuLocators.register(CuriosItemLocator.class, CuriosItemLocator::writeToPacket, CuriosItemLocator::readFromPacket);
+
+            // 绑定装配矩阵上传核心的方块实体类型（延迟到注册完成后）
+            com.extendedae_plus.init.ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
+                    com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                    com.extendedae_plus.init.ModBlockEntities.UPLOAD_CORE_BE.get(),
+                    null,
+                    null
+            );
         });
     }
 

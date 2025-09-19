@@ -28,6 +28,12 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
     );
 
+    // 装配矩阵上传核心（方块物品）
+    public static final RegistryObject<Item> ASSEMBLER_MATRIX_UPLOAD_CORE = ITEMS.register(
+            "assembler_matrix_upload_core",
+            () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get(), new Item.Properties())
+    );
+
     // Crafting Accelerators
     public static final RegistryObject<Item> ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",

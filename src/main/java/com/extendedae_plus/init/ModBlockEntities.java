@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.DeferredRegister;
@@ -23,4 +24,10 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("network_pattern_controller",
                     () -> BlockEntityType.Builder.of(NetworkPatternControllerBlockEntity::new,
                             ModBlocks.NETWORK_PATTERN_CONTROLLER.get()).build(null));
+
+    // 装配矩阵上传核心
+    public static final RegistryObject<BlockEntityType<UploadCoreBlockEntity>> UPLOAD_CORE_BE =
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_upload_core",
+                    () -> BlockEntityType.Builder.of(UploadCoreBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get()).build(null));
 }

@@ -543,7 +543,7 @@ public class ExtendedAEPatternUploadUtil {
             var tiles = grid.getMachines(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern.class);
             int idx = 0;
             for (com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern tile : tiles) {
-                if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
+                if (tile != null && tile.isFormed() && tile.getMainNode().isActive() && clusterHasSingleUploadCore(tile)) {
                     var inv = tile.getExposedInventory();
                     if (inv != null) {
                         result.add(inv);
@@ -565,7 +565,7 @@ public class ExtendedAEPatternUploadUtil {
             Set<TileAssemblerMatrixBase> matrices = grid.getMachines(TileAssemblerMatrixBase.class);
             int idx = 0;
             for (TileAssemblerMatrixBase tile : matrices) {
-                if (tile != null && tile.isFormed()) {
+                if (tile != null && tile.isFormed() && clusterHasSingleUploadCore(tile)) {
                     var capOpt = tile.getCapability(ForgeCapabilities.ITEM_HANDLER, null);
                     if (capOpt != null) {
                         var handler = capOpt.orElse(null);
@@ -629,6 +629,28 @@ public class ExtendedAEPatternUploadUtil {
         } catch (Throwable t) {
         }
         return false;
+    }
+
+    /**
+     * 判断给定矩阵集群中是否存在且仅存在一个“装配矩阵上传核心”。
+     * 传入任意属于该集群的 Tile（如 Pattern/Crafter/Frame 等）。
+     */
+    private static boolean clusterHasSingleUploadCore(TileAssemblerMatrixBase any) {
+        try {
+            if (any == null || any.getCluster() == null) return false;
+            int cores = 0;
+            var it = any.getCluster().getBlockEntities();
+            while (it.hasNext()) {
+                var te = it.next();
+                if (te instanceof com.extendedae_plus.content.matrix.UploadCoreBlockEntity) {
+                    cores++;
+                    if (cores > 1) return false; // 至多一个
+                }
+            }
+            return cores == 1; // 恰好一个
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /**
