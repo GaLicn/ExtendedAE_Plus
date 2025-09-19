@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(AdvPatternProviderMenu.class)
 public interface AdvPatternProviderMenuAdvancedAccessor {
-    @Accessor("logic")
+    @Accessor(value = "logic", remap = false)
     AdvPatternProviderLogic eap$logic();
 }

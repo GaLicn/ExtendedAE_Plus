@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PatternEncodingTermMenu.class)
 public interface PatternEncodingTermMenuAccessor {
-    @Accessor("encodedPatternSlot")
+    @Accessor(value = "encodedPatternSlot",remap = false)
     RestrictedInputSlot eap$getEncodedPatternSlot();
 
-    @Accessor("blankPatternSlot")
+    @Accessor(value = "blankPatternSlot",remap = false)
     RestrictedInputSlot eap$getBlankPatternSlot();
 }

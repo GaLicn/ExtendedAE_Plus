@@ -33,7 +33,8 @@ public abstract class CraftingTreeProcessMixin {
     @ModifyVariable(
             method = "<init>(Lappeng/api/networking/crafting/ICraftingService;Lappeng/crafting/CraftingCalculation;Lappeng/api/crafting/IPatternDetails;Lappeng/crafting/CraftingTreeNode;)V",
             at = @At("HEAD"),
-            argsOnly = true
+            argsOnly = true,
+            remap = false
     )
     private static IPatternDetails eap$replaceDetailsAtHead(IPatternDetails original, ICraftingService cc, CraftingCalculation job, IPatternDetails details, CraftingTreeNode craftingTreeNode) {
         try {

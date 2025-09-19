@@ -9,6 +9,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,7 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AdvPatternProviderMenu.class)
 public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProviderMenuDoublingSync {
-    @Shadow
+    @Final
+    @Shadow(remap = false)
     protected AdvPatternProviderLogic logic;
 
     @Unique
@@ -35,7 +37,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProv
         }
     }
 
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"), remap = false)
     private void eap$initSmartSync_Public(int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
@@ -45,7 +47,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProv
         } catch (Throwable ignored) {}
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;)V", at = @At("TAIL"), remap = false)
     private void eap$initSmartSync_Protected(MenuType menuType, int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
