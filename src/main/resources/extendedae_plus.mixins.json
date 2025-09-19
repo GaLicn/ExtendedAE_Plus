@@ -36,6 +36,7 @@
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
+    "ae2.menu.CraftConfirmMenuGoBackMixin",
     "ae2.accessor.AEBaseScreenAccessor",
     "ae2.accessor.AEBaseScreenInvoker",
     "ae2.accessor.MEStorageScreenAccessor",

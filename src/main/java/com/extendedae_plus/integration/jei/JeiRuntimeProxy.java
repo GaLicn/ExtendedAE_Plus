@@ -7,7 +7,9 @@ import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.gui.bookmarks.BookmarkList;
+import mezz.jei.gui.bookmarks.IngredientBookmark;
 import mezz.jei.gui.overlay.elements.IElement;
+import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -131,5 +133,45 @@ public final class JeiRuntimeProxy {
             return bookmarkList.getElements().stream().map(IElement::getTypedIngredient).toList();
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * 将物品添加到 JEI 书签
+     */
+    public static void addBookmark(ItemStack stack) {
+        IJeiRuntime rt = RUNTIME;
+        if (rt == null || stack == null || stack.isEmpty()) return;
+
+        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
+        if (overlay instanceof BookmarkOverlayAccessor accessor) {
+            BookmarkList list = accessor.eap$getBookmarkList();
+            try {
+                var typedOpt = rt.getIngredientManager().createTypedIngredient(VanillaTypes.ITEM_STACK, stack);
+                typedOpt.ifPresent(typed -> {
+                    IngredientBookmark<ItemStack> bookmark = IngredientBookmark.create(typed, rt.getIngredientManager());
+                    list.add(bookmark); // add 内部会自动保存到配置
+                });
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    /**
+     * 从 JEI 书签移除物品
+     */
+    public static void removeBookmark(ItemStack stack) {
+        IJeiRuntime rt = RUNTIME;
+        if (rt == null || stack == null || stack.isEmpty()) return;
+
+        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
+        if (overlay instanceof BookmarkOverlayAccessor accessor) {
+            BookmarkList list = accessor.eap$getBookmarkList();
+            try {
+                var typedOpt = rt.getIngredientManager().createTypedIngredient(VanillaTypes.ITEM_STACK, stack);
+                typedOpt.ifPresent(typed -> {
+                    IngredientBookmark<ItemStack> bookmark = IngredientBookmark.create(typed, rt.getIngredientManager());
+                    list.remove(bookmark);
+                });
+            } catch (Throwable ignored) {}
+        }
     }
 }
