@@ -44,8 +44,8 @@ public class InfinityDataStorage {
      */
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
-        nbt.put("keys", keys);
-        nbt.put("amounts", amounts);
+        nbt.put("keys", this.keys);
+        nbt.put("amounts", this.amounts);
         return nbt;
     }
 

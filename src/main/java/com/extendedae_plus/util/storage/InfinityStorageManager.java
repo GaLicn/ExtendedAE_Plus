@@ -1,11 +1,18 @@
 package com.extendedae_plus.util.storage;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.saveddata.SavedData;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.level.storage.LevelResource;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -13,88 +20,89 @@ import java.util.UUID;
 /**
  * InfinityStorageManager
  * <p>
- * 世界级别的持久化容器，集中管理所有 InfinityBigInteger 存储单元的序列化数据。
- * 功能要点：
- * - 在世界加载时从存档恢复所有 cell 的数据
- * - 提供按 UUID 获取/创建单个 cell 的数据容器
- * - 在世界保存时将内存数据打包为 NBT 写回存档
+ * 替代之前基于 SavedData 的实现，本类使用手动文件 I/O 在 world 目录下保存 NBT 数据，
+ * 以避免依赖 Minecraft 的 SavedData 机制。
+ * 数据保持与之前兼容的 NBT 结构：根 Compound 包含 "list" => ListTag of Compound { uuid, data }
  */
-public class InfinityStorageManager extends SavedData {
+public class InfinityStorageManager {
+
+    public static final String FILE_NAME = "eap_infinity_biginteger_cells.dat";
 
     /**
-     * SavedData 文件名常量
+     * 全局单例，由 mod 在 world load 时初始化
      */
-    public static final String FILE_NAME = "eap_infinity_biginteger_cells";
-    /**
-     * 全局单例实例（在世界加载时由 InfiniteBigIntegerStorageCell.onLevelLoad 填充）
-     */
-    public static InfinityStorageManager INSTANCE = null;
-    /**
-     * UUID -> 数据 的内存映射
-     */
+    public static volatile InfinityStorageManager INSTANCE = new InfinityStorageManager();
+
     private final Map<UUID, InfinityDataStorage> cells = new HashMap<>();
 
-    public InfinityStorageManager() {
-        setDirty();
+    private Path saveFilePath = null;
+
+    private InfinityStorageManager() {}
+
+    /**
+     * 初始化并从 world 保存目录加载数据；若文件不存在则保持空状态
+     */
+    public void initFromWorld(@Nullable ServerLevel serverLevel) {
+        if (serverLevel == null) return;
+        try {
+            File worldFolder = serverLevel.getServer().getWorldPath(LevelResource.ROOT).toFile();
+            // 保存到 world/<modid>/ 文件夹下，避免与其它 mod 冲突
+            File modDir = new File(worldFolder, ExtendedAEPlus.MODID);
+            if (!modDir.exists()) {
+                modDir.mkdirs();
+            }
+            this.saveFilePath = new File(modDir, FILE_NAME).toPath();
+            if (Files.exists(this.saveFilePath)) {
+                CompoundTag root = NbtIo.readCompressed(this.saveFilePath.toFile());
+                ListTag cellList = root.getList("list", Tag.TAG_COMPOUND);
+                for (int i = 0; i < cellList.size(); i++) {
+                    CompoundTag cell = cellList.getCompound(i);
+                    this.cells.put(cell.getUUID("uuid"), InfinityDataStorage.loadFromNBT(cell.getCompound("data")));
+                }
+            }
+        } catch (IOException e) {
+            // 读取失败保持空，并打印栈追踪以便调试
+            e.printStackTrace();
+        }
     }
 
     /**
-     * 从 NBT 构造：用于在世界加载时从存档恢复数据
+     * 保存当前内存数据到文件（会覆盖已有文件）
      */
-    public InfinityStorageManager(CompoundTag nbt) {
-        ListTag cellList = nbt.getList("list", CompoundTag.TAG_COMPOUND);
-        for (int i = 0; i < cellList.size(); i++) {
-            CompoundTag cell = cellList.getCompound(i);
-            cells.put(cell.getUUID("uuid"), InfinityDataStorage.loadFromNBT(cell.getCompound("data")));
+    public synchronized void saveToFile() {
+        if (this.saveFilePath == null)
+            return;
+        try {
+            CompoundTag root = new CompoundTag();
+            ListTag cellList = new ListTag();
+            for (Map.Entry<UUID, InfinityDataStorage> entry : this.cells.entrySet()) {
+                CompoundTag cell = new CompoundTag();
+                cell.putUUID("uuid", entry.getKey());
+                cell.put("data", entry.getValue().serializeNBT());
+                cellList.add(cell);
+            }
+            root.put("list", cellList);
+            // 使用压缩写入以节省空间
+            NbtIo.writeCompressed(root, this.saveFilePath.toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        setDirty();
     }
 
-    /**
-     * 根据给定的 ServerLevel 获取或创建该世界对应的 SavedData 实例并缓存到 INSTANCE
-     */
-    public static InfinityStorageManager getForLevel(ServerLevel level) {
-        if (INSTANCE == null && level != null) {
-            INSTANCE = level.getDataStorage().computeIfAbsent(InfinityStorageManager::new, InfinityStorageManager::new, FILE_NAME);
-        }
-        return INSTANCE;
-    }
-
-    @Override
-    public @NotNull CompoundTag save(@NotNull CompoundTag nbt) {
-        // 将内存中的所有 cell 序列化为一个 ListTag
-        ListTag cellList = new ListTag();
-        for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
-            CompoundTag cell = new CompoundTag();
-            cell.putUUID("uuid", entry.getKey());
-            cell.put("data", entry.getValue().serializeNBT());
-            cellList.add(cell);
-        }
-        nbt.put("list", cellList);
-        return nbt;
-    }
-
-    /**
-     * 更新或添加某个 UUID 对应的数据并标记为脏（需要保存）
-     */
     public void updateCell(UUID uuid, InfinityDataStorage infinityDataStorage) {
-        cells.put(uuid, infinityDataStorage);
-        setDirty();
+        this.cells.put(uuid, infinityDataStorage);
+        saveToFile();
     }
 
-    /**
-     * 获取或创建某个 UUID 对应的数据容器
-     */
     public InfinityDataStorage getOrCreateCell(UUID uuid) {
-        if (!cells.containsKey(uuid)) {
-            updateCell(uuid, new InfinityDataStorage());
+        if (!this.cells.containsKey(uuid)) {
+            InfinityDataStorage newCell = new InfinityDataStorage();
+            this.cells.put(uuid, newCell);
+            saveToFile();
         }
-        return cells.get(uuid);
+        return this.cells.get(uuid);
     }
 
-    /**
-     * 修改某个 UUID 对应的键与数量列表并保存（新的签名，stackAmounts 为 ListTag 字符串列表）
-     */
     public void modifyCell(UUID cellID, ListTag stackKeys, ListTag stackAmounts) {
         InfinityDataStorage cellToModify = getOrCreateCell(cellID);
         if (stackKeys != null && stackAmounts != null) {
@@ -104,11 +112,8 @@ public class InfinityStorageManager extends SavedData {
         updateCell(cellID, cellToModify);
     }
 
-    /**
-     * 删除某个 UUID 的持久化记录并标记为脏
-     */
     public void removeCell(UUID uuid) {
-        cells.remove(uuid);
-        setDirty();
+        this.cells.remove(uuid);
+        saveToFile();
     }
 }

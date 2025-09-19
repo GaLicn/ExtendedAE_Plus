@@ -53,12 +53,11 @@ public class ExtendedAEPlus {
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
-        // 注册通用配置
-        ModConfig.init();
-        // 注册 InfinityBigIntegerCellInventory 的事件监听（tick flush 与停止时 flush）
+        // 注册每秒合并持久化队列的事件监听（Server tick end + stopping）
         MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
         MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
-//        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+        // 注册通用配置
+        ModConfig.init();
     }
 
     /**
@@ -120,7 +119,8 @@ public class ExtendedAEPlus {
     // 在世界加载时注册/加载 SavedData
     private static void onLevelLoad(LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
-            InfinityStorageManager.getForLevel(serverLevel);
+            // 初始化自定义的文件 I/O 存储管理器
+            InfinityStorageManager.INSTANCE.initFromWorld(serverLevel);
         }
     }
 }
