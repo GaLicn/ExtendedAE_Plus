@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(BookmarkOverlay.class)
 public interface BookmarkOverlayAccessor {
-    @Accessor("bookmarkList")
+    @Accessor(value = "bookmarkList", remap = false)
     BookmarkList eap$getBookmarkList();
 }

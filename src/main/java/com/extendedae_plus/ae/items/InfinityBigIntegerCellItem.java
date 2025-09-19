@@ -1,7 +1,6 @@
 package com.extendedae_plus.ae.items;
 
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
-import com.google.common.base.Preconditions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongTag;
@@ -14,7 +13,6 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.math.BigInteger;
 import java.util.List;
 
 public class InfinityBigIntegerCellItem extends Item {
@@ -39,15 +37,14 @@ public class InfinityBigIntegerCellItem extends Item {
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon1"));
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon2"));
 
-        Preconditions.checkArgument(stack.getItem() == this);
-        // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑
+        // 优先使用 ItemStack 的 NBT 缓存信息显示 tooltip（客户端不应触发世界 I/O）
         CompoundTag tag = stack.getTag();
         if (tag != null && tag.contains("uuid")) {
             String uuidStr = tag.getUUID("uuid").toString();
             tooltip.add(
                     Component.literal("UUID: ").withStyle(ChatFormatting.GRAY).append(Component.literal(uuidStr).withStyle(ChatFormatting.YELLOW))
             );
-            // 读取并显示已缓存的种类数量（types），表示当前存储了多少种不同的 AEKey
+            // types 表示缓存的种类数
             if (tag.contains("types")) {
                 try {
                     int types = tag.getInt("types");
@@ -55,27 +52,25 @@ public class InfinityBigIntegerCellItem extends Item {
                             Component.literal("Types: ").withStyle(ChatFormatting.GRAY).append(Component.literal(String.valueOf(types)).withStyle(ChatFormatting.GREEN))
                     );
                 } catch (Exception ignored) {
-                    // ignore malformed value
                 }
             }
-            // 读取并显示已缓存的 total（支持 long 或 string），使用格式化函数展示友好单位
+            // total 支持 long 或 string 两种表现形式
             if (tag.contains("total")) {
-                BigInteger total = BigInteger.ZERO;
-                Tag t = tag.get("total");
                 try {
+                    java.math.BigInteger total;
+                    Tag t = tag.get("total");
                     if (t instanceof LongTag) {
-                        total = BigInteger.valueOf(tag.getLong("total"));
+                        total = java.math.BigInteger.valueOf(tag.getLong("total"));
                     } else {
                         String s = tag.getString("total");
-                        total = new BigInteger(s);
+                        total = new java.math.BigInteger(s);
                     }
+                    String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
+                    tooltip.add(
+                            Component.literal("Byte: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
+                    );
                 } catch (Exception ignored) {
-                    // 解析失败保持为 0
                 }
-                String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
-                tooltip.add(
-                        Component.literal("Byte: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
-                );
             }
         }
     }

@@ -9,6 +9,7 @@ import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
 import com.extendedae_plus.api.SmartDoublingHolder;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -20,7 +21,8 @@ import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(PatternProviderMenu.class)
 public abstract class PatternProviderMenuDoublingMixin implements PatternProviderMenuDoublingSync {
-    @Shadow
+    @Final
+    @Shadow(remap = false)
     protected PatternProviderLogic logic;
 
     @Unique
@@ -37,7 +39,7 @@ public abstract class PatternProviderMenuDoublingMixin implements PatternProvide
         }
     }
 
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"), remap = false)
     private void eap$initSmartSync_Public(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
@@ -49,7 +51,7 @@ public abstract class PatternProviderMenuDoublingMixin implements PatternProvide
         }
     }
 
-    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V", at = @At("TAIL"), remap = false)
     private void eap$initSmartSync_Protected(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;

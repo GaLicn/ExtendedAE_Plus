@@ -32,7 +32,7 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
     private Player epp$player;
 
     // 明确目标构造签名：<init>(int, Inventory, HostWirelessExPAT)
-    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0)
+    @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lcom/glodblock/github/extendedae/common/me/itemhost/HostWirelessExPAT;)V", at = @At("TAIL"), require = 0, remap = false)
     private void init(int id, net.minecraft.world.entity.player.Inventory playerInventory, HostWirelessExPAT host, CallbackInfo ci) {
         this.epp$player = playerInventory.player;
         // 注册上传动作：参数顺序必须与客户端 CGenericPacket 保持一致

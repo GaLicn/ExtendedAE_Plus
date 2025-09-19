@@ -3,7 +3,6 @@ package com.extendedae_plus;
 import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
@@ -55,10 +54,6 @@ public class ExtendedAEPlus {
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
         // 注册通用配置
         ModConfig.init();
-        // 注册 InfinityBigIntegerCellInventory 的事件监听（tick flush 与停止时 flush）
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
-//        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
     }
 
     /**
@@ -128,7 +123,8 @@ public class ExtendedAEPlus {
     // 在世界加载时注册/加载 SavedData
     private static void onLevelLoad(LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
-            InfinityStorageManager.getForLevel(serverLevel);
+            // 初始化自定义的文件 I/O 存储管理器
+            InfinityStorageManager.INSTANCE.initFromWorld(serverLevel);
         }
     }
 }

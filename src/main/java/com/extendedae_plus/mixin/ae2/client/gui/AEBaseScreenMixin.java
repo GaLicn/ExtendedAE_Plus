@@ -312,7 +312,7 @@ public abstract class AEBaseScreenMixin {
     }
 
 
-    @Shadow
+    @Shadow(remap = false)
     protected void setTextContent(String id, Component content) {};
 
     @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
