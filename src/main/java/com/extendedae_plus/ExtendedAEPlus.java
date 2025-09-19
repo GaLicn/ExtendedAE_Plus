@@ -3,7 +3,6 @@ package com.extendedae_plus;
 import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
@@ -53,9 +52,6 @@ public class ExtendedAEPlus {
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
-        // 注册每秒合并持久化队列的事件监听（Server tick end + stopping）
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
         // 注册通用配置
         ModConfig.init();
     }
