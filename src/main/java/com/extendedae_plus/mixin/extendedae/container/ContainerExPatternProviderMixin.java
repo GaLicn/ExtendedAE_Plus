@@ -134,10 +134,12 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         } else {
             for (var stack : stacks) {
                 if (stack != null) {
-                    long upper = 999999L * stack.what().getAmountPerUnit();
-                    if (stack.amount() * scale > upper) {
+                    long amt = stack.amount();
+                    // 先检查乘法是否会导致超出 Long.MAX_VALUE，避免溢出
+                    if (amt > Integer.MAX_VALUE / scale) {
                         return false;
                     }
+                    // 已移除原有的业务上限检查（999999 * amountPerUnit），仅保留溢出检查
                 }
             }
             return true;
@@ -150,7 +152,18 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
             var stack = src[i];
             if (stack != null) {
                 long amt = stack.amount();
-                long newAmt = div ? (amt / scale) : (amt * scale);
+                long newAmt;
+                if (div) {
+                    newAmt = amt / scale;
+                } else {
+                    // 防御性检查：虽然上游已检查过，但在此处再次确保不会溢出
+                    if (amt > Integer.MAX_VALUE / scale) {
+                        // 遇到潜在溢出时跳过该项（保持原样为 null），调用方已通过 eap$checkModify 避免进入此分支
+                        dst[i] = null;
+                        continue;
+                    }
+                    newAmt = amt * scale;
+                }
                 dst[i] = new GenericStack(stack.what(), newAmt);
             } else {
                 dst[i] = null;

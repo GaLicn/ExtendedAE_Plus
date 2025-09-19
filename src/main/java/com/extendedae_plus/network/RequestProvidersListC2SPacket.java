@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;

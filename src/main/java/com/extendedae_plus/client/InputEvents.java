@@ -4,16 +4,16 @@ import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
 import appeng.integration.modules.jei.GenericEntryStackHelper;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
-import com.extendedae_plus.network.ModNetwork;
+import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
-import mezz.jei.api.constants.VanillaTypes;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -98,13 +98,18 @@ public final class InputEvents {
         var screen = Minecraft.getInstance().screen;
         if (screen instanceof MEStorageScreen<?> me) {
             try {
-                MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;
+                MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
                 acc.eap$getSearchField().setValue(name);
                 acc.eap$setSearchText(name); // 同步到 Repo 并刷新
                 event.setCanceled(true);
-                return;
             } catch (Throwable ignored) {
             }
+        }else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+            try {
+                GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                acc.getSearchOutField().setValue(name);
+                event.setCanceled(true);
+            }catch (Throwable ignored) {}
         }
     }
 }

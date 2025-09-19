@@ -22,7 +22,7 @@ import java.util.Collections;
 @Mixin(value = PatternProviderLogic.class, remap = false)
 public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
     @Unique
-    private static final String EPP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
+    private static final String EAP_ADV_BLOCKING_KEY = "eap_advanced_blocking";
 
     @Unique
     private boolean eap$advancedBlocking = false;
@@ -39,13 +39,13 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$writeAdvancedToNbt(CompoundTag tag, CallbackInfo ci) {
-        tag.putBoolean(EPP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
+        tag.putBoolean(EAP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$readAdvancedFromNbt(CompoundTag tag, CallbackInfo ci) {
-        if (tag.contains(EPP_ADV_BLOCKING_KEY)) {
-            this.eap$advancedBlocking = tag.getBoolean(EPP_ADV_BLOCKING_KEY);
+        if (tag.contains(EAP_ADV_BLOCKING_KEY)) {
+            this.eap$advancedBlocking = tag.getBoolean(EAP_ADV_BLOCKING_KEY);
         }
     }
 
@@ -95,13 +95,13 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
     private void onExportSettings(CompoundTag output, CallbackInfo ci) {
         System.out.println(this.eap$advancedBlocking);
-        output.putBoolean("eap_advanced_blocking", this.eap$advancedBlocking);
+        output.putBoolean(EAP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
     @Inject(method = "importSettings(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/world/entity/player/Player;)V", at = @At("TAIL"))
     private void onImportSettings(CompoundTag input, Player player, CallbackInfo ci) {
-        if (input.contains("eap_advanced_blocking")) {
-            this.eap$advancedBlocking = input.getBoolean("eap_advanced_blocking");
+        if (input.contains(EAP_ADV_BLOCKING_KEY)) {
+            this.eap$advancedBlocking = input.getBoolean(EAP_ADV_BLOCKING_KEY);
             // 持久化到 world
             this.saveChanges();
         }

@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(CraftingTreeNode.class)
 public interface CraftingTreeNodeAccessor {
-    @Accessor("what")
+    @Accessor(value = "what", remap = false)
     AEKey eap$getWhat();
 }

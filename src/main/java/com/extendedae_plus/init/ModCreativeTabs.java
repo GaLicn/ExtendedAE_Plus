@@ -26,6 +26,15 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ACCELERATOR_64x.get());
                         output.accept(ModItems.ACCELERATOR_256x.get());
                         output.accept(ModItems.ACCELERATOR_1024x.get());
+                        output.accept(ModItems.ENTITY_TICKER_PART_ITEM.get());
+
+                        // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
+                        output.accept(ModItems.createEntitySpeedCardStack(2));
+                        output.accept(ModItems.createEntitySpeedCardStack(4));
+                        output.accept(ModItems.createEntitySpeedCardStack(8));
+                        output.accept(ModItems.createEntitySpeedCardStack(16));
+
+                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
                     })
                     .build());
 }

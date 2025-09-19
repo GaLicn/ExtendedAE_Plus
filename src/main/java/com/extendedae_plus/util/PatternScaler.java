@@ -4,7 +4,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 
 public final class PatternScaler {
@@ -56,7 +56,7 @@ public final class PatternScaler {
         }
         // 小请求绕过：若请求量小且不会带来收益，则不启用缩放（返回 null）
         try {
-            int minBenefit = ModConfigs.SMART_SCALING_MIN_BENEFIT_FACTOR.get();
+            int minBenefit = ModConfig.INSTANCE.smartScalingMinBenefitFactor;
             if (minBenefit > 1 && requestedAmount > 0 && requestedAmount < perOperationTarget * (long) minBenefit) {
                 return null;
             }
@@ -65,7 +65,7 @@ public final class PatternScaler {
         }
         // 应用配置的最大倍数上限（0 表示不限制）
         try {
-            int maxMul = ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get();
+            int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
             if (maxMul > 0 && multiplier > maxMul) {
                 multiplier = maxMul;
             }

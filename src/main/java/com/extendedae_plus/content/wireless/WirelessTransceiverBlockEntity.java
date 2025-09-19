@@ -1,6 +1,8 @@
 package com.extendedae_plus.content.wireless;
 
 import appeng.api.networking.*;
+import appeng.api.util.AECableType;
+import appeng.blockentity.AEBaseBlockEntity;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.IWirelessEndpoint;
@@ -11,11 +13,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Objects;
 
 /**
  * 无线收发器方块实体（骨架）：
@@ -24,7 +26,7 @@ import java.util.EnumSet;
  * - 集成 AE2 节点；
  * - 集成无线主/从逻辑。
  */
-public class WirelessTransceiverBlockEntity extends BlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
+public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
     private IManagedGridNode managedNode;
 
@@ -38,7 +40,8 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     public WirelessTransceiverBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.WIRELESS_TRANSCEIVER_BE.get(), pos, state);
         // 创建 AE2 管理节点
-        this.managedNode = GridHelper.createManagedNode(this, NodeListener.INSTANCE);
+        this.managedNode = GridHelper.createManagedNode(this, NodeListener.INSTANCE)
+                .setFlags(GridFlags.DENSE_CAPACITY);
         this.managedNode.setIdlePowerUsage(1.0); // 可按需调整基础待机功耗
         this.managedNode.setTagName("wireless_node");
         this.managedNode.setInWorldNode(true);
@@ -48,6 +51,20 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
         // 初始化无线逻辑
         this.masterLink = new WirelessMasterLink(this);
         this.slaveLink = new WirelessSlaveLink(this);
+    }
+
+    @Override
+    public appeng.api.util.AECableType getCableConnectionType(Direction dir) {
+        // 根据相邻方块的实际连接类型渲染（优先采用相邻主机返回的类型），回退为 GLASS。
+        if (this.level == null) return AECableType.GLASS;
+        var adjacentPos = this.worldPosition.relative(dir);
+        if (!Objects.requireNonNull(this.getLevel()).hasChunkAt(adjacentPos)) return AECableType.GLASS;
+        var adjacentHost = GridHelper.getNodeHost(this.getLevel(), adjacentPos);
+        if (adjacentHost != null) {
+            var t = adjacentHost.getCableConnectionType(dir.getOpposite());
+            if (t != null) return t;
+        }
+        return AECableType.GLASS;
     }
 
     /* ===================== IInWorldGridNodeHost ===================== */
@@ -170,7 +187,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
 
     /* ===================== NBT ===================== */
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
@@ -181,15 +198,15 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void loadTag(CompoundTag tag) {
+        super.loadTag(tag);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");
+
         if (managedNode != null) {
             managedNode.loadFromNBT(tag);
         }
-        // 应用到链接器
         if (masterMode) {
             masterLink.setFrequency(frequency);
         } else {

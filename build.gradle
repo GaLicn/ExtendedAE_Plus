@@ -1,6 +1,7 @@
 plugins {
     id 'dev.architectury.loom' version '1.10-SNAPSHOT'
     id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = project.maven_group
@@ -116,6 +117,10 @@ dependencies {
     modRuntimeOnly "curse.maven:geckolib-388172:6920925"
     //mclib运行时
     forgeRuntimeLibrary "com.eliotlash.mclib:mclib:20"
+
+    // compileOnly 供代码编译
+    include "curse.maven:configuration-444699:4710266"
+    modImplementation "curse.maven:configuration-444699:4710266"
 }
 
 allprojects {

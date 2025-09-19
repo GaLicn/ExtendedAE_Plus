@@ -1,28 +1,37 @@
 package com.extendedae_plus.client;
 
 import appeng.client.render.crafting.CraftingCubeModel;
+import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
+import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
-import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.renderer.item.ItemProperties;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
  */
-public final class ClientProxy {
-    private ClientProxy() {}
+public final class ClientRegistrar {
+    private ClientRegistrar() {}
 
     private static boolean REGISTERED = false;
 
-    public static void init() {
+    /**
+     * 注册内置模型（formed 模型等）。可被 ModelEvent 或启动阶段直接调用。
+     */
+    public static void initBuiltInModels() {
         if (REGISTERED) return;
         REGISTERED = true;
+        // 注册 Item property，用于根据 ItemStack 的 NBT exponent 切换模型
+        ItemProperties.register(ModItems.ENTITY_SPEED_CARD.get(), ExtendedAEPlus.id("mult"),
+                (stack, world, entity, seed) -> (float) EntitySpeedCardItem.readMultiplier(stack));
         // 注册四种形成态模型为内置模型
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/4x_accelerator_formed_v2"),
@@ -46,29 +55,31 @@ public final class ClientProxy {
     }
 
     /**
-     * 客户端设置阶段：延迟执行需要访问注册对象的客户端注册。
+     * 将菜单类型与对应的屏幕绑定。
      */
-    public static void onClientSetup(final FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            // 确保在首次资源加载前完成内置模型注册（REGISTERED 保护避免重复）
-            init();
-            // 仅在客户端设置阶段执行与 UI 相关的一次性绑定
-            registerConfigScreen();
-            // 菜单 -> 屏幕 绑定
-            MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
-        });
+    public static void registerMenuScreens() {
+        MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
+    }
+
+    /**
+     * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
+     */
+    public static void registerInitScreens() {
+        InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
+                EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
+                "/screens/entity_speed_ticker.json");
     }
 
     /**
      * 仅客户端：在 Mods 菜单注册配置界面入口。
      * 将对 Screen 的引用限制在客户端侧，避免服务端类加载。
      */
-    public static void registerConfigScreen() {
-        // 将 ModConfigScreen 的引用放在此处，确保仅在 Dist.CLIENT 下解析该类
-        ModLoadingContext.get().registerExtensionPoint(
-                ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory(
-                        (mc, parent) -> new com.extendedae_plus.client.ModConfigScreen(parent))
-        );
-    }
+//    public static void registerConfigScreen() {
+//        // 将 ModConfigScreen 的引用放在此处，确保仅在 Dist.CLIENT 下解析该类
+//        ModLoadingContext.get().registerExtensionPoint(
+//                ConfigScreenHandler.ConfigScreenFactory.class,
+//                () -> new ConfigScreenHandler.ConfigScreenFactory(
+//                        (mc, parent) -> new ModConfigScreen(parent))
+//        );
+//    }
 }

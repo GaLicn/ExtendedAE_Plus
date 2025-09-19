@@ -10,7 +10,7 @@ import appeng.crafting.CraftingTreeProcess;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.util.PatternScaler;
 import com.extendedae_plus.util.RequestedAmountHolder;
@@ -33,7 +33,8 @@ public abstract class CraftingTreeProcessMixin {
     @ModifyVariable(
             method = "<init>(Lappeng/api/networking/crafting/ICraftingService;Lappeng/crafting/CraftingCalculation;Lappeng/api/crafting/IPatternDetails;Lappeng/crafting/CraftingTreeNode;)V",
             at = @At("HEAD"),
-            argsOnly = true
+            argsOnly = true,
+            remap = false
     )
     private static IPatternDetails eap$replaceDetailsAtHead(IPatternDetails original, ICraftingService cc, CraftingCalculation job, IPatternDetails details, CraftingTreeNode craftingTreeNode) {
         try {
@@ -58,7 +59,7 @@ public abstract class CraftingTreeProcessMixin {
 
             // 根据配置决定是否在 provider 间轮询分配请求量（默认开启）
             long perProvider = 1L;
-            if (!ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.get()) {
+            if (!ModConfig.INSTANCE.providerRoundRobinEnable) {
                 // 关闭轮询：直接使用完整请求量，不需要查询 provider 列表
                 perProvider = requested;
                 if (perProvider <= 0) perProvider = 1L;

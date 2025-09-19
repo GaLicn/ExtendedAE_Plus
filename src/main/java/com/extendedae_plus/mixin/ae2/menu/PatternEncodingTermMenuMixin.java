@@ -14,6 +14,7 @@ import appeng.menu.slot.RestrictedInputSlot;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,7 +29,8 @@ public abstract class PatternEncodingTermMenuMixin {
     @Unique
     private boolean eap$blankAutoFilled = false;
 
-    @Shadow
+    @Final
+    @Shadow(remap = false)
     private RestrictedInputSlot blankPatternSlot;
 
     @Unique
@@ -87,7 +89,7 @@ public abstract class PatternEncodingTermMenuMixin {
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;Z)V",
-            at = @At("TAIL"))
+            at = @At("TAIL"), remap = false)
     private void eap$autoFillBlankPattern(MenuType<?> menuType, int id, Inventory ip,
                                           IPatternTerminalMenuHost host, boolean bindInventory,
                                           CallbackInfo ci) {
@@ -95,7 +97,7 @@ public abstract class PatternEncodingTermMenuMixin {
     }
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;)V",
-            at = @At("TAIL"))
+            at = @At("TAIL"), remap = false)
     private void eap$autoFillCtor3(int id, Inventory ip, IPatternTerminalMenuHost host, CallbackInfo ci) {
         eap$tryFill(host, ip);
     }

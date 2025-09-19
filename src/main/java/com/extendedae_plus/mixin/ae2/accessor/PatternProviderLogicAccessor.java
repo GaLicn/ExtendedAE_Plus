@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PatternProviderLogic.class)
 public interface PatternProviderLogicAccessor {
-    @Accessor("host")
+    @Accessor(value = "host", remap = false)
     PatternProviderLogicHost eap$host();
 
-    @Accessor("mainNode")
+    @Accessor(value = "mainNode", remap = false)
     IManagedGridNode eap$mainNode();
 }

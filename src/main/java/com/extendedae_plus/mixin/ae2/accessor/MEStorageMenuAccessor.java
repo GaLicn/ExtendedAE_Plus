@@ -10,23 +10,23 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(MEStorageMenu.class)
 public interface MEStorageMenuAccessor {
-    @Accessor("storage")
+    @Accessor(value = "storage", remap = false)
     @Nullable
     MEStorage getStorage();
 
-    @Accessor("powerSource")
+    @Accessor(value = "powerSource", remap = false)
     @Nullable
     IEnergySource getPowerSource();
 
-    @Accessor("hasPower")
+    @Accessor(value = "hasPower", remap = false)
     boolean getHasPower();
 
     // Access client-side config manager mirror used for syncing settings
-    @Accessor("clientCM")
+    @Accessor(value = "clientCM", remap = false)
     IConfigManager getClientCM();
 
     // Access server-side config manager
-    @Accessor("serverCM")
+    @Accessor(value = "serverCM", remap = false)
     @Nullable
     IConfigManager getServerCM();
 }

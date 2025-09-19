@@ -37,7 +37,12 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
             if (data.contains("masterMode") && !data.getBoolean("masterMode") && data.contains("masterPos")) {
                 BlockPos pos = BlockPos.of(data.getLong("masterPos"));
                 String dim = data.contains("masterDim") ? data.getString("masterDim") : "";
-                tooltip.add(Component.literal("主节点位置: (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                String customName = data.contains("customName") ? data.getString("customName") : null;
+                if (customName != null) {
+                    tooltip.add(Component.literal("主节点: " + customName + "(" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                } else {
+                    tooltip.add(Component.literal("主节点位置: (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                }
                 if (!dim.isEmpty()) {
                     tooltip.add(Component.literal("维度: " + dim));
                 }

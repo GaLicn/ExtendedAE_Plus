@@ -8,9 +8,9 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
@@ -259,7 +259,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     private void injectConstructor(CallbackInfo ci) {
         // 根据配置初始化默认显示/隐藏状态
         try {
-            this.eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
+            this.eap$showSlots = ModConfig.INSTANCE.patternTerminalShowSlotsDefault;
         } catch (Throwable ignored) {
         }
         // 创建切换槽位显示的按钮
