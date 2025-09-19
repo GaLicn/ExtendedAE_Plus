@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
  * InfinityStorageManager
  * <p>
@@ -20,6 +22,10 @@ import java.util.UUID;
  * - 在世界保存时将内存数据打包为 NBT 写回存档
  */
 public class InfinityStorageManager extends SavedData {
+
+    // 当前磁盘格式版本号，增加字段用于向后/向前兼容
+    private static final int FORMAT_VERSION = 1;
+
 
     /**
      * SavedData 文件名常量
@@ -42,10 +48,18 @@ public class InfinityStorageManager extends SavedData {
      * 从 NBT 构造：用于在世界加载时从存档恢复数据
      */
     public InfinityStorageManager(CompoundTag nbt) {
+        // 读取格式版本，缺省视为 1（兼容旧档）
+        int version = nbt.contains("format_version") ? nbt.getInt("format_version") : 1;
+        LOGGER.info("Loading InfinityStorageManager format_version={}", version);
+
         ListTag cellList = nbt.getList("list", CompoundTag.TAG_COMPOUND);
         for (int i = 0; i < cellList.size(); i++) {
             CompoundTag cell = cellList.getCompound(i);
-            cells.put(cell.getUUID("uuid"), InfinityDataStorage.loadFromNBT(cell.getCompound("data")));
+            java.util.UUID uuid = cell.getUUID("uuid");
+            CompoundTag dataTag = cell.getCompound("data");
+            InfinityDataStorage data = InfinityDataStorage.loadFromNBT(dataTag);
+            cells.put(uuid, data);
+            LOGGER.info("Loaded InfinityDataStorage for uuid {}: keys={}, amounts={}", uuid, data.keys.size(), data.amounts.size());
         }
         setDirty();
     }
@@ -71,6 +85,8 @@ public class InfinityStorageManager extends SavedData {
             cellList.add(cell);
         }
         nbt.put("list", cellList);
+        // 写入当前格式版本号，便于未来迁移与兼容判断
+        nbt.putInt("format_version", FORMAT_VERSION);
         return nbt;
     }
 
