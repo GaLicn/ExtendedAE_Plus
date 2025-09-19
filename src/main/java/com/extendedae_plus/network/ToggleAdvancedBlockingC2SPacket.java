@@ -10,6 +10,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.server.level.ServerPlayer;
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 
 /**
  * C2S：切换高级阻挡模式。
@@ -41,6 +43,8 @@ public class ToggleAdvancedBlockingC2SPacket implements CustomPacketPayload {
             if (logic instanceof AdvancedBlockingHolder holder) {
                 boolean next = !holder.eap$getAdvancedBlocking();
                 holder.eap$setAdvancedBlocking(next);
+                // 自动开启原版阻挡
+                logic.getConfigManager().putSetting(Settings.BLOCKING_MODE, YesNo.YES);
                 logic.saveChanges();
             }
         });
