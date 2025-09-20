@@ -18,6 +18,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.ModList;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
@@ -28,88 +29,115 @@ public final class InputEvents {
 
     @SubscribeEvent
     public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
+        // 若未安装 JEI，直接跳过，避免触发 JEI 类加载导致的 NoClassDefFoundError
+        if (!ModList.get().isLoaded("jei")) {
+            return;
+        }
+        // 若 JEI 运行时尚未就绪，跳过
+        if (JeiRuntimeProxy.get() == null) {
+            return;
+        }
         // 优先处理：Shift + 左键（拉取或下单）
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-            double mouseX = event.getMouseX();
-            double mouseY = event.getMouseY();
-            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
-            if (hovered.isEmpty()) {
-                hovered = JeiRuntimeProxy.getIngredientUnderMouse();
-            }
-            if (hovered.isPresent()) {
-                // 若 JEI 作弊模式开启，则放行给 JEI 处理（Shift+左键=一组）
-                if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
-                    return;
+            try {
+                double mouseX = event.getMouseX();
+                double mouseY = event.getMouseY();
+                Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
+                if (hovered.isEmpty()) {
+                    hovered = JeiRuntimeProxy.getIngredientUnderMouse();
                 }
-                ITypedIngredient<?> typed = hovered.get();
-                GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
-                if (stack != null) {
-                    // 发送到服务端：若网络有库存则拉取一组到空槽，否则若可合成则打开下单界面
-                    ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
-                    // 消费此次点击，避免 JEI/原版对左键的其它处理
-                    event.setCanceled(true);
-                    return;
+                if (hovered.isPresent()) {
+                    // 若 JEI 作弊模式开启，则放行给 JEI 处理（Shift+左键=一组）
+                    if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
+                        return;
+                    }
+                    ITypedIngredient<?> typed = hovered.get();
+                    GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+                    if (stack != null) {
+                        // 发送到服务端：若网络有库存则拉取一组到空槽，否则若可合成则打开下单界面
+                        ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+                        // 消费此次点击，避免 JEI/原版对左键的其它处理
+                        event.setCanceled(true);
+                        return;
+                    }
                 }
+            } catch (Throwable ignored) {
+                // 兼容 JEI 版本差异或运行时异常
             }
         }
 
         // 中键：打开 AE 下单界面（保持原有功能）
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-            // 优先在 JEI 配方界面基于坐标获取；若无，再从覆盖层/书签获取
-            double mouseX = event.getMouseX();
-            double mouseY = event.getMouseY();
-            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
-            if (hovered.isEmpty()) {
-                hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+            try {
+                // 优先在 JEI 配方界面基于坐标获取；若无，再从覆盖层/书签获取
+                double mouseX = event.getMouseX();
+                double mouseY = event.getMouseY();
+                Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
+                if (hovered.isEmpty()) {
+                    hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+                }
+                if (hovered.isEmpty()) return;
+
+                ITypedIngredient<?> typed = hovered.get();
+                // 若 JEI 作弊模式开启，则放行给 JEI 处理（中键=一组）
+                if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
+                    return;
+                }
+                GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+                if (stack == null) return;
+
+                // 发送到服务端，让其验证并打开 CraftAmountMenu
+                ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+
+                // 消费此次点击，避免 JEI/原版对中键的其它处理
+                event.setCanceled(true);
+            } catch (Throwable ignored) {
+                // 兼容 JEI 版本差异或运行时异常
             }
-            if (hovered.isEmpty()) return;
-
-            ITypedIngredient<?> typed = hovered.get();
-            // 若 JEI 作弊模式开启，则放行给 JEI 处理（中键=一组）
-            if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
-                return;
-            }
-            GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
-            if (stack == null) return;
-
-            // 发送到服务端，让其验证并打开 CraftAmountMenu
-            ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
-
-            // 消费此次点击，避免 JEI/原版对中键的其它处理
-            event.setCanceled(true);
         }
     }
 
     @SubscribeEvent
     public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
+        // 若未安装 JEI，直接跳过
+        if (!ModList.get().isLoaded("jei")) {
+            return;
+        }
+        if (JeiRuntimeProxy.get() == null) {
+            return;
+        }
         if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
 
         // 仅当鼠标确实悬停在 JEI 配料上时触发
-        Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse();
-        if (hovered.isEmpty()) return;
+        try {
+            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse();
+            if (hovered.isEmpty()) return;
 
-        ITypedIngredient<?> typed = hovered.get();
+            ITypedIngredient<?> typed = hovered.get();
 
-        // 通用获取显示名称（兼容物品/流体等）
-        String name = JeiRuntimeProxy.getTypedIngredientDisplayName(typed);
-        if (name == null || name.isEmpty()) return;
+            // 通用获取显示名称（兼容物品/流体等）
+            String name = JeiRuntimeProxy.getTypedIngredientDisplayName(typed);
+            if (name == null || name.isEmpty()) return;
 
-        // 写入 AE2 终端的搜索框
-        var screen = Minecraft.getInstance().screen;
-        if (screen instanceof MEStorageScreen<?> me) {
-            try {
-                MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
-                acc.eap$getSearchField().setValue(name);
-                acc.eap$setSearchText(name); // 同步到 Repo 并刷新
-                event.setCanceled(true);
-            } catch (Throwable ignored) {
+            // 写入 AE2 终端的搜索框
+            var screen = Minecraft.getInstance().screen;
+            if (screen instanceof MEStorageScreen<?> me) {
+                try {
+                    MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
+                    acc.eap$getSearchField().setValue(name);
+                    acc.eap$setSearchText(name); // 同步到 Repo 并刷新
+                    event.setCanceled(true);
+                } catch (Throwable ignored) {
+                }
+            }else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+                try {
+                    GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                    acc.getSearchOutField().setValue(name);
+                    event.setCanceled(true);
+                }catch (Throwable ignored) {}
             }
-        }else if (screen instanceof GuiExPatternTerminal<?> gpt) {
-            try {
-                GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
-                acc.getSearchOutField().setValue(name);
-                event.setCanceled(true);
-            }catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+            // 兼容 JEI 版本差异或运行时异常
         }
     }
 }
