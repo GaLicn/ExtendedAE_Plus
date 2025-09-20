@@ -2,10 +2,18 @@ package com.extendedae_plus.util.storage;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -50,7 +58,14 @@ public class InfinityStorageManager extends SavedData {
     public InfinityStorageManager(CompoundTag nbt) {
         // 读取格式版本，缺省视为 1（兼容旧档）
         int version = nbt.contains("format_version") ? nbt.getInt("format_version") : 1;
-        LOGGER.info("Loading InfinityStorageManager format_version={}", version);
+        if (!nbt.contains("format_version")) {
+            // 旧档未包含 format_version，标记为需要写回以便下次保存写入版本号
+            LOGGER.info("Found legacy InfinityStorageManager dat without format_version; treating as version {} and marking dirty for upgrade", version);
+            // 立即标记为脏以触发尽快写盘（升级写入 format_version）
+            this.setDirty();
+        } else {
+            LOGGER.info("Loading InfinityStorageManager format_version={}", version);
+        }
 
         ListTag cellList = nbt.getList("list", CompoundTag.TAG_COMPOUND);
         for (int i = 0; i < cellList.size(); i++) {
@@ -69,6 +84,53 @@ public class InfinityStorageManager extends SavedData {
      */
     public static InfinityStorageManager getForLevel(ServerLevel level) {
         if (INSTANCE == null && level != null) {
+            // 迁移逻辑：若旧的压缩 dat 文件存在且缺少 format_version，则读取并补上 version，备份原文件
+            try {
+                Path dataDir = level.getServer().getWorldPath(new LevelResource("data"));
+                Path filePath = dataDir.resolve(FILE_NAME + ".dat");
+                File oldFile = filePath.toFile();
+                if (oldFile.exists()) {
+                    // 检测是否为 gzip（压缩 NBT）
+                    boolean isGzip = false;
+                    try (var fis = Files.newInputStream(filePath)) {
+                        int b1 = fis.read();
+                        int b2 = fis.read();
+                        isGzip = (b1 == 0x1F && b2 == 0x8B);
+                    } catch (IOException ignored) {
+                    }
+                    if (isGzip) {
+                        try {
+                            var root = NbtIo.readCompressed(oldFile);
+                            if (!root.contains("format_version")) {
+                                // 备份旧文件
+                                Path bak = filePath.resolveSibling(FILE_NAME + ".dat.bak");
+                                try {
+                                    Files.copy(filePath, bak);
+                                } catch (IOException ignored) {
+                                }
+                                // 写回并加入 format_version
+                                root.putInt("format_version", FORMAT_VERSION);
+                                Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
+                                File tmpFile = tmp.toFile();
+                                if (tmpFile.getParentFile() != null && !tmpFile.getParentFile().exists()) {
+                                    tmpFile.getParentFile().mkdirs();
+                                }
+                                NbtIo.writeCompressed(root, tmpFile);
+                                try {
+                                    Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                                } catch (AtomicMoveNotSupportedException ex) {
+                                    Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING);
+                                }
+                                LOGGER.info("Migrated old compressed {} to include format_version", filePath);
+                            }
+                        } catch (IOException ex) {
+                            LOGGER.info("Failed to migrate old compressed file {}: {}", filePath, ex.getMessage());
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
             INSTANCE = level.getDataStorage().computeIfAbsent(InfinityStorageManager::new, InfinityStorageManager::new, FILE_NAME);
         }
         return INSTANCE;
