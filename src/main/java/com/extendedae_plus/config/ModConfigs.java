@@ -11,6 +11,7 @@ public final class ModConfigs {
     public static final ModConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ModConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
+    public static final ModConfigSpec.IntValue CRAFTING_PAUSE_THRESHOLD;
 
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
@@ -40,6 +41,12 @@ public final class ModConfigs {
                         "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
                 )
                 .define("patternTerminalShowSlotsDefault", true);
+
+        CRAFTING_PAUSE_THRESHOLD = builder
+                .comment(
+                        "值越大将减少AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
+                )
+                .defineInRange("craftingPauseThreshold", 100000, 100, Integer.MAX_VALUE);
 
         // end general
         builder.pop();
@@ -88,5 +95,6 @@ public final class ModConfigs {
         COMMON_SPEC = builder.build();
     }
 
-    private ModConfigs() {}
+    private ModConfigs() {
+    }
 }
