@@ -46,6 +46,9 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                 long freq = blockEntity.getFrequency();
                 IWirelessEndpoint master = WirelessMasterRegistry.get(level, freq);
                 if (master != null && !master.isEndpointRemoved()) {
+                    if (master instanceof WirelessTransceiverBlockEntity masterBlockEntity && masterBlockEntity.getCustomName() != null) {
+                        data.putString("customName", masterBlockEntity.getCustomName().getString());
+                    }
                     BlockPos pos = master.getBlockPos();
                     if (pos != null) {
                         data.putLong("masterPos", pos.asLong());
