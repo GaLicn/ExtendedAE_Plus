@@ -1,10 +1,13 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
+import appeng.api.stacks.AEFluidKey;
+import appeng.api.stacks.AEItemKey;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import net.minecraft.client.gui.screens.Screen;
+import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,13 +45,24 @@ public class CraftConfirmMenuGoBackMixin {
             // 为缺失的条目添加 JEI 书签
             for (CraftingPlanSummaryEntry entry : entries) {
                 if (entry.getMissingAmount() > 0) {
-                    try {
-                        var display = entry.getWhat().wrapForDisplayOrFilter();
-                        if (display != null && !display.isEmpty()) {
-                            // wrapForDisplayOrFilter 返回 ItemStack
-                            JeiRuntimeProxy.addBookmark(display);
-                        }
-                    } catch (Throwable ignored) {}
+                    var what = entry.getWhat();
+                    if (what instanceof AEItemKey aeItemKey) {
+                        JeiRuntimeProxy.addBookmark(aeItemKey.getReadOnlyStack());
+                    } else if (what instanceof AEFluidKey aeFluidKey) {
+                        JeiRuntimeProxy.addBookmark(aeFluidKey.toStack(1000));
+                    } else if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
+                        try {
+                            if (what != null) {
+                                // avoid compile-time dependency on MekanismKey by reflection
+                                Class<?> mekanismKeyCls = Class.forName("me.ramidzkh.mekae2.ae2.MekanismKey");
+                                if (mekanismKeyCls.isInstance(what)) {
+                                    java.lang.reflect.Method m = mekanismKeyCls.getMethod("getStack");
+                                    Object stack = m.invoke(what);
+                                    JeiRuntimeProxy.addBookmark(stack);
+                                }
+                            }
+                        } catch (Throwable ignored) {}
+                    }
                 }
             }
         } catch (Throwable ignored) {}
