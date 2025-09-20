@@ -80,22 +80,26 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             String curiosSlotId = located.getCuriosSlotId();
             int curiosIndex = located.getCuriosIndex();
             if (curiosSlotId != null && curiosIndex >= 0) {
-                WTDefinition def = WTDefinition.ofOrNull(terminal);
-                if (def != null) {
+                // 与 PullFromJeiOrCraftC2SPacket 保持一致：优先走 AE2 原生路径
+                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
+                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
+                if (wt != null) {
+                    grid = wt.getLinkedGrid(terminal, level, null);
+                    if (grid == null) return;
+                    if (!wt.hasPower(player, 0.5, terminal)) return;
+                } else {
+                    // 非 AE2 原生无线终端（极少数情况），再尝试 wtlib host
+                    WTDefinition def = WTDefinition.ofOrNull(terminal);
+                    if (def == null) return;
                     WTMenuHost wtHost = def.wTMenuHostFactory().create(
                             def.item(),
                             player,
                             new CuriosItemLocator(curiosSlotId, curiosIndex),
                             (p, sub) -> {}
                     );
-                    if (wtHost != null && wtHost.getActionableNode() != null && wtHost.getActionableNode().getGrid() != null) {
-                        grid = wtHost.getActionableNode().getGrid();
-                        usedWtHost = true;
-                    } else {
-                        return;
-                    }
-                } else {
-                    return;
+                    if (wtHost == null || wtHost.getActionableNode() == null || wtHost.getActionableNode().getGrid() == null) return;
+                    grid = wtHost.getActionableNode().getGrid();
+                    usedWtHost = true;
                 }
             } else {
                 // AE2 原生路径

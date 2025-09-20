@@ -79,6 +79,18 @@ public class ExtendedAEPlus {
         // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
         event.enqueueWork(() -> {
             try {
+                // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
+                try {
+                    appeng.menu.locator.MenuLocators.register(
+                            com.extendedae_plus.menu.locator.CuriosItemLocator.class,
+                            com.extendedae_plus.menu.locator.CuriosItemLocator::writeToPacket,
+                            com.extendedae_plus.menu.locator.CuriosItemLocator::readFromPacket
+                    );
+                    LOGGER.info("Registered AE2 MenuLocator: CuriosItemLocator");
+                } catch (Throwable t) {
+                    LOGGER.warn("Failed to register CuriosItemLocator with AE2 MenuLocators: {}", t.toString());
+                }
+
                 AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
                 AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
                 AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();

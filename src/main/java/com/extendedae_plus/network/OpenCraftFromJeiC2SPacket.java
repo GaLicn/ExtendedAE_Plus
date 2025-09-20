@@ -50,13 +50,46 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
             var located = WirelessTerminalLocator.find(player);
             if (located.isEmpty()) return;
 
-            // 若为 Curios 槽位：直接用 CuriosItemLocator 作为宿主打开数量界面
+            // 若为 Curios 槽位：根据终端类型分别处理
             String curiosSlotId = located.getCuriosSlotId();
             int curiosIndex = located.getCuriosIndex();
             if (curiosSlotId != null && curiosIndex >= 0) {
-                int initial = 1;
-                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
-                return;
+                // 兼容 ae2wtlib 与 AE2 原生无线终端
+                var stack = located.stack;
+                // AE2 原生无线终端路径需要做与背包一致的前置校验，避免打开后立即失败
+                if (stack.getItem() instanceof WirelessTerminalItem wt) {
+                    var grid = wt.getLinkedGrid(stack, player.level(), null);
+                    if (grid == null) { return; }
+                    if (!wt.hasPower(player, 0.5, stack)) { return; }
+                    var craftingService = grid.getCraftingService();
+                    if (!craftingService.isCraftable(what)) { return; }
+                    int initial = 1;
+                    CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
+                    return;
+                }
+
+                // wtlib 路径：先通过 WTMenuHost 获取 Grid 并检查是否可合成，再打开数量界面
+                try {
+                    de.mari_023.ae2wtlib.api.registration.WTDefinition def = de.mari_023.ae2wtlib.api.registration.WTDefinition.ofOrNull(stack);
+                    if (def == null) { return; }
+                    var wtHost = def.wTMenuHostFactory().create(
+                            def.item(),
+                            player,
+                            new com.extendedae_plus.menu.locator.CuriosItemLocator(curiosSlotId, curiosIndex),
+                            (p, sub) -> {}
+                    );
+                    if (wtHost == null) { return; }
+                    if (wtHost.getActionableNode() == null) { return; }
+                    if (wtHost.getActionableNode().getGrid() == null) { return; }
+                    var grid2 = wtHost.getActionableNode().getGrid();
+                    boolean craftable = grid2.getCraftingService().isCraftable(what);
+                    if (!craftable) return;
+                    int initial = 1;
+                    CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
+                    return;
+                } catch (Throwable ignored) {
+                    return;
+                }
             }
 
             // 非 Curios（主手/副手/背包）仍按原先流程做前置校验，保持行为一致。
