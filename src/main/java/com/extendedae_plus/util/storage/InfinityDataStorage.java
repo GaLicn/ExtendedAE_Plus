@@ -18,8 +18,10 @@ import net.minecraft.nbt.Tag;
  */
 public class InfinityDataStorage {
 
-    /** 空实例（表示没有数据） */
-    public static final InfinityDataStorage EMPTY = new InfinityDataStorage();
+    /** 空实例的访问器（返回新实例以避免共享可变状态） */
+    public static InfinityDataStorage empty() {
+        return new InfinityDataStorage();
+    }
 
     /** 序列化的键列表（NBT ListTag，元素为 CompoundTag） */
     public ListTag keys;
