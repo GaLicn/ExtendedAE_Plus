@@ -1,13 +1,14 @@
-package com.extendedae_plus.mixin.ae2.helpers;
+package com.extendedae_plus.mixin.advancedae.helpers;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
-import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 
-@Mixin(value = PatternProviderLogic.class, remap = false)
-public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
+@Mixin(value = AdvPatternProviderLogic.class, remap = false)
+public class AdvPatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
     @Unique
-    private static final String EAP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
+    private static final String EAP_ADV_BLOCKING_KEY = "eap_advanced_blocking";
 
     @Unique
     private boolean eap$advancedBlocking = false;
@@ -37,12 +38,12 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeAdvancedToNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$writeAdvancedToNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         tag.putBoolean(EAP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$readAdvancedFromNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readAdvancedFromNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         if (tag.contains(EAP_ADV_BLOCKING_KEY)) {
             this.eap$advancedBlocking = tag.getBoolean(EAP_ADV_BLOCKING_KEY);
         }
@@ -55,7 +56,7 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
                                                  IPatternDetails patternDetails,
                                                  appeng.api.stacks.KeyCounter[] inputHolder) {
         // 原版是否打开阻挡
-        boolean vanillaBlocking = ((PatternProviderLogic)(Object)this).isBlocking();
+        boolean vanillaBlocking = ((AdvPatternProviderLogic)(Object)this).isBlocking();
         if (!vanillaBlocking) {
             return adapter.containsPatternInput(patternInputs);
         }

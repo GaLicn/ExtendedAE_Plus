@@ -1,15 +1,17 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.SmartDoublingHolder;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
 
 /**
  * C2S：切换智能翻倍启用状态。
@@ -34,14 +36,25 @@ public class ToggleSmartDoublingC2SPacket implements CustomPacketPayload {
     public static void handle(final ToggleSmartDoublingC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
-            if (!(player.containerMenu instanceof PatternProviderMenu menu)) return;
-
-            var accessor = (PatternProviderMenuAdvancedAccessor) menu;
-            var logic = accessor.eap$logic();
-            if (logic instanceof SmartDoublingHolder holder) {
-                boolean next = !holder.eap$getSmartDoubling();
-                holder.eap$setSmartDoubling(next);
-                logic.saveChanges();
+            var containerMenu = player.containerMenu;
+            if (containerMenu instanceof PatternProviderMenu menu) {
+                var accessor = (PatternProviderMenuAdvancedAccessor) menu;
+                var logic = accessor.eap$logic();
+                if (logic instanceof SmartDoublingHolder holder) {
+                    boolean current = holder.eap$getSmartDoubling();
+                    boolean next = !current;
+                    holder.eap$setSmartDoubling(next);
+                    logic.saveChanges();
+                }
+            }else if (containerMenu instanceof AdvPatternProviderMenu menu){
+                var accessor = (AdvPatternProviderMenuAdvancedAccessor) menu;
+                var logic = accessor.eap$logic();
+                if (logic instanceof SmartDoublingHolder holder) {
+                    boolean current = holder.eap$getSmartDoubling();
+                    boolean next = !current;
+                    holder.eap$setSmartDoubling(next);
+                    logic.saveChanges();
+                }
             }
         });
     }

@@ -162,6 +162,12 @@ dependencies {
    // runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
     runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
+    //aea
+    implementation "curse.maven:advancedae-1084104:6921281"
+
+    //geckolib
+    runtimeOnly "curse.maven:geckolib-388172:7009924"
+
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
     switch (project.findProperty('use_Xei') ?: 'emi') {
         case 'emi':
