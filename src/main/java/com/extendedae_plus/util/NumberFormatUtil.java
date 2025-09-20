@@ -1,5 +1,7 @@
 package com.extendedae_plus.util;
 
+import java.text.DecimalFormat;
+
 /**
  * 数字格式化工具类，提供大数字和小数的格式化功能
  */
@@ -15,13 +17,18 @@ public class NumberFormatUtil {
     public static String formatNumber(long number) {
         if (number < 1000) {
             return String.valueOf(number);
-        } else if (number < 1000000) {
-            double value = number / 1000.0;
-            return formatDecimal(value, "k");
-        } else {
-            double value = number / 1000000.0;
-            return formatDecimal(value, "m");
         }
+
+        String[] preFixes = new String[]{"k", "M", "G", "T", "P", "E", "Z", "Y"};
+        double value = number;
+        String level = "";
+
+        for (int offset = 0; value >= 1000.0 && offset < preFixes.length; ++offset) {
+            value /= 1000.0;
+            level = preFixes[offset];
+        }
+
+        return formatDecimal(value, level);
     }
 
     /**
@@ -31,16 +38,24 @@ public class NumberFormatUtil {
      */
     public static String formatNumberWithDecimal(double value) {
         if (value < 1000) {
+            DecimalFormat smallDf = new DecimalFormat("#.##");
+            // 小于1000时，若是整数则显示整数，否则显示最多两位小数
             if (value == (long) value) {
                 return String.valueOf((long) value);
             } else {
-                return String.format("%.1f", value).replaceAll("\\.0$", "");
+                return smallDf.format(value);
             }
-        } else if (value < 1000000) {
-            return formatDecimal(value / 1000.0, "k");
-        } else {
-            return formatDecimal(value / 1000000.0, "m");
         }
+
+        String[] preFixes = new String[]{"k", "M", "G", "T", "P", "E", "Z", "Y"};
+        String level = "";
+        for (int offset = 0; value >= 1000.0 && offset < preFixes.length; ++offset) {
+            value /= 1000.0;
+            level = preFixes[offset];
+        }
+
+        DecimalFormat df = new DecimalFormat("#.##");
+        return df.format(value) + level;
     }
 
     /**
@@ -54,7 +69,7 @@ public class NumberFormatUtil {
         if (Math.abs(value - Math.round(value)) < 0.001) {
             return String.valueOf(Math.round(value)) + suffix;
         } else {
-            // 修复重复后缀问题：先格式化数字，再添加后缀
+            // 使用一位小数显示，去掉末尾 .0
             String formatted = String.format("%.1f", value).replaceAll("\\.0$", "");
             return formatted + suffix;
         }

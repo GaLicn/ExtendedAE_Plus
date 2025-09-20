@@ -13,7 +13,6 @@ import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Pseudo
@@ -107,7 +107,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private boolean eap$checkModify(java.util.List<GenericStack> stacks, int scale, boolean div) {
+    private boolean eap$checkModify(List<GenericStack> stacks, int scale, boolean div) {
         if (stacks == null) return false;
         if (div) {
             for (var stack : stacks) {
@@ -121,10 +121,12 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         } else {
             for (var stack : stacks) {
                 if (stack != null) {
-                    long upper = 999999L * stack.what().getAmountPerUnit();
-                    if (stack.amount() * scale > upper) {
+                    long amt = stack.amount();
+                    // 先检查乘法是否会导致超出 Long.MAX_VALUE，避免溢出
+                    if (amt > Integer.MAX_VALUE / scale) {
                         return false;
                     }
+                    // 已移除原有的业务上限检查（999999 * amountPerUnit），仅保留溢出检查
                 }
             }
             return true;
@@ -132,12 +134,23 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private java.util.List<GenericStack> eap$modifyStacks(java.util.List<GenericStack> src, int scale, boolean div) {
-        var dst = new java.util.ArrayList<GenericStack>(src.size());
+    private List<GenericStack> eap$modifyStacks(List<GenericStack> src, int scale, boolean div) {
+        var dst = new ArrayList<GenericStack>(src.size());
         for (var stack : src) {
             if (stack != null) {
                 long amt = stack.amount();
-                long newAmt = div ? (amt / scale) : (amt * scale);
+                long newAmt;
+                if (div) { // 如果是除法操作
+                    newAmt = amt / scale; // 执行除法
+                } else { // 如果是乘法操作
+                    // 防御性检查：确保不会发生溢出，尽管上层应已验证
+                    if (amt > Integer.MAX_VALUE / scale) {
+                        // 遇到潜在溢出时跳过，保持为 null；调用方应通过 eap$checkModify 避免此分支
+                        dst.add(null);
+                        continue;
+                    }
+                    newAmt = amt * scale; // 执行乘法
+                }
                 dst.add(new GenericStack(stack.what(), newAmt));
             } else {
                 dst.add(null);
