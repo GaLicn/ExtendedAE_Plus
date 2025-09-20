@@ -189,4 +189,23 @@ public class InfinityStorageManager extends SavedData {
         cells.remove(uuid);
         setDirty();
     }
+
+    /**
+     * 强制将内存中的所有 InfinityDataStorage 写入磁盘
+     * 可在服务器停止或 tick 中调用，确保数据不会丢失
+     */
+    public void forceSaveAll(ServerLevel level) {
+        try {
+            if (level != null) {
+                this.setDirty();
+                CompoundTag nbt = new CompoundTag();
+                this.save(nbt);
+                File file = level.getServer().getWorldPath(new LevelResource("data"))
+                        .resolve(FILE_NAME + ".dat").toFile();
+                NbtIo.writeCompressed(nbt, file);
+            }
+        } catch (Throwable ex) {
+            LOGGER.info("InfinityStorageManager forceSaveAll error: {}", ex.getMessage());
+        }
+    }
 }

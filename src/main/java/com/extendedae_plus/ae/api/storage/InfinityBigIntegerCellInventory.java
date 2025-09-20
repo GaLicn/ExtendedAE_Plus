@@ -21,6 +21,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -86,54 +87,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取全局存储实例
     private static InfinityStorageManager getStorageInstance() {
         return InfinityStorageManager.INSTANCE;
-    }
-
-    // 服务器 tick 回调：合并并执行待持久化项
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        InfinityBigIntegerCellInventory inv;
-        // 处理本次 tick 中的全部待持久化项
-        while ((inv = PENDING_PERSIST.poll()) != null) {
-            try {
-                if (!inv.isPersisted) {
-                    inv.persist();
-                }
-            } catch (Throwable ignored) {
-                LOGGER.info("InfinityBigIntegerCellInventory onServerTick error: {}", ignored.getMessage());
-            }
-        }
-    }
-
-    // 在服务器停止时被调用，立即强制持久化队列中的所有实例
-    public static void onServerStopping(ServerStoppingEvent event) {
-        // 尝试在服务端停止流程开始时初始化 SavedData（确保 INSTANCE 可用以便后续持久化）
-        try {
-            MinecraftServer server = event.getServer();
-            if (server != null) {
-                for (ServerLevel level : server.getAllLevels()) {
-                    InfinityStorageManager.getForLevel(level);
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-
-        InfinityBigIntegerCellInventory inv;
-        while ((inv = PENDING_PERSIST.poll()) != null) {
-            try {
-                if (!inv.isPersisted) {
-                    inv.persist();
-                }
-            } catch (Throwable ignored) {
-                LOGGER.info("InfinityBigIntegerCellInventory onServerStopping error1: {}", ignored.getMessage());
-            }
-        }
-        // 将全局存储管理器标记为脏以确保 SavedData 被写回
-        try {
-            var stor = getStorageInstance();
-            if (stor != null) stor.setDirty();
-        } catch (Throwable ignored) {
-            LOGGER.info("InfinityBigIntegerCellInventory onServerStopping error2: {}", ignored.getMessage());
-        }
     }
 
     // 将 BigInteger 格式化为带单位的字符串，保留两位小数
@@ -251,12 +204,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         // 如果有损坏，保存修正后的数据
         if (corruptedTag) {
             this.saveChanges();
-        }
-        // 打印加载后的摘要日志
-        try {
-            var uuid = this.getUUID();
-            LOGGER.info("Loaded cell {}: types={}, totalCached={}", uuid, this.getCellStoredMap().size(), this.getTotalStorage());
-        } catch (Throwable ignored) {
         }
     }
 
@@ -378,12 +325,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             stack.getOrCreateTag().putInt("types", typesCount);
         }
         isPersisted = true;
-        // 打印持久化摘要日志
-        try {
-            var uuid = this.getUUID();
-            LOGGER.info("Persisted cell {}: types={}, totalCached={}", uuid, this.getCellStoredMap().size(), this.getTotalStorage());
-        } catch (Throwable ignored) {
-        }
     }
 
     // 插入物品到存储单元
@@ -463,5 +404,88 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     public String getTotalStorage() {
         // 使用缓存的 totalStored，避免每次全表扫描
         return formatBigInteger(totalStored);
+    }
+
+    /** 定时 tick 保存计数器 */
+    private static int SAVE_TICK_COUNTER = 0;
+
+    /** tick 间隔，单位为服务器 tick（20 tick ≈ 1 秒） */
+    private static final int SAVE_TICK_INTERVAL = 20; // 约30秒
+
+    /** 服务器 tick 事件：处理队列并定时保存 */
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        // 处理待持久化队列
+        InfinityBigIntegerCellInventory inv;
+        while ((inv = PENDING_PERSIST.poll()) != null) {
+            try {
+                if (!inv.isPersisted) {
+                    inv.persist();
+                }
+            } catch (Throwable ex) {
+                LOGGER.info("InfinityBigIntegerCellInventory onServerTick error: {}", ex.getMessage());
+            }
+        }
+
+        // 定时标记全局存储为脏
+        try {
+            if (++SAVE_TICK_COUNTER >= SAVE_TICK_INTERVAL) {
+                SAVE_TICK_COUNTER = 0;
+                if (InfinityStorageManager.INSTANCE != null) {
+                    InfinityStorageManager.INSTANCE.setDirty();
+                }
+            }
+        } catch (Throwable ex) {
+            LOGGER.info("InfinityBigIntegerCellInventory tick dirty set error: {}", ex.getMessage());
+        }
+    }
+
+    // 在服务器停止时被调用，立即强制持久化队列中的所有实例
+    @SubscribeEvent
+    public static void onServerStopping(ServerStoppingEvent event) {
+        // 尝试在服务端停止流程开始时初始化 SavedData（确保 INSTANCE 可用以便后续持久化）
+        try {
+            MinecraftServer server = event.getServer();
+            if (server != null) {
+                for (ServerLevel level : server.getAllLevels()) {
+                    InfinityStorageManager.getForLevel(level);
+                }
+            }
+        } catch (Throwable ignored) {
+            LOGGER.info("InfinityBigIntegerCellInventory onServerStopping init error: {}", ignored.getMessage());
+        }
+
+        InfinityBigIntegerCellInventory inv;
+        while ((inv = PENDING_PERSIST.poll()) != null) {
+            try {
+                if (!inv.isPersisted) {
+                    inv.persist();
+                }
+            } catch (Throwable ex) {
+                LOGGER.info("InfinityBigIntegerCellInventory onServerStopping persist error: {}", ex.getMessage());            }
+        }
+
+        // 强制写回磁盘，确保直接关闭游戏也能保存
+        try {
+            InfinityStorageManager mgr = InfinityStorageManager.INSTANCE;
+            if (mgr != null) {
+                MinecraftServer server = event.getServer();
+                if (server != null) {
+                    for (ServerLevel level : server.getAllLevels()) {
+                        try {
+                            mgr.forceSaveAll(level);
+                            LOGGER.info("Stop forceSaveAll for level {}", level.dimension().location());
+                        } catch (Throwable ex) {
+                            LOGGER.info("InfinityBigIntegerCellInventory forceSaveAll error for level {}: {}",
+                                    level.dimension().location(), ex.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ex) {
+            LOGGER.info("InfinityBigIntegerCellInventory onServerStopping forceSaveAll error: {}", ex.getMessage());
+        }
     }
 }
