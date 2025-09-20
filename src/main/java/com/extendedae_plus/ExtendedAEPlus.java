@@ -124,7 +124,7 @@ public class ExtendedAEPlus {
     private static void onLevelLoad(LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
             // 初始化自定义的文件 I/O 存储管理器
-            InfinityStorageManager.INSTANCE.initFromWorld(serverLevel);
+            InfinityStorageManager.getForLevel(serverLevel);
         }
     }
 }
