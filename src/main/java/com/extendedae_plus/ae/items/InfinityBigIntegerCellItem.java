@@ -7,15 +7,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Objects;
 
 public class InfinityBigIntegerCellItem extends Item {
 
@@ -78,5 +81,16 @@ public class InfinityBigIntegerCellItem extends Item {
                 );
             }
         }
+    }
+
+    /**
+     * 创建一个带有指定 UUID 的 Infinity 磁盘 ItemStack
+     */
+    public static ItemStack withUUID(java.util.UUID uuid) {
+        ItemStack stack = new ItemStack(Objects.requireNonNull(
+                ForgeRegistries.ITEMS.getValue(new ResourceLocation("extendedae_plus", "infinity_biginteger_cell")
+        )));
+        stack.getOrCreateTag().putUUID("uuid", uuid);
+        return stack;
     }
 }

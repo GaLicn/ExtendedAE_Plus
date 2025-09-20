@@ -17,6 +17,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import com.extendedae_plus.command.InfinityDiskGiveCommand;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -53,6 +55,8 @@ public class ExtendedAEPlus {
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
+        // 注册命令注册监听
+        MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         // 注册通用配置
         ModConfig.init();
         // 注册 InfinityBigIntegerCellInventory 的事件监听（tick flush 与停止时 flush）
@@ -122,5 +126,9 @@ public class ExtendedAEPlus {
         if (event.getLevel() instanceof ServerLevel serverLevel) {
             InfinityStorageManager.getForLevel(serverLevel);
         }
+    }
+
+    private void onRegisterCommands(RegisterCommandsEvent event) {
+        InfinityDiskGiveCommand.register(event.getDispatcher());
     }
 }

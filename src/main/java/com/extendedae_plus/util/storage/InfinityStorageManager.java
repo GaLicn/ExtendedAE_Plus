@@ -48,6 +48,13 @@ public class InfinityStorageManager extends SavedData {
      */
     private final Map<UUID, InfinityDataStorage> cells = new HashMap<>();
 
+    /**
+     * 返回当前已加载的所有 UUID 的不可变视图，用于命令或调试用途
+     */
+    public java.util.Set<UUID> getAllLoadedUUIDs() {
+        return java.util.Collections.unmodifiableSet(cells.keySet());
+    }
+
     public InfinityStorageManager() {
         setDirty();
     }
@@ -203,6 +210,19 @@ public class InfinityStorageManager extends SavedData {
                 File file = level.getServer().getWorldPath(new LevelResource("data"))
                         .resolve(FILE_NAME + ".dat").toFile();
                 NbtIo.writeCompressed(nbt, file);
+
+                // 打印所有已保存的无限磁盘 UUID 及相关信息
+                StringBuilder sb = new StringBuilder();
+                sb.append("Saving Infinity Disks (UUIDs and info):\n");
+                for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
+                    UUID uuid = entry.getKey();
+                    InfinityDataStorage data = entry.getValue();
+                    int types = (data.keys != null) ? data.keys.size() : 0;
+                    sb.append(" - UUID: ").append(uuid)
+                      .append(", Types: ").append(types)
+                      .append("\n");
+                }
+                LOGGER.info(sb.toString());
             }
         } catch (Throwable ex) {
             LOGGER.info("InfinityStorageManager forceSaveAll error: {}", ex.getMessage());
