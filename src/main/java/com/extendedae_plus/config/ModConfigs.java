@@ -2,6 +2,8 @@ package com.extendedae_plus.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+import java.util.List;
+
 public final class ModConfigs {
     public static final ModConfigSpec COMMON_SPEC;
     public static final ModConfigSpec.IntValue PAGE_MULTIPLIER;
@@ -12,7 +14,9 @@ public final class ModConfigs {
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ModConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
     public static final ModConfigSpec.IntValue CRAFTING_PAUSE_THRESHOLD;
-
+    public static final ModConfigSpec.IntValue ENTITY_TICKER_COST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_BLACK_LIST;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_MULTIPLIERS;
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -22,7 +26,8 @@ public final class ModConfigs {
                 .comment(
                         "扩展样板供应器总槽位容量的倍率",
                         "基础为36，每页仍显示36格，倍率会增加总页数/总容量",
-                        "建议范围 1-16")
+                        "建议范围 1-16"
+                )
                 .defineInRange("pageMultiplier", 1, 1, 64);
 
         // 是否显示样板编码玩家（通用）
@@ -59,7 +64,8 @@ public final class ModConfigs {
                         "智能倍增时是否对样板供应器轮询分配",
                         "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
                         "注意：所有相关供应器需开启智能倍增，否则可能失效",
-                        "默认: true")
+                        "默认: true"
+                )
                 .define("providerRoundRobinEnable", true);
 
         // 智能倍增的最大倍数（以单次样板产出为单位）。
@@ -67,7 +73,8 @@ public final class ModConfigs {
         SMART_SCALING_MAX_MULTIPLIER = builder
                 .comment(
                         "智能倍增的最大倍数（0 表示不限制）",
-                        "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模")
+                        "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模"
+                )
                 .defineInRange("smartScalingMaxMultiplier", 0, 0, 1048576);
 
         builder.pop(); // pop smart
@@ -79,19 +86,55 @@ public final class ModConfigs {
         WIRELESS_MAX_RANGE = builder
                 .comment(
                         "无线收发器最大连接距离（单位：方块）",
-                        "从端与主端的直线距离需小于等于该值才会建立连接。")
+                        "从端与主端的直线距离需小于等于该值才会建立连接。"
+                )
                 .defineInRange("wirelessMaxRange", 256.0D, 1.0D, 4096.0D);
 
         // 是否允许跨维度连接（忽略维度差异进行频道传输）。
         WIRELESS_CROSS_DIM_ENABLE = builder
                 .comment(
                         "是否允许无线收发器跨维度建立连接",
-                        "开启后，从端可连接到不同维度的主端（忽略距离限制）")
+                        "开启后，从端可连接到不同维度的主端（忽略距离限制）"
+                )
                 .define("wirelessCrossDimEnable", true);
 
         builder.pop(); // pop wireless
 
-//        builder.pop(); // pop extendedae_plus
+        builder.push("entitySpeedTicker");
+
+        ENTITY_TICKER_COST = builder
+                .comment(
+                        "实体加速器能量消耗基础值"
+                )
+                .defineInRange("entityTickerCost", 512, 0 , Integer.MAX_VALUE);
+
+
+        ENTITY_TICKER_BLACK_LIST = builder
+                .comment(
+                        "实体加速器黑名单：匹配的方块将不会被加速。支持通配符/正则（例如：minecraft:*）",
+                        "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
+                )
+                .defineListAllowEmpty(
+                        List.of("entityTickerBlackList"), // 路径
+                        List::of, // 默认值
+                        () -> "", // 新元素默认值（空字符串，供配置编辑器使用）
+                        obj -> obj instanceof String // 验证每个元素是字符串
+                );
+
+        ENTITY_TICKER_MULTIPLIERS = builder
+                .comment(
+                        "额外消耗倍率配置：为某些方块设置额外能量倍率，格式 'modid:blockid multiplier'，例如 'minecraft:chest 2x'",
+                        "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
+                )
+                .defineListAllowEmpty(
+                        List.of("entityTickerMultipliers"), // 路径
+                        List::of, // 默认值
+                        () -> "", // 新元素默认值（空字符串，供配置编辑器使用）
+                        obj -> obj instanceof String // 验证每个元素是字符串
+                );
+
+        builder.pop();
+
         COMMON_SPEC = builder.build();
     }
 

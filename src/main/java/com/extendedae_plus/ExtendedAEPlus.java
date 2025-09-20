@@ -1,10 +1,12 @@
 package com.extendedae_plus;
 
+import appeng.api.parts.IPart;
+import appeng.api.parts.PartModels;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
-import com.extendedae_plus.network.ModNetwork;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -69,6 +71,16 @@ public class ExtendedAEPlus {
         // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
         event.enqueueWork(() -> {
             try {
+                // 注册升级卡
+                new UpgradeCards(event);
+
+                // 为 PartItem 注册 AE2 部件模型
+                PartModels.registerModels(
+                        PartModelsHelper.createModels(
+                                ModItems.ENTITY_TICKER_PART_ITEM.get().getPartClass().asSubclass(IPart.class)
+                        )
+                );
+                
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
                 try {
                     appeng.menu.locator.MenuLocators.register(

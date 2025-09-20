@@ -28,6 +28,25 @@
   "item.extendedae_plus.64x_crafting_accelerator": "64x并行处理单元",
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
+
+  "item.extendedae_plus.entity_speed_ticker": "实体加速器",
+  "screen.extendedae_plus.entity_speed_ticker.enable": "§c§l机器已被禁用",
+  "screen.extendedae_plus.entity_speed_ticker.energy": "能耗: %s FE/t",
+  "screen.extendedae_plus.entity_speed_ticker.power_ratio": "功耗比例: %s",
+  "screen.extendedae_plus.entity_speed_ticker.speed": "当前加速倍率: %d",
+  "screen.extendedae_plus.entity_speed_ticker.multiplier": "额外消耗倍率: %s",
+
+  "item.extendedae_plus.entity_speed_ticker.tip.requirement": "需要放入实体加速卡以启用加速",
+  "item.extendedae_plus.entity_speed_ticker.tip.max": "最高可达 1024x 加速",
+  "item.extendedae_plus.entity_speed_ticker.tip.energy": "加速将消耗 AE 网络能量，网络能量不足时无法加速",
+
+  "item.extendedae_plus.entity_speed_card": "实体加速卡",
+  "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
+  "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
+  "item.extendedae_plus.entity_speed_card.x8": "实体加速卡 (x8)",
+  "item.extendedae_plus.entity_speed_card.x16": "实体加速卡 (x16)",
+  "tooltip.extendedae_plus.entity_speed_card.multiplier": "乘数: %s",
+  "tooltip.extendedae_plus.entity_speed_card.max": "最大生效: %s 倍",
   "item.extendedae_plus.infinity_biginteger_cell": "§4吞§c噬§6万§e籁§a的§b寂§d静",
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon1": "§6九重献祭, 终得虚空回响§r——觐见§8虚空之主Iava§r, 赐汝此物",
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b——§4方§d寸§c之§e间§a, §6自§b有§5千§9寰",
@@ -61,6 +80,12 @@
   "extendedae_plus.configuration.wirelessMaxRange": "无线最大距离",
   "extendedae_plus.configuration.wirelessMaxRange_with_range": "无线最大距离 (1-4096)",
   "extendedae_plus.configuration.wirelessCrossDimEnable": "无线收发器允许跨维度连接",
+
+  "extendedae_plus.configuration.entitySpeedTicker": "实体加速器",
+  "extendedae_plus.configuration.entityTickerCost": "实体加速器能量消耗基础值",
+  "extendedae_plus.configuration.entityTickerBlackList": "实体加速器黑名单",
+  "extendedae_plus.configuration.entityTickerMultipliers": "实体加速器额外消耗倍率",
+  "extendedae_pluscraftingPauseThreshold": "AE合成计算暂停检查阈值",
 
   "extendedae_plus.configuration.state_on": "开",
   "extendedae_plus.configuration.state_off": "关",

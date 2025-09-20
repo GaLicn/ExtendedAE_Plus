@@ -159,7 +159,10 @@ dependencies {
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
     runtimeOnly "curse.maven:jade-324717:5427817"
     runtimeOnly "curse.maven:mega-cells-622112:6005043"
-   // runtimeOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
+
+    runtimeOnly "curse.maven:mekanism-268560:6895130"
+    runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
+
     runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
     //aea

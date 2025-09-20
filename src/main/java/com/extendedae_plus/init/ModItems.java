@@ -1,8 +1,14 @@
 package com.extendedae_plus.init;
 
+import appeng.api.parts.IPart;
+import appeng.api.parts.PartModels;
+import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
+import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -47,8 +53,34 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), new Item.Properties())
     );
 
-//    public static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
-//            "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
-//    );
+    public static final DeferredItem<EntitySpeedTickerPartItem> ENTITY_TICKER_PART_ITEM = ITEMS.register(
+            "entity_speed_ticker",
+            () -> new EntitySpeedTickerPartItem(new Item.Properties())
+    );
 
+    // AE Upgrade Cards: 实体加速卡（四个等级：x2,x4,x8,x16）
+    // 单一实体加速卡 Item（不同等级由 ItemStack.nbt 存储）
+    public static final DeferredItem<EntitySpeedCardItem> ENTITY_SPEED_CARD = ITEMS.register(
+            "entity_speed_card",
+            () -> new EntitySpeedCardItem(new Item.Properties())
+    );
+
+    /**
+     * 为 PartItem 注册 AE2 部件模型。
+     * 在客户端进行模型/几何体注册时调用。
+     */
+    public static void registerPartModels() {
+        PartModels.registerModels(
+                PartModelsHelper.createModels(
+                        ENTITY_TICKER_PART_ITEM.get().getPartClass().asSubclass(IPart.class)
+                )
+        );
+    }
+
+    /**
+     * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
+     */
+    public static ItemStack createEntitySpeedCardStack(int multiplier) {
+        return EntitySpeedCardItem.withMultiplier(multiplier);
+    }
 }
