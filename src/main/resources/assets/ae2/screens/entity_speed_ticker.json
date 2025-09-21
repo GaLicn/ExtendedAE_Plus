@@ -2,7 +2,8 @@
   "$schema": "schema.json",
   "includes": [
     "common/common.json",
-    "common/player_inventory.json"
+    "common/player_inventory.json",
+    "common/toolbox.json"
   ],
   "background": {
     "texture": "guis/blank_background.png",
@@ -62,16 +63,14 @@
   },
   "widgets": {
     "toolbox": {
-      "right": -2,
-      "bottom": 50,
-      "width": 68,
-      "height": 68
+      "right": 1,
+      "bottom": 55
     }
   },
   "slots": {
     "TOOLBOX": {
-      "bottom": 42,
-      "right": -10,
+      "right": 0,
+      "bottom": 50,
       "grid": "BREAK_AFTER_3COLS"
     }
   }
