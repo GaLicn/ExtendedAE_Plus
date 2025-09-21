@@ -68,23 +68,24 @@
   "screen.extendedae_plus.title": "ExtendedAE Plus 配置",
   "config.extendedae_plus": "ExtendedAE Plus",
 
-  "extendedae_plus.configuration.general": "通用",
+  "extendedae_plus.configuration.common": "通用配置",
   "extendedae_plus.configuration.pageMultiplier": "扩展样板供应器槽位倍率",
   "extendedae_plus.configuration.pageMultiplier_with_range": "扩展样板供应器槽位倍率 (1-64)",
+
+  "extendedae_plus.configuration.client": "显示配置",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "显示样板编码玩家",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "样板终端默认显示槽位",
-  "extendedae_plus.configuration.craftingPauseThreshold": "AE合成计算暂停检查阈值",
 
+  "extendedae_plus.configuration.ae": "AE2配置",
+  "extendedae_plus.configuration.craftingPauseThreshold": "AE合成计算暂停检查阈值",
   "extendedae_plus.configuration.smartScaling": "智能样板倍增",
   "extendedae_plus.configuration.providerRoundRobinEnable": "启用样板供应器轮询分配",
   "extendedae_plus.configuration.smartScalingMaxMultiplier": "智能倍增最大倍数",
   "extendedae_plus.configuration.smartScalingMaxMultiplier_with_range": "智能倍增最大倍数 (0为不限制)",
-
   "extendedae_plus.configuration.wireless": "无线连接器配置",
   "extendedae_plus.configuration.wirelessMaxRange": "无线最大距离",
   "extendedae_plus.configuration.wirelessMaxRange_with_range": "无线最大距离 (1-4096)",
   "extendedae_plus.configuration.wirelessCrossDimEnable": "无线收发器允许跨维度连接",
-
   "extendedae_plus.configuration.entitySpeedTicker": "实体加速器",
   "extendedae_plus.configuration.entityTickerCost": "实体加速器能量消耗基础值",
   "extendedae_plus.configuration.entityTickerBlackList": "实体加速器黑名单",

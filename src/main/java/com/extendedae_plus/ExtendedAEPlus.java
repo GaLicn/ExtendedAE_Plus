@@ -54,7 +54,9 @@ public class ExtendedAEPlus {
         NeoForge.EVENT_BUS.register(this);
 
         // 注册配置：接入自定义的 ModConfigs
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, ModConfigs.SERVER_SPEC, "extendedae_plus-server.toml");
     }
 
     // 便捷 ResourceLocation 工具

@@ -67,28 +67,29 @@
 
   "screen.extendedae_plus.title": "ExtendedAE Plus Configuration",
   "config.extendedae_plus": "ExtendedAE Plus",
-
-  "extendedae_plus.configuration.general": "General",
+  
+  "extendedae_plus.configuration.common": "Common Configuration",
   "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Slot Multiplier",
   "extendedae_plus.configuration.pageMultiplier_with_range": "Pattern Provider Slot Multiplier (1-64)",
+
+  "extendedae_plus.configuration.client": "Display Configuration",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Pattern Encoder Player",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots by Default",
-  "extendedae_plus.configuration.craftingPauseThreshold": "AE Crafting Calculation Pause Threshold",
 
+  "extendedae_plus.configuration.ae": "AE2 Configuration",
+  "extendedae_plus.configuration.craftingPauseThreshold": "AE Crafting Pause Threshold",
   "extendedae_plus.configuration.smartScaling": "Smart Pattern Scaling",
-  "extendedae_plus.configuration.providerRoundRobinEnable": "Enable Pattern Provider Round-Robin Allocation",
+  "extendedae_plus.configuration.providerRoundRobinEnable": "Enable Pattern Provider Round-Robin",
   "extendedae_plus.configuration.smartScalingMaxMultiplier": "Smart Scaling Maximum Multiplier",
-  "extendedae_plus.configuration.smartScalingMaxMultiplier_with_range": "Smart Scaling Maximum Multiplier (0 for Unlimited)",
-
+  "extendedae_plus.configuration.smartScalingMaxMultiplier_with_range": "Smart Scaling Maximum Multiplier (0 for unlimited)",
   "extendedae_plus.configuration.wireless": "Wireless Connector Configuration",
   "extendedae_plus.configuration.wirelessMaxRange": "Wireless Maximum Range",
   "extendedae_plus.configuration.wirelessMaxRange_with_range": "Wireless Maximum Range (1-4096)",
-  "extendedae_plus.configuration.wirelessCrossDimEnable": "Allow Wireless Transceiver Cross-Dimension Connection",
-
-  "extendedae_plus.configuration.entitySpeedTicker": "Entity Accelerator",
-  "extendedae_plus.configuration.entityTickerCost": "Entity Accelerator Base Energy Consumption",
-  "extendedae_plus.configuration.entityTickerBlackList": "Entity Accelerator Blacklist",
-  "extendedae_plus.configuration.entityTickerMultipliers": "Entity Accelerator Additional Consumption Multiplier",
+  "extendedae_plus.configuration.wirelessCrossDimEnable": "Enable Wireless Cross-Dimensional Connection",
+  "extendedae_plus.configuration.entitySpeedTicker": "Entity Speed Ticker",
+  "extendedae_plus.configuration.entityTickerCost": "Entity Ticker Base Energy Cost",
+  "extendedae_plus.configuration.entityTickerBlackList": "Entity Ticker Blacklist",
+  "extendedae_plus.configuration.entityTickerMultipliers": "Entity Ticker Extra Cost Multipliers",
 
   "extendedae_plus.configuration.state_on": "On",
   "extendedae_plus.configuration.state_off": "Off"
