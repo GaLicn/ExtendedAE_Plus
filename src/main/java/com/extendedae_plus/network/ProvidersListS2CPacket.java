@@ -7,6 +7,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -58,11 +60,14 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
     }
 
     public static void handle(final ProvidersListS2CPacket msg, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            var mc = Minecraft.getInstance();
-            if (mc == null) return;
-            var current = mc.screen;
-            mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
-        });
+        ctx.enqueueWork(() -> handleClient(msg));
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void handleClient(ProvidersListS2CPacket msg) {
+        var mc = Minecraft.getInstance();
+        if (mc == null) return;
+        var current = mc.screen;
+        mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
     }
 }
