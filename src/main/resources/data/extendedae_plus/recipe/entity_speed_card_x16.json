@@ -7,11 +7,14 @@
   ],
   "key": {
     "S": {
-      "type": "forge:partial_nbt",
-      "item": "extendedae_plus:entity_speed_card",
-      "nbt": {
-        "EAS:mult": 8
-      }
+      "type": "neoforge:components",
+      "items": "extendedae_plus:entity_speed_card",
+      "components": {
+        "minecraft:custom_data": {
+          "EAS:mult": 8
+        }
+      },
+      "strict": true
     },
     "A": {
       "item": "minecraft:nether_star"
@@ -27,11 +30,12 @@
     }
   },
   "result": {
-    "type": "forge:partial_nbt",
-    "item": "extendedae_plus:entity_speed_card",
+    "id": "extendedae_plus:entity_speed_card",
     "count": 1,
-    "nbt": {
-      "EAS:mult": 16
+    "components": {
+      "minecraft:custom_data": {
+        "EAS:mult": 16
+      }
     }
   }
 }

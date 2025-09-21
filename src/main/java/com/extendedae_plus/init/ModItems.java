@@ -1,8 +1,5 @@
 package com.extendedae_plus.init;
 
-import appeng.api.parts.IPart;
-import appeng.api.parts.PartModels;
-import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
@@ -66,21 +63,9 @@ public final class ModItems {
     );
 
     /**
-     * 为 PartItem 注册 AE2 部件模型。
-     * 在客户端进行模型/几何体注册时调用。
-     */
-    public static void registerPartModels() {
-        PartModels.registerModels(
-                PartModelsHelper.createModels(
-                        ENTITY_TICKER_PART_ITEM.get().getPartClass().asSubclass(IPart.class)
-                )
-        );
-    }
-
-    /**
      * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
      */
-    public static ItemStack createEntitySpeedCardStack(int multiplier) {
+    public static ItemStack createEntitySpeedCardStack(byte multiplier) {
         return EntitySpeedCardItem.withMultiplier(multiplier);
     }
 }

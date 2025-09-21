@@ -25,30 +25,30 @@ public class EntitySpeedCardItem extends UpgradeCardItem {
         super(props);
     }
 
-    public static ItemStack withMultiplier(int multiplier) {
+    public static ItemStack withMultiplier(byte multiplier) {
         ItemStack stack = new ItemStack(ModItems.ENTITY_SPEED_CARD.get());
         CompoundTag tag = new CompoundTag();
-        tag.putInt(NBT_MULTIPLIER, multiplier);
+        tag.putByte(NBT_MULTIPLIER, multiplier);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         return stack;
     }
 
-    public static int readMultiplier(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return 1;
+    public static byte readMultiplier(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) return (byte) 1;
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null || !customData.copyTag().contains(NBT_MULTIPLIER)) return 1;
-        return customData.copyTag().getInt(NBT_MULTIPLIER);
+        if (customData == null || !customData.copyTag().contains(NBT_MULTIPLIER)) return (byte)1;
+        return customData.copyTag().getByte(NBT_MULTIPLIER);
     }
 
     @Override
     public @NotNull Component getName(@NotNull ItemStack stack) {
-        int mult = readMultiplier(stack);
+        byte mult = readMultiplier(stack);
         String key;
         switch (mult) {
-            case 2 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x2";
-            case 4 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x4";
-            case 8 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x8";
-            case 16 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x16";
+            case (byte)2 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x2";
+            case (byte)4 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x4";
+            case (byte)8 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x8";
+            case (byte)16 -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x16";
             default -> key = "item." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.x1";
         }
         return Component.translatable(key);
@@ -56,13 +56,13 @@ public class EntitySpeedCardItem extends UpgradeCardItem {
 
 
     public List<Component> getTooltipLines(ItemStack stack) {
-        int mult = readMultiplier(stack);
-        long cap = 1L;
+        byte mult = readMultiplier(stack);
+        int cap = 1;
         switch (mult) {
-            case 16 -> cap = 1024L;
-            case 8 -> cap = 256L;
-            case 4 -> cap = 64L;
-            case 2 -> cap = 8L;
+            case (byte)16 -> cap = 1024;
+            case (byte)8 -> cap = 256;
+            case (byte)4 -> cap = 64;
+            case (byte)2 -> cap = 8;
         }
         MutableComponent line1 = Component.translatable("tooltip." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.multiplier", "x" + mult);
         MutableComponent line2 = Component.translatable("tooltip." + com.extendedae_plus.ExtendedAEPlus.MODID + ".entity_speed_card.max", cap);
