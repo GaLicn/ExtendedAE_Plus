@@ -92,5 +92,10 @@
   "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_success": "样板已上传到装配矩阵",
   "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
   "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
-  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_full": "装配矩阵的样板仓已满或无法插入"
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_full": "装配矩阵的样板仓已满或无法插入",
+
+  "item.extendedae_plus.channel_card": "频道卡",
+  "item.extendedae_plus.channel_card.channel": "频率：%s",
+  "item.extendedae_plus.channel_card.channel.unset": "频率：未设置",
+  "item.extendedae_plus.channel_card.set": "已设置频率：%s"
 }

@@ -87,5 +87,10 @@
   "config.extendedae_plus.option.entityTickerBlackList": "Entity Ticker Blacklist",
   "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold",
-  "block.extendedae_plus.assembler_matrix_upload_core": "Assembler Matrix Upload Core"
+  "block.extendedae_plus.assembler_matrix_upload_core": "Assembler Matrix Upload Core",
+
+  "item.extendedae_plus.channel_card": "Channel Card",
+  "item.extendedae_plus.channel_card.channel": "Frequency: %s",
+  "item.extendedae_plus.channel_card.channel.unset": "Frequency: Unset",
+  "item.extendedae_plus.channel_card.set": "Frequency set to: %s"
 }

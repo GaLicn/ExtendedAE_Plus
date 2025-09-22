@@ -5,6 +5,7 @@ import appeng.api.parts.PartModels;
 import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
+import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
 import net.minecraft.world.item.BlockItem;
@@ -74,6 +75,12 @@ public final class ModItems {
 
     public static final RegistryObject<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
             "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
+    );
+
+    // 频道卡（作为 AE 升级卡使用）
+    public static final RegistryObject<ChannelCardItem> CHANNEL_CARD = ITEMS.register(
+            "channel_card",
+            () -> new ChannelCardItem(new Item.Properties())
     );
 
 

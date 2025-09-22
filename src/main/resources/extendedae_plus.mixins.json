@@ -67,7 +67,9 @@
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "ae2.helpers.InterfaceLogicChannelCardMixin",
+    "ae2.helpers.InterfaceLogicTickerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
