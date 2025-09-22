@@ -6,6 +6,14 @@ import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.core.localization.GuiText;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_PATTERN_PROVIDER;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_PATTERN_PROVIDER_PART;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_INTERFACE;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_INTERFACE_PART;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.OVERSIZE_INTERFACE;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.OVERSIZE_INTERFACE_PART;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_IMPORT_BUS;
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_EXPORT_BUS;
 
 /**
  * 
@@ -22,6 +30,31 @@ public class UpgradeCards {
             String interfaceGroup = GuiText.Interface.getTranslationKey();
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.INTERFACE, 1, interfaceGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.INTERFACE, 1, interfaceGroup);
+
+            // 新增：样板供应器（方块与部件）支持频道卡，每台最多 1 张
+            String patternProviderGroup = "group.pattern_provider.name";
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.PATTERN_PROVIDER, 1, patternProviderGroup);
+
+            // ExtendedAE 的扩展样板供应器（方块与部件）
+            Upgrades.add(ModItems.CHANNEL_CARD.get(),EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(),EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+
+            //EAE 的扩展接口与超大接口（方块与部件）支持频道卡
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_INTERFACE_PART, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), OVERSIZE_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), OVERSIZE_INTERFACE_PART, 1, interfaceGroup);
+
+            //AE2 的输入/输出/存储总线支持频道卡（部件）
+            String ioBusGroup = GuiText.IOBuses.getTranslationKey();
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.IMPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.STORAGE_BUS, 1, ioBusGroup);
+
+            //EAE 的扩展输入/输出总线支持频道卡（部件）
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_IMPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_EXPORT_BUS, 1, ioBusGroup);
         });
     }
 }
