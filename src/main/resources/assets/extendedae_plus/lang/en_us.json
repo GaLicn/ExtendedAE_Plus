@@ -92,5 +92,6 @@
   "item.extendedae_plus.channel_card": "Channel Card",
   "item.extendedae_plus.channel_card.channel": "Frequency: %s",
   "item.extendedae_plus.channel_card.channel.unset": "Frequency: Unset",
-  "item.extendedae_plus.channel_card.set": "Frequency set to: %s"
+  "item.extendedae_plus.channel_card.set": "Frequency set to: %s",
+  "group.storage.name": "StorageBus"
 }

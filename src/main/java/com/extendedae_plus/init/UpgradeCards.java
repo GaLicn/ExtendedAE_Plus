@@ -48,9 +48,10 @@ public class UpgradeCards {
 
             //AE2 的输入/输出/存储总线支持频道卡（部件）
             String ioBusGroup = GuiText.IOBuses.getTranslationKey();
+            String storageGroup = "group.storage.name";
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.IMPORT_BUS, 1, ioBusGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.EXPORT_BUS, 1, ioBusGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.STORAGE_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.STORAGE_BUS, 1, storageGroup);
 
             //EAE 的扩展输入/输出总线支持频道卡（部件）
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_IMPORT_BUS, 1, ioBusGroup);
