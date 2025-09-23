@@ -61,7 +61,7 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
     }
 
     @Unique
-    private void eap$initializeChannelLink() {
+    public void eap$initializeChannelLink() {
         // 防止重复调用
         if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
             return;
