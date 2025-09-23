@@ -37,6 +37,18 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     @Unique
     private WirelessSlaveLink eap$link;
 
+    @Unique
+    private long eap$lastChannel = -1;
+
+    @Unique
+    private boolean eap$clientConnected = false;
+
+    @Unique
+    private boolean eap$hasInitialized = false;
+
+    @Unique
+    private int eap$delayedInitTicks = 0;
+
     @Final
     @Shadow
     private PatternProviderLogicHost host;
@@ -52,26 +64,13 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     @Unique
     private void eap$onUpgradesChanged() {
         this.host.saveChanges();
-        // 读取频道卡，更新无线链接频率
-        long channel = 0L;
-        for (var stack : this.eap$upgrades) {
-            if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                channel = ChannelCardItem.getChannel(stack);
-                break;
-            }
-        }
-        if (eap$link == null) {
-            var endpoint = new GenericNodeEndpointImpl(() -> host.getBlockEntity(), () -> this.mainNode.getNode());
-            eap$link = new WirelessSlaveLink(endpoint);
-        }
-        eap$link.setFrequency(channel);
-        eap$link.updateStatus();
+        // 升级变更，重置并尝试初始化
+        eap$lastChannel = -1;
+        eap$hasInitialized = false;
+        eap$initializeChannelLink();
     }
 
-    @Override
-    public IUpgradeInventory getUpgrades() {
-        return this.eap$upgrades;
-    }
+    
 
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
@@ -87,6 +86,10 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$loadUpgrades(CompoundTag tag, CallbackInfo ci) {
         this.eap$upgrades.readFromNBT(tag, "upgrades");
+        // 从 NBT 加载后，重置并尝试初始化（可能刚进入世界）
+        eap$lastChannel = -1;
+        eap$hasInitialized = false;
+        eap$initializeChannelLink();
     }
 
     @Inject(method = "addDrops", at = @At("TAIL"))
@@ -108,5 +111,141 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
         if (eap$link != null) {
             eap$link.updateStatus();
         }
+    }
+
+    @Override
+    public IUpgradeInventory getUpgrades() {
+        return this.eap$upgrades;
+    }
+
+    // ===== 频道卡初始化与延迟重试（服务端） =====
+    @Unique
+    public void eap$initializeChannelLink() {
+        // 客户端早退
+        if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
+            return;
+        }
+
+        // 避免重复初始化
+        if (eap$hasInitialized) {
+            return;
+        }
+
+        // 等待网格完成引导
+        if (!mainNode.hasGridBooted()) {
+            // 安排短延迟，等待后续 tick 再试
+            eap$delayedInitTicks = Math.max(eap$delayedInitTicks, 5);
+            try {
+                mainNode.ifPresent((grid, node) -> {
+                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
+                });
+            } catch (Throwable ignored) {}
+            return;
+        }
+
+        try {
+            long channel = 0L;
+            boolean found = false;
+            for (ItemStack stack : this.eap$upgrades) {
+                if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                    channel = ChannelCardItem.getChannel(stack);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                // 无频道卡：断开并视为初始化完成
+                if (eap$link != null) {
+                    eap$link.setFrequency(0L);
+                    eap$link.updateStatus();
+                }
+                eap$hasInitialized = true;
+                return;
+            }
+
+            if (eap$link == null) {
+                var endpoint = new GenericNodeEndpointImpl(() -> host.getBlockEntity(), () -> this.mainNode.getNode());
+                eap$link = new WirelessSlaveLink(endpoint);
+            }
+
+            eap$link.setFrequency(channel);
+            eap$link.updateStatus();
+
+            if (eap$link.isConnected()) {
+                eap$hasInitialized = true;
+            } else {
+                eap$hasInitialized = false;
+                eap$delayedInitTicks = Math.max(eap$delayedInitTicks, 5);
+                try {
+                    mainNode.ifPresent((grid, node) -> {
+                        try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
+                    });
+                } catch (Throwable ignored) {}
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Override
+    public void eap$setClientWirelessState(boolean connected) {
+        eap$clientConnected = connected;
+    }
+
+    @Override
+    public boolean eap$isWirelessConnected() {
+        if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
+            return eap$clientConnected;
+        } else {
+            return eap$link != null && eap$link.isConnected();
+        }
+    }
+
+    @Override
+    public boolean eap$hasTickInitialized() {
+        return eap$hasInitialized;
+    }
+
+    @Override
+    public void eap$setTickInitialized(boolean initialized) {
+        eap$hasInitialized = initialized;
+    }
+
+    @Override
+    public void eap$handleDelayedInit() {
+        // 仅服务端
+        if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
+            return;
+        }
+        if (!eap$hasInitialized) {
+            if (!mainNode.hasGridBooted()) {
+                if (eap$delayedInitTicks > 0) {
+                    eap$delayedInitTicks--;
+                }
+                if (eap$delayedInitTicks == 0) {
+                    eap$delayedInitTicks = 5;
+                    try {
+                        mainNode.ifPresent((grid, node) -> {
+                            try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
+                        });
+                    } catch (Throwable ignored) {}
+                }
+            } else {
+                eap$initializeChannelLink();
+            }
+        }
+    }
+
+    // 当主节点状态变化（例如 GRID_BOOT 完成）时，安排一次延迟初始化并唤醒设备
+    @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
+    private void eap$onMainNodeStateChangedTail(CallbackInfo ci) {
+        eap$lastChannel = -1;
+        eap$hasInitialized = false;
+        eap$delayedInitTicks = 10;
+        try {
+            mainNode.ifPresent((grid, node) -> {
+                try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
+            });
+        } catch (Throwable ignored) {}
     }
 }

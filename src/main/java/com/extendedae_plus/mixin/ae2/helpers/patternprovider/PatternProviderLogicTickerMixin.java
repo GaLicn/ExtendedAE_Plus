@@ -20,6 +20,18 @@ public abstract class PatternProviderLogicTickerMixin {
     @Final
     private PatternProviderLogic this$0;
 
+    @Inject(method = "tickingRequest", at = @At("HEAD"))
+    private void eap$tickHead(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
+                              CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+        // 仅在服务端处理延迟初始化
+        if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
+            return;
+        }
+        if (this$0 instanceof InterfaceWirelessLinkBridge bridge) {
+            bridge.eap$handleDelayedInit();
+        }
+    }
+
     @Inject(method = "tickingRequest", at = @At("TAIL"))
     private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
                                           CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
