@@ -26,42 +26,42 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class StorageBusPartChannelCardMixin implements InterfaceWirelessLinkBridge, IUpgradeableObject {
 
     @Unique
-    private WirelessSlaveLink extendedae_plus$link;
+    private WirelessSlaveLink eap$link;
     
     @Unique
-    private long extendedae_plus$lastChannel = -1;
+    private long eap$lastChannel = -1;
     
     @Unique
-    private boolean extendedae_plus$clientConnected = false;
+    private boolean eap$clientConnected = false;
 
     @Inject(method = "upgradesChanged", at = @At("TAIL"))
-    private void extendedae_plus$onUpgradesChanged(CallbackInfo ci) {
+    private void eap$onUpgradesChanged(CallbackInfo ci) {
         // 只在服务端初始化频道链接
         if (!((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            extendedae_plus$initializeChannelLink();
+            eap$initializeChannelLink();
         }
     }
 
     @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
-    private void extendedae_plus$onMainNodeStateChanged(IGridNodeListener.State reason, CallbackInfo ci) {
+    private void eap$onMainNodeStateChanged(IGridNodeListener.State reason, CallbackInfo ci) {
         // 在节点状态变化时（包括加载后的GRID_BOOT）重新初始化频道链接
         if (reason == IGridNodeListener.State.GRID_BOOT && !((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            extendedae_plus$initializeChannelLink();
+            eap$initializeChannelLink();
         }
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void extendedae_plus$afterReadFromNBT(CompoundTag extra, CallbackInfo ci) {
+    private void eap$afterReadFromNBT(CompoundTag extra, CallbackInfo ci) {
         // 从NBT加载后也重新初始化频道链接（只在服务端）
         if (!((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
             // 从NBT加载时重置频道缓存，强制重新初始化
-            extendedae_plus$lastChannel = -1;
-            extendedae_plus$initializeChannelLink();
+            eap$lastChannel = -1;
+            eap$initializeChannelLink();
         }
     }
 
     @Unique
-    private void extendedae_plus$initializeChannelLink() {
+    private void eap$initializeChannelLink() {
         // 防止重复调用
         if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
             return;
@@ -80,17 +80,17 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
             }
             
             // 频道没有变化则跳过
-            if (extendedae_plus$lastChannel == channel) {
+            if (eap$lastChannel == channel) {
                 return;
             }
-            extendedae_plus$lastChannel = channel;
+            eap$lastChannel = channel;
             
             ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 初始化频道链接: found={}, channel={}", found, channel);
             
             if (!found) {
-                if (extendedae_plus$link != null) {
-                    extendedae_plus$link.setFrequency(0L);
-                    extendedae_plus$link.updateStatus();
+                if (eap$link != null) {
+                    eap$link.setFrequency(0L);
+                    eap$link.updateStatus();
                     ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 断开频道链接");
                     // 通知客户端状态变化
                     ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
@@ -98,24 +98,18 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
                 return;
             }
             
-            if (extendedae_plus$link == null) {
+            if (eap$link == null) {
                 var endpoint = new GenericNodeEndpointImpl(
                         () -> ((appeng.parts.AEBasePart)(Object)this).getHost().getBlockEntity(),
                         () -> ((IActionHost)(Object)this).getActionableNode()
                 );
-                extendedae_plus$link = new WirelessSlaveLink(endpoint);
+                eap$link = new WirelessSlaveLink(endpoint);
                 ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 创建新的无线链接");
             }
             
-            extendedae_plus$link.setFrequency(channel);
-            extendedae_plus$link.updateStatus();
-            
-            // 调试信息：检查网格节点状态
-            var gridNode = ((IActionHost)(Object)this).getActionableNode();
-            ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 设置频道: {}, 连接状态: {}, 网格节点: {}, 在线: {}", 
-                channel, extendedae_plus$link.isConnected(), 
-                gridNode != null ? "exists" : "null", 
-                gridNode != null ? gridNode.isOnline() : "N/A");
+            eap$link.setFrequency(channel);
+            eap$link.updateStatus();
+            ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());
             
             // 通知客户端状态变化
             ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
@@ -125,23 +119,23 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
     }
 
     @Override
-    public void extendedae_plus$updateWirelessLink() {
-        if (extendedae_plus$link != null) {
-            extendedae_plus$link.updateStatus();
+    public void eap$updateWirelessLink() {
+        if (eap$link != null) {
+            eap$link.updateStatus();
         }
     }
     
     @Override
-    public boolean extendedae_plus$isWirelessConnected() {
+    public boolean eap$isWirelessConnected() {
         if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            return extendedae_plus$clientConnected;
+            return eap$clientConnected;
         } else {
-            return extendedae_plus$link != null && extendedae_plus$link.isConnected();
+            return eap$link != null && eap$link.isConnected();
         }
     }
     
     @Override
-    public void extendedae_plus$setClientWirelessState(boolean connected) {
-        extendedae_plus$clientConnected = connected;
+    public void eap$setClientWirelessState(boolean connected) {
+        eap$clientConnected = connected;
     }
 }

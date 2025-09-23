@@ -28,23 +28,23 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     @Shadow(remap = false) protected InterfaceLogicHost host;
 
     @Unique
-    private WirelessSlaveLink extendedae_plus$link;
+    private WirelessSlaveLink eap$link;
 
     @Inject(method = "onUpgradesChanged", at = @At("TAIL"), remap = false)
-    private void extendedae_plus$onUpgradesChangedTail(CallbackInfo ci) {
+    private void eap$onUpgradesChangedTail(CallbackInfo ci) {
         handleChannelCardChange();
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
-    private void extendedae_plus$afterReadNBT(net.minecraft.nbt.CompoundTag tag, CallbackInfo ci) {
+    private void eap$afterReadNBT(net.minecraft.nbt.CompoundTag tag, CallbackInfo ci) {
         // 重载后根据卡状态恢复连接
         handleChannelCardChange();
     }
 
     @Inject(method = "clearContent", at = @At("HEAD"), remap = false)
-    private void extendedae_plus$onClearContent(CallbackInfo ci) {
-        if (extendedae_plus$link != null) {
-            extendedae_plus$link.onUnloadOrRemove();
+    private void eap$onClearContent(CallbackInfo ci) {
+        if (eap$link != null) {
+            eap$link.onUnloadOrRemove();
         }
     }
 
@@ -58,17 +58,17 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 break;
             }
         }
-        if (extendedae_plus$link == null) {
+        if (eap$link == null) {
             IWirelessEndpoint endpoint = new InterfaceNodeEndpointImpl(host, this::getActionableNode);
-            extendedae_plus$link = new WirelessSlaveLink(endpoint);
+            eap$link = new WirelessSlaveLink(endpoint);
         }
-        extendedae_plus$link.setFrequency(channel);
+        eap$link.setFrequency(channel);
     }
 
     @Override
-    public void extendedae_plus$updateWirelessLink() {
-        if (extendedae_plus$link != null) {
-            extendedae_plus$link.updateStatus();
+    public void eap$updateWirelessLink() {
+        if (eap$link != null) {
+            eap$link.updateStatus();
         }
     }
 }

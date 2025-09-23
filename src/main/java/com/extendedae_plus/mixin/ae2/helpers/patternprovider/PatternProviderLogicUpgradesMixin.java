@@ -32,10 +32,10 @@ import java.util.List;
 @Mixin(value = PatternProviderLogic.class, remap = false)
 public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableObject, InterfaceWirelessLinkBridge {
     @Unique
-    private IUpgradeInventory extendedae_plus$upgrades = UpgradeInventories.empty();
+    private IUpgradeInventory eap$upgrades = UpgradeInventories.empty();
 
     @Unique
-    private WirelessSlaveLink extendedae_plus$link;
+    private WirelessSlaveLink eap$link;
 
     @Final
     @Shadow
@@ -50,48 +50,48 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     private IActionSource actionSource;
 
     @Unique
-    private void extendedae_plus$onUpgradesChanged() {
+    private void eap$onUpgradesChanged() {
         this.host.saveChanges();
         // 读取频道卡，更新无线链接频率
         long channel = 0L;
-        for (var stack : this.extendedae_plus$upgrades) {
+        for (var stack : this.eap$upgrades) {
             if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                 channel = ChannelCardItem.getChannel(stack);
                 break;
             }
         }
-        if (extendedae_plus$link == null) {
+        if (eap$link == null) {
             var endpoint = new GenericNodeEndpointImpl(() -> host.getBlockEntity(), () -> this.mainNode.getNode());
-            extendedae_plus$link = new WirelessSlaveLink(endpoint);
+            eap$link = new WirelessSlaveLink(endpoint);
         }
-        extendedae_plus$link.setFrequency(channel);
-        extendedae_plus$link.updateStatus();
+        eap$link.setFrequency(channel);
+        eap$link.updateStatus();
     }
 
     @Override
     public IUpgradeInventory getUpgrades() {
-        return this.extendedae_plus$upgrades;
+        return this.eap$upgrades;
     }
 
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
-    private void extendedae_plus$initUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
-        this.extendedae_plus$upgrades = UpgradeInventories.forMachine(host.getTerminalIcon().getItem(), 1, this::extendedae_plus$onUpgradesChanged);
+    private void eap$initUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
+        this.eap$upgrades = UpgradeInventories.forMachine(host.getTerminalIcon().getItem(), 1, this::eap$onUpgradesChanged);
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void extendedae_plus$saveUpgrades(CompoundTag tag, CallbackInfo ci) {
-        this.extendedae_plus$upgrades.writeToNBT(tag, "upgrades");
+    private void eap$saveUpgrades(CompoundTag tag, CallbackInfo ci) {
+        this.eap$upgrades.writeToNBT(tag, "upgrades");
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void extendedae_plus$loadUpgrades(CompoundTag tag, CallbackInfo ci) {
-        this.extendedae_plus$upgrades.readFromNBT(tag, "upgrades");
+    private void eap$loadUpgrades(CompoundTag tag, CallbackInfo ci) {
+        this.eap$upgrades.readFromNBT(tag, "upgrades");
     }
 
     @Inject(method = "addDrops", at = @At("TAIL"))
-    private void extendedae_plus$dropUpgrades(List<ItemStack> drops, CallbackInfo ci) {
-        for (var stack : this.extendedae_plus$upgrades) {
+    private void eap$dropUpgrades(List<ItemStack> drops, CallbackInfo ci) {
+        for (var stack : this.eap$upgrades) {
             if (!stack.isEmpty()) {
                 drops.add(stack);
             }
@@ -99,14 +99,14 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     }
 
     @Inject(method = "clearContent", at = @At("TAIL"))
-    private void extendedae_plus$clearUpgrades(CallbackInfo ci) {
-        this.extendedae_plus$upgrades.clear();
+    private void eap$clearUpgrades(CallbackInfo ci) {
+        this.eap$upgrades.clear();
     }
 
     @Override
-    public void extendedae_plus$updateWirelessLink() {
-        if (extendedae_plus$link != null) {
-            extendedae_plus$link.updateStatus();
+    public void eap$updateWirelessLink() {
+        if (eap$link != null) {
+            eap$link.updateStatus();
         }
     }
 }

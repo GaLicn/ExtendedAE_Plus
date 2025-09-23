@@ -26,45 +26,45 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLinkBridge, IUpgradeableObject {
 
     @Unique
-    private WirelessSlaveLink extendedae_plus$link;
+    private WirelessSlaveLink eap$link;
     
     @Unique
-    private long extendedae_plus$lastChannel = -1;
+    private long eap$lastChannel = -1;
     
     @Unique
-    private boolean extendedae_plus$clientConnected = false;
+    private boolean eap$clientConnected = false;
     
     @Unique
-    private boolean extendedae_plus$hasTickInitialized = false;
+    private boolean eap$hasTickInitialized = false;
 
     @Inject(method = "upgradesChanged", at = @At("TAIL"))
-    private void extendedae_plus$onUpgradesChanged(CallbackInfo ci) {
+    private void eap$onUpgradesChanged(CallbackInfo ci) {
         // 只在服务端初始化频道链接
         if (!((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            extendedae_plus$initializeChannelLink();
+            eap$initializeChannelLink();
         }
     }
 
     @Inject(method = "tickingRequest", at = @At("HEAD"))
-    private void extendedae_plus$beforeTick(appeng.api.networking.IGridNode node, int ticksSinceLastCall, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+    private void eap$beforeTick(appeng.api.networking.IGridNode node, int ticksSinceLastCall, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
         // 在第一次tick时初始化频道链接（此时网格节点已经在线）
-        if (!extendedae_plus$hasTickInitialized && !((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            extendedae_plus$hasTickInitialized = true;
-            extendedae_plus$initializeChannelLink();
+        if (!eap$hasTickInitialized && !((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
+            eap$hasTickInitialized = true;
+            eap$initializeChannelLink();
         }
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void extendedae_plus$afterReadFromNBT(CompoundTag extra, CallbackInfo ci) {
+    private void eap$afterReadFromNBT(CompoundTag extra, CallbackInfo ci) {
         // 从NBT加载时重置频道缓存和tick初始化标志
         if (!((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            extendedae_plus$lastChannel = -1;
-            extendedae_plus$hasTickInitialized = false; // 重置标志，允许再次初始化
+            eap$lastChannel = -1;
+            eap$hasTickInitialized = false; // 重置标志，允许再次初始化
         }
     }
 
     @Unique
-    private void extendedae_plus$initializeChannelLink() {
+    private void eap$initializeChannelLink() {
         // 防止重复调用
         if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
             return;
@@ -83,18 +83,18 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
             }
             
             // 频道没有变化则跳过
-            if (extendedae_plus$lastChannel == channel) {
+            if (eap$lastChannel == channel) {
                 return;
             }
-            extendedae_plus$lastChannel = channel;
+            eap$lastChannel = channel;
             
             ExtendedAELogger.LOGGER.debug("[服务端] IOBus 初始化频道链接: found={}, channel={}", found, channel);
             
             if (!found) {
                 // 无频道卡则断开
-                if (extendedae_plus$link != null) {
-                    extendedae_plus$link.setFrequency(0L);
-                    extendedae_plus$link.updateStatus();
+                if (eap$link != null) {
+                    eap$link.setFrequency(0L);
+                    eap$link.updateStatus();
                     ExtendedAELogger.LOGGER.debug("[服务端] IOBus 断开频道链接");
                     // 立即通知客户端状态变化（断开连接无需延迟）
                     ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
@@ -102,24 +102,18 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
                 return;
             }
             
-            if (extendedae_plus$link == null) {
+            if (eap$link == null) {
                 var endpoint = new GenericNodeEndpointImpl(
                         () -> ((appeng.parts.AEBasePart)(Object)this).getHost().getBlockEntity(),
                         () -> ((IActionHost)(Object)this).getActionableNode()
                 );
-                extendedae_plus$link = new WirelessSlaveLink(endpoint);
+                eap$link = new WirelessSlaveLink(endpoint);
                 ExtendedAELogger.LOGGER.debug("[服务端] IOBus 创建新的无线链接");
             }
             
-            extendedae_plus$link.setFrequency(channel);
-            extendedae_plus$link.updateStatus();
-            
-            // 调试信息：检查网格节点状态
-            var gridNode = ((IActionHost)(Object)this).getActionableNode();
-            ExtendedAELogger.LOGGER.debug("[服务端] IOBus 设置频道: {}, 连接状态: {}, 网格节点: {}, 在线: {}", 
-                channel, extendedae_plus$link.isConnected(), 
-                gridNode != null ? "exists" : "null", 
-                gridNode != null ? gridNode.isOnline() : "N/A");
+            eap$link.setFrequency(channel);
+            eap$link.updateStatus();
+            ExtendedAELogger.LOGGER.debug("[服务端] IOBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());
             
             // 通知客户端状态变化
             ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
@@ -129,23 +123,23 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
     }
 
     @Override
-    public void extendedae_plus$updateWirelessLink() {
-        if (extendedae_plus$link != null) {
-            extendedae_plus$link.updateStatus();
+    public void eap$updateWirelessLink() {
+        if (eap$link != null) {
+            eap$link.updateStatus();
         }
     }
     
     @Override
-    public boolean extendedae_plus$isWirelessConnected() {
+    public boolean eap$isWirelessConnected() {
         if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
-            return extendedae_plus$clientConnected;
+            return eap$clientConnected;
         } else {
-            return extendedae_plus$link != null && extendedae_plus$link.isConnected();
+            return eap$link != null && eap$link.isConnected();
         }
     }
     
     @Override
-    public void extendedae_plus$setClientWirelessState(boolean connected) {
-        extendedae_plus$clientConnected = connected;
+    public void eap$setClientWirelessState(boolean connected) {
+        eap$clientConnected = connected;
     }
 }

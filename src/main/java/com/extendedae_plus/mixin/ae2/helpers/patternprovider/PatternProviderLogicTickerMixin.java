@@ -21,10 +21,10 @@ public abstract class PatternProviderLogicTickerMixin {
     private PatternProviderLogic this$0;
 
     @Inject(method = "tickingRequest", at = @At("TAIL"))
-    private void extendedae_plus$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
+    private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
                                           CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
         if (this$0 instanceof InterfaceWirelessLinkBridge bridge) {
-            bridge.extendedae_plus$updateWirelessLink();
+            bridge.eap$updateWirelessLink();
         }
     }
 }

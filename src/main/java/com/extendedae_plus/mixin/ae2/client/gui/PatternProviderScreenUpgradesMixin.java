@@ -25,17 +25,17 @@ import java.util.List;
 public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void extendedae_plus$initUpgrades(PatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
+    private void eap$initUpgrades(PatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.widgets.add("upgrades", new UpgradesPanel(
                 menu.getSlots(SlotSemantics.UPGRADE),
-                this::extendedae_plus$getCompatibleUpgrades));
+                this::eap$getCompatibleUpgrades));
         if (((IUpgradableMenu) menu).getToolbox().isPresent()) {
             this.widgets.add("toolbox", new ToolboxPanel(style, ((IUpgradableMenu) menu).getToolbox().getName()));
         }
     }
 
     @Unique
-    private List<Component> extendedae_plus$getCompatibleUpgrades() {
+    private List<Component> eap$getCompatibleUpgrades() {
         var list = new ArrayList<Component>();
         list.add(GuiText.CompatibleUpgrades.text());
         list.addAll(Upgrades.getTooltipLinesForMachine(((IUpgradableMenu) menu).getUpgrades().getUpgradableItem()));

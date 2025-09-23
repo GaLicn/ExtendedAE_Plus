@@ -24,18 +24,18 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     @Shadow protected PatternProviderLogic logic;
 
     @Unique
-    private ToolboxMenu extendedae_plus$toolbox;
+    private ToolboxMenu eap$toolbox;
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V",
             at = @At("TAIL"))
-    private void extendedae_plus$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
-        this.extendedae_plus$toolbox = new ToolboxMenu(this);
+    private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
+        this.eap$toolbox = new ToolboxMenu(this);
         this.setupUpgrades(((IUpgradeableObject) host).getUpgrades());
     }
 
     @Override
     public ToolboxMenu getToolbox() {
-        return this.extendedae_plus$toolbox;
+        return this.eap$toolbox;
     }
 
     @Override

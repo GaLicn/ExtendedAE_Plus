@@ -16,9 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class IOBusPartTickerChannelCardMixin {
 
     @Inject(method = "tickingRequest", at = @At("TAIL"))
-    private void extendedae_plus$tickTail(IGridNode node, int ticksSinceLastCall, CallbackInfoReturnable<TickRateModulation> cir) {
+    private void eap$tickTail(IGridNode node, int ticksSinceLastCall, CallbackInfoReturnable<TickRateModulation> cir) {
         if (this instanceof InterfaceWirelessLinkBridge bridge) {
-            bridge.extendedae_plus$updateWirelessLink();
+            bridge.eap$updateWirelessLink();
         }
     }
 }
