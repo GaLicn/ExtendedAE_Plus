@@ -67,6 +67,7 @@
     "ae2.helpers.patternprovider.PatternProviderLogicHostUpgradesMixin",
     "ae2.menu.PatternProviderMenuUpgradesMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
+    "ae2.parts.AEBasePartClientSyncMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
     "ae2.parts.automation.IOBusPartTickerChannelCardMixin",
     "ae2.parts.storagebus.StorageBusPartChannelCardMixin",
