@@ -37,6 +37,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.createEntitySpeedCardStack(16));
 
                         output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
+                        
+                        // 频道卡
+                        output.accept(ModItems.CHANNEL_CARD.get());
                     })
                     .build());
 }
