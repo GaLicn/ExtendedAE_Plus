@@ -1,34 +1,31 @@
 package com.extendedae_plus.ae.items;
 
+import appeng.api.config.FuzzyMode;
+import appeng.api.storage.cells.ICellWorkbenchItem;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
+import com.extendedae_plus.util.storage.InfinityConstants;
+import com.google.common.base.Preconditions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.LongTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 
-public class InfinityBigIntegerCellItem extends Item {
+public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchItem {
 
     public InfinityBigIntegerCellItem() {
         super(new Properties().stacksTo(1).fireResistant());
     }
 
-    /**
-     * 在物品悬停提示中展示额外信息。
-     * 功能：
-     * - 若 ItemStack 的 NBT 含有 UUID，则显示该 UUID（不会触发服务器加载或持久化行为）
-     * - 若 NBT 同步了 total 字段，则读取并格式化显示总存储量（使用 Inventory 的 formatBigInteger）
-     *
-     * 设计说明：客户端 tooltip 不主动访问服务端 SavedData，以避免不必要的 I/O 与状态变更。
-     */
     @Override
     public void appendHoverText(ItemStack stack,
                                 @Nullable Level world,
@@ -37,41 +34,71 @@ public class InfinityBigIntegerCellItem extends Item {
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon1"));
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon2"));
 
-        // 优先使用 ItemStack 的 NBT 缓存信息显示 tooltip（客户端不应触发世界 I/O）
+        Preconditions.checkArgument(stack.getItem() == this);
+        // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑
         CompoundTag tag = stack.getTag();
-        if (tag != null && tag.contains("uuid")) {
-            String uuidStr = tag.getUUID("uuid").toString();
+        if (tag != null && tag.contains(InfinityConstants.INFINITY_CELL_UUID)) {
+            String uuidStr = tag.getUUID(InfinityConstants.INFINITY_CELL_UUID).toString();
             tooltip.add(
                     Component.literal("UUID: ").withStyle(ChatFormatting.GRAY).append(Component.literal(uuidStr).withStyle(ChatFormatting.YELLOW))
             );
-            // types 表示缓存的种类数
-            if (tag.contains("types")) {
+
+            // 显示已缓存的种类数量（types）——优先使用 ItemStack 缓存字段
+            if (tag.contains(InfinityConstants.INFINITY_ITEM_TYPES)) {
                 try {
-                    int types = tag.getInt("types");
+                    int types = tag.getInt(InfinityConstants.INFINITY_ITEM_TYPES);
                     tooltip.add(
                             Component.literal("Types: ").withStyle(ChatFormatting.GRAY).append(Component.literal(String.valueOf(types)).withStyle(ChatFormatting.GREEN))
                     );
                 } catch (Exception ignored) {
+                    // ignore malformed value
                 }
             }
-            // total 支持 long 或 string 两种表现形式
-            if (tag.contains("total")) {
+
+            // 显示物品总数（formatted）。优先使用缓存的 INFINITY_ITEM_TOTAL 字段（byte[]），否则回退为 legacy 字段或不显示
+            if (tag.contains(InfinityConstants.INFINITY_ITEM_TOTAL)) {
                 try {
-                    java.math.BigInteger total;
-                    Tag t = tag.get("total");
-                    if (t instanceof LongTag) {
-                        total = java.math.BigInteger.valueOf(tag.getLong("total"));
-                    } else {
-                        String s = tag.getString("total");
-                        total = new java.math.BigInteger(s);
-                    }
+                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_ITEM_TOTAL);
+                    java.math.BigInteger total = new java.math.BigInteger(bytes);
                     String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
                     tooltip.add(
-                            Component.literal("Byte: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
+                            Component.literal("Total: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
                     );
                 } catch (Exception ignored) {
+                    // ignore malformed value
+                }
+            } else if (tag.contains(InfinityConstants.INFINITY_CELL_ITEM_COUNT)) {
+                try {
+                    byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
+                    java.math.BigInteger total = new java.math.BigInteger(bytes);
+                    String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
+                    tooltip.add(
+                            Component.literal("Total: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
+                    );
+                } catch (Exception ignored) {
+                    // ignore malformed value
                 }
             }
         }
+    }
+
+    /**
+     * 创建一个带有指定 UUID 的 Infinity 磁盘 ItemStack
+     */
+    public static ItemStack withUUID(java.util.UUID uuid) {
+        ItemStack stack = new ItemStack(Objects.requireNonNull(
+                ForgeRegistries.ITEMS.getValue(new ResourceLocation("extendedae_plus", "infinity_biginteger_cell")
+        )));
+        stack.getOrCreateTag().putUUID(InfinityConstants.INFINITY_CELL_UUID, uuid);
+        return stack;
+    }
+
+    @Override
+    public FuzzyMode getFuzzyMode(ItemStack itemStack) {
+        return null;
+    }
+
+    @Override
+    public void setFuzzyMode(ItemStack itemStack, FuzzyMode fuzzyMode) {
     }
 }
