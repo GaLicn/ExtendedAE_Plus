@@ -20,7 +20,7 @@
     "ae2.client.gui.PatternEncodingTermScreenMixin",
     "ae2.client.gui.PatternProviderCloseMixin",
     "ae2.client.gui.PatternProviderScreenMixin",
-    "ae2.client.gui.PatternProviderScreenUpgradesMixin",
+    "ae2.compat.PatternProviderScreenCompatMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
@@ -63,9 +63,9 @@
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
-    "ae2.helpers.patternprovider.PatternProviderLogicUpgradesMixin",
-    "ae2.helpers.patternprovider.PatternProviderLogicHostUpgradesMixin",
-    "ae2.menu.PatternProviderMenuUpgradesMixin",
+    "ae2.compat.PatternProviderLogicCompatMixin",
+    "ae2.compat.PatternProviderLogicHostCompatMixin",
+    "ae2.compat.PatternProviderCompatMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.parts.AEBasePartClientSyncMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
@@ -84,5 +84,6 @@
   "injectors": {
     "defaultRequire": 1
   },
+  "plugin": "com.extendedae_plus.mixin.MixinConditions",
   "priority": 1000
 }

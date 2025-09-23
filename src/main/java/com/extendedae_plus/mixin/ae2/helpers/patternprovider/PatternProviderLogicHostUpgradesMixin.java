@@ -10,12 +10,15 @@ import org.spongepowered.asm.mixin.Shadow;
 /**
  * 让 PatternProviderLogicHost 作为 IUpgradeableObject 的代理，菜单可从 host 获取升级槽。
  */
-@Mixin(value = PatternProviderLogicHost.class, remap = false)
+@Mixin(value = PatternProviderLogicHost.class, priority = 2000, remap = false)
 public interface PatternProviderLogicHostUpgradesMixin extends IUpgradeableObject {
     @Shadow PatternProviderLogic getLogic();
 
     @Override
     default IUpgradeInventory getUpgrades() {
+        if (!com.extendedae_plus.compat.UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return appeng.api.upgrades.UpgradeInventories.empty();
+        }
         return ((IUpgradeableObject) this.getLogic()).getUpgrades();
     }
 }

@@ -8,6 +8,7 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
@@ -29,7 +30,7 @@ import java.util.List;
  * 为 PatternProviderLogic 注入升级槽，实现 IUpgradeableObject。
  * 仅负责升级槽的持久化/掉落/清空与初始化，不改变原有逻辑。
  */
-@Mixin(value = PatternProviderLogic.class, remap = false)
+@Mixin(value = PatternProviderLogic.class, priority = 2000, remap = false)
 public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableObject, InterfaceWirelessLinkBridge {
     @Unique
     private IUpgradeInventory eap$upgrades = UpgradeInventories.empty();
@@ -75,16 +76,27 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
     private void eap$initUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
+        // 只有在应该启用升级卡槽时才初始化
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return;
+        }
+        
         this.eap$upgrades = UpgradeInventories.forMachine(host.getTerminalIcon().getItem(), 1, this::eap$onUpgradesChanged);
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$saveUpgrades(CompoundTag tag, CallbackInfo ci) {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return;
+        }
         this.eap$upgrades.writeToNBT(tag, "upgrades");
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$loadUpgrades(CompoundTag tag, CallbackInfo ci) {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return;
+        }
         this.eap$upgrades.readFromNBT(tag, "upgrades");
         // 从 NBT 加载后，重置并尝试初始化（可能刚进入世界）
         eap$lastChannel = -1;
@@ -94,6 +106,9 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
 
     @Inject(method = "addDrops", at = @At("TAIL"))
     private void eap$dropUpgrades(List<ItemStack> drops, CallbackInfo ci) {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return;
+        }
         for (var stack : this.eap$upgrades) {
             if (!stack.isEmpty()) {
                 drops.add(stack);
@@ -103,6 +118,9 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
 
     @Inject(method = "clearContent", at = @At("TAIL"))
     private void eap$clearUpgrades(CallbackInfo ci) {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return;
+        }
         this.eap$upgrades.clear();
     }
 
@@ -115,6 +133,9 @@ public abstract class PatternProviderLogicUpgradesMixin implements IUpgradeableO
 
     @Override
     public IUpgradeInventory getUpgrades() {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            return UpgradeInventories.empty();
+        }
         return this.eap$upgrades;
     }
 

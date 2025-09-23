@@ -4,6 +4,7 @@ import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
+import com.extendedae_plus.compat.CompatibilityTest;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
@@ -61,6 +62,9 @@ public class ExtendedAEPlus {
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
         StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
+
+        // 运行兼容性测试
+        CompatibilityTest.testCompatibility();
 
         // 注册本模组网络通道与数据包
         event.enqueueWork(() -> {
