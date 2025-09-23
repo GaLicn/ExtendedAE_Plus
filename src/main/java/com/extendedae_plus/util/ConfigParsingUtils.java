@@ -1,6 +1,7 @@
 package com.extendedae_plus.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -114,34 +115,71 @@ public final class ConfigParsingUtils {
     // ------------------ 全局缓存与接口 ------------------
     private static volatile List<Pattern> cachedBlacklist = null;
     private static volatile List<MultiplierEntry> cachedMultiplierEntries = null;
+    private static volatile List<String> cachedBlacklistSourceSnapshot = null;
+    private static volatile List<String> cachedMultiplierSourceSnapshot = null;
     private static final Object CACHE_LOCK = new Object();
 
     /**
      * 获取已解析并缓存的黑名单（线程安全、懒加载）。
      */
     public static List<Pattern> getCachedBlacklist(java.util.List<? extends String> source) {
-        if (cachedBlacklist == null) {
-            synchronized (CACHE_LOCK) {
-                if (cachedBlacklist == null) {
-                    cachedBlacklist = compilePatterns(source);
-                }
-            }
+        List<String> normalized = normalizeSource(source);
+
+        // fast path: identical snapshot reference or equal contents
+        if (cachedBlacklist != null && listEquals(cachedBlacklistSourceSnapshot, normalized)) {
+            return Collections.unmodifiableList(cachedBlacklist);
         }
-        return java.util.List.copyOf(cachedBlacklist);
+
+        synchronized (CACHE_LOCK) {
+            if (cachedBlacklist == null || !listEquals(cachedBlacklistSourceSnapshot, normalized)) {
+                cachedBlacklist = compilePatterns(normalized);
+                cachedBlacklistSourceSnapshot = normalized.isEmpty() ? Collections.emptyList() : new ArrayList<>(normalized);
+            }
+            return Collections.unmodifiableList(cachedBlacklist);
+        }
     }
 
     /**
      * 获取已解析并缓存的倍率列表（线程安全、懒加载）。
      */
     public static List<MultiplierEntry> getCachedMultiplierEntries(java.util.List<? extends String> source) {
-        if (cachedMultiplierEntries == null) {
-            synchronized (CACHE_LOCK) {
-                if (cachedMultiplierEntries == null) {
-                    cachedMultiplierEntries = parseMultiplierList(source);
-                }
-            }
+        List<String> normalized = normalizeSource(source);
+
+        if (cachedMultiplierEntries != null && listEquals(cachedMultiplierSourceSnapshot, normalized)) {
+            return Collections.unmodifiableList(cachedMultiplierEntries);
         }
-        return java.util.List.copyOf(cachedMultiplierEntries);
+
+        synchronized (CACHE_LOCK) {
+            if (cachedMultiplierEntries == null || !listEquals(cachedMultiplierSourceSnapshot, normalized)) {
+                cachedMultiplierEntries = parseMultiplierList(normalized);
+                cachedMultiplierSourceSnapshot = normalized.isEmpty() ? Collections.emptyList() : new ArrayList<>(normalized);
+            }
+            return Collections.unmodifiableList(cachedMultiplierEntries);
+        }
+    }
+
+    // Normalize the incoming source list: trim entries, drop blanks, keep stable ordering
+    private static List<String> normalizeSource(java.util.List<? extends String> source) {
+        List<String> out = new ArrayList<>();
+        if (source == null) return out;
+        for (String s : source) {
+            if (s == null) continue;
+            String t = s.trim();
+            if (t.isEmpty()) continue;
+            out.add(t);
+        }
+        return out;
+    }
+
+    // Null-safe equality for two lists of strings. Uses size + element equals.
+    private static boolean listEquals(List<String> a, List<String> b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        if (a.size() != b.size()) return false;
+        for (int i = 0; i < a.size(); i++) {
+            if (!a.get(i).equals(b.get(i))) return false;
+        }
+        return true;
     }
 
     /**

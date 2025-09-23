@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EncodePatternTransferHandlerMixin {
 
     @Inject(method = "transferRecipe", at = @At("HEAD"), require = 0)
-    private void extendedae_plus$captureProcessingName(PatternEncodingTermMenu menu,
+    private void eap$captureProcessingName(PatternEncodingTermMenu menu,
                                                        Object recipeBase,
                                                        IRecipeSlotsView slotsView,
                                                        Player player,

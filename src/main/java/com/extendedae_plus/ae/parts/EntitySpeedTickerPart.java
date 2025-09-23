@@ -84,14 +84,34 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     // 控制是否启用加速（默认启用）
     private boolean accelerateEnabled = true;
+    // 标记网络中是否能量不足（用于 GUI 提示）
+    private boolean networkEnergyInsufficient = true;
 
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
     }
 
+    public boolean isNetworkEnergyInsufficient() {
+        return this.networkEnergyInsufficient;
+    }
+
     public void setAccelerateEnabled(boolean accelerateEnabled) {
         this.accelerateEnabled = accelerateEnabled;
+    }
+
+    /**
+     * 更新网络能量不足标记并在菜单存在且状态变化时触发同步
+     * @param insufficient 是否能量不足
+     */
+    private void updateNetworkEnergyInsufficient(boolean insufficient) {
+        if (this.networkEnergyInsufficient == insufficient) return;
+        this.networkEnergyInsufficient = insufficient;
+        if (this.menu != null) {
+            try {
+                this.menu.broadcastChanges();
+            } catch (Exception ignored) {}
+        }
     }
 
     /**
@@ -239,11 +259,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         // 先模拟提取以检查网络中是否有足够能量，再真正抽取
         double simulated = getMainNode().getGrid().getEnergyService()
                 .extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated < requiredPower) return;
+        if (simulated < requiredPower) {
+            updateNetworkEnergyInsufficient(false);
+            return;
+        }
 
         double extractedPower = getMainNode().getGrid().getEnergyService()
                 .extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-        if (extractedPower < requiredPower) return;
+        if (extractedPower < requiredPower) {
+            updateNetworkEnergyInsufficient(false);
+            return;
+        }
 
         // 计算加速倍数：基于 2 的次方，并把 8 张映射到最大 1024x（2^10）
         // 已由 product 计算得到 speed；上面已在没有卡时提前返回

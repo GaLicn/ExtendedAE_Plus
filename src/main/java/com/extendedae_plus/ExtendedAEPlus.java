@@ -3,18 +3,18 @@ package com.extendedae_plus;
 import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.client.ClientRegistrar;
+import com.extendedae_plus.command.InfinityDiskGiveCommand;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -52,13 +52,11 @@ public class ExtendedAEPlus {
 
         // 注册到Forge事件总线
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
+        // 注册命令注册监听
+        MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
         // 注册通用配置
         ModConfig.init();
-        // 注册 InfinityBigIntegerCellInventory 的事件监听（tick flush 与停止时 flush）
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
-        MinecraftForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
-//        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::worldTick);
     }
 
     /**
@@ -74,6 +72,14 @@ public class ExtendedAEPlus {
             ModNetwork.register();
             // 注册自定义 Curios 宿主定位器，便于将菜单宿主信息在服务端与客户端间同步
             MenuLocators.register(CuriosItemLocator.class, CuriosItemLocator::writeToPacket, CuriosItemLocator::readFromPacket);
+            
+            // 绑定方块实体类型，避免 blockEntityClass 为 null 的问题
+            ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
+                com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                ModBlockEntities.UPLOAD_CORE_BE.get(),
+                null,
+                null
+            );
         });
     }
 
@@ -117,10 +123,16 @@ public class ExtendedAEPlus {
         }
     }
 
-    // 在世界加载时注册/加载 SavedData
-    private static void onLevelLoad(LevelEvent.Load event) {
-        if (event.getLevel() instanceof ServerLevel serverLevel) {
-            InfinityStorageManager.getForLevel(serverLevel);
+
+    public static InfinityStorageManager STORAGE_INSTANCE = new InfinityStorageManager();
+
+    public static void worldTick(TickEvent.LevelTickEvent event) {
+        if (event.phase == TickEvent.Phase.START && event.side.isServer()) {
+            STORAGE_INSTANCE = InfinityStorageManager.getInstance(event.level.getServer());
         }
+    }
+
+    private void onRegisterCommands(RegisterCommandsEvent event) {
+        InfinityDiskGiveCommand.register(event.getDispatcher());
     }
 }

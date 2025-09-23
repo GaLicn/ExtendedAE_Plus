@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
+import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import appeng.block.crafting.CraftingUnitBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
@@ -37,6 +38,16 @@ public final class ModBlocks {
                             .strength(1.5F, 6.0F)
                             .requiresCorrectToolForDrops()
             )
+    );
+
+    // 装配矩阵上传核心（内部功能块）
+    public static final RegistryObject<UploadCoreBlock> ASSEMBLER_MATRIX_UPLOAD_CORE = BLOCKS.register(
+            "assembler_matrix_upload_core",
+            () -> {
+                var b = new UploadCoreBlock();
+                // 注意：方块实体绑定延后到 commonSetup 的 enqueueWork 中执行，避免注册阶段循环依赖
+                return b;
+            }
     );
 
     // Crafting Accelerators (reuse MAE2 textures/models)

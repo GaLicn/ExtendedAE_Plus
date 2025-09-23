@@ -19,7 +19,7 @@ import com.extendedae_plus.hooks.BuiltInModelHooks;
 @Mixin(ModelBakery.class)
 public class ModelBakeryMixin {
     @Inject(method = "loadModel", at = @At("HEAD"), cancellable = true)
-    private void extendedae_plus$loadModelHook(ResourceLocation id, CallbackInfo ci) {
+    private void eap$loadModelHook(ResourceLocation id, CallbackInfo ci) {
         var model = BuiltInModelHooks.getBuiltInModel(id);
         if (model != null) {
             cacheAndQueueDependencies(id, model);

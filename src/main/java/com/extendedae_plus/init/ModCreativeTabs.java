@@ -21,6 +21,8 @@ public final class ModCreativeTabs {
                         // 将本模组物品加入创造物品栏
                         output.accept(ModItems.WIRELESS_TRANSCEIVER.get());
                         output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
+                        // 装配矩阵上传核心
+                        output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
                         output.accept(ModItems.ACCELERATOR_4x.get());
                         output.accept(ModItems.ACCELERATOR_16x.get());
                         output.accept(ModItems.ACCELERATOR_64x.get());
@@ -35,6 +37,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.createEntitySpeedCardStack(16));
 
                         output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
+                        
+                        // 频道卡
+                        output.accept(ModItems.CHANNEL_CARD.get());
                     })
                     .build());
 }

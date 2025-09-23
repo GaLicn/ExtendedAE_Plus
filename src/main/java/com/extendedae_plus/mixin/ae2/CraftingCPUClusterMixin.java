@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class CraftingCPUClusterMixin {
     // 1) 提升“单方块线程上限”的常量，避免抛出 IAE 的 IllegalArgumentException
     @ModifyConstant(
-        method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
-        constant = @Constant(intValue = 16)
+            method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
+            constant = @Constant(intValue = 16)
     )
     private int extendedae_plus$raisePerUnitLimit(int original) {
         // 放宽到极大值，完全取消单方块 16 线程的硬限制
@@ -22,12 +22,12 @@ public abstract class CraftingCPUClusterMixin {
 
     // 2) 保持统计使用原始线程值（若存在多处调用），不再返回固定 16
     @Redirect(
-        method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
-        at = @At(
-            value = "INVOKE",
-            target = "Lappeng/blockentity/crafting/CraftingBlockEntity;getAcceleratorThreads()I",
-            ordinal = 1
-        )
+            method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lappeng/blockentity/crafting/CraftingBlockEntity;getAcceleratorThreads()I",
+                    ordinal = 1
+            )
     )
     private int extendedae_plus$onGetThreadsForLimitCheck(CraftingBlockEntity te) {
         // 返回原始线程数，确保总并行单元不被错误下限

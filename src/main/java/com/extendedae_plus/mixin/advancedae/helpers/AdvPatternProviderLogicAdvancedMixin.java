@@ -94,7 +94,6 @@ public class AdvPatternProviderLogicAdvancedMixin implements AdvancedBlockingHol
 
     @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
     private void onExportSettings(CompoundTag output, CallbackInfo ci) {
-        System.out.println(this.eap$advancedBlocking);
         output.putBoolean(EAP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
