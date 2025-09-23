@@ -42,6 +42,6 @@ ExtendedAE Plus 是一个面向 Applied Energistics 2 与 ExtendedAE 的功能�
 - Applied Energistics 2（AE2）：MIT License
 - SpongePowered Mixin：MIT License
 - Configuration（by Toma）：MIT License
-- AE2Things（by ProjectET）：MIT License
+- AE2Things-Forge（by Technici4n）：MIT License
 
 请查阅各上游项目以获取完整与最新的许可证信息。第三方组件的许可证与版权归其各自作者所有。

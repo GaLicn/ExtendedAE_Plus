@@ -1,5 +1,6 @@
 package com.extendedae_plus.command;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.brigadier.CommandDispatcher;
@@ -33,7 +34,7 @@ public class InfinityDiskGiveCommand {
                 source.sendFailure(Component.literal("This command must be run on server side."));
                 return 0;
             }
-            InfinityStorageManager mgr = InfinityStorageManager.getForLevel((ServerLevel) player.level());
+            InfinityStorageManager mgr = ExtendedAEPlus.STORAGE_INSTANCE;
             if (mgr == null) {
                 source.sendFailure(Component.literal("InfinityStorageManager is not initialized."));
                 return 0;
@@ -54,7 +55,7 @@ public class InfinityDiskGiveCommand {
         } catch (Exception ex) {
             source.sendFailure(Component.literal("Error: " + ex.getMessage()));
             return 0;
-        }
+      }
     }
 }
 

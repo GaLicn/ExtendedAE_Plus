@@ -2,145 +2,37 @@ package com.extendedae_plus.util.storage;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtIo;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import java.math.BigInteger;
+import java.util.*;
 
 /**
- * InfinityStorageManager
- * <p>
- * 世界级别的持久化容器，集中管理所有 InfinityBigInteger 存储单元的序列化数据。
- * 功能要点：
- * - 在世界加载时从存档恢复所有 cell 的数据
- * - 提供按 UUID 获取/创建单个 cell 的数据容器
- * - 在世界保存时将内存数据打包为 NBT 写回存档
+ * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
+ * Original copyright (c) Technici4n<p>
  */
 public class InfinityStorageManager extends SavedData {
 
-    // 当前磁盘格式版本号，增加字段用于向后/向前兼容
-    private static final int FORMAT_VERSION = 1;
+    // 存储所有磁盘的Map，键为UUID，值为DataStorage对象
+    private final Map<UUID, InfinityDataStorage> cells;
 
 
-    /**
-     * SavedData 文件名常量
-     */
-    public static final String FILE_NAME = "eap_infinity_biginteger_cells";
-    /**
-     * 全局单例实例（在世界加载时由 InfiniteBigIntegerStorageCell.onLevelLoad 填充）
-     */
-    public static InfinityStorageManager INSTANCE = null;
-    /**
-     * UUID -> 数据 的内存映射
-     */
-    private final Map<UUID, InfinityDataStorage> cells = new HashMap<>();
-
-    /**
-     * 返回当前已加载的所有 UUID 的不可变视图，用于命令或调试用途
-     */
-    public java.util.Set<UUID> getAllLoadedUUIDs() {
-        return java.util.Collections.unmodifiableSet(cells.keySet());
-    }
-
+    // 构造方法，初始化磁盘Map
     public InfinityStorageManager() {
-        setDirty();
+        cells = new HashMap<>();
+        // 标记数据为“脏”，确保新创建的实例在下次保存时写入磁盘
+        this.setDirty();
     }
 
-    /**
-     * 从 NBT 构造：用于在世界加载时从存档恢复数据
-     */
-    public InfinityStorageManager(CompoundTag nbt) {
-        // 读取格式版本，缺省视为 1（兼容旧档）
-        int version = nbt.contains("format_version") ? nbt.getInt("format_version") : 1;
-        if (!nbt.contains("format_version")) {
-            // 旧档未包含 format_version，标记为需要写回以便下次保存写入版本号
-            LOGGER.info("Found legacy InfinityStorageManager dat without format_version; treating as version {} and marking dirty for upgrade", version);
-            // 立即标记为脏以触发尽快写盘（升级写入 format_version）
-            this.setDirty();
-        } else {
-            LOGGER.info("Loading InfinityStorageManager format_version={}", version);
-        }
-
-        ListTag cellList = nbt.getList("list", CompoundTag.TAG_COMPOUND);
-        for (int i = 0; i < cellList.size(); i++) {
-            CompoundTag cell = cellList.getCompound(i);
-            java.util.UUID uuid = cell.getUUID("uuid");
-            CompoundTag dataTag = cell.getCompound("data");
-            InfinityDataStorage data = InfinityDataStorage.loadFromNBT(dataTag);
-            cells.put(uuid, data);
-            LOGGER.info("Loaded InfinityDataStorage for uuid {}: keys={}, amounts={}", uuid, data.keys.size(), data.amounts.size());
-        }
-        setDirty();
-    }
-
-    /**
-     * 根据给定的 ServerLevel 获取或创建该世界对应的 SavedData 实例并缓存到 INSTANCE
-     */
-    public static InfinityStorageManager getForLevel(ServerLevel level) {
-        if (INSTANCE == null && level != null) {
-            // 迁移逻辑：若旧的压缩 dat 文件存在且缺少 format_version，则读取并补上 version，备份原文件
-            try {
-                Path dataDir = level.getServer().getWorldPath(new LevelResource("data"));
-                Path filePath = dataDir.resolve(FILE_NAME + ".dat");
-                File oldFile = filePath.toFile();
-                if (oldFile.exists()) {
-                    // 检测是否为 gzip（压缩 NBT）
-                    boolean isGzip = false;
-                    try (var fis = Files.newInputStream(filePath)) {
-                        int b1 = fis.read();
-                        int b2 = fis.read();
-                        isGzip = (b1 == 0x1F && b2 == 0x8B);
-                    } catch (IOException ignored) {
-                    }
-                    if (isGzip) {
-                        try {
-                            var root = NbtIo.readCompressed(oldFile);
-                            if (!root.contains("format_version")) {
-                                // 备份旧文件
-                                Path bak = filePath.resolveSibling(FILE_NAME + ".dat.bak");
-                                try {
-                                    Files.copy(filePath, bak);
-                                } catch (IOException ignored) {
-                                }
-                                // 写回并加入 format_version
-                                root.putInt("format_version", FORMAT_VERSION);
-                                Path tmp = filePath.resolveSibling(FILE_NAME + ".tmp");
-                                File tmpFile = tmp.toFile();
-                                if (tmpFile.getParentFile() != null && !tmpFile.getParentFile().exists()) {
-                                    tmpFile.getParentFile().mkdirs();
-                                }
-                                NbtIo.writeCompressed(root, tmpFile);
-                                try {
-                                    Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-                                } catch (AtomicMoveNotSupportedException ex) {
-                                    Files.move(tmp, filePath, StandardCopyOption.REPLACE_EXISTING);
-                                }
-                                LOGGER.info("Migrated old compressed {} to include format_version", filePath);
-                            }
-                        } catch (IOException ex) {
-                            LOGGER.info("Failed to migrate old compressed file {}: {}", filePath, ex.getMessage());
-                        }
-                    }
-                }
-            } catch (Throwable ignored) {
-            }
-
-            INSTANCE = level.getDataStorage().computeIfAbsent(InfinityStorageManager::new, InfinityStorageManager::new, FILE_NAME);
-        }
-        return INSTANCE;
+    // 私有构造方法，用于从已有Map创建StorageManager
+    private InfinityStorageManager(Map<UUID, InfinityDataStorage> cells) {
+        // 确保使用已加载的数据
+        this.cells = cells;
+        // 标记数据为“脏”，确保新创建的实例在下次保存时写入磁盘
+        this.setDirty();
     }
 
     @Override
@@ -149,83 +41,96 @@ public class InfinityStorageManager extends SavedData {
         ListTag cellList = new ListTag();
         for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
             CompoundTag cell = new CompoundTag();
-            cell.putUUID("uuid", entry.getKey());
-            cell.put("data", entry.getValue().serializeNBT());
+            cell.putUUID(InfinityConstants.INFINITY_CELL_UUID, entry.getKey());
+            cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT());
             cellList.add(cell);
         }
-        nbt.put("list", cellList);
+        nbt.put(InfinityConstants.INFINITY_CELL_LIST, cellList);
         // 写入当前格式版本号，便于未来迁移与兼容判断
-        nbt.putInt("format_version", FORMAT_VERSION);
+        nbt.putInt(InfinityConstants.FORMAT_VERSION_FIELD, InfinityConstants.FORMAT_VERSION);
         return nbt;
     }
 
-    /**
-     * 更新或添加某个 UUID 对应的数据并标记为脏（需要保存）
-     */
+    // 静态方法，从 NBT 数据反序列化创建 StorageManager 实例
+    public static InfinityStorageManager readNbt(CompoundTag nbt) {
+        // 读取格式版本，缺省视为 1（兼容旧档）
+        int version = nbt.contains(InfinityConstants.FORMAT_VERSION_FIELD) ?
+                nbt.getInt(InfinityConstants.FORMAT_VERSION_FIELD) :
+                1;
+
+        Map<UUID, InfinityDataStorage> cells = new HashMap<>();
+        // 从 NBT 中获取磁盘数据列表，指定类型为 CompoundTag（TAG_COMPOUND）
+        ListTag cellList = nbt.getList(InfinityConstants.INFINITY_CELL_LIST, CompoundTag.TAG_COMPOUND);
+        // 遍历 cellList 中的每个 CompoundTag
+        for (int i = 0; i < cellList.size(); i++) {
+            // 获取当前索引的 CompoundTag，表示单个磁盘的数据
+            CompoundTag cell = cellList.getCompound(i);
+            // 从 CompoundTag 中读取 UUID 和 DataStorage 数据，并存入 cells 映射
+            cells.put(cell.getUUID(InfinityConstants.INFINITY_CELL_UUID), InfinityDataStorage.loadFromNBT(cell.getCompound(InfinityConstants.INFINITY_CELL_DATA)));
+        }
+        // 使用加载的 cells 数据创建新的 StorageManager 实例
+        return new InfinityStorageManager(cells);
+    }
+
+    // 返回当前已加载的所有 UUID 的不可变视图，用于命令或调试用途
+    public Set<UUID> getAllLoadedUUIDs() {
+        return Collections.unmodifiableSet(cells.keySet());
+    }
+
+
+    // 更新或添加某个 UUID 对应的数据并标记为脏（需要保存）
     public void updateCell(UUID uuid, InfinityDataStorage infinityDataStorage) {
         cells.put(uuid, infinityDataStorage);
+        // 标记数据为“脏”，确保修改后的数据会在下次保存时写入磁盘
         setDirty();
     }
 
-    /**
-     * 获取或创建某个 UUID 对应的数据容器
-     */
+    // 删除某个 UUID 的持久化记录并标记为脏
+    public void removeCell(UUID uuid) {
+        cells.remove(uuid);
+        // 标记数据为“脏”，确保移除操作会在下次保存时反映到磁盘
+        setDirty();
+    }
+
+    // 检查指定 UUID 是否存在于 disks 映射中
+    public boolean hasUUID(UUID uuid) {
+        // 返回 cells 映射是否包含指定 UUID
+        return cells.containsKey(uuid);
+    }
+
+    // 获取或创建某个 UUID 对应的数据容器
     public InfinityDataStorage getOrCreateCell(UUID uuid) {
+        // 检查 cells 映射中是否不存在指定 UUID
         if (!cells.containsKey(uuid)) {
             updateCell(uuid, new InfinityDataStorage());
         }
+        // 返回指定 UUID 对应的 DataStorage 对象
         return cells.get(uuid);
     }
 
-    /**
-     * 修改某个 UUID 对应的键与数量列表并保存（新的签名，stackAmounts 为 ListTag 字符串列表）
-     */
-    public void modifyCell(UUID cellID, ListTag stackKeys, ListTag stackAmounts) {
-        InfinityDataStorage cellToModify = getOrCreateCell(cellID);
-        if (stackKeys != null && stackAmounts != null) {
-            cellToModify.keys = stackKeys;
-            cellToModify.amounts = stackAmounts;
+    // 修改指定 UUID 的磁盘数据，包括堆栈键、数量和总项目数
+    public void modifyDisk(UUID uuid, ListTag keys, ListTag amounts, BigInteger itemCount) {
+        // 获取或创建指定 UUID 的 DataStorage 对象
+        InfinityDataStorage cellToModify = getOrCreateCell(uuid);
+        if (keys != null && amounts != null) {
+            cellToModify.keys = keys;
+            cellToModify.amounts = amounts;
         }
-        updateCell(cellID, cellToModify);
+        // 更新 DataStorage 的 itemCount 字段
+        cellToModify.itemCount = itemCount;
+        // 将修改后的 DataStorage 对象更新到 cells 映射
+        updateCell(uuid, cellToModify);
     }
 
-    /**
-     * 删除某个 UUID 的持久化记录并标记为脏
-     */
-    public void removeCell(UUID uuid) {
-        cells.remove(uuid);
-        setDirty();
-    }
-
-    /**
-     * 强制将内存中的所有 InfinityDataStorage 写入磁盘
-     * 可在服务器停止或 tick 中调用，确保数据不会丢失
-     */
-    public void forceSaveAll(ServerLevel level) {
-        try {
-            if (level != null) {
-                this.setDirty();
-                CompoundTag nbt = new CompoundTag();
-                this.save(nbt);
-                File file = level.getServer().getWorldPath(new LevelResource("data"))
-                        .resolve(FILE_NAME + ".dat").toFile();
-                NbtIo.writeCompressed(nbt, file);
-
-                // 打印所有已保存的无限磁盘 UUID 及相关信息
-                StringBuilder sb = new StringBuilder();
-                sb.append("Saving Infinity Disks (UUIDs and info):\n");
-                for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
-                    UUID uuid = entry.getKey();
-                    InfinityDataStorage data = entry.getValue();
-                    int types = (data.keys != null) ? data.keys.size() : 0;
-                    sb.append(" - UUID: ").append(uuid)
-                      .append(", Types: ").append(types)
-                      .append("\n");
-                }
-                LOGGER.info(sb.toString());
-            }
-        } catch (Throwable ex) {
-            LOGGER.info("InfinityStorageManager forceSaveAll error: {}", ex.getMessage());
-        }
+    // 静态方法，获取 StorageManager 的单例实例
+    public static InfinityStorageManager getInstance(MinecraftServer server) {
+        ServerLevel world = server.getLevel(ServerLevel.OVERWORLD);
+        // 使用 DataStorage 的 computeIfAbsent 方法加载或创建 StorageManager 实例
+        // 如果数据存在，则调用 readNbt 加载；否则调用默认构造器创建新实例
+        return world.getDataStorage().computeIfAbsent(
+                InfinityStorageManager::readNbt,
+                InfinityStorageManager::new,
+                InfinityConstants.SAVE_FILE_NAME
+        );
     }
 }

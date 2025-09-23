@@ -2,62 +2,47 @@ package com.extendedae_plus.util.storage;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
+
+import java.math.BigInteger;
 
 /**
- * InfinityDataStorage
- *
- * 表示单个 UUID 对应的持久化数据容器，直接映射到世界存档中的一项记录。
- * 数据结构说明：
- * - keys: 存放序列化后的 AEKey（每项为 CompoundTag），用于标识不同的存储条目
- * - amounts: 与 keys 一一对应的数量列表（每项为 CompoundTag），采用混合表示：
- *     - 当数量能放入 long 时，CompoundTag 包含键 "l" 存放 long 值
- *     - 当数量超出 long 时，CompoundTag 包含键 "s" 存放 BigInteger 的字符串形式
- *
- * 该类提供将内存数据与 NBT 之间互转的辅助方法，供 `SavedData` 在世界保存/加载时调用。
+ * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
+ * Original copyright (c) Technici4n<p>
  */
 public class InfinityDataStorage {
+    // 定义一个静态常量 EMPTY，表示一个空的 DataStorage 实例，用于默认或占位场景
+    public static final InfinityDataStorage EMPTY = new InfinityDataStorage();
 
-    /** 空实例的访问器（返回新实例以避免共享可变状态） */
-    public static InfinityDataStorage empty() {
-        return new InfinityDataStorage();
-    }
-
-    /** 序列化的键列表（NBT ListTag，元素为 CompoundTag） */
     public ListTag keys;
-    /**
-     * 与 keys 对应的数量列表（NBT ListTag，元素为 CompoundTag）：
-     * - 若数量能放入 long，则 CompoundTag 包含键 "l"(long)
-     * - 否则包含键 "s"(String) 存放 BigInteger 的字符串形式
-     */
     public ListTag amounts;
+    // 存储磁盘中物品的总数，使用 BigInteger 支持大容量
+    public BigInteger itemCount;
 
     public InfinityDataStorage() {
-        this(new ListTag(), new ListTag());
+        this(new ListTag(), new ListTag(), BigInteger.ZERO);
     }
 
-    private InfinityDataStorage(ListTag keys, ListTag amounts) {
+    private InfinityDataStorage(ListTag keys, ListTag amounts, BigInteger itemCount) {
         this.keys = keys;
         this.amounts = amounts;
+        this.itemCount = itemCount;
     }
 
-    /**
-     * 将当前数据封装为 CompoundTag 以写入存档
-     */
+    // 将 DataStorage 数据序列化为 NBT 格式
     public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
-        nbt.put("keys", keys);
-        nbt.put("amounts", amounts);
+        nbt.put(InfinityConstants.INFINITY_CELL_KEYS, keys);
+        nbt.put(InfinityConstants.INFINITY_CELL_AMOUNTS, amounts);
+        nbt.putByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT, itemCount.toByteArray());
         return nbt;
     }
 
-    /**
-     * 从存档读取数据并构造实例
-     */
+    // 从 NBT 数据反序列化创建 DataStorage 实例
     public static InfinityDataStorage loadFromNBT(CompoundTag nbt) {
-        ListTag stackKeys = nbt.getList("keys", Tag.TAG_COMPOUND);
-        // amounts 以 CompoundTag 列表存储，每个 CompoundTag 内含 long 或 String
-        ListTag stackAmounts = nbt.getList("amounts", Tag.TAG_COMPOUND);
-        return new InfinityDataStorage(stackKeys, stackAmounts);
+        ListTag keys = nbt.getList(InfinityConstants.INFINITY_CELL_KEYS, ListTag.TAG_COMPOUND);
+        ListTag amounts = nbt.getList(InfinityConstants.INFINITY_CELL_AMOUNTS, ListTag.TAG_COMPOUND);
+        BigInteger itemCount = new BigInteger(nbt.getByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT));
+        // 使用加载的数据创建新的 DataStorage 实例
+        return new InfinityDataStorage(keys, amounts, itemCount);
     }
 }
