@@ -80,7 +80,8 @@
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
-    "ae2.helpers.InterfaceLogicTickerMixin"
+    "ae2.helpers.InterfaceLogicTickerMixin",
+    "ae2.InterfaceLogicUpgradesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -28,11 +28,19 @@ public class UpgradeSlotCompat {
     private static final String APPFLUX_MOD_ID = "appflux";
     
     /**
+     * 检测Applied Flux模组是否存在
+     * @return true如果存在，false如果不存在
+     */
+    public static boolean isAppfluxPresent() {
+        return ModList.get().isLoaded(APPFLUX_MOD_ID);
+    }
+    
+    /**
      * 检测是否应该启用我们的升级卡槽功能
      * @return true如果应该启用，false如果检测到appflux模组存在
      */
     public static boolean shouldEnableUpgradeSlots() {
-        boolean appfluxExists = ModList.get().isLoaded(APPFLUX_MOD_ID);
+        boolean appfluxExists = isAppfluxPresent();
         ExtendedAELogger.LOGGER.info("ExtendedAE-appflux模组检测: {}", appfluxExists ? "存在" : "不存在");
         
         if (appfluxExists) {
