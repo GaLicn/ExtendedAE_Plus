@@ -19,7 +19,7 @@ public interface PatternProviderLogicHostCompatMixin extends IUpgradeableObject 
 
     @Override
     default IUpgradeInventory getUpgrades() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots() && !UpgradeSlotCompat.shouldEnableChannelCard()) {
             return UpgradeInventories.empty();
         }
         return ((IUpgradeableObject) this.getLogic()).getUpgrades();

@@ -45,6 +45,15 @@ public class UpgradeSlotCompat {
     }
     
     /**
+     * 检测是否应该启用频道卡功能
+     * 频道卡是我们独有的功能，即使appflux存在也应该启用
+     * @return 总是返回true，因为频道卡功能不与appflux冲突
+     */
+    public static boolean shouldEnableChannelCard() {
+        return true; // 频道卡功能总是启用，因为appflux没有实现这个功能
+    }
+    
+    /**
      * 检测是否应该在Screen中添加升级面板
      * @return true如果应该添加，false如果检测到appflux模组存在
      */

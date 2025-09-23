@@ -27,7 +27,8 @@ import java.util.List;
 
 /**
  * PatternProviderLogic的兼容性Mixin
- * 优先级设置为500，避免与appflux冲突
+ * 优先级设置为1500，在appflux之后应用
+ * 根据appflux是否存在来决定是否实现IUpgradeableObject接口
  */
 @Mixin(value = PatternProviderLogic.class, priority = 500, remap = false)
 public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, InterfaceWirelessLinkBridge {
@@ -64,18 +65,33 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Unique
     private void eap$compatOnUpgradesChanged() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            return;
-        }
-        
         try {
             this.host.saveChanges();
-            // 升级变更，重置并尝试初始化
-            eap$compatLastChannel = -1;
-            eap$compatHasInitialized = false;
-            eap$compatInitializeChannelLink();
+            // 频道卡功能独立于升级槽功能，总是处理
+            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
+                // 升级变更，重置并尝试初始化频道卡
+                eap$compatLastChannel = -1;
+                eap$compatHasInitialized = false;
+                eap$compatInitializeChannelLink();
+            }
         } catch (Exception e) {
             com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级变更处理失败", e);
+        }
+    }
+    
+    // 监听appflux的升级变化 - 通过注入到appflux的af_$onUpgradesChanged方法
+    @Inject(method = "af_$onUpgradesChanged", at = @At("TAIL"), remap = false, require = 0)
+    private void eap$onAppfluxUpgradesChanged(CallbackInfo ci) {
+        try {
+            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
+                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("监听到appflux升级变化，处理频道卡");
+                // 升级变更，重置并尝试初始化频道卡
+                eap$compatLastChannel = -1;
+                eap$compatHasInitialized = false;
+                eap$compatInitializeChannelLink();
+            }
+        } catch (Exception e) {
+            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("监听appflux升级变化失败", e);
         }
     }
 
@@ -83,12 +99,26 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             at = @At("TAIL"))
     private void eap$compatInitUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("兼容性PatternProviderLogic初始化被调用");
+            
+            boolean upgradeSlots = UpgradeSlotCompat.shouldEnableUpgradeSlots();
+            boolean channelCard = UpgradeSlotCompat.shouldEnableChannelCard();
+            
+            com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("升级槽功能: {}, 频道卡功能: {}", upgradeSlots, channelCard);
+            
+            if (upgradeSlots) {
+                // 只有在升级槽功能启用时才创建升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
                     host.getTerminalIcon().getItem(), 
                     1, 
                     this::eap$compatOnUpgradesChanged
                 );
+                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("创建了完整的升级槽");
+            } else if (channelCard) {
+                // 如果装了appflux，我们不创建自己的升级槽，而是监听appflux的升级槽
+                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("装了appflux，将监听其升级槽来处理频道卡");
+            } else {
+                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("跳过升级槽创建");
             }
         } catch (Exception e) {
             com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级初始化失败", e);
@@ -98,7 +128,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$compatSaveUpgrades(CompoundTag tag, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldEnableUpgradeSlots() || UpgradeSlotCompat.shouldEnableChannelCard()) {
                 this.eap$compatUpgrades.writeToNBT(tag, "compat_upgrades");
             }
         } catch (Exception e) {
@@ -109,12 +139,14 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$compatLoadUpgrades(CompoundTag tag, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldEnableUpgradeSlots() || UpgradeSlotCompat.shouldEnableChannelCard()) {
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades");
-                // 从 NBT 加载后，重置并尝试初始化
-                eap$compatLastChannel = -1;
-                eap$compatHasInitialized = false;
-                eap$compatInitializeChannelLink();
+                // 从 NBT 加载后，重置并尝试初始化频道卡
+                if (UpgradeSlotCompat.shouldEnableChannelCard()) {
+                    eap$compatLastChannel = -1;
+                    eap$compatHasInitialized = false;
+                    eap$compatInitializeChannelLink();
+                }
             }
         } catch (Exception e) {
             com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级加载失败", e);
@@ -124,7 +156,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Inject(method = "addDrops", at = @At("TAIL"))
     private void eap$compatDropUpgrades(List<ItemStack> drops, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldEnableUpgradeSlots() || UpgradeSlotCompat.shouldEnableChannelCard()) {
                 for (var stack : this.eap$compatUpgrades) {
                     if (!stack.isEmpty()) {
                         drops.add(stack);
@@ -139,7 +171,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Inject(method = "clearContent", at = @At("TAIL"))
     private void eap$compatClearUpgrades(CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldEnableUpgradeSlots() || UpgradeSlotCompat.shouldEnableChannelCard()) {
                 this.eap$compatUpgrades.clear();
             }
         } catch (Exception e) {
@@ -150,14 +182,19 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Override
     public IUpgradeInventory getUpgrades() {
         if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            return this.eap$compatUpgrades;
+            // 不装appflux时，返回我们自己的升级槽
+            return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
+        } else {
+            // 装了appflux时，这个方法不应该被调用，因为appflux的Mixin会覆盖它
+            // 但是为了安全起见，返回空的升级槽
+            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("装了appflux时getUpgrades被调用，这不应该发生");
+            return UpgradeInventories.empty();
         }
-        return UpgradeInventories.empty();
     }
 
     @Override
     public void eap$updateWirelessLink() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
             return;
         }
         
@@ -172,7 +209,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Unique
     public void eap$compatInitializeChannelLink() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
             return;
         }
         
@@ -200,11 +237,33 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
             long channel = 0L;
             boolean found = false;
-            for (ItemStack stack : this.eap$compatUpgrades) {
-                if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                    channel = ChannelCardItem.getChannel(stack);
-                    found = true;
-                    break;
+            
+            // 获取升级槽 - 如果装了appflux则从appflux获取，否则从我们自己的获取
+            IUpgradeInventory upgrades = null;
+            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                // 不装appflux时使用我们自己的升级槽
+                upgrades = this.eap$compatUpgrades;
+            } else if (UpgradeSlotCompat.shouldEnableChannelCard()) {
+                // 装了appflux时，尝试从PatternProviderLogic获取升级槽
+                try {
+                    if (this instanceof IUpgradeableObject) {
+                        IUpgradeableObject upgradeableThis = (IUpgradeableObject) this;
+                        upgrades = upgradeableThis.getUpgrades();
+                        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("从appflux获取到升级槽: {}", upgrades != null);
+                    }
+                } catch (Exception e) {
+                    com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("获取appflux升级槽失败", e);
+                }
+            }
+            
+            if (upgrades != null) {
+                for (ItemStack stack : upgrades) {
+                    if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                        channel = ChannelCardItem.getChannel(stack);
+                        found = true;
+                        com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("找到频道卡，频道: {}", channel);
+                        break;
+                    }
                 }
             }
 
@@ -244,14 +303,14 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Override
     public void eap$setClientWirelessState(boolean connected) {
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
             eap$compatClientConnected = connected;
         }
     }
 
     @Override
     public boolean eap$isWirelessConnected() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
             return false;
         }
         
@@ -269,7 +328,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Override
     public boolean eap$hasTickInitialized() {
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
             return eap$compatHasInitialized;
         }
         return true;
@@ -277,14 +336,14 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Override
     public void eap$setTickInitialized(boolean initialized) {
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
             eap$compatHasInitialized = initialized;
         }
     }
 
     @Override
     public void eap$handleDelayedInit() {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
             return;
         }
         
@@ -317,7 +376,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
     private void eap$compatOnMainNodeStateChangedTail(CallbackInfo ci) {
-        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
             return;
         }
         
