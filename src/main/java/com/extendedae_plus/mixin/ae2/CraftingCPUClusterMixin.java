@@ -1,48 +1,36 @@
 package com.extendedae_plus.mixin.ae2;
 
 import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.blockentity.crafting.CraftingMonitorBlockEntity;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-import appeng.me.helpers.MachineSource;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.List;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(value = CraftingCPUCluster.class, remap = false, priority = 2000)
 public abstract class CraftingCPUClusterMixin {
-    
-    @Shadow private List<CraftingBlockEntity> blockEntities;
-    @Shadow private List<CraftingMonitorBlockEntity> status;
-    @Shadow private MachineSource machineSrc;
-    @Shadow private long storage;
-    @Shadow private int accelerator;
-    
-    /**
-     * 完全重写addBlockEntity方法，移除16线程的硬限制
-     * @author ExtendedAE_Plus
-     * @reason 移除单方块16线程的硬限制，允许更高的线程数
-     */
-    @Overwrite
-    void addBlockEntity(CraftingBlockEntity te) {
-        if (this.machineSrc == null || te.isCoreBlock()) {
-            this.machineSrc = new MachineSource(te);
-        }
+    // 1) 提升“单方块线程上限”的常量，避免抛出 IAE 的 IllegalArgumentException
+    @ModifyConstant(
+            method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
+            constant = @Constant(intValue = 16)
+    )
+    private int extendedae_plus$raisePerUnitLimit(int original) {
+        // 放宽到极大值，完全取消单方块 16 线程的硬限制
+        return Integer.MAX_VALUE;
+    }
 
-        te.setCoreBlock(false);
-        te.saveChanges();
-        this.blockEntities.add(0, te);
-
-        if (te instanceof CraftingMonitorBlockEntity) {
-            this.status.add((CraftingMonitorBlockEntity) te);
-        }
-        if (te.getStorageBytes() > 0) {
-            this.storage += te.getStorageBytes();
-        }
-        if (te.getAcceleratorThreads() > 0) {
-            // 移除原来的16线程限制，直接添加线程数
-            this.accelerator += te.getAcceleratorThreads();
-        }
+    // 2) 保持统计使用原始线程值（若存在多处调用），不再返回固定 16
+    @Redirect(
+            method = "addBlockEntity(Lappeng/blockentity/crafting/CraftingBlockEntity;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lappeng/blockentity/crafting/CraftingBlockEntity;getAcceleratorThreads()I",
+                    ordinal = 1
+            )
+    )
+    private int extendedae_plus$onGetThreadsForLimitCheck(CraftingBlockEntity te) {
+        // 返回原始线程数，确保总并行单元不被错误下限
+        return te.getAcceleratorThreads();
     }
 }

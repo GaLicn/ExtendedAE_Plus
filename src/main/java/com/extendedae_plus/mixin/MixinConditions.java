@@ -64,6 +64,29 @@ public class MixinConditions implements IMixinConfigPlugin {
             return true; // 总是加载，在Mixin内部进行运行时检查
         }
         
+        // 对于CraftingCPUClusterMixin，检查MAE2是否存在
+        if (mixinClassName.contains("CraftingCPUClusterMixin")) {
+            try {
+                // 检查ModList是否已初始化
+                if (net.minecraftforge.fml.ModList.get() == null) {
+                    System.out.println("[ExtendedAE_Plus] ModList未初始化，默认应用CraftingCPU Mixin: " + mixinClassName);
+                    return true; // 未初始化时默认应用
+                }
+                
+                boolean mae2Exists = net.minecraftforge.fml.ModList.get().isLoaded("mae2");
+                boolean shouldApply = !mae2Exists;
+                
+                System.out.println("[ExtendedAE_Plus] CraftingCPU Mixin检查: " + mixinClassName + 
+                                 ", MAE2存在: " + mae2Exists + 
+                                 ", 应用Mixin: " + shouldApply);
+                
+                return shouldApply;
+            } catch (Exception e) {
+                System.out.println("[ExtendedAE_Plus] ModList检查失败，默认跳过CraftingCPU Mixin: " + mixinClassName);
+                return false; // 出错时默认跳过，避免冲突
+            }
+        }
+        
         // 其他Mixin正常应用
         System.out.println("[ExtendedAE_Plus] 加载Mixin: " + mixinClassName);
         return true;
