@@ -81,7 +81,7 @@ dependencies {
 
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
-   // modImplementation "curse.maven:applied-flux-965012:6755986"
+    modImplementation "curse.maven:applied-flux-965012:6755986"
     modCompileOnly "curse.maven:mega-cells-622112:${mega_cells_version}"
     modCompileOnly "curse.maven:jade-324717:${jade_version}"
 
