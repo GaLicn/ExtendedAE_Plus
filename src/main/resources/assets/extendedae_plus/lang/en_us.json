@@ -54,6 +54,7 @@
   "screen.extendedae_plus.entity_speed_ticker.power_ratio": "Power ratio: %s",
   "screen.extendedae_plus.entity_speed_ticker.speed": "Current speed multiplier: %d",
   "screen.extendedae_plus.entity_speed_ticker.multiplier": "Extra consumption multiplier: %s",
+  "screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient": "§c§lInsufficient network energy",
 
   "item.extendedae_plus.entity_speed_ticker.tip.requirement": "Requires Entity Acceleration Card(s) to enable acceleration",
   "item.extendedae_plus.entity_speed_ticker.tip.max": "Maximum up to 1024x speed",
