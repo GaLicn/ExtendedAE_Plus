@@ -52,6 +52,12 @@ public class MixinConditions implements IMixinConfigPlugin {
             }
         }
         
+        // 对于appflux相关的Mixin，总是加载但在运行时检查条件
+        if (mixinClassName.contains("AppfluxPatternProviderLogicMixin")) {
+            System.out.println("[ExtendedAE_Plus] 总是加载appflux Mixin，运行时检查条件: " + mixinClassName);
+            return true; // 总是加载，在Mixin内部进行运行时检查
+        }
+        
         // 其他Mixin正常应用
         System.out.println("[ExtendedAE_Plus] 加载Mixin: " + mixinClassName);
         return true;

@@ -66,6 +66,7 @@
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.compat.PatternProviderLogicHostCompatMixin",
     "ae2.compat.PatternProviderCompatMixin",
+    "appflux.AppfluxPatternProviderLogicMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.parts.AEBasePartClientSyncMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
