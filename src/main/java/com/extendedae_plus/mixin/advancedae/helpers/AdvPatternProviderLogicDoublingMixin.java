@@ -76,7 +76,6 @@ public class AdvPatternProviderLogicDoublingMixin implements SmartDoublingHolder
 
     @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
     private void onExportSettings(CompoundTag output, CallbackInfo ci) {
-        System.out.println(this.eap$smartDoubling);
         output.putBoolean(EAP_SMART_DOUBLING_KEY, this.eap$smartDoubling);
     }
 
