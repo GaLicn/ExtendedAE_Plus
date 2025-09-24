@@ -1,5 +1,6 @@
 package com.extendedae_plus.config;
 
+import com.extendedae_plus.util.GetKey;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class ModConfig {
@@ -39,14 +40,16 @@ public final class ModConfig {
                 .define("patternTerminalShowSlotsDefault", true);
 
         OVERRIDE_AE2WT_PICKING = builder
-                .translation("config.extendedae_plus.override_ae2wt_picking")
+                .translation(new GetKey(GetKey.CONFIG)
+                        .addStr("override_ae2wt_picking").buildRaw())
                 .comment("是否覆盖AE2WT使用中键从终端选取方块的逻辑",
                         "开启后选取方块的数量将不被限制在32个",
                         "(不建议使用,在EMI环境下可能出现奇怪bug)")
                 .define("overrideAE2WTPicking", false);
 
         INDEPENDENT_UPLOADING_BUTTON = builder
-                .translation("config.extendedae_plus.independent_uploading_button")
+                .translation(new GetKey(GetKey.CONFIG)
+                        .addStr("independence_uploading_button").buildRaw())
                 .comment("启用后,在样板编码终端会出现一个独立的按钮用于上传样板")
                 .define("independentUploadingButton", false);
 
@@ -59,8 +62,7 @@ public final class ModConfig {
         PROVIDER_ROUND_ROBIN_ENABLE = builder.comment(
                         "智能倍增时是否对样板供应器轮询分配",
                         "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
-                        "注意：所有相关供应器需开启智能倍增，否则可能失效",
-                        "默认: true")
+                        "注意：所有相关供应器需开启智能倍增，否则可能失效")
                 .define("providerRoundRobinEnable", true);
 
         // 智能倍增的最大倍数（以单次样板产出为单位）。

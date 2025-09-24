@@ -24,23 +24,14 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ExtendedAEPlus.MODID)
 public class ExtendedAEPlus {
-    // Define mod id in a common place for everything to reference
     public static final String MODID = "extendedae_plus";
-    // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
-    // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public ExtendedAEPlus(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
-        // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
-        // 注册能力：让 AE2 电缆识别我们的 In-World Grid Node Host
         modEventBus.addListener(ModCapabilities::onRegisterCapabilities);
 
         /*
@@ -48,42 +39,32 @@ public class ExtendedAEPlus {
            将这literal地狱烧成灰(bushi
            反正就是引入dataGeneration, 多写点translatable
            顺便不小心露出我无敌的component工具类(
-           还有改一下config的结构
+           算了算了,我真不敢动aaa
          */
 
-        // 注册本模组方块/物品/创造物品栏
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so menu types get registered
         ModMenuTypes.MENUS.register(modEventBus);
 
-        // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelLoad);
 
         NeoForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerTick);
         NeoForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
 
-        // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.COMMON_SPEC);
     }
 
-    // 便捷 ResourceLocation 工具
     public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
-        // 示例日志，避免引用不存在的模板 Config 字段
         LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
         StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
-        // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
         event.enqueueWork(() -> {
             try {
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
@@ -98,11 +79,11 @@ public class ExtendedAEPlus {
                     LOGGER.warn("Failed to register CuriosItemLocator with AE2 MenuLocators: {}", t.toString());
                 }
 
-                AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b256 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_256x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b1024 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_1024x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b4 = ModBlocks.ACCELERATOR_4x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b16 = ModBlocks.ACCELERATOR_16x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b64 = ModBlocks.ACCELERATOR_64x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b256 = ModBlocks.ACCELERATOR_256x.get();
+                AEBaseEntityBlock<CraftingBlockEntity> b1024 = ModBlocks.ACCELERATOR_1024x.get();
 
                 // 使用我们自定义的 CraftingBlockEntity 类型，它的有效方块列表包含自定义加速器
                 var type = ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get();
@@ -119,13 +100,8 @@ public class ExtendedAEPlus {
         });
     }
 
-    // 移除示例 addCreative 事件，避免将示例物品加入原版标签
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
     }
 
 
