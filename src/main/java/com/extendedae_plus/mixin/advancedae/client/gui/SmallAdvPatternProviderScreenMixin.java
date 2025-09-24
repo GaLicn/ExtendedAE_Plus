@@ -16,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.pedroksl.advanced_ae.client.gui.SmallAdvPatternProviderScreen;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.SmallAdvPatternProviderMenu;
-import org.checkerframework.checker.units.qual.C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,8 +44,8 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
     @Unique
     private boolean eap$SmartDoublingEnabled = false;
 
-    public SmallAdvPatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
-        super((SmallAdvPatternProviderMenu) menu, playerInventory, title, style);
+    public SmallAdvPatternProviderScreenMixin(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super(menu, playerInventory, title, style);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
