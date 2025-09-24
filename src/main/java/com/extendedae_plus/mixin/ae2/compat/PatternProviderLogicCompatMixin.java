@@ -184,18 +184,49 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             boolean found = false;
 
             IUpgradeInventory upgrades = null;
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                upgrades = this.eap$compatUpgrades;
-                ExtendedAELogger.LOGGER.debug("[样板供应器] 使用自带升级槽（未安装 appflux）: {}", upgrades != null);
-            } else {
-                // appflux 应该注入其自身的 IUpgradeableObject 实现
+            
+            // 优先尝试从AppliedFlux获取升级槽（如果安装了的话）
+            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                // 安装了appflux：优先使用appflux的升级槽
                 try {
                     if ((Object) this instanceof IUpgradeableObject uo) {
                         upgrades = uo.getUpgrades();
                         ExtendedAELogger.LOGGER.debug("[样板供应器] 使用 appflux 提供的升级槽: {}", upgrades != null);
                     }
                 } catch (Throwable t) {
-                    ExtendedAELogger.LOGGER.error("[样板供应器] 获取第三方升级槽失败", t);
+                    ExtendedAELogger.LOGGER.error("[样板供应器] 获取 appflux 升级槽失败，回退到兼容槽", t);
+                    // 如果获取AppliedFlux升级槽失败，回退到我们的兼容槽
+                    upgrades = this.eap$compatUpgrades;
+                }
+            } else {
+                // 未安装appflux：使用我们的兼容升级槽
+                upgrades = this.eap$compatUpgrades;
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 使用自带升级槽（未安装 appflux）: {}", upgrades != null);
+            }
+            
+            // 双重保险：如果主要方式失败，尝试备用方式
+            if (upgrades == null || eap$isUpgradeInventoryEmpty(upgrades)) {
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 主升级槽为空，尝试备用方式");
+                
+                if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                    // 如果我们的槽为空，尝试检查是否有AppliedFlux的槽
+                    try {
+                        if ((Object) this instanceof IUpgradeableObject uo) {
+                            IUpgradeInventory backupUpgrades = uo.getUpgrades();
+                            if (backupUpgrades != null && !eap$isUpgradeInventoryEmpty(backupUpgrades)) {
+                                upgrades = backupUpgrades;
+                                ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用 appflux 升级槽");
+                            }
+                        }
+                    } catch (Throwable t) {
+                        ExtendedAELogger.LOGGER.debug("[样板供应器] 备用升级槽检查失败: {}", t.getMessage());
+                    }
+                } else {
+                    // 如果AppliedFlux的槽为空，尝试我们的兼容槽
+                    if (this.eap$compatUpgrades != null && !eap$isUpgradeInventoryEmpty(this.eap$compatUpgrades)) {
+                        upgrades = this.eap$compatUpgrades;
+                        ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用兼容升级槽");
+                    }
                 }
             }
 
@@ -273,6 +304,19 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
+    @Unique
+    private boolean eap$isUpgradeInventoryEmpty(IUpgradeInventory inventory) {
+        if (inventory == null) {
+            return true;
+        }
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public IUpgradeInventory eap$getCompatUpgrades() {
         return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
