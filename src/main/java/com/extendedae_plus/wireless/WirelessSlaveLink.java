@@ -4,6 +4,7 @@ import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
 import appeng.me.service.helpers.ConnectionWrapper;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
@@ -51,16 +52,19 @@ public class WirelessSlaveLink {
      */
     public void updateStatus() {
         if (host.isEndpointRemoved()) {
+            ExtendedAELogger.LOGGER.debug("[无线] 端点已移除或无效，销毁连接");
             destroyConnection();
             return;
         }
         final ServerLevel level = host.getServerLevel();
         if (level == null || frequency == 0L) {
+            ExtendedAELogger.LOGGER.debug("[无线] 环境不满足：level={}, freq={}", level, frequency);
             destroyConnection();
             return;
         }
 
         IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency);
+        ExtendedAELogger.LOGGER.debug("[无线] 查找主站: level={}, freq={} -> {}", level.dimension(), frequency, master);
         shutdown = false;
         distance = 0.0D;
 
@@ -68,6 +72,7 @@ public class WirelessSlaveLink {
         if (master != null && !master.isEndpointRemoved() && (crossDim || master.getServerLevel() == level)) {
             if (!crossDim) {
                 distance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
+                ExtendedAELogger.LOGGER.debug("[无线] 同维度距离={}, 最大距离={}", distance, ModConfigs.WIRELESS_MAX_RANGE.get());
             }
             double maxRange = ModConfigs.WIRELESS_MAX_RANGE.get();
             if (crossDim || distance <= maxRange) {
@@ -76,6 +81,8 @@ public class WirelessSlaveLink {
                     var current = connection.getConnection();
                     IGridNode a = host.getGridNode(); // 从端
                     IGridNode b = master.getGridNode(); // 主端
+                    if (a == null) { ExtendedAELogger.LOGGER.debug("[无线] 从端节点为 null，无法连接"); }
+                    if (b == null) { ExtendedAELogger.LOGGER.debug("[无线] 主端节点为 null，无法连接"); }
                     if (a == null || b == null) {
                         shutdown = true;
                     } else {
@@ -84,22 +91,29 @@ public class WirelessSlaveLink {
                             var ca = current.a();
                             var cb = current.b();
                             if ((ca == a || cb == a) && (ca == b || cb == b)) {
+                                ExtendedAELogger.LOGGER.debug("[无线] 连接已存在且目标一致，保持");
                                 return; // 连接已正确
                             }
                             // 否则先断开，再重建
+                            ExtendedAELogger.LOGGER.debug("[无线] 连接目标变化，先销毁再重建");
                             current.destroy();
                             connection = new ConnectionWrapper(null);
                         }
+                        ExtendedAELogger.LOGGER.debug("[无线] 创建连接: a={}, b={}", a, b);
                         connection = new ConnectionWrapper(GridHelper.createConnection(a, b));
+                        ExtendedAELogger.LOGGER.debug("[无线] 连接创建完成: {}", connection.getConnection());
                         return;
                     }
-                } catch (IllegalStateException ignore) {
+                } catch (IllegalStateException ex) {
                     // 连接非法（如重复连接等）——落入重建/关闭逻辑
+                    ExtendedAELogger.LOGGER.debug("[无线] 连接创建异常: {}", ex.toString());
                 }
             } else {
+                ExtendedAELogger.LOGGER.debug("[无线] 超出范围：{} > {}，关闭连接", distance, maxRange);
                 shutdown = true; // 超出范围
             }
         } else {
+            ExtendedAELogger.LOGGER.debug("[无线] 无可用主站或跨维度不允许，关闭连接");
             shutdown = true; // 无主或主端不可用
         }
 

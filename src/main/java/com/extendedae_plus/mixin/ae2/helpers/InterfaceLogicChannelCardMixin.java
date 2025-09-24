@@ -8,6 +8,7 @@ import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.InterfaceNodeEndpointImpl;
+import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,6 +51,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     @Inject(method = "onUpgradesChanged", at = @At("TAIL"), remap = false)
     private void eap$onUpgradesChangedTail(CallbackInfo ci) {
         // 升级变更时重置标志并尝试初始化
+        ExtendedAELogger.LOGGER.debug("[服务端] Interface onUpgradesChanged -> 重置初始化状态");
         eap$lastChannel = -1;
         eap$hasInitialized = false;
         eap$initializeChannelLink();
@@ -58,6 +60,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     @Inject(method = "gridChanged", at = @At("TAIL"), remap = false)
     private void eap$afterGridChanged(CallbackInfo ci) {
         // 网格状态变化时重置标志并设置延迟初始化
+        ExtendedAELogger.LOGGER.debug("[服务端] Interface gridChanged -> 延迟初始化计时开始");
         eap$lastChannel = -1;
         eap$hasInitialized = false;
         eap$delayedInitTicks = 10; // 适当增加延迟tick，等待网格完成引导
@@ -100,8 +103,9 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
             return;
         }
 
-        // 检查网格节点是否在线（1.21.1版本使用isActive替代hasGridBooted）
-        if (mainNode == null || !mainNode.isActive()) {
+        // 仅要求节点对象可用；不要依赖 isActive（无线连接本身会建立连接与激活节点）
+        if (mainNode == null || mainNode.getNode() == null) {
+            ExtendedAELogger.LOGGER.debug("[服务端] Interface 初始化频道链接跳过：mainNode 或其 Node 不可用");
             return;
         }
 
@@ -121,18 +125,36 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 if (eap$link != null) {
                     eap$link.setFrequency(0L);
                     eap$link.updateStatus();
+                    ExtendedAELogger.LOGGER.debug("[服务端] Interface 无频道卡 -> 断开无线链接");
                 }
                 eap$hasInitialized = true;
+                // 保存一次状态
+                try { host.saveChanges(); } catch (Throwable ignored) {}
+                // 唤醒设备以刷新客户端/邻居
+                try {
+                    mainNode.ifPresent((grid, node) -> {
+                        try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
+                    });
+                } catch (Throwable ignored2) {}
                 return;
             }
 
             if (eap$link == null) {
                 var endpoint = new InterfaceNodeEndpointImpl(host, () -> this.mainNode.getNode());
                 eap$link = new WirelessSlaveLink(endpoint);
+                ExtendedAELogger.LOGGER.debug("[服务端] Interface 创建新的无线链接实例");
             }
 
             eap$link.setFrequency(channel);
             eap$link.updateStatus();
+            ExtendedAELogger.LOGGER.debug("[服务端] Interface 设置频道: {} 连接状态: {}", channel, eap$link.isConnected());
+            try { host.saveChanges(); } catch (Throwable ignored) {}
+            // 唤醒设备，加速后续 tick 以完成连接
+            try {
+                mainNode.ifPresent((grid, node) -> {
+                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
+                });
+            } catch (Throwable ignored2) {}
             
             if (eap$link.isConnected()) {
                 eap$hasInitialized = true; // 设置初始化完成标志
@@ -196,7 +218,8 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
 
         // 若尚未初始化，则持续尝试，直到网格完成引导
         if (!eap$hasInitialized) {
-            if (mainNode == null || !mainNode.isActive()) {
+            // 若节点对象尚未就绪，则等待；无需等待 isActive（无线接入后会激活）
+            if (mainNode == null || mainNode.getNode() == null) {
                 // 仍在引导，消耗计时器
                 if (eap$delayedInitTicks > 0) {
                     eap$delayedInitTicks--;
@@ -216,6 +239,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 }
             } else {
                 // 网格已引导完成，执行初始化
+                ExtendedAELogger.LOGGER.debug("[服务端] Interface 延迟初始化触发 -> 开始初始化频道链接");
                 eap$initializeChannelLink();
             }
         }
