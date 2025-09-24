@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
+import com.extendedae_plus.ae.items.ChannelCardItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -60,6 +61,12 @@ public final class ModItems {
     public static final DeferredItem<EntitySpeedCardItem> ENTITY_SPEED_CARD = ITEMS.register(
             "entity_speed_card",
             () -> new EntitySpeedCardItem(new Item.Properties())
+    );
+
+    // 频道卡：用于AE机器的无线频道连接
+    public static final DeferredItem<ChannelCardItem> CHANNEL_CARD = ITEMS.register(
+            "channel_card",
+            () -> new ChannelCardItem(new Item.Properties())
     );
 
     /**

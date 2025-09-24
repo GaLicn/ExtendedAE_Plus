@@ -24,6 +24,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ACCELERATOR_256x.get());
                         output.accept(ModItems.ACCELERATOR_1024x.get());
                         output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
+                        output.accept(ModItems.CHANNEL_CARD.get());
                         output.accept(ModItems.ENTITY_TICKER_PART_ITEM.get());
                         // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
                         output.accept(ModItems.createEntitySpeedCardStack((byte) 2));
