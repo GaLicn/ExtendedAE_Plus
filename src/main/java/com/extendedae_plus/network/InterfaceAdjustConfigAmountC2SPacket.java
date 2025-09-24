@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
-import appeng.menu.implementations.InterfaceMenu;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.implementations.InterfaceMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;

@@ -7,14 +7,13 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.NewIcon;
 import com.extendedae_plus.api.ExPatternButtonsAccessor;
-import com.extendedae_plus.api.ExPatternPageAccessor;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
-import net.minecraft.network.chat.Component;
 import net.minecraft.client.Minecraft;
-import com.extendedae_plus.network.ScalePatternsC2SPacket;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -66,7 +65,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     private int getMaxPage() {
         // 优先使用配置倍数
         try {
-            int cfg = ModConfigs.PAGE_MULTIPLIER.get();
+            int cfg = ModConfig.PAGE_MULTIPLIER.get();
             if (cfg > 1) return cfg;
         } catch (Throwable ignored) {}
         try {
@@ -125,7 +124,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         // 计算并下发 maxPage（配置优先，其次按槽位总数计算）
         int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
         int cfgPages = 1;
-        try { cfgPages = Math.max(1, ModConfigs.PAGE_MULTIPLIER.get()); } catch (Throwable ignored) {}
+        try { cfgPages = Math.max(1, ModConfig.PAGE_MULTIPLIER.get()); } catch (Throwable ignored) {}
         int calcPages = Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
         int desiredMaxPage = Math.max(cfgPages, calcPages);
         LOGGER.info("[EAP] GuiExPatternProvider init: totalSlots={}, cfgPages={}, calcPages={}, desiredMaxPage={}", totalSlots, cfgPages, calcPages, desiredMaxPage);

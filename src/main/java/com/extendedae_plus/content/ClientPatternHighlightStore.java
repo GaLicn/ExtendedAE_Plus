@@ -1,8 +1,6 @@
 package com.extendedae_plus.content;
 
 import appeng.api.stacks.AEKey;
-import appeng.api.crafting.IPatternDetails;
-import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 
 import java.util.Collections;
 import java.util.HashSet;

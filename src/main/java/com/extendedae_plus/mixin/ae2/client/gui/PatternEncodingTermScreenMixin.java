@@ -6,7 +6,7 @@ import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
 import appeng.client.gui.widgets.IconButton;
-import appeng.menu.AEBaseMenu;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 通过解析 AE2 样式中 encodePattern 的坐标，将按钮放在其左侧紧挨位置。
  */
 @Mixin(value = AEBaseScreen.class, remap = false)
-public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
+public abstract class PatternEncodingTermScreenMixin {
 
     @Unique
     private IconButton eap$uploadBtn;
@@ -36,9 +36,9 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
     @Inject(method = "init", at = @At("TAIL"), remap = false)
     private void eap$addUploadButton(CallbackInfo ci) {
         // 仅在图样编码终端界面中添加按钮
-        if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
+        if (!(((Object) this) instanceof PatternEncodingTermScreen &&
+                ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()))
             return;
-        }
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> PacketDistributor
@@ -98,12 +98,12 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
         // 解析 encodePattern 的样式位置
         try {
-            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
+            ScreenStyle style = ((AEBaseScreenAccessor<?>) this).eap$getStyle();
             WidgetStyle ws = style.getWidget("encodePattern");
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
+            int leftPos = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
+            int imageHeight = ((AbstractContainerScreenAccessor<?>) this).eap$getImageHeight();
             Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
             var pos = ws.resolve(bounds);
             int baseW = ws.getWidth() > 0 ? ws.getWidth() : 12;
@@ -120,15 +120,15 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             // 回退：放在界面右侧大致位置，避免不可见
             eap$uploadBtn.setWidth(12);
             eap$uploadBtn.setHeight(12);
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            int leftPos = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
             eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2); // 向右微移 2px
             eap$uploadBtn.setY(topPos + 88);
         }
 
         // 直接向 renderables / children 列表添加，避免依赖受保护方法
-        var accessor = (ScreenAccessor) (Object) this;
+        var accessor = (ScreenAccessor) this;
         var renderables = accessor.eap$getRenderables();
         var children = accessor.eap$getChildren();
         if (!renderables.contains(eap$uploadBtn)) {
@@ -141,22 +141,22 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
     @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
     private void eap$ensureUploadButton(CallbackInfo ci) {
-        if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
+        if (!(((Object) this) instanceof PatternEncodingTermScreen &&
+                ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()))
             return;
-        }
         if (eap$uploadBtn == null) {
             return;
         }
-        var renderables2 = ((ScreenAccessor) (Object) this).eap$getRenderables();
+        var renderables2 = ((ScreenAccessor) this).eap$getRenderables();
         if (!renderables2.contains(eap$uploadBtn)) {
             // 被其它模组清空/替换后，重新计算一次位置并补回
             try {
-                ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
+                ScreenStyle style = ((AEBaseScreenAccessor<?>) this).eap$getStyle();
                 WidgetStyle ws = style.getWidget("encodePattern");
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-                int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
+                int leftPos = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+                int topPos = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+                int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
+                int imageHeight = ((AbstractContainerScreenAccessor<?>) this).eap$getImageHeight();
                 Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
                 var pos = ws.resolve(bounds);
                 int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
@@ -168,15 +168,15 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                 eap$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
                 eap$uploadBtn.setY(pos.getY());
             } catch (Throwable t) {
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+                int leftPos = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+                int topPos = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+                int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
                 eap$uploadBtn.setWidth(12);
                 eap$uploadBtn.setHeight(12);
                 eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2);
                 eap$uploadBtn.setY(topPos + 88);
             }
-            var accessor2 = (ScreenAccessor) (Object) this;
+            var accessor2 = (ScreenAccessor) this;
             var r = accessor2.eap$getRenderables();
             var c = accessor2.eap$getChildren();
             if (!r.contains(eap$uploadBtn)) {

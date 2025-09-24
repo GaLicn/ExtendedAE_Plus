@@ -5,7 +5,7 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
@@ -18,7 +18,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -44,6 +43,14 @@ public class ExtendedAEPlus {
         // 注册能力：让 AE2 电缆识别我们的 In-World Grid Node Host
         modEventBus.addListener(ModCapabilities::onRegisterCapabilities);
 
+        /*
+          TODO
+           将这literal地狱烧成灰(bushi
+           反正就是引入dataGeneration, 多写点translatable
+           顺便不小心露出我无敌的component工具类(
+           还有改一下config的结构
+         */
+
         // 注册本模组方块/物品/创造物品栏
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
@@ -62,7 +69,7 @@ public class ExtendedAEPlus {
         NeoForge.EVENT_BUS.addListener(InfinityBigIntegerCellInventory::onServerStopping);
 
         // 注册配置：接入自定义的 ModConfigs
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC);
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.COMMON, ModConfig.COMMON_SPEC);
     }
 
     // 便捷 ResourceLocation 工具

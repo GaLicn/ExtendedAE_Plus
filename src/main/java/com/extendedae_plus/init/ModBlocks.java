@@ -1,11 +1,9 @@
 package com.extendedae_plus.init;
 
-import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
-import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import appeng.block.crafting.CraftingUnitBlock;
-import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.core.definitions.AEBlockEntities;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;

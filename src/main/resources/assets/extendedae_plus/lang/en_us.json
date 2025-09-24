@@ -31,6 +31,8 @@
 
   "screen.extendedae_plus.title": "ExtendedAE Plus Config",
   "config.extendedae_plus": "ExtendedAE Plus",
+  "config.extendedae_plus.override_ae2wt_picking": "Override AE2WT Picking",
+
   "extendedae_plus.configuration.general": "General",
   "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Page Multiplier",
   "extendedae_plus.configuration.pageMultiplier_with_range": "Pattern Provider Page Multiplier (1-64)",

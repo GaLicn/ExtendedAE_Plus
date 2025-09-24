@@ -3,7 +3,7 @@ package com.extendedae_plus.wireless;
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
 import appeng.me.service.helpers.ConnectionWrapper;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
@@ -64,12 +64,12 @@ public class WirelessSlaveLink {
         shutdown = false;
         distance = 0.0D;
 
-        boolean crossDim = ModConfigs.WIRELESS_CROSS_DIM_ENABLE.get();
+        boolean crossDim = ModConfig.WIRELESS_CROSS_DIM_ENABLE.get();
         if (master != null && !master.isEndpointRemoved() && (crossDim || master.getServerLevel() == level)) {
             if (!crossDim) {
                 distance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
             }
-            double maxRange = ModConfigs.WIRELESS_MAX_RANGE.get();
+            double maxRange = ModConfig.WIRELESS_MAX_RANGE.get();
             if (crossDim || distance <= maxRange) {
                 // 保持/建立连接
                 try {

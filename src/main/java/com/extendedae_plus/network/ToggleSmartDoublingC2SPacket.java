@@ -1,15 +1,15 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.SmartDoublingHolder;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * C2S：切换智能翻倍启用状态。

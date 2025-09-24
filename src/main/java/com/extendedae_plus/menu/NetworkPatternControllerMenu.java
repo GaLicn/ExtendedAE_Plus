@@ -2,12 +2,12 @@ package com.extendedae_plus.menu;
 
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.Nullable;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 public class NetworkPatternControllerMenu extends AbstractContainerMenu {
     private final BlockPos bePos;

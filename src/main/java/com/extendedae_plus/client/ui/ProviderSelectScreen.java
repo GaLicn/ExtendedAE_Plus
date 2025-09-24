@@ -1,6 +1,5 @@
 package com.extendedae_plus.client.ui;
 
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;

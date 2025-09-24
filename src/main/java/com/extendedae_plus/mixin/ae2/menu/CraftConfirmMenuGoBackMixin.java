@@ -3,8 +3,10 @@ package com.extendedae_plus.mixin.ae2.menu;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
-import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import dev.emi.emi.api.stack.EmiIngredient;
+import dev.emi.emi.runtime.EmiFavorites;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.item.crafting.Ingredient;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -46,7 +48,8 @@ public class CraftConfirmMenuGoBackMixin {
                         var display = entry.getWhat().wrapForDisplayOrFilter();
                         if (display != null && !display.isEmpty()) {
                             // wrapForDisplayOrFilter 返回 ItemStack
-                            JeiRuntimeProxy.addBookmark(display);
+//                            JeiRuntimeProxy.addBookmark(display);
+                            EmiFavorites.addFavorite(EmiIngredient.of(Ingredient.of(display)));
                         }
                     } catch (Throwable ignored) {}
                 }

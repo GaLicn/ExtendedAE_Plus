@@ -4,14 +4,12 @@ import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.content.ScaledProcessingPattern;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 public final class PatternScaler {
     private PatternScaler() {
@@ -65,7 +63,7 @@ public final class PatternScaler {
         }
         // 应用配置的最大倍数上限（0 表示不限制）
         try {
-            int maxMul = ModConfigs.SMART_SCALING_MAX_MULTIPLIER.get();
+            int maxMul = ModConfig.SMART_SCALING_MAX_MULTIPLIER.get();
             if (maxMul > 0 && multiplier > maxMul) {
                 multiplier = maxMul;
             }

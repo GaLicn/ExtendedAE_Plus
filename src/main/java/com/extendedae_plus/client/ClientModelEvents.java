@@ -1,11 +1,11 @@
 package com.extendedae_plus.client;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 
 /**
  * 确保在模型烘焙/资源重载期间也会注册内置模型，避免在刷新资源后丢失内置模型映射。

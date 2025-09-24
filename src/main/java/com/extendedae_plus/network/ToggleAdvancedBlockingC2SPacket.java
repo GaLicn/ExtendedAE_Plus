@@ -1,17 +1,17 @@
 package com.extendedae_plus.network;
 
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.menu.implementations.PatternProviderMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.minecraft.server.level.ServerPlayer;
-import appeng.api.config.Settings;
-import appeng.api.config.YesNo;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * C2S：切换高级阻挡模式。

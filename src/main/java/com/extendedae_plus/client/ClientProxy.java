@@ -3,16 +3,14 @@ package com.extendedae_plus.client;
 import appeng.client.render.crafting.CraftingCubeModel;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
-import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
-import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
+import com.extendedae_plus.init.ModMenuTypes;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。

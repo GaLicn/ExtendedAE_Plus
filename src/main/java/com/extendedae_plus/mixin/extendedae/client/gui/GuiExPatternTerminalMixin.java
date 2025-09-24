@@ -5,10 +5,9 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
@@ -22,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -32,20 +30,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.*;
 
 @Pseudo
 @Mixin(value = GuiExPatternTerminal.class, remap = false)
@@ -141,7 +133,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
 
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                // 改用我们自己的网络包，直接将玩家槽位与选择的供应器ID发送到服务器
+                // 什么逆天ide的中文语法检查(
+                // 改用我们自己的网络包，直接将玩家槽位 与 选择的供应器ID发送到服务器
                 try {
                     PacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
                             playerSlotIndex,
@@ -245,14 +238,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         }
     }
 
-    /**
-     * 重置当前选择的样板供应器ID
-     */
-    @Unique
-    public void resetCurrentlyChoicePatternProvider() {
-        this.eap$currentlyChoicePatterProvider = -1;
-    }
-
     @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false, require = 0)
     private void injectConstructor(com.glodblock.github.extendedae.container.ContainerExPatternTerminal menu,
                                    Inventory playerInventory,
@@ -261,7 +246,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                                    CallbackInfo ci) {
         // 根据配置初始化默认显示/隐藏状态
         try {
-            this.eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
+            this.eap$showSlots = ModConfig.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
         } catch (Throwable ignored) {
         }
         // 创建切换槽位显示的按钮

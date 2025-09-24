@@ -44,6 +44,7 @@
 
   "screen.extendedae_plus.title": "ExtendedAE Plus 配置",
   "config.extendedae_plus": "ExtendedAE Plus",
+  "config.extendedae_plus.override_ae2wt_picking": "覆盖AE2WT选取",
 
   "extendedae_plus.configuration.general": "通用",
   "extendedae_plus.configuration.pageMultiplier": "扩展样板供应器槽位倍率",
