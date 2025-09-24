@@ -17,6 +17,7 @@
   "item.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
   "item.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
+  "item.extendedae_plus.assembler_matrix_upload_core": "装配矩阵上传核心",
   "item.extendedae_plus.entity_speed_card": "实体加速卡",
   "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
   "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
@@ -32,6 +33,7 @@
   "block.extendedae_plus.256x_crafting_accelerator": "256x并行处理单元",
   "block.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
   "block.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
+  "block.extendedae_plus.assembler_matrix_upload_core": "装配矩阵上传核心",
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",

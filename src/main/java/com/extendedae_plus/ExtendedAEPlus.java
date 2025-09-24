@@ -110,8 +110,17 @@ public class ExtendedAEPlus {
                 b256.setBlockEntity(CraftingBlockEntity.class, type, null, null);
                 b1024.setBlockEntity(CraftingBlockEntity.class, type, null, null);
                 LOGGER.info("Bound AE2 CraftingBlockEntity to ExtendedAE Plus accelerators.");
+
+                // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
+                ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
+                    com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                    ModBlockEntities.UPLOAD_CORE_BE.get(),
+                    null,
+                    null
+                );
+                LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind CraftingBlockEntity to accelerators: {}", t.toString());
+                LOGGER.warn("Failed to bind block entities: {}", t.toString());
             }
         });
     }

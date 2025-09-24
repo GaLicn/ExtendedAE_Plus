@@ -68,4 +68,10 @@ public final class ModItems {
     public static ItemStack createEntitySpeedCardStack(byte multiplier) {
         return EntitySpeedCardItem.withMultiplier(multiplier);
     }
+
+    // 装配矩阵上传核心物品
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_UPLOAD_CORE = ITEMS.register(
+            "assembler_matrix_upload_core",
+            () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get(), new Item.Properties())
+    );
 }

@@ -17,6 +17,7 @@
   "item.extendedae_plus.256x_crafting_accelerator": "256x Crafting Accelerator",
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x Crafting Accelerator",
   "item.extendedae_plus.network_pattern_controller": "Pattern Provider Status Controller",
+  "item.extendedae_plus.assembler_matrix_upload_core": "Assembly Matrix Upload Core",
   "item.extendedae_plus.entity_speed_card": "Entity Speed Card",
   "item.extendedae_plus.entity_speed_card.x2": "Entity Speed Card (x2)",
   "item.extendedae_plus.entity_speed_card.x4": "Entity Speed Card (x4)",
@@ -32,6 +33,7 @@
   "block.extendedae_plus.256x_crafting_accelerator": "256x Crafting Accelerator",
   "block.extendedae_plus.1024x_crafting_accelerator": "1024x Crafting Accelerator",
   "block.extendedae_plus.network_pattern_controller": "Pattern Provider Status Controller",
+  "block.extendedae_plus.assembler_matrix_upload_core": "Assembly Matrix Upload Core",
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern Uploaded to Assembly Matrix",

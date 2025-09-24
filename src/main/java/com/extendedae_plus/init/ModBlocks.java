@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import appeng.block.crafting.CraftingUnitBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.core.definitions.AEBlockEntities;
@@ -72,5 +73,16 @@ public final class ModBlocks {
             () -> {
                 return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x);
             }
+    );
+
+    // 装配矩阵上传核心方块
+    public static final DeferredBlock<UploadCoreBlock> ASSEMBLER_MATRIX_UPLOAD_CORE = BLOCKS.register(
+            "assembler_matrix_upload_core",
+            () -> new UploadCoreBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
     );
 }
