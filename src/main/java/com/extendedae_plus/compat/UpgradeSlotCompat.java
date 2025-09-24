@@ -2,6 +2,7 @@ package com.extendedae_plus.compat;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
+import appeng.api.upgrades.UpgradeInventories;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
@@ -40,6 +41,7 @@ public class UpgradeSlotCompat {
      */
     public static boolean shouldEnableUpgradeSlots() {
         boolean appfluxExists = isAppfluxPresent();
+        
         if (appfluxExists) {
             return false;
         } else {
@@ -95,6 +97,8 @@ public class UpgradeSlotCompat {
                 if (menu instanceof IUpgradeableMenuCompat compatMenu) {
                     compatMenu.setCompatToolbox(toolbox);
                 }
+                
+                ExtendedAELogger.LOGGER.debug("成功为PatternProviderMenu初始化升级功能");
                 return true;
             }
         } catch (Exception e) {
@@ -140,6 +144,8 @@ public class UpgradeSlotCompat {
                         ToolboxPanel toolboxPanel = new ToolboxPanel(style, toolbox.getName());
                         addMethod.invoke(widgets, "toolbox", toolboxPanel);
                     }
+                    
+                    ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板");
                     return true;
                 } catch (NoSuchMethodException e) {
                     // 尝试其他可能的方法签名
@@ -165,6 +171,7 @@ public class UpgradeSlotCompat {
                             putMethod.invoke(widgets, "toolbox", toolboxPanel);
                         }
                         
+                        ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板（使用put方法）");
                         return true;
                     } catch (Exception e2) {
                         ExtendedAELogger.LOGGER.error("反射调用widgets方法失败", e2);

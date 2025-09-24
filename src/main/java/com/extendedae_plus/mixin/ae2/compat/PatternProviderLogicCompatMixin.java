@@ -84,7 +84,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     private void eap$onAppfluxUpgradesChanged(CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("监听到appflux升级变化，处理频道卡");
                 // 升级变更，重置并尝试初始化频道卡
                 eap$compatLastChannel = -1;
                 eap$compatHasInitialized = false;
@@ -99,12 +98,10 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             at = @At("TAIL"))
     private void eap$compatInitUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("兼容性PatternProviderLogic初始化被调用");
             
             boolean upgradeSlots = UpgradeSlotCompat.shouldEnableUpgradeSlots();
             boolean channelCard = UpgradeSlotCompat.shouldEnableChannelCard();
             
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("升级槽功能: {}, 频道卡功能: {}", upgradeSlots, channelCard);
             
             if (upgradeSlots) {
                 // 只有在升级槽功能启用时才创建升级槽
@@ -113,12 +110,9 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     1, 
                     this::eap$compatOnUpgradesChanged
                 );
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("创建了完整的升级槽");
             } else if (channelCard) {
                 // 如果装了appflux，我们不创建自己的升级槽，而是监听appflux的升级槽
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("装了appflux，将监听其升级槽来处理频道卡");
             } else {
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("跳过升级槽创建");
             }
         } catch (Exception e) {
             com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级初始化失败", e);
@@ -261,7 +255,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                         channel = ChannelCardItem.getChannel(stack);
                         found = true;
-                        com.extendedae_plus.util.ExtendedAELogger.LOGGER.info("找到频道卡，频道: {}", channel);
                         break;
                     }
                 }
