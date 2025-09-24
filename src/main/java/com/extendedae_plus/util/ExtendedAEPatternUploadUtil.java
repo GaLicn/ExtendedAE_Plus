@@ -12,10 +12,13 @@ import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.menu.slot.RestrictedInputSlot;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
+import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -30,6 +33,8 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.items.IItemHandler;
+import org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEMolecularAssemblerIOPartMachine;
+import org.gtlcore.gtlcore.integration.ae2.AEUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -50,6 +55,8 @@ public class ExtendedAEPatternUploadUtil {
     // 允许使用最终搜索关键字（通常为 path 或自定义短语）作为键，例如："assembler": "组装机"
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
+    public static volatile String lastProcessingName = null;
 
     static {
         try {
@@ -63,7 +70,7 @@ public class ExtendedAEPatternUploadUtil {
      * 从配置文件加载 RecipeType → 中文名称映射。文件不存在则生成模板。
      * 同时支持“别名”形式：不含冒号的键会被视为最终搜索关键字（大小写不敏感），如：
      * {
-     *   "assembler": "组装机"
+     * "assembler": "组装机"
      * }
      */
     public static synchronized void loadRecipeTypeNames() {
@@ -104,7 +111,8 @@ public class ExtendedAEPatternUploadUtil {
                             try {
                                 ResourceLocation rl = new ResourceLocation(k);
                                 map.put(rl, name);
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         } else {
                             // 视为别名：最终搜索关键字（大小写不敏感）
                             alias.put(k.toLowerCase(), name);
@@ -119,9 +127,6 @@ public class ExtendedAEPatternUploadUtil {
         } catch (IOException ignored) {
         }
     }
-
-    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
-    public static volatile String lastProcessingName = null;
 
     public static void setLastProcessingName(String name) {
         lastProcessingName = name;
@@ -456,54 +461,37 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
 
-        // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
-        if (matrixContainsPattern(grid, stack)) {
+        if (GTMatrixContainsPattern(grid, stack) || matrixContainsPattern(grid, stack)) {
             // 直接提醒并跳过上传，并将同等数量的空白样板放回空白样板槽，否则退回玩家背包
             if (player != null) {
-                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
-            }
-            try {
-                var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
-                var blankSlot = accessor.eap$getBlankPatternSlot();
-                ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
-                if (blankSlot != null && blankSlot.mayPlace(blanks)) {
-                    ItemStack remain = blankSlot.safeInsert(blanks);
-                    if (!remain.isEmpty() && player != null) {
-                        player.getInventory().placeItemBackInInventory(remain, false);
-                    }
-                } else if (player != null) {
-                    player.getInventory().placeItemBackInInventory(blanks, false);
-                }
-            } catch (Throwable t) {
-                if (player != null) {
-                    // 兜底：直接还给玩家背包
-                    player.getInventory().placeItemBackInInventory(AEItems.BLANK_PATTERN.stack(stack.getCount()), false);
+                if (matrixContainsPattern(grid, stack)) {
+                    player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
+                } else {
+                    player.sendSystemMessage(Component.literal("ExtendedAE Plus: 分子操纵者已存在相同样板，已跳过上传并返还空白样板"));
                 }
             }
-            // 清空编码样板槽，防止再次输出
-            encodedSlot.set(ItemStack.EMPTY);
+            clearAndRestorePattern(player, menu, stack, encodedSlot);
+            return false;
+        }
+
+        if (!AEUtils.molecularFilter(stack, player.level())){
+            player.sendSystemMessage(Component.literal("ExtendedAE Plus: 分子操纵者不支持该类型样板"));
+            clearAndRestorePattern(player, menu, stack, encodedSlot);
+            return false;
+        }
+
+        List<InternalInventory> gtInventories = findAllGTMatrixPatternInventories(grid);
+        if (uploadPattern(player, encodedSlot, stack, gtInventories))
+            return true;
+
+        if (ModConfig.INSTANCE.restrictCraftingPatternToMolecular){
             return false;
         }
 
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
         List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
-        if (!inventories.isEmpty()) {
-            for (int i = 0; i < inventories.size(); i++) {
-                var inv = inventories.get(i);
-                ItemStack toInsert = stack.copy();
-                ItemStack remain = inv.addItems(toInsert);
-                if (remain.getCount() < stack.getCount()) {
-                    int inserted = stack.getCount() - remain.getCount();
-                    stack.shrink(inserted);
-                    if (stack.isEmpty()) {
-                        encodedSlot.set(ItemStack.EMPTY);
-                    }
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
-                    return true;
-                }
-            }
-            // 所有内部库存都无法接收 -> 尝试 capability 回退
-        }
+        if (uploadPattern(player, encodedSlot, stack, inventories))
+            return true;
 
         // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
         List<IItemHandler> handlers = findAllMatrixPatternHandlers(grid);
@@ -525,10 +513,54 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 未找到可用矩阵或全部拒收
-        if (inventories.isEmpty() && handlers.isEmpty()) {
+        if (gtInventories.isEmpty() || (inventories.isEmpty() && handlers.isEmpty())) {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
         } else {
             sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+        }
+        return false;
+    }
+
+    private static void clearAndRestorePattern(ServerPlayer player, Object menu, ItemStack stack, RestrictedInputSlot encodedSlot) {
+        try {
+            var accessor = (PatternEncodingTermMenuAccessor) menu;
+            var blankSlot = accessor.eap$getBlankPatternSlot();
+            ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
+            if (blankSlot != null && blankSlot.mayPlace(blanks)) {
+                ItemStack remain = blankSlot.safeInsert(blanks);
+                if (!remain.isEmpty() && player != null) {
+                    player.getInventory().placeItemBackInInventory(remain, false);
+                }
+            } else if (player != null) {
+                player.getInventory().placeItemBackInInventory(blanks, false);
+            }
+        } catch (Throwable t) {
+            if (player != null) {
+                // 兜底：直接还给玩家背包
+                player.getInventory().placeItemBackInInventory(AEItems.BLANK_PATTERN.stack(stack.getCount()), false);
+            }
+        }
+        // 清空编码样板槽，防止再次输出
+        encodedSlot.set(ItemStack.EMPTY);
+    }
+
+    private static boolean uploadPattern(ServerPlayer player, RestrictedInputSlot encodedSlot, ItemStack stack, List<InternalInventory> gtInventories) {
+        if (!gtInventories.isEmpty()) {
+            for (int i = 0; i < gtInventories.size(); i++) {
+                var inv = gtInventories.get(i);
+                ItemStack toInsert = stack.copy();
+                ItemStack remain = inv.addItems(toInsert);
+                if (remain.getCount() < stack.getCount()) {
+                    int inserted = stack.getCount() - remain.getCount();
+                    stack.shrink(inserted);
+                    if (stack.isEmpty()) {
+                        encodedSlot.set(ItemStack.EMPTY);
+                    }
+                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    return true;
+                }
+            }
+            // 所有内部库存都无法接收 -> 尝试 capability 回退
         }
         return false;
     }
@@ -540,9 +572,9 @@ public class ExtendedAEPatternUploadUtil {
     private static List<InternalInventory> findAllMatrixPatternInventories(IGrid grid) {
         List<InternalInventory> result = new ArrayList<>();
         try {
-            var tiles = grid.getMachines(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern.class);
+            var tiles = grid.getMachines(TileAssemblerMatrixPattern.class);
             int idx = 0;
-            for (com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern tile : tiles) {
+            for (TileAssemblerMatrixPattern tile : tiles) {
                 if (tile != null && tile.isFormed() && tile.getMainNode().isActive() && clusterHasSingleUploadCore(tile)) {
                     var inv = tile.getExposedInventory();
                     if (inv != null) {
@@ -631,6 +663,51 @@ public class ExtendedAEPatternUploadUtil {
         return false;
     }
 
+
+    /**
+     * 检查GT分子装配矩阵中是否已存在与给定样板完全相同的物品（含NBT）。
+     */
+    // todo
+    private static boolean GTMatrixContainsPattern(IGrid grid, ItemStack pattern) {
+        if (grid == null || pattern == null || pattern.isEmpty()) return false;
+        try {
+            // 先检查提供外部插入视图的内部库存
+            List<InternalInventory> inventories = findAllGTMatrixPatternInventories(grid);
+            for (InternalInventory inv : inventories) {
+                if (inv == null) continue;
+                for (int i = 0; i < inv.size(); i++) {
+                    ItemStack s = inv.getStackInSlot(i);
+                    if (!s.isEmpty() && ItemStack.isSameItemSameTags(s, pattern)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+
+    /**
+     * 在给定 AE Grid 中收集在线的GT分子的用于外部插入的内部库存。
+     */
+    private static List<InternalInventory> findAllGTMatrixPatternInventories(IGrid grid) {
+        List<InternalInventory> result = new ArrayList<>();
+        try {
+            var tiles = grid.getMachines(MEMolecularAssemblerIOPartMachine.class);
+            for (MEMolecularAssemblerIOPartMachine tile : tiles) {
+                if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
+                    var inv = tile.getTerminalPatternInventory();
+                    if (inv != null) {
+                        result.add(inv);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return result;
+    }
+
     /**
      * 判断给定矩阵集群中是否存在“装配矩阵上传核心”。
      * 要求：至少存在 1 个即可，不限制数量。
@@ -655,7 +732,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 检查当前菜单是否为ExtendedAE的扩展样板管理终端
-     * 
+     *
      * @param player 玩家
      * @return 是否为ExtendedAE扩展终端
      */
@@ -663,7 +740,7 @@ public class ExtendedAEPatternUploadUtil {
         if (player == null || player.containerMenu == null) {
             return false;
         }
-        
+
         String containerClassName = player.containerMenu.getClass().getName();
         return containerClassName.equals("com.glodblock.github.extendedae.container.ContainerExPatternTerminal");
     }
@@ -671,10 +748,10 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 将玩家背包中的样板上传到指定的样板供应器
      * 兼容ExtendedAE和原版AE2
-     * 
-     * @param player 玩家
+     *
+     * @param player          玩家
      * @param playerSlotIndex 玩家背包槽位索引
-     * @param providerId 目标样板供应器的服务器ID
+     * @param providerId      目标样板供应器的服务器ID
      * @return 是否上传成功
      */
     public static boolean uploadPatternToProvider(ServerPlayer player, int playerSlotIndex, long providerId) {
@@ -724,11 +801,11 @@ public class ExtendedAEPatternUploadUtil {
             // 插入成功（部分或全部）
             int insertedCount = itemToInsert.getCount() - remaining.getCount();
             playerItem.shrink(insertedCount);
-            
+
             if (playerItem.isEmpty()) {
                 player.getInventory().setItem(playerSlotIndex, ItemStack.EMPTY);
             }
-            
+
             String terminalType = isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
             sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
             return true;
@@ -740,21 +817,21 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 批量上传样板到指定供应器（支持ExtendedAE和原版AE2）
-     * 
-     * @param player 玩家
+     *
+     * @param player            玩家
      * @param playerSlotIndices 玩家背包槽位索引数组
-     * @param providerId 目标样板供应器ID
+     * @param providerId        目标样板供应器ID
      * @return 成功上传的样板数量
      */
     public static int uploadMultiplePatterns(ServerPlayer player, int[] playerSlotIndices, long providerId) {
         int successCount = 0;
-        
+
         for (int slotIndex : playerSlotIndices) {
             if (uploadPatternToProvider(player, slotIndex, providerId)) {
                 successCount++;
             }
         }
-        
+
         String terminalType = isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
         sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "批量上传完成，成功上传 " + successCount + " 个样板");
         return successCount;
@@ -762,9 +839,9 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 检查样板供应器是否有足够的空槽位
-     * 
-     * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单（支持ExtendedAE）
+     *
+     * @param providerId    供应器ID
+     * @param menu          样板访问终端菜单（支持ExtendedAE）
      * @param requiredSlots 需要的槽位数
      * @return 是否有足够的空槽位
      */
@@ -794,9 +871,9 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 获取样板供应器中的空槽位数量
-     * 
+     *
      * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单（支持ExtendedAE）
+     * @param menu       样板访问终端菜单（支持ExtendedAE）
      * @return 空槽位数量，如果无法访问则返回-1
      */
     public static int getAvailableSlots(long providerId, PatternAccessTermMenu menu) {
@@ -823,8 +900,8 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 通过服务器ID获取PatternContainer
      * 兼容ExtendedAE的ContainerExPatternTerminal和原版PatternAccessTermMenu
-     * 
-     * @param menu 样板访问终端菜单
+     *
+     * @param menu       样板访问终端菜单
      * @param providerId 供应器服务器ID
      * @return PatternContainer实例，如果不存在则返回null
      */
@@ -836,12 +913,12 @@ public class ExtendedAEPatternUploadUtil {
                 System.err.println("ExtendedAE Plus: 无法找到byId字段");
                 return null;
             }
-            
+
             byIdField.setAccessible(true);
-            
+
             @SuppressWarnings("unchecked")
             Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
-            
+
             Object containerTracker = byId.get(providerId);
             if (containerTracker == null) {
                 return null;
@@ -853,10 +930,10 @@ public class ExtendedAEPatternUploadUtil {
                 System.err.println("ExtendedAE Plus: 无法找到container字段");
                 return null;
             }
-            
+
             containerField.setAccessible(true);
             return (PatternContainer) containerField.get(containerTracker);
-            
+
         } catch (Exception e) {
             System.err.println("ExtendedAE Plus: 无法获取PatternContainer，错误: " + e.getMessage());
             return null;
@@ -895,8 +972,8 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 发送消息给玩家
-     * 
-     * @param player 玩家
+     *
+     * @param player  玩家
      * @param message 消息内容
      */
     private static void sendMessage(ServerPlayer player, String message) {
@@ -909,26 +986,10 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * ExtendedAE兼容的样板过滤器
-     * 使用AE2的PatternDetailsHelper进行样板验证
-     */
-    private static class ExtendedAEPatternFilter implements IAEItemFilter {
-        @Override
-        public boolean allowExtract(InternalInventory inv, int slot, int amount) {
-            return true;
-        }
-
-        @Override
-        public boolean allowInsert(InternalInventory inv, int slot, ItemStack stack) {
-            return !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack);
-        }
-    }
-
-    /**
      * 获取样板供应器的显示名称
-     * 
+     *
      * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单
+     * @param menu       样板访问终端菜单
      * @return 显示名称，如果无法获取则返回"未知供应器"
      */
     public static String getProviderDisplayName(long providerId, PatternAccessTermMenu menu) {
@@ -952,9 +1013,9 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 验证样板供应器是否可用
-     * 
+     *
      * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单
+     * @param menu       样板访问终端菜单
      * @return 是否可用
      */
     public static boolean isProviderAvailable(long providerId, PatternAccessTermMenu menu) {
@@ -974,7 +1035,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 获取当前终端类型的描述
-     * 
+     *
      * @param player 玩家
      * @return 终端类型描述
      */
@@ -1099,7 +1160,8 @@ public class ExtendedAEPatternUploadUtil {
                     tryIds.add(id);
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
         // 按顺序逐个尝试插入
         for (Long id : tryIds) {
@@ -1167,7 +1229,10 @@ public class ExtendedAEPatternUploadUtil {
                         if (inv == null || inv.size() <= 0) continue;
                         boolean hasEmpty = false;
                         for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
+                            if (inv.getStackInSlot(i).isEmpty()) {
+                                hasEmpty = true;
+                                break;
+                            }
                         }
                         if (hasEmpty) list.add(container);
                     }
@@ -1178,7 +1243,9 @@ public class ExtendedAEPatternUploadUtil {
         return list;
     }
 
-    /** 获取供应器显示名（优先组名） */
+    /**
+     * 获取供应器显示名（优先组名）
+     */
     public static String getProviderDisplayName(PatternContainer container) {
         if (container == null) return "未知供应器";
         try {
@@ -1189,7 +1256,9 @@ public class ExtendedAEPatternUploadUtil {
         return "样板供应器";
     }
 
-    /** 计算供应器空槽位数量 */
+    /**
+     * 计算供应器空槽位数量
+     */
     public static int getAvailableSlots(PatternContainer container) {
         if (container == null) return -1;
         InternalInventory inv = container.getTerminalPatternInventory();
@@ -1231,7 +1300,8 @@ public class ExtendedAEPatternUploadUtil {
                     tryList.add(c);
                 }
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+        }
 
         for (PatternContainer c : tryList) {
             InternalInventory inv = c.getTerminalPatternInventory();
@@ -1251,5 +1321,21 @@ public class ExtendedAEPatternUploadUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * ExtendedAE兼容的样板过滤器
+     * 使用AE2的PatternDetailsHelper进行样板验证
+     */
+    private static class ExtendedAEPatternFilter implements IAEItemFilter {
+        @Override
+        public boolean allowExtract(InternalInventory inv, int slot, int amount) {
+            return true;
+        }
+
+        @Override
+        public boolean allowInsert(InternalInventory inv, int slot, ItemStack stack) {
+            return !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack);
+        }
     }
 }

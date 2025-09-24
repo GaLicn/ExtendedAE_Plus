@@ -125,4 +125,12 @@ public final class ModConfig {
     @Configurable.Range(min = 100, max = Integer.MAX_VALUE)
     public int craftingPauseThreshold = 100000;
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "是否限制合成样板自动上传仅进入分子操纵者",
+            "开启后，合成样板将只自动上传到分子操纵者，不再上传至装配矩阵"
+    })
+    @Configurable.Synchronized
+    public boolean restrictCraftingPatternToMolecular = false;
+
 }

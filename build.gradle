@@ -88,7 +88,7 @@ dependencies {
     // GregTech
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
     modCompileOnly "curse.maven:ldlib-626676:${ldlib_version}"
-    modCompileOnly files('libs/gtlcore-1.2.2.1-fix5.jar')
+    modCompileOnly files('libs/gtlcore-1.2.2.3-fix6.jar')
 
     //curios
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
