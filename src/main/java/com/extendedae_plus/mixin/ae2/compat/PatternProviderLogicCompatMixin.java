@@ -33,7 +33,7 @@ import java.util.List;
  * - 安装 appflux 时，优先从 appflux 提供的升级槽读取频道卡；
  * - 建立到无线主站的网格连接。
  */
-@Mixin(value = PatternProviderLogic.class, remap = false)
+@Mixin(value = PatternProviderLogic.class, priority = 1500, remap = false)
 public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge {
 
     @Unique
@@ -51,9 +51,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private boolean eap$compatHasInitialized = false;
 
-    @Unique
-    private int eap$compatDelayedInitTicks = 0;
-
     @Final
     @Shadow
     private PatternProviderLogicHost host;
@@ -70,10 +67,21 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             at = @At("TAIL"))
     private void eap$compatInit(IManagedGridNode mainNode, PatternProviderLogicHost host, int size, CallbackInfo ci) {
         try {
+            ExtendedAELogger.LOGGER.debug("[样板供应器] 初始化兼容升级槽，shouldEnableUpgradeSlots: {}", UpgradeSlotCompat.shouldEnableUpgradeSlots());
+            ExtendedAELogger.LOGGER.debug("[样板供应器] this instanceof IUpgradeableObject: {}", this instanceof IUpgradeableObject);
+            
             if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                // 未安装AppliedFlux，我们需要提供升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
                         host.getTerminalIcon().getItem(), 1, this::eap$compatOnUpgradesChanged);
                 ExtendedAELogger.LOGGER.debug("[样板供应器] 初始化自带升级槽 (未安装 appflux)");
+            } else {
+                // 安装了AppliedFlux，我们不提供升级槽，但保留空的兼容槽用于备用
+                this.eap$compatUpgrades = UpgradeInventories.empty();
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 跳过初始化升级槽 (已安装 appflux)");
+                
+                // 尝试监听AppliedFlux的升级变更
+                eap$tryHookAppliedFluxUpgradeChanges();
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化兼容升级槽失败", t);
@@ -93,6 +101,26 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         }
     }
 
+    /**
+     * 尝试监听AppliedFlux的升级变更
+     */
+    @Unique
+    private void eap$tryHookAppliedFluxUpgradeChanges() {
+        try {
+            if (this instanceof IUpgradeableObject upgradeableObject) {
+                IUpgradeInventory afUpgrades = upgradeableObject.getUpgrades();
+                if (afUpgrades != null) {
+                    ExtendedAELogger.LOGGER.debug("[样板供应器] 尝试监听AppliedFlux升级变更");
+                    // 我们不能直接修改AppliedFlux的升级槽回调，但我们可以定期检查
+                    // 这里我们先记录一下，实际的检查会在tick中进行
+                }
+            }
+        } catch (Throwable t) {
+            ExtendedAELogger.LOGGER.debug("[样板供应器] 监听AppliedFlux升级变更失败: {}", t.getMessage());
+        }
+    }
+
+
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$compatWrite(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         try {
@@ -109,10 +137,11 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         try {
             if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades", registries);
-                eap$compatLastChannel = -1;
-                eap$compatHasInitialized = false;
-                eap$compatInitializeChannelLink();
             }
+            // 无论哪种模式都重新初始化
+            eap$compatLastChannel = -1;
+            eap$compatHasInitialized = false;
+            eap$compatInitializeChannelLink();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 读取兼容升级失败", t);
         }
@@ -147,7 +176,8 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         try {
             eap$compatLastChannel = -1;
             eap$compatHasInitialized = false;
-            eap$compatDelayedInitTicks = 10;
+            // 直接初始化，不使用延迟
+            eap$compatInitializeChannelLink();
             mainNode.ifPresent((grid, node) -> {
                 try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
             });
@@ -155,6 +185,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             ExtendedAELogger.LOGGER.error("[样板供应器] 主节点状态变更处理失败", t);
         }
     }
+
 
     
 
@@ -189,13 +220,16 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                 // 安装了appflux：优先使用appflux的升级槽
                 try {
-                    if ((Object) this instanceof IUpgradeableObject uo) {
-                        upgrades = uo.getUpgrades();
-                        ExtendedAELogger.LOGGER.debug("[样板供应器] 使用 appflux 提供的升级槽: {}", upgrades != null);
+                    // 更安全的方式获取AppliedFlux升级槽
+                    upgrades = eap$getAppliedFluxUpgrades();
+                    if (upgrades != null) {
+                        ExtendedAELogger.LOGGER.debug("[样板供应器] 成功获取 appflux 升级槽，大小: {}", upgrades.size());
+                    } else {
+                        ExtendedAELogger.LOGGER.warn("[样板供应器] 无法获取 appflux 升级槽，回退到兼容槽");
+                        upgrades = this.eap$compatUpgrades;
                     }
                 } catch (Throwable t) {
                     ExtendedAELogger.LOGGER.error("[样板供应器] 获取 appflux 升级槽失败，回退到兼容槽", t);
-                    // 如果获取AppliedFlux升级槽失败，回退到我们的兼容槽
                     upgrades = this.eap$compatUpgrades;
                 }
             } else {
@@ -211,12 +245,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                     // 如果我们的槽为空，尝试检查是否有AppliedFlux的槽
                     try {
-                        if ((Object) this instanceof IUpgradeableObject uo) {
-                            IUpgradeInventory backupUpgrades = uo.getUpgrades();
-                            if (backupUpgrades != null && !eap$isUpgradeInventoryEmpty(backupUpgrades)) {
-                                upgrades = backupUpgrades;
-                                ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用 appflux 升级槽");
-                            }
+                        IUpgradeInventory backupUpgrades = eap$getAppliedFluxUpgrades();
+                        if (backupUpgrades != null && !eap$isUpgradeInventoryEmpty(backupUpgrades)) {
+                            upgrades = backupUpgrades;
+                            ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用 appflux 升级槽");
                         }
                     } catch (Throwable t) {
                         ExtendedAELogger.LOGGER.debug("[样板供应器] 备用升级槽检查失败: {}", t.getMessage());
@@ -269,7 +301,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 eap$compatHasInitialized = true;
             } else {
                 eap$compatHasInitialized = false;
-                eap$compatDelayedInitTicks = Math.max(eap$compatDelayedInitTicks, 5);
+                // 如果连接失败，唤醒设备以便稍后重试
                 mainNode.ifPresent((grid, node) -> {
                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
                 });
@@ -315,6 +347,38 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
         }
         return true;
+    }
+
+    /**
+     * 安全地获取AppliedFlux提供的升级槽
+     */
+    @Unique
+    private IUpgradeInventory eap$getAppliedFluxUpgrades() {
+        try {
+            ExtendedAELogger.LOGGER.debug("[样板供应器] 尝试获取AppliedFlux升级槽");
+            ExtendedAELogger.LOGGER.debug("[样板供应器] this instanceof IUpgradeableObject: {}", this instanceof IUpgradeableObject);
+            
+            // 检查当前对象是否实现了IUpgradeableObject接口
+            if (this instanceof IUpgradeableObject upgradeableObject) {
+                IUpgradeInventory upgrades = upgradeableObject.getUpgrades();
+                ExtendedAELogger.LOGGER.debug("[样板供应器] AppliedFlux升级槽: {}", upgrades);
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 兼容升级槽: {}", this.eap$compatUpgrades);
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 是否为同一对象: {}", upgrades == this.eap$compatUpgrades);
+                
+                // 确保这不是我们自己的兼容升级槽
+                if (upgrades != null && upgrades != this.eap$compatUpgrades) {
+                    ExtendedAELogger.LOGGER.debug("[样板供应器] 成功获取AppliedFlux升级槽，大小: {}", upgrades.size());
+                    return upgrades;
+                } else {
+                    ExtendedAELogger.LOGGER.debug("[样板供应器] AppliedFlux升级槽无效或与兼容槽相同");
+                }
+            } else {
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 当前对象未实现IUpgradeableObject接口");
+            }
+        } catch (Throwable t) {
+            ExtendedAELogger.LOGGER.error("[样板供应器] 获取AppliedFlux升级槽时出错", t);
+        }
+        return null;
     }
 
     @Override
