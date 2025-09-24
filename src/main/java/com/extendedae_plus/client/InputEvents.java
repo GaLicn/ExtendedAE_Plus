@@ -6,6 +6,7 @@ import appeng.core.AEConfig;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
+import com.extendedae_plus.network.C2SPacketTargetKeyTriggered;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
@@ -78,37 +79,46 @@ public final class InputEvents {
 
     @SubscribeEvent
     public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
-        if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
+        if (event.getKeyCode() == GLFW.GLFW_KEY_F) {
+            // 仅当鼠标确实悬停在 JEI 配料上时触发
+            // 大概会在一格有多个(?)stack的时候出bug, 但是真的会有那种时候吗?
+            List<EmiStack> stack = EmiApi.getHoveredStack(false).getStack().getEmiStacks();
+            if (stack.isEmpty()) return;
+            String name = stack.getFirst().getName().getString();
+            if (name.isEmpty()) return;
 
-        // 仅当鼠标确实悬停在 JEI 配料上时触发
-        // 大概会在一格有多个(?)stack的时候出bug, 但是真的会有那种时候吗?
-        List<EmiStack> stack = EmiApi.getHoveredStack(false).getStack().getEmiStacks();
-        if (stack.isEmpty()) return;
-        String name = stack.getFirst().getName().getString();
-        if (name.isEmpty()) return;
+            // 写入 AE2 终端的搜索框
+            var screen = Minecraft.getInstance().screen;
+            if (screen instanceof MEStorageScreen<?> me) {
+                try {
+                    // 如果用EMI搜索框
+                    if (AEConfig.instance().isUseExternalSearch()) EmiApi.setSearchText(name);
+                    else {
+                        MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
+                        acc.eap$getSearchField().setValue(name);
+                        acc.eap$setSearchText(name); // 同步到 Repo 并刷新
+                    }
+                    event.setCanceled(true);
+                } catch (Throwable ignored) {
+                }
+            } else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+                try {
+                    if (AEConfig.instance().isUseExternalSearch()) EmiApi.setSearchText(name);
+                    else {
+                        GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                        acc.getSearchField().setValue(name);
+                    }
+                    event.setCanceled(true);
+                } catch (Throwable ignored) {
+                }
+            }
+        } else if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_SHIFT)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.SHIFT_DOWN));
+    }
 
-        // 写入 AE2 终端的搜索框
-        var screen = Minecraft.getInstance().screen;
-        if (screen instanceof MEStorageScreen<?> me) {
-            try {
-                // 如果用EMI搜索框
-                if (AEConfig.instance().isUseExternalSearch()) EmiApi.setSearchText(name);
-                else {
-                    MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
-                    acc.eap$getSearchField().setValue(name);
-                    acc.eap$setSearchText(name); // 同步到 Repo 并刷新
-                }
-                event.setCanceled(true);
-            } catch (Throwable ignored) {}
-        } else if (screen instanceof GuiExPatternTerminal<?> gpt) {
-            try {
-                if (AEConfig.instance().isUseExternalSearch()) EmiApi.setSearchText(name);
-                else {
-                    GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
-                    acc.getSearchField().setValue(name);
-                }
-                event.setCanceled(true);
-            } catch (Throwable ignored) {}
-        }
+    @SubscribeEvent
+    public static void onKeyReleasePre(ScreenEvent.KeyReleased.Pre event) {
+        if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_SHIFT)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.SHIFT_UP));
     }
 }

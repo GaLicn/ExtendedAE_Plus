@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮。
+ * 为 AE2 原版样板供应器界面添加“智能阻挡模式”按钮。
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */

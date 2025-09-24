@@ -36,5 +36,8 @@ public class ModNetwork {
         registrar.playToClient(C2SPacketEncodeFinished.TYPE,
                 C2SPacketEncodeFinished.STREAM_CODEC,
                 C2SPacketEncodeFinished::handle);
+        registrar.playToServer(C2SPacketTargetKeyTriggered.TYPE,
+                C2SPacketTargetKeyTriggered.STREAM_CODEC,
+                C2SPacketTargetKeyTriggered::handle);
     }
 }

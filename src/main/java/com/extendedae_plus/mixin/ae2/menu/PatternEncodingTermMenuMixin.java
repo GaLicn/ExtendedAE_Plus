@@ -8,14 +8,13 @@ import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
 import appeng.helpers.IPatternTerminalMenuHost;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
+import com.extendedae_plus.client.PatternEncodingTermMenuMixinHelper;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import com.extendedae_plus.network.C2SPacketEncodeFinished;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -28,16 +27,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class PatternEncodingTermMenuMixin {
+public abstract class PatternEncodingTermMenuMixin implements PatternEncodingTermMenuMixinHelper {
     // 防止重复执行
     @Unique
     private boolean eap$blankAutoFilled = false;
-
     @Shadow
     private RestrictedInputSlot blankPatternSlot;
-
     @Shadow
     public EncodingMode mode;
+    @Unique
+    public boolean isShiftPressed = false;
+
+    @Unique
+    public void eaep$setShiftPressed(boolean press) {
+        isShiftPressed = press;
+    }
 
     @Unique
     private void eap$tryFill(IPatternTerminalMenuHost host, Inventory ip) {
@@ -114,14 +118,14 @@ public abstract class PatternEncodingTermMenuMixin {
         }
         // 仅在服务器端执行
         var self = (PatternEncodingTermMenu) (Object) this;
-        var acc = (MEStorageMenuAccessor) (Object) ((MEStorageMenu) self);
+        var acc = (MEStorageMenuAccessor) self;
         MEStorage storage = acc.getStorage();
         IEnergySource power = acc.getEnergySource();
         var player = self.getPlayerInventory().player;
         if (player.level().isClientSide()) {
             return;
         }
-        boolean canInteract = storage != null && power != null && ((MEStorageMenu) self).getLinkStatus().connected();
+        boolean canInteract = storage != null && power != null && self.getLinkStatus().connected();
         if (!canInteract) {
             return;
         }
@@ -161,7 +165,8 @@ public abstract class PatternEncodingTermMenuMixin {
     @Inject(method = "encode", at = @At("TAIL"))
     private void eaep$onEncode(CallbackInfo ci) {
         if (ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
-        if (!Screen.hasShiftDown()) return;
+        if (!isShiftPressed) return;
+        isShiftPressed = false;
         var self = (PatternEncodingTermMenu) (Object) this;
         PacketDistributor.sendToPlayer((ServerPlayer) self.getPlayer(), C2SPacketEncodeFinished.INSTANCE);
     }
