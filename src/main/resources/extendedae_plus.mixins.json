@@ -26,6 +26,7 @@
     "ae2.autopattern.CraftingTreeProcessMixin",
     "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
+    "ae2.helpers.InterfaceLogicTickerMixin",
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.PatternProviderLogicDoublingMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
