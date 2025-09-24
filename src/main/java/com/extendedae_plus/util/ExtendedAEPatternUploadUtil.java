@@ -170,7 +170,8 @@ public class ExtendedAEPatternUploadUtil {
                 try {
                     ResourceLocation rl = new ResourceLocation(key);
                     CUSTOM_NAMES.put(rl, cnValue);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             } else {
                 CUSTOM_ALIASES.put(key.toLowerCase(), cnValue);
             }
@@ -227,7 +228,8 @@ public class ExtendedAEPatternUploadUtil {
                         if (target.equals(cur)) {
                             CUSTOM_NAMES.remove(rl);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 } else {
                     // 别名按小写存放
                     String lower = k.toLowerCase();
@@ -397,7 +399,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 获取玩家当前的样板访问终端菜单（支持ExtendedAE和原版AE2）
-     * 
+     *
      * @param player 玩家
      * @return PatternAccessTermMenu实例，如果玩家没有打开则返回null
      */
@@ -473,18 +475,18 @@ public class ExtendedAEPatternUploadUtil {
             clearAndRestorePattern(player, menu, stack, encodedSlot);
             return false;
         }
-
-        if (!AEUtils.molecularFilter(stack, player.level())){
-            player.sendSystemMessage(Component.literal("ExtendedAE Plus: 分子操纵者不支持该类型样板"));
-            clearAndRestorePattern(player, menu, stack, encodedSlot);
-            return false;
+        if (ModConfig.INSTANCE.restrictCraftingPatternToMolecular) {
+            if (!AEUtils.molecularFilter(stack, player.level())) {
+                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 分子操纵者不支持该类型样板"));
+                clearAndRestorePattern(player, menu, stack, encodedSlot);
+                return false;
+            }
         }
-
         List<InternalInventory> gtInventories = findAllGTMatrixPatternInventories(grid);
         if (uploadPattern(player, encodedSlot, stack, gtInventories))
             return true;
 
-        if (ModConfig.INSTANCE.restrictCraftingPatternToMolecular){
+        if (ModConfig.INSTANCE.restrictCraftingPatternToMolecular) {
             return false;
         }
 
