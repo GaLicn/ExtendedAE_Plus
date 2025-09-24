@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [1.4.3]
+### ⚠️ 重要提醒 / Important Notice
+- **更新会导致旧版的无限盘失效，如有需要请先导盘再更新**
+  - **Updating will invalidate old infinite disks. Please export data before updating if needed.**
+
+### Added / 新增
+- 装配矩阵上传核心 - 现在必须在装配矩阵中添加该核心才能正常使用自动上传合成样板功能
+  - Assembly Matrix Upload Core - now required in Assembly Matrix to use automatic pattern upload functionality.
+- 频道卡 - 手持频道卡右键可调整频率，将频道卡放入AE设备将自动连接上同频率的本模组的无线收发器
+  - Channel Card - right-click while holding to adjust frequency, placing in AE devices automatically connects to same-frequency wireless transceivers.
+
+### Fixed / 修复
+- 修复合成计划中添加缺失物品时，流体、MEK化学品出现错误书签
+  - Fixed incorrect bookmarks for fluids and Mekanism chemicals when adding missing items in crafting plan.
+- 修复吞噬万籁的寂静的重大bug
+  - Fixed critical bug in Devourer of Cosmic Silence.
+- 修复JEI模组不存在时导致的崩溃问题
+  - Fixed crash when JEI mod is not present.
+
 ## [1.4.2]
 ### Added / 新增
 - 添加实体加速器，最高可加速 1024 倍（配置文件可配置能耗、黑名单、额外消耗倍率名单）
