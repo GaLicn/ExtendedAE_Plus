@@ -41,13 +41,10 @@ public class UpgradeSlotCompat {
      */
     public static boolean shouldEnableUpgradeSlots() {
         boolean appfluxExists = isAppfluxPresent();
-        ExtendedAELogger.LOGGER.info("ExtendedAE-appflux模组检测: {}", appfluxExists ? "存在" : "不存在");
         
         if (appfluxExists) {
-            ExtendedAELogger.LOGGER.info("检测到ExtendedAE-appflux模组，跳过我们的升级卡槽功能");
             return false;
         } else {
-            ExtendedAELogger.LOGGER.info("未检测到ExtendedAE-appflux模组，启用我们的升级卡槽功能");
             return true;
         }
     }

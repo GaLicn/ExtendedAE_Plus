@@ -48,7 +48,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         if (!eap$isSupportedInterfaceScreen()) {
             return;
         }
-        try { LogUtils.getLogger().info("[EAP][InterfaceMixin] init tail reached, preparing scale buttons."); } catch (Throwable ignored) {}
         // 避免重复创建
         if (eap$x2Button == null) {
             eap$x2Button = new ActionEPPButton((b) -> {
@@ -110,7 +109,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
 
         // 初次定位
         eap$relayoutButtons();
-        try { LogUtils.getLogger().info("[EAP][InterfaceMixin] buttons added and laid out."); } catch (Throwable ignored) {}
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"))
@@ -123,32 +121,26 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         if (eap$divideBy2Button != null && !accessor.eap$getRenderables().contains(eap$divideBy2Button)) {
             accessor.eap$getRenderables().add(eap$divideBy2Button);
             accessor.eap$getChildren().add(eap$divideBy2Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added divide2 button to renderables."); } catch (Throwable ignored) {}
         }
         if (eap$x2Button != null && !accessor.eap$getRenderables().contains(eap$x2Button)) {
             accessor.eap$getRenderables().add(eap$x2Button);
             accessor.eap$getChildren().add(eap$x2Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added x2 button to renderables."); } catch (Throwable ignored) {}
         }
         if (eap$divideBy5Button != null && !accessor.eap$getRenderables().contains(eap$divideBy5Button)) {
             accessor.eap$getRenderables().add(eap$divideBy5Button);
             accessor.eap$getChildren().add(eap$divideBy5Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added divide5 button to renderables."); } catch (Throwable ignored) {}
         }
         if (eap$x5Button != null && !accessor.eap$getRenderables().contains(eap$x5Button)) {
             accessor.eap$getRenderables().add(eap$x5Button);
             accessor.eap$getChildren().add(eap$x5Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added x5 button to renderables."); } catch (Throwable ignored) {}
         }
         if (eap$divideBy10Button != null && !accessor.eap$getRenderables().contains(eap$divideBy10Button)) {
             accessor.eap$getRenderables().add(eap$divideBy10Button);
             accessor.eap$getChildren().add(eap$divideBy10Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added divide10 button to renderables."); } catch (Throwable ignored) {}
         }
         if (eap$x10Button != null && !accessor.eap$getRenderables().contains(eap$x10Button)) {
             accessor.eap$getRenderables().add(eap$x10Button);
             accessor.eap$getChildren().add(eap$x10Button);
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] re-added x10 button to renderables."); } catch (Throwable ignored) {}
         }
         // 尺寸变化时重新定位
         int curLeft = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
@@ -161,7 +153,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             eap$lastImageWidth = curImgW;
             eap$lastImageHeight = curImgH;
             eap$relayoutButtons();
-            try { LogUtils.getLogger().info("[EAP][InterfaceMixin] relayout due to bounds change: left={}, top={}, w={}, h={}", curLeft, curTop, curImgW, curImgH); } catch (Throwable ignored) {}
         }
         // 每帧根据 hoveredSlot 刷新最近一次的配置槽索引
         eap$updateLastConfigFromHover();
@@ -214,10 +205,8 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
                 slotField = slotFieldObj;
             } else if (eap$lastConfigIndex >= 0 && eap$lastConfigIndex < configSlots.size()) {
                 slotField = eap$lastConfigIndex;
-                try { LogUtils.getLogger().info("[EAP][InterfaceMixin] Using last hovered config index: {}", slotField); } catch (Throwable ignored) {}
             }
             if (slotField < 0) {
-                try { LogUtils.getLogger().info("[EAP][InterfaceMixin] No hovered slot and no last config index; ignoring adjust."); } catch (Throwable ignored) {}
                 return;
             }
 
@@ -312,7 +301,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             if (idx != null && idx >= 0) {
                 if (eap$lastConfigIndex != idx) {
                     eap$lastConfigIndex = idx;
-                    try { LogUtils.getLogger().info("[EAP][InterfaceMixin] lastConfigIndex updated: {}", eap$lastConfigIndex); } catch (Throwable ignored) {}
                 }
             }
         } catch (Throwable ignored) {}
