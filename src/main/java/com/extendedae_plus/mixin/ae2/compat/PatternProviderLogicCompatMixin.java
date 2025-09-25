@@ -392,6 +392,48 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         }
     }
 
+    /**
+     * 指示 PatternProviderLogic 的 Ticker 是否需要保持慢速 tick 以轮询频道卡或维持无线连接。
+     */
+    public boolean eap$shouldKeepTicking() {
+        try {
+            // 仅在服务端保持tick
+            if (host.getBlockEntity() == null || host.getBlockEntity().getLevel() == null || host.getBlockEntity().getLevel().isClientSide) {
+                return false;
+            }
+            // 未初始化：需要继续tick直到初始化完成
+            if (!eap$compatHasInitialized) {
+                return true;
+            }
+            // 安装了 AppliedFlux：根据连接状态与频道卡存在性决定是否维持慢速tick
+            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                // 若曾经设置过频道或者当前存在未连通的链接，则保持tick
+                if (eap$compatLastChannel != 0L) {
+                    return true;
+                }
+                if (eap$compatLink != null && !eap$compatLink.isConnected()) {
+                    return true;
+                }
+                try {
+                    IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
+                    if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
+                        // 槽中有频道卡，保持tick以尽快完成连接
+                        return true;
+                    }
+                } catch (Throwable ignored) {}
+                // 否则可以休眠
+                return false;
+            }
+            // 未安装 AppliedFlux：当存在频道卡但连接尚未建立时保持tick
+            if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
+                if (eap$compatLink == null || !eap$compatLink.isConnected()) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
     @Unique
     private boolean eap$hasChannelCard(IUpgradeInventory inventory) {

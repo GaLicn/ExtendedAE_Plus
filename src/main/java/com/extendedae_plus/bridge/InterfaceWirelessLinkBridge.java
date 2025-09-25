@@ -47,4 +47,11 @@ public interface InterfaceWirelessLinkBridge {
     default void eap$handleDelayedInit() {
         // 默认实现为空
     }
+    
+    /**
+     * 指示是否需要保持慢速tick（用于轮询频道卡或维持无线状态）
+     */
+    default boolean eap$shouldKeepTicking() {
+        return false;
+    }
 }

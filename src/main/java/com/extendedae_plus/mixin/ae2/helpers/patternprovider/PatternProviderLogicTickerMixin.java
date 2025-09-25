@@ -32,11 +32,18 @@ public abstract class PatternProviderLogicTickerMixin {
         }
     }
 
-    @Inject(method = "tickingRequest", at = @At("TAIL"))
+    @Inject(method = "tickingRequest", at = @At("TAIL"), cancellable = true)
     private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
                               CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+        // 仅在服务端设置慢速 tick
+        if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
+            return;
+        }
         if (this$0 instanceof InterfaceWirelessLinkBridge bridge) {
             bridge.eap$updateWirelessLink();
+            if (bridge.eap$shouldKeepTicking()) {
+                cir.setReturnValue(appeng.api.networking.ticking.TickRateModulation.SLOWER);
+            }
         }
     }
 }

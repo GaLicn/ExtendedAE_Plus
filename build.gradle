@@ -132,7 +132,7 @@ configurations {
 dependencies {
     // --- Added dependencies for target mods ---
     implementation "curse.maven:glodium-957920:5821676"
-    implementation "org.appliedenergistics:appliedenergistics2:19.2.8"
+    implementation "org.appliedenergistics:appliedenergistics2:19.2.15"
     implementation "org.appliedenergistics:guideme:2.5.1"
     // jarJar configuration not set in this build; use implementation for API for now
     implementation "de.mari_023:ae2wtlib_api:19.2.0"
