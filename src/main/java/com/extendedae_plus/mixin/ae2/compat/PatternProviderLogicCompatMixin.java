@@ -33,7 +33,7 @@ import java.util.List;
  * - 安装 appflux 时，优先从 appflux 提供的升级槽读取频道卡；
  * - 建立到无线主站的网格连接。
  */
-@Mixin(value = PatternProviderLogic.class, priority = 1500, remap = false)
+@Mixin(value = PatternProviderLogic.class, priority = 900, remap = false)
 public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge {
 
     @Unique
@@ -239,14 +239,14 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
             
             // 双重保险：如果主要方式失败，尝试备用方式
-            if (upgrades == null || eap$isUpgradeInventoryEmpty(upgrades)) {
-                ExtendedAELogger.LOGGER.debug("[样板供应器] 主升级槽为空，尝试备用方式");
+            if (upgrades == null || !eap$hasChannelCard(upgrades)) {
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 主升级槽无频道卡，尝试备用方式");
                 
                 if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                    // 如果我们的槽为空，尝试检查是否有AppliedFlux的槽
+                    // 如果我们的槽无频道卡，尝试检查是否有AppliedFlux的槽
                     try {
                         IUpgradeInventory backupUpgrades = eap$getAppliedFluxUpgrades();
-                        if (backupUpgrades != null && !eap$isUpgradeInventoryEmpty(backupUpgrades)) {
+                        if (backupUpgrades != null && eap$hasChannelCard(backupUpgrades)) {
                             upgrades = backupUpgrades;
                             ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用 appflux 升级槽");
                         }
@@ -254,8 +254,8 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                         ExtendedAELogger.LOGGER.debug("[样板供应器] 备用升级槽检查失败: {}", t.getMessage());
                     }
                 } else {
-                    // 如果AppliedFlux的槽为空，尝试我们的兼容槽
-                    if (this.eap$compatUpgrades != null && !eap$isUpgradeInventoryEmpty(this.eap$compatUpgrades)) {
+                    // 如果AppliedFlux的槽无频道卡，尝试我们的兼容槽
+                    if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
                         upgrades = this.eap$compatUpgrades;
                         ExtendedAELogger.LOGGER.debug("[样板供应器] 使用备用兼容升级槽");
                     }
@@ -279,6 +279,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     eap$compatLink.setFrequency(0L);
                     eap$compatLink.updateStatus();
                 }
+                eap$compatLastChannel = 0L;
                 eap$compatHasInitialized = true;
                 try { host.saveChanges(); } catch (Throwable ignored) {}
                 return;
@@ -291,6 +292,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
             eap$compatLink.setFrequency(channel);
             eap$compatLink.updateStatus();
+            eap$compatLastChannel = channel; // 记录当前频道
             ExtendedAELogger.LOGGER.debug("[样板供应器] 设置频道={} 连接状态={}", channel, eap$compatLink.isConnected());
             try { host.saveChanges(); } catch (Throwable ignored) {}
             mainNode.ifPresent((grid, node) -> {
@@ -335,18 +337,54 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         eap$compatHasInitialized = initialized;
     }
 
-    // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
-    @Unique
-    private boolean eap$isUpgradeInventoryEmpty(IUpgradeInventory inventory) {
-        if (inventory == null) {
-            return true;
-        }
-        for (ItemStack stack : inventory) {
-            if (!stack.isEmpty()) {
-                return false;
+    @Override
+    public void eap$handleDelayedInit() {
+        // 如果还未初始化，或者需要重新检查AppliedFlux升级槽
+        if (!eap$compatHasInitialized) {
+            eap$compatInitializeChannelLink();
+        } else if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            // 安装了AppliedFlux时，定期检查升级槽变化
+            try {
+                IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
+                if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
+                    // 检查频道是否发生变化
+                    for (ItemStack stack : afUpgrades) {
+                        if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                            long newChannel = ChannelCardItem.getChannel(stack);
+                            if (newChannel != eap$compatLastChannel) {
+                                ExtendedAELogger.LOGGER.debug("[样板供应器] 检测到频道变化: {} -> {}", eap$compatLastChannel, newChannel);
+                                eap$compatLastChannel = -1; // 强制重新初始化
+                                eap$compatHasInitialized = false;
+                                eap$compatInitializeChannelLink();
+                            }
+                            break;
+                        }
+                    }
+                } else if (eap$compatLastChannel != 0L) {
+                    // 频道卡被移除
+                    ExtendedAELogger.LOGGER.debug("[样板供应器] 频道卡被移除");
+                    eap$compatLastChannel = -1;
+                    eap$compatHasInitialized = false;
+                    eap$compatInitializeChannelLink();
+                }
+            } catch (Throwable t) {
+                ExtendedAELogger.LOGGER.debug("[样板供应器] 延迟初始化检查失败: {}", t.getMessage());
             }
         }
-        return true;
+    }
+
+    // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
+    @Unique
+    private boolean eap$hasChannelCard(IUpgradeInventory inventory) {
+        if (inventory == null) {
+            return false;
+        }
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
