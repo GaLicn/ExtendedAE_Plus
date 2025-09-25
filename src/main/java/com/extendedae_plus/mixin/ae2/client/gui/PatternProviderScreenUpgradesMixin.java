@@ -42,6 +42,12 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
             com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 跳过添加升级面板：shouldAddUpgradePanelToScreen返回false");
             return;
         }
+
+        // 若已安装 AppliedFlux，则由 AE2/AppliedFlux 自己负责渲染升级面板，避免我们重复添加导致界面显示两个槽
+        if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 跳过添加升级面板：已安装 appflux，由 AE2/AppliedFlux 负责渲染");
+            return;
+        }
         
         // 使用改进的AppliedFlux兼容性检测
         @SuppressWarnings("unchecked")

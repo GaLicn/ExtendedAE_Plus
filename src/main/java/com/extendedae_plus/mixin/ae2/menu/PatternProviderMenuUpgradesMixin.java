@@ -37,9 +37,8 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
             ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 注入升级槽: 使用自带 compat 槽");
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
         } else {
-            // 安装 appflux：使用 appflux 注入到 PatternProviderLogic 的升级槽
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 注入升级槽: 使用 appflux 槽");
-            this.setupUpgrades(((IUpgradeableObject) this.logic).getUpgrades());
+            // 安装 appflux：AE2/AppliedFlux 已在其原始构造流程中添加升级槽，这里避免重复注入导致界面重复渲染
+            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 跳过注入升级槽: 由 AE2/AppliedFlux 负责渲染");
         }
     }
 
