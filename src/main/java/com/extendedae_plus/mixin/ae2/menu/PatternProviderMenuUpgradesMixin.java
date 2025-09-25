@@ -34,19 +34,12 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         this.eap$toolbox = new ToolboxMenu(this);
         
-        // 现在 PatternProviderLogic 始终实现 IUpgradeableObject（通过我们的 mixin）
-        if (this.logic instanceof IUpgradeableObject upgradeableLogic) {
-            IUpgradeInventory upgrades = upgradeableLogic.getUpgrades();
-            if (upgrades != null && upgrades != appeng.api.upgrades.UpgradeInventories.empty()) {
-                ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 设置升级槽 UI，槽位数: {}", upgrades.size());
-                this.setupUpgrades(upgrades);
-            } else {
-                ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 升级槽为空或未初始化");
-            }
-        } else if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            // 备用方案：使用 compat 升级槽
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 备用方案：使用 compat 升级槽");
+        // 当未安装 AppliedFlux 时，我们负责注入升级槽；安装了 AF 则由 AF 的菜单 Mixin 负责，避免重复渲染
+        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 注入升级槽: 使用自带 compat 槽");
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
+        } else {
+            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 跳过注入升级槽: 由 AE2/AppliedFlux 负责渲染");
         }
     }
 

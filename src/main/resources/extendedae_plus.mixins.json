@@ -34,6 +34,7 @@
     "ae2.helpers.PatternProviderLogicUpgradesMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.menu.InterfaceMenuUpgradesMixin",
+    "ae2.menu.AEBaseMenuUpgradesDedupMixin",
     "ae2.menu.PatternProviderMenuUpgradesMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
     "ae2.parts.storagebus.StorageBusPartChannelCardMixin",
