@@ -31,6 +31,7 @@
     "ae2.helpers.InterfaceLogicUpgradesMixin",
     "ae2.helpers.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.PatternProviderLogicDoublingMixin",
+    "ae2.helpers.PatternProviderLogicUpgradesMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.menu.InterfaceMenuUpgradesMixin",
     "ae2.menu.PatternProviderMenuUpgradesMixin",

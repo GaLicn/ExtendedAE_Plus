@@ -8,6 +8,7 @@ import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.bridge.CompatUpgradeProvider;
+import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -32,13 +33,20 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
             at = @At("TAIL"))
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         this.eap$toolbox = new ToolboxMenu(this);
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            // 未安装 appflux：使用我们提供的升级槽
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 注入升级槽: 使用自带 compat 槽");
+        
+        // 现在 PatternProviderLogic 始终实现 IUpgradeableObject（通过我们的 mixin）
+        if (this.logic instanceof IUpgradeableObject upgradeableLogic) {
+            IUpgradeInventory upgrades = upgradeableLogic.getUpgrades();
+            if (upgrades != null && upgrades != appeng.api.upgrades.UpgradeInventories.empty()) {
+                ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 设置升级槽 UI，槽位数: {}", upgrades.size());
+                this.setupUpgrades(upgrades);
+            } else {
+                ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 升级槽为空或未初始化");
+            }
+        } else if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            // 备用方案：使用 compat 升级槽
+            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 备用方案：使用 compat 升级槽");
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
-        } else {
-            // 安装 appflux：AE2/AppliedFlux 已在其原始构造流程中添加升级槽，这里避免重复注入导致界面重复渲染
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 跳过注入升级槽: 由 AE2/AppliedFlux 负责渲染");
         }
     }
 
