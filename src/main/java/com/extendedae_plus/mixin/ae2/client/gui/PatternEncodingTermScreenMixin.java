@@ -36,9 +36,8 @@ public abstract class PatternEncodingTermScreenMixin {
     @Inject(method = "init", at = @At("TAIL"), remap = false)
     private void eap$addUploadButton(CallbackInfo ci) {
         // 仅在图样编码终端界面中添加按钮
-        if (!(((Object) this) instanceof PatternEncodingTermScreen &&
-                ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()))
-            return;
+        if (!(((Object) this) instanceof PatternEncodingTermScreen)) return;
+        if (!ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> PacketDistributor

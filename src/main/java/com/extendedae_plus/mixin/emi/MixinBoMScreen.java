@@ -1,6 +1,5 @@
 package com.extendedae_plus.mixin.emi;
 
-import appeng.api.stacks.GenericStack;
 import appeng.integration.modules.emi.EmiStackHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.integration.emi.HandlerBoMRecipes;
@@ -13,7 +12,7 @@ import dev.emi.emi.bom.MaterialNode;
 import dev.emi.emi.screen.BoMScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
@@ -24,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Mixin(BoMScreen.class)
@@ -35,7 +33,6 @@ public abstract class MixinBoMScreen {
         try {
             var self = (BoMScreen)(Object) this;
             Object hover = self.getHoveredStack((int) mouseX, (int) mouseY);
-            HashMap<ResourceLocation, GenericStack> selectedInputs;
 
             // 救救孩子😭😭😭为什么private内部类套内部类aaa
             // Mixins你们好啊, 我是reflection大王, 我要来破坏代码兼容性了😈😈😈
@@ -82,6 +79,7 @@ public abstract class MixinBoMScreen {
 
                             PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
                         }
+                        Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value());
                     }
                 }
             }
