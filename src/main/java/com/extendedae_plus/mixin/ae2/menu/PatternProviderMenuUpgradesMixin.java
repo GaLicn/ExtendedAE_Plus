@@ -42,7 +42,7 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     }
 
     @Override
-    public ToolboxMenu getToolbox() {
+    public ToolboxMenu eap$getToolbox() {
         return this.eap$toolbox;
     }
 

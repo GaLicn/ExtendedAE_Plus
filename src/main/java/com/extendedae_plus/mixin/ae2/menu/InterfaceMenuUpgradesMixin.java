@@ -34,7 +34,7 @@ public abstract class InterfaceMenuUpgradesMixin extends AEBaseMenu implements I
     }
 
     @Override
-    public ToolboxMenu getToolbox() {
+    public ToolboxMenu eap$getToolbox() {
         return this.eap$toolbox;
     }
 

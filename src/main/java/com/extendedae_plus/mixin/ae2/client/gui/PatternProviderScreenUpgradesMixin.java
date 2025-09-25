@@ -77,9 +77,9 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
             ((IStyleAccessor) style).getWidgets().put("toolbox", ws);
             
             // 添加工具箱面板
-            if (menu instanceof AEBaseMenu base && base instanceof com.extendedae_plus.bridge.IUpgradableMenu upg && upg.getToolbox() != null && upg.getToolbox().isPresent()) {
+            if (menu instanceof AEBaseMenu base && base instanceof com.extendedae_plus.bridge.IUpgradableMenu upg && upg.eap$getToolbox() != null && upg.eap$getToolbox().isPresent()) {
                 try {
-                    this.widgets.add("toolbox", new ToolboxPanel(style, upg.getToolbox().getName()));
+                    this.widgets.add("toolbox", new ToolboxPanel(style, upg.eap$getToolbox().getName()));
                 } catch (IllegalStateException e) {
                     com.extendedae_plus.util.ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 工具箱面板已存在，跳过添加: {}", e.getMessage());
                 }

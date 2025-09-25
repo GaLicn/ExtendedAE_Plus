@@ -8,5 +8,5 @@ import appeng.menu.ToolboxMenu;
  * 以便在界面上显示升级卡槽（用于放置频道卡）。
  */
 public interface IUpgradableMenu {
-    ToolboxMenu getToolbox();
+    ToolboxMenu eap$getToolbox();
 }
