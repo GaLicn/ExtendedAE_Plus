@@ -7,7 +7,6 @@ import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;
-import com.extendedae_plus.network.ModNetwork;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;

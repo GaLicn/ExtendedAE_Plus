@@ -1,6 +1,7 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.network.*;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public class ModNetwork {
@@ -39,5 +40,8 @@ public class ModNetwork {
         registrar.playToServer(C2SPacketTargetKeyTriggered.TYPE,
                 C2SPacketTargetKeyTriggered.STREAM_CODEC,
                 C2SPacketTargetKeyTriggered::handle);
+        registrar.playToServer(C2SPacketStoneCuttingID.TYPE,
+                C2SPacketStoneCuttingID.STREAM_CODEC,
+                C2SPacketStoneCuttingID::handle);
     }
 }

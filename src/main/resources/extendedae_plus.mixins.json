@@ -48,6 +48,7 @@
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
+    "emi.MixinBoMScreen",
     "emi.MixinEncodingHelper",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
