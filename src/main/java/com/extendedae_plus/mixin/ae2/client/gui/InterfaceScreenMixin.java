@@ -223,7 +223,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
             int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
             int bx = leftPos + imageWidth + 1;
-            int by = topPos + 20;
+            int by = topPos + 70;
             int spacing = 22;
             if (eap$divideBy2Button != null) { eap$divideBy2Button.setX(bx); eap$divideBy2Button.setY(by); }
             if (eap$x2Button != null) { eap$x2Button.setX(bx); eap$x2Button.setY(by + spacing); }

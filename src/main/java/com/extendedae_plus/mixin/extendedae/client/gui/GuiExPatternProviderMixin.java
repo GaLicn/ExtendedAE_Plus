@@ -340,7 +340,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
         // 定位到 GUI 右缘外侧一点（使用绝对屏幕坐标）
         int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
-        int by = this.topPos + 20;
+        int by = this.topPos + 50;
         int spacing = 22;
         // 翻页按钮交由左侧工具栏布局，无需手动定位
         if (this.divideBy2Button != null) {
