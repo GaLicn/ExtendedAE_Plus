@@ -88,14 +88,12 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
             }
             eap$lastChannel = channel;
             
-            ExtendedAELogger.LOGGER.debug("[服务端] IOBus 初始化频道链接: found={}, channel={}", found, channel);
             
             if (!found) {
                 // 无频道卡则断开
                 if (eap$link != null) {
                     eap$link.setFrequency(0L);
                     eap$link.updateStatus();
-                    ExtendedAELogger.LOGGER.debug("[服务端] IOBus 断开频道链接");
                     // 立即通知客户端状态变化（断开连接无需延迟）
                     ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
                 }
@@ -108,12 +106,10 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
                         () -> ((IActionHost)(Object)this).getActionableNode()
                 );
                 eap$link = new WirelessSlaveLink(endpoint);
-                ExtendedAELogger.LOGGER.debug("[服务端] IOBus 创建新的无线链接");
             }
             
             eap$link.setFrequency(channel);
             eap$link.updateStatus();
-            ExtendedAELogger.LOGGER.debug("[服务端] IOBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());
             
             // 通知客户端状态变化
             ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();

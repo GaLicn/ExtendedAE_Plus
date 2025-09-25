@@ -56,7 +56,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
         try {
             // 检测是否安装了 AppliedFlux
             this.eap$hasAppliedFlux = ModList.get().isLoaded("appflux");
-            ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] AppliedFlux 状态: {}", eap$hasAppliedFlux);
             
             if (eap$hasAppliedFlux) {
                 // AppliedFlux 已安装，尝试获取并扩展其升级槽
@@ -77,7 +76,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
                 f.setAccessible(true);
                 existingUpgrades = (IUpgradeInventory) f.get(this);
             } catch (Throwable t) {
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 读取 AF 升级槽字段失败: {}", t.getMessage());
             }
             
             if (existingUpgrades != null && existingUpgrades != UpgradeInventories.empty()) {
@@ -85,8 +83,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
                 int currentSlots = existingUpgrades.size();
                 int targetSlots = 2; // AppliedFlux 1个 + 我们 1个 = 2个
                 
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] AppliedFlux 升级槽数量: {}, 目标: {}", 
-                    currentSlots, targetSlots);
                 
                 if (currentSlots < targetSlots) {
                     // 需要扩展升级槽
@@ -113,16 +109,13 @@ public abstract class PatternProviderLogicUpgradesMixin {
                         f.setAccessible(true);
                         f.set(this, this.eap$upgrades);
                     } catch (Throwable t) {
-                        ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 绑定 AF 升级槽字段失败: {}", t.getMessage());
                     }
                     
                     this.eap$upgradesInitialized = true;
-                    ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 扩展到 {} 个升级槽", targetSlots);
                 } else {
                     // AppliedFlux 或其他模组已经提供了足够的槽位
                     this.eap$upgrades = existingUpgrades;
                     this.eap$upgradesInitialized = true;
-                    ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 使用现有 {} 个升级槽", currentSlots);
                 }
             } else {
                 // AppliedFlux 还没初始化升级槽，或者出了问题，我们创建默认的
@@ -137,10 +130,8 @@ public abstract class PatternProviderLogicUpgradesMixin {
                     f.setAccessible(true);
                     f.set(this, this.eap$upgrades);
                 } catch (Throwable t) {
-                    ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 初始化时绑定 AF 升级槽字段失败: {}", t.getMessage());
                 }
                 this.eap$upgradesInitialized = true;
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 创建 2 个升级槽（AppliedFlux 未初始化）");
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] 扩展 AppliedFlux 升级槽失败", t);
@@ -174,11 +165,9 @@ public abstract class PatternProviderLogicUpgradesMixin {
                 } catch (NoSuchMethodException e) {
                     // AppliedFlux 的方法不存在，这是正常的
                 } catch (Throwable t) {
-                    ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 调用 AppliedFlux onUpgradesChanged 失败: {}", t.getMessage());
                 }
             }
             
-            ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 升级槽内容已变更");
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] onUpgradesChanged 处理失败", t);
         }
@@ -202,7 +191,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
                     // 没有 AppliedFlux，使用标准键
                     this.eap$upgrades.writeToNBT(tag, "upgrades", registries);
                 }
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 保存升级槽到 NBT");
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] 保存升级槽失败", t);
@@ -233,7 +221,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
             if (!eap$hasAppliedFlux && this.eap$upgrades != null && this.eap$upgrades != UpgradeInventories.empty()) {
                 if (tag.contains("upgrades")) {
                     this.eap$upgrades.readFromNBT(tag, "upgrades", registries);
-                    ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 从 upgrades 加载升级槽");
                 }
             }
         } catch (Throwable t) {
@@ -254,7 +241,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
                         drops.add(is);
                     }
                 }
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 添加升级槽物品到掉落列表");
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] 添加掉落失败", t);
@@ -270,7 +256,6 @@ public abstract class PatternProviderLogicUpgradesMixin {
             }
             if (eap$upgradesInitialized && this.eap$upgrades != null) {
                 this.eap$upgrades.clear();
-                ExtendedAELogger.LOGGER.debug("[样板供应器][升级槽] 清空升级槽");
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] 清空升级槽失败", t);

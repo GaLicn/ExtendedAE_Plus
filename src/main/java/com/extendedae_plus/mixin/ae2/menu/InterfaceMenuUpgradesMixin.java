@@ -31,9 +31,6 @@ public abstract class InterfaceMenuUpgradesMixin extends AEBaseMenu implements I
         this.eap$toolbox = new ToolboxMenu(this);
         
         // InterfaceMenu已经继承自UpgradeableMenu，会自动处理升级槽
-        // 这里只需要记录日志，不需要重复设置升级槽
-        ExtendedAELogger.LOGGER.debug("[ME接口][菜单] 升级槽已由UpgradeableMenu自动处理，当前升级槽数量: {}", 
-            host.getInterfaceLogic().getUpgrades().size());
     }
 
     @Override

@@ -55,11 +55,9 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
     public static void handle(final CraftingMonitorJumpC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
-            LogUtils.getLogger().info("EAP[S]: recv CraftingMonitorJumpC2SPacket key={} from {}", msg.what, player.getGameProfile().getName());
 
             // 必须在 CraftingCPU 界面内
             if (!(player.containerMenu instanceof appeng.menu.me.crafting.CraftingCPUMenu menu)) {
-                LogUtils.getLogger().info("EAP[S]: not in CraftingCPUMenu, abort");
                 return;
             }
 
@@ -70,19 +68,16 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
                 grid = host.getActionableNode().getGrid();
             }
             if (grid == null) {
-                LogUtils.getLogger().info("EAP[S]: grid is null, abort");
                 return;
             }
 
             var cs = grid.getCraftingService();
             if (!(cs instanceof CraftingService craftingService)) {
-                LogUtils.getLogger().info("EAP[S]: craftingService is null/unsupported, abort");
                 return;
             }
 
             // 1) 根据 AEKey 找到可能的样板（pattern）
             Collection<IPatternDetails> patterns = craftingService.getCraftingFor(msg.what);
-            LogUtils.getLogger().info("EAP[S]: patterns found={} for key={}", patterns.size(), msg.what);
             if (patterns.isEmpty()) {
                 return;
             }
@@ -93,9 +88,6 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
                 int providerCount = 0;
                 for (var provider : providers) {
                     providerCount++;
-                    try {
-                        LogUtils.getLogger().info("EAP[S]: provider class={}", provider.getClass().getName());
-                    } catch (Throwable ignored) {}
                     if (provider instanceof PatternProviderLogic ppl) {
                         // 使用 accessor 获取 host（受保护字段通过 accessor 访问）
                         PatternProviderLogicHost host = ((PatternProviderLogicAccessor) ppl).eap$host();
@@ -108,14 +100,12 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
                             BlockPos targetPos = pbe.getBlockPos().relative(dir);
                             var tbe = serverLevel.getBlockEntity(targetPos);
                             if (tbe instanceof MenuProvider provider1) {
-                                LogUtils.getLogger().info("EAP[S]: open screen via MenuProvider at {}", targetPos);
                                 player.openMenu(provider1, targetPos);
                                 return;
                             }
                             var tstate = serverLevel.getBlockState(targetPos);
                             var provider2 = tstate.getMenuProvider(serverLevel, targetPos);
                             if (provider2 != null) {
-                                LogUtils.getLogger().info("EAP[S]: open screen via state.getMenuProvider at {}", targetPos);
                                 player.openMenu(provider2, targetPos);
                                 return;
                             }
@@ -124,9 +114,7 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
                         // 兜底：若无 MenuProvider，则跳过（不再模拟右键以确保兼容性）
                     }
                 }
-                LogUtils.getLogger().info("EAP[S]: providers count for one pattern: {}", providerCount);
             }
-            LogUtils.getLogger().info("EAP[S]: no target opened for key={}", msg.what);
         });
     }
 }

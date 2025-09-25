@@ -34,18 +34,13 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
 
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     private void eap$initUpgrades(PatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
-        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 开始初始化升级面板");
-        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] shouldAddUpgradePanelToScreen: {}", UpgradeSlotCompat.shouldAddUpgradePanelToScreen());
-        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] shouldUseLowPriorityMode: {}", UpgradeSlotCompat.shouldUseLowPriorityMode());
         
         if (!UpgradeSlotCompat.shouldAddUpgradePanelToScreen()) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 跳过添加升级面板：shouldAddUpgradePanelToScreen返回false");
             return;
         }
 
         // 若已安装 AppliedFlux，则由 AE2/AppliedFlux 自己负责渲染升级面板，避免我们重复添加导致界面显示两个槽
         if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 跳过添加升级面板：已安装 appflux，由 AE2/AppliedFlux 负责渲染");
             return;
         }
         
@@ -54,18 +49,14 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
         PatternProviderScreen<PatternProviderMenu> screen = (PatternProviderScreen<PatternProviderMenu>) (Object) this;
         
         boolean shouldSkip = AppliedFluxCompat.shouldSkipOurUpgradePanel(screen);
-        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] AppliedFlux兼容性检测结果: shouldSkip={}", shouldSkip);
         
         if (shouldSkip) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 检测到AppliedFlux升级面板，跳过添加我们的面板");
         } else {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 开始添加升级面板");
             
             // 检查是否已经存在upgrades widget
             try {
                 // 尝试添加升级面板
                 this.widgets.add("upgrades", new UpgradesPanel(menu.getSlots(SlotSemantics.UPGRADE), this::eap$getCompatibleUpgrades));
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 成功添加升级面板");
             } catch (IllegalStateException e) {
                 com.extendedae_plus.util.ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 升级面板已存在，跳过添加: {}", e.getMessage());
                 return; // 如果升级面板已存在，不继续添加其他内容
@@ -89,13 +80,11 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
             if (menu instanceof AEBaseMenu base && base instanceof com.extendedae_plus.bridge.IUpgradableMenu upg && upg.getToolbox() != null && upg.getToolbox().isPresent()) {
                 try {
                     this.widgets.add("toolbox", new ToolboxPanel(style, upg.getToolbox().getName()));
-                    com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 成功添加工具箱面板");
                 } catch (IllegalStateException e) {
                     com.extendedae_plus.util.ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 工具箱面板已存在，跳过添加: {}", e.getMessage());
                 }
             }
             
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("[样板供应器][界面] 按照AppliedFlux方式完成升级面板和工具箱初始化");
         }
     }
     

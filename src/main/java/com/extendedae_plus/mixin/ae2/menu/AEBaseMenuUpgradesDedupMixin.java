@@ -26,7 +26,6 @@ public abstract class AEBaseMenuUpgradesDedupMixin {
             var self = (AEBaseMenu) (Object) this;
             var existing = self.getSlots(SlotSemantics.UPGRADE);
             if (existing != null && !existing.isEmpty()) {
-                ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 检测到升级槽已存在({})，取消重复注入", existing.size());
                 ci.cancel();
             }
         }

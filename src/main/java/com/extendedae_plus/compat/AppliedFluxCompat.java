@@ -22,14 +22,14 @@ public final class AppliedFluxCompat {
             return false;
         }
         
-        // 如果AppliedFlux加载了，假设它会添加升级面板
+        // 如果 AppliedFlux 加载了，假设它会添加升级面板
         // 这是一个保守的假设，避免冲突
-        ExtendedAELogger.LOGGER.debug("[AppliedFlux兼容] 检测到AppliedFlux已加载，假设存在升级面板");
         return true;
     }
     
     /**
      * 检查是否应该跳过添加我们的升级面板
+     * 主要用于检测 AppliedFlux 是否已经添加了升级面板
      */
     public static boolean shouldSkipOurUpgradePanel(PatternProviderScreen<?> screen) {
         if (!UpgradeSlotCompat.shouldUseLowPriorityMode()) {

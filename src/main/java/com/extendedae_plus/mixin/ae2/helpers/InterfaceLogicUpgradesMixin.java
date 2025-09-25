@@ -50,17 +50,14 @@ public abstract class InterfaceLogicUpgradesMixin implements CompatUpgradeProvid
         if (hasAppliedFlux) {
             // AppliedFlux已经将升级槽从1增加到2，我们再增加1个变成3
             targetSlots = 3;
-            ExtendedAELogger.LOGGER.debug("[ME接口] 检测到AppliedFlux，当前升级槽: {}, 目标升级槽: {}", currentSlots, targetSlots);
         } else {
             // 没有AppliedFlux，从原始的1增加到2
             targetSlots = 2;
-            ExtendedAELogger.LOGGER.debug("[ME接口] 未检测到AppliedFlux，当前升级槽: {}, 目标升级槽: {}", currentSlots, targetSlots);
         }
         
         // 只有当当前槽数小于目标槽数时才需要扩展
         if (currentSlots < targetSlots) {
             this.upgrades = UpgradeInventories.forMachine(is, targetSlots, this::eap$onUpgradesChanged);
-            ExtendedAELogger.LOGGER.debug("[ME接口] 升级槽已扩展到: {}", targetSlots);
             
             // 设置兼容升级槽
             if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {

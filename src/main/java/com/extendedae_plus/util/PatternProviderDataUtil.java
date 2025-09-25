@@ -251,7 +251,6 @@ public class PatternProviderDataUtil {
                     patternDataList.add(new PatternData(patternDetails, patternStack, i));
                 }
             } catch (Exception e) {
-                if (DEBUG) LogUtils.getLogger().debug("Pattern decode failed at slot {}: {}", i, e.toString());
             }
         }
 
@@ -572,7 +571,6 @@ public class PatternProviderDataUtil {
                     return i;
                 }
             } catch (Exception e) {
-                if (DEBUG) LogUtils.getLogger().debug("findSlotForPattern decode failed at {}: {}", i, e.toString());
             }
         }
         return -1;

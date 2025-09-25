@@ -36,10 +36,8 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
         
         // 当未安装 AppliedFlux 时，我们负责注入升级槽；安装了 AF 则由 AF 的菜单 Mixin 负责，避免重复渲染
         if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 注入升级槽: 使用自带 compat 槽");
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
         } else {
-            ExtendedAELogger.LOGGER.debug("[样板供应器][菜单] 跳过注入升级槽: 由 AE2/AppliedFlux 负责渲染");
         }
     }
 
