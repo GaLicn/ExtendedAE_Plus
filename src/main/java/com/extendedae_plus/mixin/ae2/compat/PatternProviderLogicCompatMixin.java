@@ -1,6 +1,7 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
 import appeng.api.networking.IManagedGridNode;
+import appeng.api.networking.IGridConnection;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -282,6 +283,24 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 eap$compatLastChannel = 0L;
                 eap$compatHasInitialized = true;
                 try { host.saveChanges(); } catch (Throwable ignored) {}
+                // 唤醒节点，加速 AE2 感知到连接断开
+                mainNode.ifPresent((grid, node) -> {
+                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
+                    // 兜底：如仍存在针对无线主端的直连（非 in-world），强制销毁
+                    try {
+                        for (IGridConnection gc : node.getConnections()) {
+                            if (gc != null && !gc.isInWorld()) {
+                                var other = gc.getOtherSide(node);
+                                if (other != null && other.getOwner() instanceof com.extendedae_plus.wireless.IWirelessEndpoint) {
+                                    ExtendedAELogger.LOGGER.debug("[样板供应器] 兜底销毁残留无线直连: {} -> {}", node, other);
+                                    gc.destroy();
+                                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
+                                    try { if (other.getGrid() != null) { other.getGrid().getTickManager().wakeDevice(other); } } catch (Throwable ignored2) {}
+                                }
+                            }
+                        }
+                    } catch (Throwable ignored2) {}
+                });
                 return;
             }
 
