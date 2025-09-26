@@ -30,8 +30,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     @GuiSync(719) public int effectiveSpeed = 1;
     @GuiSync(720) public double multiplier = 1.0;
     @GuiSync(721) public boolean targetBlacklisted = false;
-    // 来自部件的网络能量不足提示（服务端设置，客户端用于显示警告）
-    @GuiSync(722) public boolean networkEnergyInsufficient = false;
+    // 来自部件的网络能量充足提示（服务端设置，客户端用于显示警告）
+    @GuiSync(722) public boolean networkEnergySufficient = true;
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
@@ -39,6 +39,16 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
 
     public void setAccelerateEnabled(boolean enabled) {
         this.accelerateEnabled = enabled;
+    }
+
+    /**
+     * 从 Part 更新 networkEnergySufficient 的封装方法（由服务器调用）
+     * 该方法会更新 @GuiSync 字段并广播变化到客户端
+     */
+    public void setNetworkEnergySufficient(boolean sufficient) {
+        this.networkEnergySufficient = sufficient;
+        // 触发一次数据广播，使客户端立即接收到最新状态
+        this.broadcastChanges();
     }
 
 
@@ -99,11 +109,11 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
             this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
         }
 
-        // 从部件同步网络能量不足状态（防御性编程，避免 NPE）
+        // 从部件同步网络能量充足状态：仅在服务器端从部件读取，客户端应使用由 @GuiSync 同步过来的值
         try {
             EntitySpeedTickerPart host = getHost();
-            if (host != null) {
-                this.networkEnergyInsufficient = host.isNetworkEnergyInsufficient();
+            if (host != null && !isClientSide()) {
+                this.networkEnergySufficient = host.isNetworkEnergySufficient();
             }
         } catch (Exception ignored) {}
 
