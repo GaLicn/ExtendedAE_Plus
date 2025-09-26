@@ -36,6 +36,28 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     public double multiplier = 1.0;
     @GuiSync(721)
     public boolean targetBlacklisted = false;
+    // 来自部件的网络能量充足提示（服务端设置，客户端用于显示警告）
+    @GuiSync(722) public boolean networkEnergySufficient = true;
+
+
+    public boolean getAccelerateEnabled() {
+        return this.accelerateEnabled;
+    }
+
+    public void setAccelerateEnabled(boolean enabled) {
+        this.accelerateEnabled = enabled;
+    }
+
+    /**
+     * 从 Part 更新 networkEnergySufficient 的封装方法（由服务器调用）
+     * 该方法会更新 @GuiSync 字段并广播变化到客户端
+     */
+    public void setNetworkEnergySufficient(boolean sufficient) {
+        this.networkEnergySufficient = sufficient;
+        // 触发一次数据广播，使客户端立即接收到最新状态
+        this.broadcastChanges();
+    }
+
 
     // 构造方法，初始化菜单并与部件绑定
     public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
@@ -45,16 +67,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         // 初始同步部件上的开关状态到菜单（服务器端构造时保证一致）
         try {
             this.accelerateEnabled = getHost().getAccelerateEnabled();
-        } catch (Exception ignored) {
-        }
-    }
-
-    public boolean getAccelerateEnabled() {
-        return this.accelerateEnabled;
-    }
-
-    public void setAccelerateEnabled(boolean enabled) {
-        this.accelerateEnabled = enabled;
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -79,7 +92,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         this.multiplier = mult;
 
         // 检查目标是否在黑名单中，如果是则标记并将生效速度设为 0（服务器端计算）
@@ -110,6 +124,14 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         } else {
             this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
         }
+
+        // 从部件同步网络能量充足状态：仅在服务器端从部件读取，客户端应使用由 @GuiSync 同步过来的值
+        try {
+            EntitySpeedTickerPart host = getHost();
+            if (host != null && !isClientSide()) {
+                this.networkEnergySufficient = host.isNetworkEnergySufficient();
+            }
+        } catch (Exception ignored) {}
 
         // 如果在客户端，刷新界面
         if (isClientSide()) {

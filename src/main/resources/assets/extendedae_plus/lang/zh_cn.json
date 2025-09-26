@@ -53,6 +53,7 @@
   "screen.extendedae_plus.entity_speed_ticker.power_ratio": "功耗比例: %s",
   "screen.extendedae_plus.entity_speed_ticker.speed": "当前加速倍率: %d",
   "screen.extendedae_plus.entity_speed_ticker.multiplier": "额外消耗倍率: %s",
+  "screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient": "§c§l网络能量不足",
 
   "item.extendedae_plus.entity_speed_ticker.tip.requirement": "需要放入实体加速卡以启用加速",
   "item.extendedae_plus.entity_speed_ticker.tip.max": "最高可达 1024x 加速",
