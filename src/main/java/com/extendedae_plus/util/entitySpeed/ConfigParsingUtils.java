@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.entitySpeed;
 
 import java.util.ArrayList;
 import java.util.Collections;

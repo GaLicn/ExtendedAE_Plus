@@ -1,6 +1,7 @@
-package com.extendedae_plus;
+package com.extendedae_plus.ae.client.gui;
 
 import appeng.client.gui.style.Blitter;
+import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.resources.ResourceLocation;
 
 public class NewIcon {

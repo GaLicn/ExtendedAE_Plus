@@ -2,9 +2,9 @@ package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
+import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
-import com.extendedae_plus.wireless.IWirelessEndpoint;
-import com.extendedae_plus.wireless.WirelessMasterRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;

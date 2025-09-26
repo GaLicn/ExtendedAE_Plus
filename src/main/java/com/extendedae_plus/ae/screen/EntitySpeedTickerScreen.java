@@ -11,7 +11,7 @@ import appeng.util.Platform;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.ToggleEntityTickerC2SPacket;
-import com.extendedae_plus.util.PowerUtils;
+import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 

@@ -1,4 +1,4 @@
-package com.extendedae_plus.wireless;
+package com.extendedae_plus.ae.wireless;
 
 import com.extendedae_plus.config.ModConfig;
 import net.minecraft.resources.ResourceKey;

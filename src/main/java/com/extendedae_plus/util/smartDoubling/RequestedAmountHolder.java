@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.smartDoubling;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

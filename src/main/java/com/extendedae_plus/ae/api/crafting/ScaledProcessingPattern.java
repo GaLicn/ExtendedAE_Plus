@@ -1,4 +1,4 @@
-package com.extendedae_plus.content;
+package com.extendedae_plus.ae.api.crafting;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.stacks.AEItemKey;

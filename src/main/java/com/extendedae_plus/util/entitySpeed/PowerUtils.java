@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.entitySpeed;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;

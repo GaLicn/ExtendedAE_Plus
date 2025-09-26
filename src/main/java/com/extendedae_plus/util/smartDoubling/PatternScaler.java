@@ -1,11 +1,11 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.smartDoubling;
 
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
+import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
-import com.extendedae_plus.content.ScaledProcessingPattern;
 
 public final class PatternScaler {
     private PatternScaler() {

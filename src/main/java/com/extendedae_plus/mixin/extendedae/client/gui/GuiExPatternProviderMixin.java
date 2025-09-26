@@ -4,7 +4,7 @@ import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
-import com.extendedae_plus.NewIcon;
+import com.extendedae_plus.ae.client.gui.NewIcon;
 import com.extendedae_plus.api.IExPatternButtonsAccessor;
 import com.extendedae_plus.api.IExPatternPageAccessor;
 import com.extendedae_plus.config.ModConfig;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.wireless;
+package com.extendedae_plus.ae.wireless;
 
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridNode;
