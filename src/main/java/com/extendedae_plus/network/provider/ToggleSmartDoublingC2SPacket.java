@@ -1,4 +1,4 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.provider;
 
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;

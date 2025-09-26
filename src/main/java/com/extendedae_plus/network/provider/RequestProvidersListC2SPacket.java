@@ -1,4 +1,4 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.provider;
 
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;

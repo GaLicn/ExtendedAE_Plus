@@ -1,4 +1,4 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.crafting;
 
 import appeng.api.networking.IGrid;
 import appeng.api.stacks.AEKey;

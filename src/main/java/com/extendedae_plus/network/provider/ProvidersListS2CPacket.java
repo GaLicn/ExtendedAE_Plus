@@ -1,4 +1,4 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.provider;
 
 import com.extendedae_plus.client.ui.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;

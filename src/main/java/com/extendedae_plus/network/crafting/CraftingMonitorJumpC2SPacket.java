@@ -1,8 +1,7 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.crafting;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
@@ -18,7 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;

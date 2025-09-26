@@ -8,7 +8,7 @@ import com.extendedae_plus.ae.client.gui.NewIcon;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
-import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.mojang.logging.LogUtils;
 import net.minecraft.world.inventory.Slot;

@@ -11,6 +11,7 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
+import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
@@ -41,7 +42,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> ModNetwork.CHANNEL
-                    .sendToServer(new com.extendedae_plus.network.RequestProvidersListC2SPacket())) {
+                    .sendToServer(new RequestProvidersListC2SPacket())) {
                 private final float eap$scale = 0.75f; // 约 12x12
 
                 @Override

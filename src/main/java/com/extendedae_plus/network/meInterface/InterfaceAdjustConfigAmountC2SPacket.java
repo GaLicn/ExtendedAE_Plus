@@ -1,8 +1,7 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.meInterface;
 
-import appeng.menu.implementations.InterfaceMenu;
-import appeng.menu.SlotSemantics;
 import appeng.api.stacks.GenericStack;
+import appeng.menu.implementations.InterfaceMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;

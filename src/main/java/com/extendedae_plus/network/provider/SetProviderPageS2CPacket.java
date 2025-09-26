@@ -1,4 +1,4 @@
-package com.extendedae_plus.network;
+package com.extendedae_plus.network.provider;
 
 import appeng.menu.SlotSemantics;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
