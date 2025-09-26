@@ -23,8 +23,14 @@ public abstract class MixinEncodePatternTransfer {
         // 对不起老牛😭
         if (recipe == null) return;
         if (EncodingHelper.isSupportedCraftingRecipe(recipe)) return;
+
         String name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
-        if (name == null || name.isBlank()) return;
-        ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+        if (!(name == null || name.isBlank()))
+            ExtendedAEPatternUploadUtil.addLastProcessingNameList(name);
+
+        ExtendedAEPatternUploadUtil.addLastProcessingNameList(emiRecipe.getCategory().getName().getString());
+
+        if (emiRecipe.getId() != null)
+            ExtendedAEPatternUploadUtil.addLastProcessingNameList(emiRecipe.getId().toString().split("/")[0]);
     }
 }

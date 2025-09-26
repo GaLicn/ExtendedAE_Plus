@@ -56,26 +56,36 @@ public abstract class MixinBoMScreen {
                         if (isCraftingRecipe) {
                             PatternFillingHelper.encodeCraftingRecipe(menu,
                                     node.recipe.getBackingRecipe(),
-                                    HandlerBoMRecipes.updateRecipe(node.recipe, BoM.tree.batches,
-                                            HandlerBoMRecipes.collectInputs(node)),
+                                    HandlerBoMRecipes.updateRecipe(node.recipe,
+                                            HandlerBoMRecipes.collectInputs(node, 1)),
                                     stack -> true);
 
                             menu.encode();
                         } else {
-                            EmiStack nodeStack = node.ingredient.getEmiStacks().getFirst();
                             List<EmiStack> outputs = new ArrayList<>(node.recipe.getOutputs());
+                            EmiStack nodeStack = outputs.get(outputs.indexOf(node.ingredient.getEmiStacks().getFirst()));
                             outputs.remove(nodeStack);
                             outputs.addFirst(nodeStack);
                             PatternFillingHelper.encodeProcessingRecipe(menu,
-                                    HandlerBoMRecipes.updateRecipe(node.recipe, BoM.tree.batches,
-                                            HandlerBoMRecipes.collectInputs(node)),
-                                    outputs.stream().map(EmiStackHelper::toGenericStack).toList());
+                                    HandlerBoMRecipes.updateRecipe(node.recipe,
+                                            HandlerBoMRecipes.collectInputs(node, BoM.tree.batches)),
+                                    outputs.stream()
+                                            .map(stack -> HandlerBoMRecipes.batchAmount(stack, BoM.tree.batches))
+                                            .map(EmiStackHelper::toGenericStack).toList());
 
                             menu.encode();
 
-                            String name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(node.recipe.getBackingRecipe().value());
-                            if (!(name == null || name.isBlank()))
-                                ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+                            ExtendedAEPatternUploadUtil.addLastProcessingNameList(
+                                    node.recipe.getCategory().getName().getString());
+
+                            if (node.recipe.getBackingRecipe() != null) {
+                                String name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(node.recipe.getBackingRecipe().value());
+                                if (!(name == null || name.isBlank()))
+                                    ExtendedAEPatternUploadUtil.addLastProcessingNameList(name);
+                            }
+
+                            ExtendedAEPatternUploadUtil.addLastProcessingNameList(
+                                    node.recipe.getId().toString().split("/")[0]);
 
                             PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
                         }

@@ -64,7 +64,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
                     // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
-                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleAdvancedBlockingC2SPacket.INSTANCE);
                 }
@@ -98,7 +97,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 Settings.BLOCKING_MODE,
                 this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
-                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleSmartDoublingC2SPacket.INSTANCE);
                 }

@@ -13,8 +13,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record C2SPacketTargetKeyTriggered(KeyType keyType) implements CustomPacketPayload{
     public enum KeyType {
-        SHIFT_DOWN,
-        SHIFT_UP
+        CTRL_DOWN,
+        CTRL_UP
     }
 
     @Override
@@ -36,9 +36,9 @@ public record C2SPacketTargetKeyTriggered(KeyType keyType) implements CustomPack
 
             if (player.containerMenu instanceof PatternEncodingTermMenu patternMenu) {
                 if (patternMenu instanceof PatternEncodingTermMenuMixinHelper accessor) {
-                    accessor.eaep$setShiftPressed(switch (packet.keyType) {
-                        case SHIFT_UP -> false;
-                        case SHIFT_DOWN -> true;
+                    accessor.eaep$setCtrlPressed(switch (packet.keyType) {
+                        case CTRL_UP -> false;
+                        case CTRL_DOWN -> true;
                     });
                 }
             }

@@ -14,13 +14,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public class HandlerBoMRecipes {
-    public static HashMap<ResourceLocation, GenericStack> collectInputs(MaterialNode parentNode) {
+    public static HashMap<ResourceLocation, GenericStack> collectInputs(MaterialNode parentNode, long batches) {
         var recipe = parentNode.recipe;
+        if (recipe == null) return new HashMap<>();
         if (parentNode.state != FoldState.EXPANDED) return new HashMap<>();
         if (parentNode.children == null) return new HashMap<>();
 
         HashMap<ResourceLocation, GenericStack> results = new HashMap<>();
-        var type = recipe.getBackingRecipe().value().getType();
+        RecipeType<?> type;
+        if (recipe.getBackingRecipe() != null)
+            type = recipe.getBackingRecipe().value().getType();
+        else type = null;
 
         parentNode.children.forEach(child -> {
             EmiStack stack;
@@ -31,8 +35,8 @@ public class HandlerBoMRecipes {
 
             recipe.getInputs().forEach(input -> {
                 if (input.getEmiStacks().contains(stack)) {
-                    stack.setAmount(input.getEmiStacks().getFirst().getAmount());
-                    GenericStack genericStack = EmiStackHelper.toGenericStack(stack);
+                    EmiStack batchedStack = batchAmount(stack, batches);
+                    GenericStack genericStack = EmiStackHelper.toGenericStack(batchedStack);
                     if (genericStack == null) return;
 
                     results.put(input.getEmiStacks().getFirst().getId(), genericStack);
@@ -42,42 +46,7 @@ public class HandlerBoMRecipes {
         return results;
     }
 
-//    public static void handle(C2SPacketStoneCuttingID packet, ServerPlayer player) {
-//        if (!(player.containerMenu instanceof PatternEncodingTermMenu menu)) return;
-////        RecipeHolder<?> recipeHolder = player.level().getRecipeManager()
-////                .byKey(packet.recipeID()).orElse(null);
-//        EmiRecipe recipe = EmiApi.getRecipeManager()
-//                .getRecipe(packet.recipeID());
-//
-//        if (recipe == null) return;
-//
-//        try {
-//            menu.clear();
-//            List<List<GenericStack>> modifiedInputs = updateRecipe(recipe, packet.batches(), packet.selectedStacks());
-//
-//            // 遍历原配方的每个输入
-//            for (EmiIngredient originalInput : recipe.getInputs()) {
-//                if (!originalInput.getEmiStacks().isEmpty()) {
-//                    EmiStack firstStack = originalInput.getEmiStacks().getFirst();
-//                    ResourceLocation stackId = firstStack.getId();
-//
-//                    if (packet.selectedStacks().containsKey(stackId))
-//                        modifiedInputs.add(List.of(
-//                                packet.selectedStacks().getOrDefault(stackId, EmiStackHelper.toGenericStack(firstStack))));
-//                }
-//            }
-//
-//            // 获取输出（保持不变）
-//            List<GenericStack> outputs = EmiStackHelper.ofOutputs(recipe);
-//
-//            // 编码修改后的配方
-////            EncodingHelper.encodeProcessingRecipe(menu, modifiedInputs, outputs);
-//        } catch (Exception e) {
-//            ExtendedAEPlus.LOGGER.debug("encode failed:", e);
-//        }
-//    }
-
-    public static List<List<GenericStack>> updateRecipe(EmiRecipe original, long batches,
+    public static List<List<GenericStack>> updateRecipe(EmiRecipe original,
                                                 HashMap<ResourceLocation, GenericStack> selectedInputs) {
         List<List<GenericStack>> modifiedInputs = new ArrayList<>();
 
@@ -92,5 +61,9 @@ public class HandlerBoMRecipes {
             } else modifiedInputs.add(List.of());
         });
         return modifiedInputs;
+    }
+
+    public static EmiStack batchAmount(EmiStack original, long batches) {
+        return original.copy().setAmount(original.getAmount() * batches);
     }
 }

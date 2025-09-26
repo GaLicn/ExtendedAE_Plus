@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
@@ -124,10 +125,10 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
-    public static volatile String lastProcessingName = null;
+    public static volatile List<String> lastProcessingNameList = new ArrayList<>();
 
-    public static void setLastProcessingName(String name) {
-        lastProcessingName = name;
+    public static void addLastProcessingNameList(String name) {
+        lastProcessingNameList.add(name);
     }
 
     /**
@@ -257,19 +258,14 @@ public class ExtendedAEPatternUploadUtil {
         String id = key.toString();
         String path = key.getPath();
         // 常见原版类型映射
-        switch (path) {
-            case "smelting":
-                return "熔炉"; // 熔炉
-            case "blasting":
-                return "高炉";
-            case "smoking":
-                return "烟熏";
-            case "campfire_cooking":
-                return "营火";
-            default:
-                // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
-                return id;
-        }
+        return switch (path) {
+            case "smelting" -> "熔炉"; // 熔炉
+            case "blasting" -> "高炉";
+            case "smoking" -> "烟熏";
+            case "campfire_cooking" -> "营火";
+            // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
+            default -> id;
+        };
     }
 
     /**
@@ -283,13 +279,14 @@ public class ExtendedAEPatternUploadUtil {
         ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key == null) return null;
         // 先查别名（按 path 匹配）
-        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
-        if (alias != null && !alias.isBlank()) return alias;
+        // 别名替换放在init做, 提前别名的次序
+//        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
+//        if (alias != null && !alias.isBlank()) return alias;
         // 再查完整ID映射
-        String custom = CUSTOM_NAMES.get(key);
-        if (custom != null && !custom.isBlank()) {
-            return custom;
-        }
+//        String custom = CUSTOM_NAMES.get(key);
+//        if (custom != null && !custom.isBlank()) {
+//            return custom;
+//        }
         return key.getPath();
     }
 
@@ -368,6 +365,25 @@ public class ExtendedAEPatternUploadUtil {
         // 取首个关键词
         s = s.trim();
         return s;
+    }
+
+    public static String findMapping(String key) {
+        if (key == null || key.isBlank()) return null;
+
+        if (CUSTOM_ALIASES.containsKey(key.toLowerCase()))
+            return CUSTOM_ALIASES.get(key.toLowerCase());
+
+        if (key.contains(":")) {
+            try {
+                ResourceLocation location = ResourceLocation.tryParse(key);
+                if (location != null && CUSTOM_NAMES.containsKey(location))
+                    return CUSTOM_NAMES.get(location);
+            } catch (Exception ignored) {}
+        }
+
+        if (!Pattern.matches(".*[:._/\\-].*", key)) return key;
+
+        return null;
     }
 
     /**
@@ -471,8 +487,7 @@ public class ExtendedAEPatternUploadUtil {
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
         List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
         if (!inventories.isEmpty()) {
-            for (int i = 0; i < inventories.size(); i++) {
-                var inv = inventories.get(i);
+            for (InternalInventory inv : inventories) {
                 ItemStack toInsert = stack.copy();
                 ItemStack remain = inv.addItems(toInsert);
                 if (remain.getCount() < stack.getCount()) {
@@ -491,8 +506,7 @@ public class ExtendedAEPatternUploadUtil {
         // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
         List<?> handlers = findAllMatrixPatternHandlers(grid);
         if (!handlers.isEmpty()) {
-            for (int i = 0; i < handlers.size(); i++) {
-                var cap = handlers.get(i);
+            for (Object cap : handlers) {
                 ItemStack toInsert = stack.copy();
                 ItemStack remain = insertIntoAnySlot(cap, toInsert);
                 if (remain.getCount() < stack.getCount()) {
@@ -871,9 +885,35 @@ public class ExtendedAEPatternUploadUtil {
         return "样板供应器 #" + providerId;
     }
 
+    /** 获取供应器显示名（优先组名） */
+    public static String getProviderDisplayName(PatternContainer container) {
+        if (container == null) return "未知供应器";
+        try {
+            var group = container.getTerminalGroup();
+            if (group != null) return group.name().getString();
+        } catch (Throwable ignored) {
+        }
+        return "样板供应器";
+    }
+
+    public static String getProviderI18nName(Long providerId, PatternAccessTermMenu menu) {
+        return getProviderI18nName(getPatternContainerById(menu, providerId));
+    }
+
+    /** 获取样板供应器默认选取的方块名称 */
+    public static String getProviderI18nName(PatternContainer container) {
+        if (container == null) return "";
+        try {
+            var group = container.getTerminalGroup();
+            var name = group.name();
+            return name.toString().contains("literal") ? "" : name.toString();
+        } catch (Throwable ignored) {}
+        return "";
+    }
+
     /**
      * 验证样板供应器是否可用
-     * 
+     *
      * @param providerId 供应器ID
      * @param menu 样板访问终端菜单
      * @return 是否可用
@@ -895,7 +935,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 获取当前终端类型的描述
-     * 
+     *
      * @param player 玩家
      * @return 终端类型描述
      */
@@ -1078,14 +1118,14 @@ public class ExtendedAEPatternUploadUtil {
         List<PatternContainer> list = new ArrayList<>();
         if (menu == null) return list;
         try {
-        IGrid grid = null;
-        if (menu instanceof AEBaseMenu abm) {
-            Object target = abm.getTarget();
-            if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                grid = host.getActionableNode().getGrid();
+            IGrid grid = null;
+            if (menu instanceof AEBaseMenu abm) {
+                Object target = abm.getTarget();
+                if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                    grid = host.getActionableNode().getGrid();
+                }
             }
-        }
-        if (grid == null) return list;
+            if (grid == null) return list;
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
                     @SuppressWarnings("unchecked")
@@ -1096,7 +1136,10 @@ public class ExtendedAEPatternUploadUtil {
                         if (inv == null || inv.size() <= 0) continue;
                         boolean hasEmpty = false;
                         for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
+                            if (inv.getStackInSlot(i).isEmpty()) {
+                                hasEmpty = true;
+                                break;
+                            }
                         }
                         if (hasEmpty) list.add(container);
                     }
@@ -1105,17 +1148,6 @@ public class ExtendedAEPatternUploadUtil {
         } catch (Throwable ignored) {
         }
         return list;
-    }
-
-    /** 获取供应器显示名（优先组名） */
-    public static String getProviderDisplayName(PatternContainer container) {
-        if (container == null) return "未知供应器";
-        try {
-            var group = container.getTerminalGroup();
-            if (group != null) return group.name().getString();
-        } catch (Throwable ignored) {
-        }
-        return "样板供应器";
     }
 
     /** 计算供应器空槽位数量 */

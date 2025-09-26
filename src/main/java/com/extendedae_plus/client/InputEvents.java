@@ -3,6 +3,7 @@ package com.extendedae_plus.client;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
 import appeng.core.AEConfig;
+import appeng.integration.modules.emi.EmiStackHelper;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
@@ -14,15 +15,11 @@ import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.stack.EmiStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluid;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
@@ -31,17 +28,6 @@ import java.util.List;
 @EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class InputEvents {
     private InputEvents() {}
-
-    private static GenericStack toGenericStack(EmiStack stack) {
-        try {
-            GenericStack genericStack = null;
-            Object typed = stack.getKey();
-            if (typed instanceof Item item) genericStack = GenericStack.fromItemStack(new ItemStack(item));
-            else if (typed instanceof Fluid fluid) genericStack = GenericStack.fromFluidStack(new FluidStack(fluid, 1000));
-            return genericStack;
-        } catch (Throwable ignored) {}
-        return null;
-    }
 
     @SubscribeEvent
     public static void onMouseButtonPre(InputEvent.MouseButton.Pre event) {
@@ -55,7 +41,7 @@ public final class InputEvents {
             // Optional<ITypedIngredient<?>> hovered = new JemiBookmarkOverlay().getIngredientUnderMouse();
             List<EmiStack> stacks = EmiApi.getHoveredStack(false).getStack().getEmiStacks();
             if (stacks.isEmpty()) return;
-            GenericStack stack = toGenericStack(stacks.getFirst());
+            GenericStack stack = EmiStackHelper.toGenericStack(stacks.getFirst());
             if (stack == null) return;
             PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
         }
@@ -66,7 +52,7 @@ public final class InputEvents {
             List<EmiStack> stacks = EmiApi.getHoveredStack(false).getStack().getEmiStacks();
             if (stacks.isEmpty()) return;
 
-            GenericStack stack = toGenericStack(stacks.getFirst());
+            GenericStack stack = EmiStackHelper.toGenericStack(stacks.getFirst());
             if (stack == null) return;
 
             // 发送到服务端，让其验证并打开 CraftAmountMenu
@@ -112,13 +98,13 @@ public final class InputEvents {
                 } catch (Throwable ignored) {
                 }
             }
-        } else if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_SHIFT)
-            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.SHIFT_DOWN));
+        } else if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_CONTROL)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.CTRL_DOWN));
     }
 
     @SubscribeEvent
     public static void onKeyReleasePre(ScreenEvent.KeyReleased.Pre event) {
-        if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_SHIFT)
-            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.SHIFT_UP));
+        if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_CONTROL)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.CTRL_UP));
     }
 }

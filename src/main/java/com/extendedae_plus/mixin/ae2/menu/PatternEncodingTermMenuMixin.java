@@ -10,7 +10,6 @@ import appeng.core.definitions.AEItems;
 import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
-import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.client.PatternEncodingTermMenuMixinHelper;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
@@ -19,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -31,16 +31,14 @@ public abstract class PatternEncodingTermMenuMixin implements PatternEncodingTer
     // 防止重复执行
     @Unique
     private boolean eap$blankAutoFilled = false;
-    @Shadow
+    @Shadow @Final
     private RestrictedInputSlot blankPatternSlot;
-    @Shadow
-    public EncodingMode mode;
     @Unique
-    public boolean isShiftPressed = false;
+    public boolean eaep$isCtrlPressed = false;
 
     @Unique
-    public void eaep$setShiftPressed(boolean press) {
-        isShiftPressed = press;
+    public void eaep$setCtrlPressed(boolean press) {
+        eaep$isCtrlPressed = press;
     }
 
     @Unique
@@ -165,8 +163,8 @@ public abstract class PatternEncodingTermMenuMixin implements PatternEncodingTer
     @Inject(method = "encode", at = @At("TAIL"))
     private void eaep$onEncode(CallbackInfo ci) {
         if (ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
-        if (!isShiftPressed) return;
-        isShiftPressed = false;
+        if (!eaep$isCtrlPressed) return;
+        eaep$isCtrlPressed = false;
         var self = (PatternEncodingTermMenu) (Object) this;
         PacketDistributor.sendToPlayer((ServerPlayer) self.getPlayer(), C2SPacketEncodeFinished.INSTANCE);
     }

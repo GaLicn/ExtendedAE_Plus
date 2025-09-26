@@ -19,6 +19,7 @@ public class GetKey {
     public static final String GUI = "gui";
     public static final String MESSAGE = "message";
     public static final String CONFIG = "config";
+    public static final String TOOLTIP = "tooltip";
 
     public GetKey() {
         this.keyType = "";
