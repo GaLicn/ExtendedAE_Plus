@@ -1,4 +1,4 @@
-package com.extendedae_plus.command;
+package com.extendedae_plus.util.command;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
