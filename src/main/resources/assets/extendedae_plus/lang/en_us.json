@@ -22,6 +22,9 @@
   "item.extendedae_plus.entity_speed_card.x4": "Entity Speed Card (x4)",
   "item.extendedae_plus.entity_speed_card.x8": "Entity Speed Card (x8)",
   "item.extendedae_plus.entity_speed_card.x16": "Entity Speed Card (x16)",
+  "item.extendedae_plus.infinity_biginteger_cell": "§4De§cvou§6rer §eof §aCo§bsmic §dSilence",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon1": "§6Through ninefold sacrifice, the Void echoes§r—§8Iava, Lord of the Void§r, bestows upon thee this artifact",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b—§4A §dUni§cverse §eWith§ain §6A §bSin§5gle §9Point",
   "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
   "tooltip.extendedae_plus.entity_speed_card.max": "Maximum Effect: %s Times",
 
