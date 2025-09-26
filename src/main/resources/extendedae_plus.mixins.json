@@ -3,6 +3,8 @@
   "package": "com.extendedae_plus.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "MixinAbstractContainerMenu",
+    "MixinPlayer",
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCPUClusterMixin",
     "ae2.EncodedPatternItemMixin",
