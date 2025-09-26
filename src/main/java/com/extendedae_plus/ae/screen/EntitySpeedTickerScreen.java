@@ -15,125 +15,111 @@ import com.extendedae_plus.util.PowerUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * 实体加速器界面，显示加速状态、卡数量、能耗和倍率信息。
+ */
 public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends UpgradeableScreen<C> {
-    private boolean eap$entitySpeedTickerEnabled = false;
-    private SettingToggleButton<YesNo> eap$entitySpeedTickerToggle;
+    private boolean eap$entitySpeedTickerEnabled = false;           // 本地缓存的加速开关状态
+    private final SettingToggleButton<YesNo> eap$entitySpeedTickerToggle; // 加速开关按钮
 
-    public EntitySpeedTickerScreen(
-            EntitySpeedTickerMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
+    /**
+     * 构造函数，初始化界面和控件。
+     * @param menu 实体加速器菜单
+     * @param playerInventory 玩家背包
+     * @param title 界面标题
+     * @param style 界面样式
+     */
+    public EntitySpeedTickerScreen(EntitySpeedTickerMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super((C) menu, playerInventory, title, style);
-        this.addToLeftToolbar(CommonButtons.togglePowerUnit());
+        this.addToLeftToolbar(CommonButtons.togglePowerUnit()); // 添加功率单位切换按钮
+        this.eap$entitySpeedTickerEnabled = menu.getAccelerateEnabled();
 
-        try{
-            this.eap$entitySpeedTickerEnabled = menu.getAccelerateEnabled();
-        }catch (Exception ignored){}
-
-        // 使用 SettingToggleButton<YesNo> 的外观（原版图标），但自定义悬停描述为“智能阻挡”
-        // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
+        // 初始化加速开关按钮
         eap$entitySpeedTickerToggle = new SettingToggleButton<>(
                 Settings.BLOCKING_MODE,
                 this.eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO,
-                (btn, backwards) -> {
-                    // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
-                    ModNetwork.CHANNEL.sendToServer(new ToggleEntityTickerC2SPacket());
-                }
+                (btn, backwards) ->
+                        ModNetwork.CHANNEL.sendToServer(new ToggleEntityTickerC2SPacket())
         ) {
             @Override
             public List<Component> getTooltipMessage() {
-                // 如果目标在黑名单中，直接显示已禁用的提示
-                try {
-                    if (menu != null && menu.targetBlacklisted) {
-                        var title = Component.literal("实体加速");
-                        var stateLine = Component.literal("已禁用（目标在黑名单）");
-                        return List.of(title, stateLine);
-                    }
-                } catch (Exception ignored) {}
-
+                if (menu.targetBlacklisted) {
+                    return List.of(
+                            Component.literal("实体加速"),
+                            Component.literal("已禁用（目标在黑名单）")
+                    );
+                }
                 boolean enabled = eap$entitySpeedTickerEnabled;
-                var title = Component.literal("实体加速");
-                var stateLine = enabled
-                        ? Component.literal("已启用: 将加速目标方块实体的tick")
-                        : Component.literal("已关闭: 不会对目标方块实体进行加速");
-                return List.of(title, stateLine);
+                return List.of(
+                        Component.literal("实体加速"),
+                        enabled ? Component.literal("已启用: 将加速目标方块实体的tick") :
+                                Component.literal("已关闭: 不会对目标方块实体进行加速")
+                );
             }
 
             @Override
             protected Icon getIcon() {
-                try {
-                    if (menu != null && menu.targetBlacklisted) {
-                        // 黑名单时显示禁用图标
-                        return Icon.INVALID;
-                    }
-                } catch (Exception ignored) {}
-
-                // 根据当前值显示不同图标（可按需替换 Icon 常量）
-                if (this.getCurrentValue() == YesNo.YES) {
-                    return Icon.VALID;
-                } else {
-                    return Icon.INVALID;
-                }
+                if (menu.targetBlacklisted) return Icon.INVALID;
+                return this.getCurrentValue() == YesNo.YES ? Icon.VALID : Icon.INVALID;
             }
         };
-        // 初始化后立刻对齐当前@GuiSync状态，避免首帧显示不一致
         eap$entitySpeedTickerToggle.set(this.eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO);
-
         this.addToLeftToolbar(eap$entitySpeedTickerToggle);
     }
 
+    /**
+     * 在渲染前更新界面状态。
+     */
     @Override
     protected void updateBeforeRender() {
         super.updateBeforeRender();
-
-        if (this.eap$entitySpeedTickerToggle != null) {
-            boolean desired = this.eap$entitySpeedTickerEnabled;
-            if (this.menu != null) {
-                desired = this.menu.getAccelerateEnabled();
-            }
-
-            this.eap$entitySpeedTickerEnabled = desired;
-            // 如果目标在黑名单中，禁用切换并强制显示为关闭
-            if (this.menu != null && this.menu.targetBlacklisted) {
-                this.eap$entitySpeedTickerToggle.set(YesNo.NO);
-                this.eap$entitySpeedTickerToggle.active = false;
-            } else {
-                this.eap$entitySpeedTickerToggle.set(desired ? YesNo.YES : YesNo.NO);
-                this.eap$entitySpeedTickerToggle.active =  true;
-            }
+        if (eap$entitySpeedTickerToggle != null && menu != null) {
+            eap$entitySpeedTickerEnabled = menu.getAccelerateEnabled();
+            // 如果目标在黑名单，禁用按钮并显示关闭状态
+            eap$entitySpeedTickerToggle.set(menu.targetBlacklisted ? YesNo.NO : (eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO));
+            eap$entitySpeedTickerToggle.active = !menu.targetBlacklisted;
         }
         textData();
     }
 
+    /**
+     * 刷新界面显示。
+     */
     public void refreshGui() {
         textData();
     }
 
+    /**
+     * 更新界面文本内容，包括加速状态、速度、能耗和倍率。
+     */
     private void textData() {
-        // 如果目标被黑名单禁止，则显示禁用状态并把数值显示为 0
+        Map<String, Component> textContents = new HashMap<>();
         if (getMenu().targetBlacklisted) {
-            setTextContent("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.enable"));
-            setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", 0));
-            setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(0.0, false)));
-            setTextContent("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(0.0)));
-            setTextContent("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", 0.0)));
-            return;
-        }
+            // 黑名单禁用时的默认显示
+            textContents.put("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.enable"));
+            textContents.put("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", 0));
+            textContents.put("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(0.0, false)));
+            textContents.put("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(0.0)));
+            textContents.put("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", 0.0)));
+        } else {
+            // 正常状态下显示实际数据
+            int energyCardCount = getMenu().energyCardCount;
+            double multiplier = getMenu().multiplier;
+            int effectiveSpeed = getMenu().effectiveSpeed;
+            double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
+            double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
 
-        int energyCardCount = getMenu().energyCardCount;
-        double multiplier = getMenu().multiplier;
-        int effectiveSpeed = getMenu().effectiveSpeed;
-        double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
-        double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
-
-        if (!getMenu().networkEnergySufficient) {
-            setTextContent("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient"));
-        }else {
-            setTextContent("enable", null);
+            textContents.put("enable", getMenu().networkEnergySufficient ? null :
+                    Component.translatable("screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient"));
+            textContents.put("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", effectiveSpeed));
+            textContents.put("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(finalPower, false)));
+            textContents.put("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(remainingRatio)));
+            textContents.put("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", multiplier)));
         }
-        setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", effectiveSpeed));
-        setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(finalPower, false)));
-        setTextContent("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(remainingRatio)));
-        setTextContent("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", multiplier)));
+        textContents.forEach(this::setTextContent);
     }
 }

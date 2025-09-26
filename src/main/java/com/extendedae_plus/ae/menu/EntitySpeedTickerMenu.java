@@ -18,140 +18,159 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
-// 实体加速器菜单，负责与客户端界面同步数据
+/**
+ * 实体加速器菜单，负责管理客户端与服务端的数据同步，处理加速卡、能量卡和目标方块的状态。
+ */
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
-    @GuiSync(716) public boolean accelerateEnabled = true;
-    // 已安装的实体加速卡数量（用于能耗计算）
-    @GuiSync(717) public int entitySpeedCardCount;
-    // 已安装的能量卡数量
-    @GuiSync(718) public int energyCardCount;
-    // 当前生效的配置倍率（从配置中读取并同步）
-    // 当前计算出的生效速度（product of multipliers），同步给客户端用于显示
-    @GuiSync(719) public int effectiveSpeed = 1;
-    @GuiSync(720) public double multiplier = 1.0;
-    @GuiSync(721) public boolean targetBlacklisted = false;
-    // 来自部件的网络能量充足提示（服务端设置，客户端用于显示警告）
-    @GuiSync(722) public boolean networkEnergySufficient = true;
+    @GuiSync(716) public boolean accelerateEnabled = true;       // 是否启用加速
+    @GuiSync(717) public int entitySpeedCardCount;               // 已安装的实体加速卡数量
+    @GuiSync(718) public int energyCardCount;                    // 已安装的能量卡数量
+    @GuiSync(719) public int effectiveSpeed = 1;                 // 当前生效的加速倍率
+    @GuiSync(720) public double multiplier = 1.0;                // 目标方块的配置倍率
+    @GuiSync(721) public boolean targetBlacklisted = false;      // 目标方块是否在黑名单中
+    @GuiSync(722) public boolean networkEnergySufficient = true; // 网络能量是否充足
 
+    /**
+     * 构造函数，初始化菜单并绑定部件。
+     * @param id 菜单ID
+     * @param ip 玩家背包
+     * @param host 关联的实体加速器部件
+     */
+    public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
+        super(ModMenuTypes.ENTITY_TICKER_MENU.get(), id, ip, host);
+        if (host != null) {
+            host.menu = this; // 绑定菜单到部件
+            this.accelerateEnabled = host.getAccelerateEnabled(); // 同步初始开关状态
+        }
+    }
+
+    /**
+     * 获取加速开关状态。
+     * @return 是否启用加速
+     */
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
     }
 
+    /**
+     * 设置加速开关状态，并同步到部件。
+     * @param enabled 是否启用加速
+     */
     public void setAccelerateEnabled(boolean enabled) {
         this.accelerateEnabled = enabled;
+        if (getHost() != null) {
+            getHost().setAccelerateEnabled(enabled); // 同步到部件
+        }
+        broadcastChanges(); // 广播状态变化
     }
 
     /**
-     * 从 Part 更新 networkEnergySufficient 的封装方法（由服务器调用）
-     * 该方法会更新 @GuiSync 字段并广播变化到客户端
+     * 更新网络能量充足状态并广播到客户端。
+     * @param sufficient 是否能量充足
      */
     public void setNetworkEnergySufficient(boolean sufficient) {
         this.networkEnergySufficient = sufficient;
-        // 触发一次数据广播，使客户端立即接收到最新状态
-        this.broadcastChanges();
+        broadcastChanges();
     }
 
-
-    // 构造方法，初始化菜单并与部件绑定
-    public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
-        super(ModMenuTypes.ENTITY_TICKER_MENU.get(), id, ip, host);
-        // 让部件持有当前菜单实例，便于通信
-        getHost().menu = this;
-        // 初始同步部件上的开关状态到菜单（服务器端构造时保证一致）
-        try {
-            this.accelerateEnabled = getHost().getAccelerateEnabled();
-        } catch (Exception ignored) {}
-    }
-
-    // 当服务器数据同步到客户端时调用
+    /**
+     * 服务端数据同步到客户端时调用，更新卡数量、目标状态和生效速度。
+     */
     @Override
     public void onServerDataSync() {
         super.onServerDataSync();
-        // 重新统计实体加速卡和能量卡数量
-        this.entitySpeedCardCount = this.getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
-        this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
-
-        // 计算当前面向方块的倍率（服务器端），并同步给客户端
-        double mult = 1.0;
-        try {
-            BlockEntity target = getHost().getLevel().getBlockEntity(getHost().getBlockEntity().getBlockPos().relative(getHost().getSide()));
-            if (target != null) {
-                String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
-                for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(List.of(ModConfig.INSTANCE.entityTickerMultipliers))) {
-                    if (me.pattern.matcher(blockId).matches()) {
-                        mult = Math.max(mult, me.multiplier);
-                    }
-                }
-            }
-        } catch (Exception ignored) {}
-        this.multiplier = mult;
-
-        // 检查目标是否在黑名单中，如果是则标记并将生效速度设为 0（服务器端计算）
-        boolean blacklisted = false;
-        try {
-            BlockEntity target = getHost().getLevel().getBlockEntity(getHost().getBlockEntity().getBlockPos().relative(getHost().getSide()));
-            if (target != null) {
-                String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
-                for (java.util.regex.Pattern p : ConfigParsingUtils.getCachedBlacklist(List.of(ModConfig.INSTANCE.entityTickerBlackList))) {
-                    if (p.matcher(blockId).matches()) {
-                        blacklisted = true;
-                        break;
-                    }
-                }
-            }
-        } catch (Exception ignored) {}
-        this.targetBlacklisted = blacklisted;
-
-        // 计算生效速度：如果被黑名单则为 0，否则进行正常计算（使用工具类从菜单直接计算 product with cap，最多 8 张）
-        if (this.targetBlacklisted) {
-            this.effectiveSpeed = 0;
-        } else {
-            this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
-        }
-
-        // 从部件同步网络能量充足状态：仅在服务器端从部件读取，客户端应使用由 @GuiSync 同步过来的值
-        try {
-            EntitySpeedTickerPart host = getHost();
-            if (host != null && !isClientSide()) {
-                this.networkEnergySufficient = host.isNetworkEnergySufficient();
-            }
-        } catch (Exception ignored) {}
-
-        // 如果在客户端，刷新界面
+        updateCardCounts();          // 更新卡数量
+        updateTargetStatus();        // 更新目标方块的黑名单和倍率
+        updateEffectiveSpeed();      // 计算生效速度
+        updateNetworkEnergyStatus(); // 同步能量状态
         if (isClientSide()) {
-            if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
-                screen.refreshGui();
-            }
+            refreshClientGui();      // 客户端刷新界面
         }
     }
 
-    // 当任意槽位发生变化时调用
+    /**
+     * 当槽位内容变化时调用，客户端更新卡数量和生效速度。
+     * @param slot 发生变化的槽位
+     */
     @Override
     public void onSlotChange(net.minecraft.world.inventory.Slot slot) {
         super.onSlotChange(slot);
-        // 客户端重新统计卡数量并刷新界面
         if (isClientSide()) {
-            this.entitySpeedCardCount = this.getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
-            this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
-            // 立即在客户端计算生效速度以便界面即时反馈（使用与服务端相同的工具方法，最多 8 张卡）
-            this.effectiveSpeed = (int) PowerUtils.computeProductWithCapFromMenu(this, 8);
-            if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
-                screen.refreshGui();
-            }
+            updateCardCounts();
+            updateEffectiveSpeed();
+            refreshClientGui();
         }
     }
 
+    /**
+     * 广播数据变化，清理未启用槽位的显示堆栈。
+     */
     @Override
-    public void broadcastChanges(){
-        // 遍历所有槽位，清理未启用但有物品显示的 OptionalFakeSlot
+    public void broadcastChanges() {
         for (Object o : this.slots) {
-            if (o instanceof OptionalFakeSlot fs) {
-                if (!fs.isSlotEnabled() && !fs.getDisplayStack().isEmpty()) {
-                    fs.clearStack();
-                }
+            if (o instanceof OptionalFakeSlot fs && !fs.isSlotEnabled() && !fs.getDisplayStack().isEmpty()) {
+                fs.clearStack(); // 清理未启用槽位的显示
             }
         }
-        // 调用标准的同步方法，通知监听者数据已更新
-        this.standardDetectAndSendChanges();
+        standardDetectAndSendChanges();
+    }
+
+    /**
+     * 更新加速卡和能量卡的数量。
+     */
+    private void updateCardCounts() {
+        this.entitySpeedCardCount = this.getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
+        this.energyCardCount = this.getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+    }
+
+    /**
+     * 更新目标方块的黑名单状态和倍率。
+     */
+    private void updateTargetStatus() {
+        BlockEntity target = getTargetBlockEntity();
+        if (target == null) {
+            this.multiplier = 1.0;
+            this.targetBlacklisted = false;
+            return;
+        }
+        String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
+        this.multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, List.of(ModConfig.INSTANCE.entityTickerMultipliers));
+        this.targetBlacklisted = ConfigParsingUtils.isBlockBlacklisted(blockId, List.of(ModConfig.INSTANCE.entityTickerBlackList));
+    }
+
+    /**
+     * 计算生效速度（考虑黑名单和卡数量）。
+     */
+    private void updateEffectiveSpeed() {
+        this.effectiveSpeed = targetBlacklisted ? 0 : (int) PowerUtils.computeProductWithCap(getUpgrades(), 8);
+    }
+
+    /**
+     * 同步网络能量状态（仅服务端）。
+     */
+    private void updateNetworkEnergyStatus() {
+        if (!isClientSide() && getHost() != null) {
+            this.networkEnergySufficient = getHost().isNetworkEnergySufficient();
+        }
+    }
+
+    /**
+     * 客户端刷新界面。
+     */
+    private void refreshClientGui() {
+        if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
+            screen.refreshGui();
+        }
+    }
+
+    /**
+     * 获取目标方块实体。
+     * @return 目标方块实体或 null
+     */
+    private BlockEntity getTargetBlockEntity() {
+        return getHost() != null ?
+                getHost().getLevel().getBlockEntity(
+                        getHost().getBlockEntity().getBlockPos().relative(getHost().getSide())
+                ) : null;
     }
 }
