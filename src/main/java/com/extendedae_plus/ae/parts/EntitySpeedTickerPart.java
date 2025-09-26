@@ -62,13 +62,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     public static final PartModel MODELS_ON;
     @PartModels
     public static final PartModel MODELS_HAS_CHANNEL;
-    
+
     static {
         MODELS_OFF = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_off"));
         MODELS_ON = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_on"));
         MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
     }
-    
+
     /**
      * 构造函数，初始化部件并设置网络节点属性
      * @param partItem 部件物品
@@ -84,16 +84,15 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     // 控制是否启用加速（默认启用）
     private boolean accelerateEnabled = true;
-    // 标记网络中是否能量不足（用于 GUI 提示）
-    private boolean networkEnergyInsufficient = true;
-
+    // 标记网络中能量是否充足（用于 GUI 提示，默认充足）
+    private boolean networkEnergySufficient = true;
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
     }
 
-    public boolean isNetworkEnergyInsufficient() {
-        return this.networkEnergyInsufficient;
+    public boolean isNetworkEnergySufficient() {
+        return this.networkEnergySufficient;
     }
 
     public void setAccelerateEnabled(boolean accelerateEnabled) {
@@ -101,15 +100,16 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     /**
-     * 更新网络能量不足标记并在菜单存在且状态变化时触发同步
-     * @param insufficient 是否能量不足
+     * 更新网络能量充足标记并在菜单存在且状态变化时触发同步
+     * @param sufficient 是否能量充足
      */
-    private void updateNetworkEnergyInsufficient(boolean insufficient) {
-        if (this.networkEnergyInsufficient == insufficient) return;
-        this.networkEnergyInsufficient = insufficient;
+    private void updateNetworkEnergySufficient(boolean sufficient) {
+        // 保持部件内部状态一致（部件为权威来源）
+        this.networkEnergySufficient = sufficient;
         if (this.menu != null) {
             try {
-                this.menu.broadcastChanges();
+                // 使用菜单的封装方法更新并广播，以保持封装性
+                this.menu.setNetworkEnergySufficient(sufficient);
             } catch (Exception ignored) {}
         }
     }
@@ -260,16 +260,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         double simulated = getMainNode().getGrid().getEnergyService()
                 .extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
         if (simulated < requiredPower) {
-            updateNetworkEnergyInsufficient(false);
+            updateNetworkEnergySufficient(false); // 能量不足
             return;
         }
 
         double extractedPower = getMainNode().getGrid().getEnergyService()
                 .extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
         if (extractedPower < requiredPower) {
-            updateNetworkEnergyInsufficient(false);
+            updateNetworkEnergySufficient(false); // 能量不足
             return;
         }
+        updateNetworkEnergySufficient(true); // 能量充足
 
         // 计算加速倍数：基于 2 的次方，并把 8 张映射到最大 1024x（2^10）
         // 已由 product 计算得到 speed；上面已在没有卡时提前返回

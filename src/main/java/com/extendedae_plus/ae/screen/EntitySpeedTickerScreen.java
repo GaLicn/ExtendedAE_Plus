@@ -126,9 +126,10 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
         double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
         double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
 
-        // 如果网络能量不足，优先显示警告信息并在能量值处显示 0
-        if (getMenu().networkEnergyInsufficient) {
+        if (!getMenu().networkEnergySufficient) {
             setTextContent("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient"));
+        }else {
+            setTextContent("enable", null);
         }
         setTextContent("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", effectiveSpeed));
         setTextContent("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(finalPower, false)));
