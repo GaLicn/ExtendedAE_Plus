@@ -5,8 +5,8 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.IAdvancedBlocking;
+import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Final;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(PatternProviderMenu.class)
-public abstract class PatternProviderMenuAdvancedMixin implements PatternProviderMenuAdvancedSync {
+public abstract class PatternProviderMenuAdvancedMixin implements IPatternProviderMenuAdvancedSync {
     @Final
     @Shadow(remap = false)
     protected PatternProviderLogic logic;
@@ -35,7 +35,7 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
         // 避免@Shadow父类方法，改用公共API：AEBaseMenu#isClientSide()
         if (!((AEBaseMenu) (Object) this).isClientSide()) {
             var l = this.logic;
-            if (l instanceof AdvancedBlockingHolder holder) {
+            if (l instanceof IAdvancedBlocking holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
             }
         }
@@ -46,7 +46,7 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     private void eap$initAdvancedSync_Public(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
-            if (l instanceof AdvancedBlockingHolder holder) {
+            if (l instanceof IAdvancedBlocking holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
             }
         } catch (Throwable ignored) {}
@@ -57,7 +57,7 @@ public abstract class PatternProviderMenuAdvancedMixin implements PatternProvide
     private void eap$initAdvancedSync_Protected(MenuType<? extends PatternProviderMenu> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
-            if (l instanceof AdvancedBlockingHolder holder) {
+            if (l instanceof IAdvancedBlocking holder) {
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
             }
         } catch (Throwable t) {

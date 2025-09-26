@@ -9,7 +9,7 @@ import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.core.localization.GuiText;
 import appeng.menu.SlotSemantics;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.bridge.IUpgradableMenu;
+import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;

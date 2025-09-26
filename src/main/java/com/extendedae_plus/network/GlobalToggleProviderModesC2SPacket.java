@@ -7,8 +7,8 @@ import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.api.IAdvancedBlocking;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -16,15 +16,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
  * C2S：全网批量切换样板供应器的三种模式：
  * - 阻挡模式（AE2 内置 BLOCKING_MODE 设置）
- * - 高级阻挡模式（AdvancedBlockingHolder mixin）
- * - 智能翻倍模式（SmartDoublingHolder mixin）
+ * - 高级阻挡模式（IAdvancedBlocking mixin）
+ * - 智能翻倍模式（ISmartDoublingHolder mixin）
  *
  * 负载为三个操作码（各1字节），分别对应：blocking、advancedBlocking、smartDoubling。
  */
@@ -173,14 +173,14 @@ public class GlobalToggleProviderModesC2SPacket {
             }
         }
         // 2) 高级阻挡（mixin 接口）
-        if (msg.opAdvancedBlocking != Op.NOOP && logic instanceof AdvancedBlockingHolder adv) {
+        if (msg.opAdvancedBlocking != Op.NOOP && logic instanceof IAdvancedBlocking adv) {
             boolean current = adv.eap$getAdvancedBlocking();
             boolean target = computeTarget(current, msg.opAdvancedBlocking);
             adv.eap$setAdvancedBlocking(target);
             changed = changed || (current != target);
         }
         // 3) 智能翻倍（mixin 接口）
-        if (msg.opSmartDoubling != Op.NOOP && logic instanceof SmartDoublingHolder sd) {
+        if (msg.opSmartDoubling != Op.NOOP && logic instanceof ISmartDoublingHolder sd) {
             boolean current = sd.eap$getSmartDoubling();
             boolean target = computeTarget(current, msg.opSmartDoubling);
             sd.eap$setSmartDoubling(target);

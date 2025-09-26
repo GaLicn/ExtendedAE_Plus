@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.Point;
 import appeng.client.gui.layout.SlotGridLayout;
+import com.extendedae_plus.api.IExPatternPageAccessor;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,7 +33,7 @@ public abstract class SlotGridLayoutMixin {
         // 读取实际当前页码：优先从 GUI accessor，其次反射容器，失败则为 0
         int currentPage = 0;
         try {
-            if (screen instanceof com.extendedae_plus.api.ExPatternPageAccessor accessor) {
+            if (screen instanceof IExPatternPageAccessor accessor) {
                 currentPage = accessor.eap$getCurrentPage();
             } else {
                 var menu = ((com.glodblock.github.extendedae.client.gui.GuiExPatternProvider) screen).getMenu();

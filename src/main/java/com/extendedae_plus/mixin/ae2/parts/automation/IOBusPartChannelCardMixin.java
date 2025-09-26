@@ -3,16 +3,14 @@ package com.extendedae_plus.mixin.ae2.parts.automation;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
-import appeng.helpers.InterfaceLogicHost;
 import appeng.parts.automation.IOBusPart;
-import net.minecraft.nbt.CompoundTag;
-import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 给 AE2 的 I/O 总线注入频道卡联动：在升级变更时读取频道并更新无线链接。
  */
 @Mixin(value = IOBusPart.class, remap = false)
-public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLinkBridge, IUpgradeableObject {
+public abstract class IOBusPartChannelCardMixin implements IInterfaceWirelessLinkBridge, IUpgradeableObject {
 
     @Unique
     private WirelessSlaveLink eap$link;

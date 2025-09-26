@@ -2,8 +2,8 @@ package com.extendedae_plus.mixin.advancedae.menu;
 
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
-import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
-import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AdvPatternProviderMenu.class)
-public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProviderMenuDoublingSync {
+public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternProviderMenuDoublingSync {
     @Final
     @Shadow(remap = false)
     protected AdvPatternProviderLogic logic;
@@ -31,7 +31,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProv
     private void eap$syncSmartDoubling(CallbackInfo ci) {
         if (!((AEBaseMenu) (Object) this).isClientSide()) {
             var l = this.logic;
-            if (l instanceof SmartDoublingHolder holder) {
+            if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
             }
         }
@@ -41,7 +41,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProv
     private void eap$initSmartSync_Public(int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
-            if (l instanceof SmartDoublingHolder holder) {
+            if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
             }
         } catch (Throwable ignored) {}
@@ -51,7 +51,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements PatternProv
     private void eap$initSmartSync_Protected(MenuType menuType, int id, Inventory playerInventory, AdvPatternProviderLogicHost host, CallbackInfo ci) {
         try {
             var l = this.logic;
-            if (l instanceof SmartDoublingHolder holder) {
+            if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
             }
         } catch (Throwable ignored) {}

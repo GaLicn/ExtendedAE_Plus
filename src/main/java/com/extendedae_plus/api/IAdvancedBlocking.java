@@ -1,6 +1,6 @@
 package com.extendedae_plus.api;
 
-public interface AdvancedBlockingHolder {
+public interface IAdvancedBlocking {
     boolean eap$getAdvancedBlocking();
     void eap$setAdvancedBlocking(boolean value);
 

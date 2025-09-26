@@ -3,8 +3,8 @@ package com.extendedae_plus.mixin.ae2.helpers;
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.helpers.patternprovider.PatternProviderLogic;
-import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicPatternsAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = PatternProviderLogic.class, remap = false)
-public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
+public class PatternProviderLogicDoublingMixin implements ISmartDoublingHolder {
     @Unique
     private static final String EAP_SMART_DOUBLING_KEY = "eap_smart_doubling";
 
@@ -35,7 +35,7 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
         try {
             var list = ((PatternProviderLogicPatternsAccessor) this).eap$patterns();
             for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof SmartDoublingAwarePattern aware) {
+                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
                     aware.eap$setAllowScaling(value);
                 }
             }
@@ -63,7 +63,7 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
             var list = ((PatternProviderLogicPatternsAccessor) this).eap$patterns();
             boolean allow = this.eap$smartDoubling;
             for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof SmartDoublingAwarePattern aware) {
+                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
                     aware.eap$setAllowScaling(allow);
                 }
             }

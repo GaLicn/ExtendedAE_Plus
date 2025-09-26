@@ -1,4 +1,4 @@
-package com.extendedae_plus.bridge;
+package com.extendedae_plus.api.bridge;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.menu.ToolboxMenu;

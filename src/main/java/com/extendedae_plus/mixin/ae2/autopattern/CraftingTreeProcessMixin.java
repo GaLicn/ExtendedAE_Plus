@@ -9,7 +9,7 @@ import appeng.crafting.CraftingTreeNode;
 import appeng.crafting.CraftingTreeProcess;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
-import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.util.PatternScaler;
@@ -41,7 +41,7 @@ public abstract class CraftingTreeProcessMixin {
             // 若传入的 details 已经是缩放样板，且原始样板不允许缩放，则直接解包为原始样板
             if (details instanceof ScaledProcessingPattern sp) {
                 var proc0 = sp.getOriginal();
-                if (proc0 instanceof SmartDoublingAwarePattern aware0 && !aware0.eap$allowScaling()) {
+                if (proc0 instanceof ISmartDoublingAwarePattern aware0 && !aware0.eap$allowScaling()) {
                     return proc0;
                 }
             }
@@ -49,7 +49,7 @@ public abstract class CraftingTreeProcessMixin {
             if (!(details instanceof AEProcessingPattern proc)) return original;
 
             // 若样板标记为不允许缩放，则直接跳过
-            if (proc instanceof SmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
+            if (proc instanceof ISmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
                 return original;
             }
 

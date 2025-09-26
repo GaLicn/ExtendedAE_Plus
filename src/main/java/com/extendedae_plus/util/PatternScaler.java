@@ -3,7 +3,7 @@ package com.extendedae_plus.util;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.api.SmartDoublingAwarePattern;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 
@@ -16,7 +16,7 @@ public final class PatternScaler {
         if (target == null) throw new IllegalArgumentException("target");
 
         // 双保险：若样板标记为不允许缩放，直接放弃缩放（返回 null 表示调用方应保持原样板）
-        if (base instanceof SmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
+        if (base instanceof ISmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
             return null;
         }
 

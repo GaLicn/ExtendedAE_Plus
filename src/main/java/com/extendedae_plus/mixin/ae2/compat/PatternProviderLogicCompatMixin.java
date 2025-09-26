@@ -8,7 +8,7 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
@@ -31,7 +31,7 @@ import java.util.List;
  * 根据appflux是否存在来决定是否实现IUpgradeableObject接口
  */
 @Mixin(value = PatternProviderLogic.class, priority = 500, remap = false)
-public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, InterfaceWirelessLinkBridge {
+public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, IInterfaceWirelessLinkBridge {
     
     @Unique
     private IUpgradeInventory eap$compatUpgrades = UpgradeInventories.empty();

@@ -3,7 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.api.IAdvancedBlocking;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,7 +36,7 @@ public class ToggleAdvancedBlockingC2SPacket {
             if (containerMenu instanceof PatternProviderMenu menu) {
                 var accessor = (PatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof AdvancedBlockingHolder holder) {
+                if (logic instanceof IAdvancedBlocking holder) {
                     boolean current = holder.eap$getAdvancedBlocking();
                     boolean next = !current;
                     holder.eap$setAdvancedBlocking(next);
@@ -48,7 +48,7 @@ public class ToggleAdvancedBlockingC2SPacket {
             }else if (containerMenu instanceof AdvPatternProviderMenu menu){
                 var accessor = (AdvPatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof AdvancedBlockingHolder holder) {
+                if (logic instanceof IAdvancedBlocking holder) {
                     boolean current = holder.eap$getAdvancedBlocking();
                     boolean next = !current;
                     holder.eap$setAdvancedBlocking(next);

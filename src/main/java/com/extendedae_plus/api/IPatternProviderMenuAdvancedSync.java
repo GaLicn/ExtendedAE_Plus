@@ -1,5 +1,5 @@
 package com.extendedae_plus.api;
 
-public interface PatternProviderMenuAdvancedSync {
+public interface IPatternProviderMenuAdvancedSync {
     boolean eap$getAdvancedBlockingSynced();
 }

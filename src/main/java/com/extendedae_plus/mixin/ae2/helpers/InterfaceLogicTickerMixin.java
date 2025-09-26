@@ -1,8 +1,7 @@
 package com.extendedae_plus.mixin.ae2.helpers;
 
 import appeng.helpers.InterfaceLogic;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,7 +28,7 @@ public abstract class InterfaceLogicTickerMixin {
             return;
         }
         
-        if (this$0 instanceof InterfaceWirelessLinkBridge bridge) {
+        if (this$0 instanceof IInterfaceWirelessLinkBridge bridge) {
             // 处理延迟初始化
             bridge.eap$handleDelayedInit();
         }
@@ -38,7 +37,7 @@ public abstract class InterfaceLogicTickerMixin {
     @Inject(method = "tickingRequest", at = @At("TAIL"), remap = false)
     private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
                                           CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
-        if (this$0 instanceof InterfaceWirelessLinkBridge bridge) {
+        if (this$0 instanceof IInterfaceWirelessLinkBridge bridge) {
             bridge.eap$updateWirelessLink();
         }
     }

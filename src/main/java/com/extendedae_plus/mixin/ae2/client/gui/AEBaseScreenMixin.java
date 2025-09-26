@@ -13,7 +13,7 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
 import appeng.menu.slot.AppEngSlot;
-import com.extendedae_plus.api.ExPatternPageAccessor;
+import com.extendedae_plus.api.IExPatternPageAccessor;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
@@ -274,7 +274,7 @@ public abstract class AEBaseScreenMixin {
 
             int cur = 1;
             int max = 1;
-            if (self instanceof ExPatternPageAccessor accessor) {
+            if (self instanceof IExPatternPageAccessor accessor) {
                 cur = Math.max(0, accessor.eap$getCurrentPage()) + 1;
             }
             try {
