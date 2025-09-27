@@ -343,7 +343,10 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             return 0;
         }
         // 不允许存储无限单元自身
-        if (what instanceof AEItemKey itemKey && itemKey.getItem() instanceof InfinityBigIntegerCellItem) {
+        if (what instanceof AEItemKey itemKey &&
+                itemKey.getItem() instanceof InfinityBigIntegerCellItem &&
+                itemKey.get(DataComponents.CUSTOM_DATA) != null
+        ) {
             return 0;
         }
 
