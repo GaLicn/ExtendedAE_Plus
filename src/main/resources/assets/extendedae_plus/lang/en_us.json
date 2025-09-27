@@ -28,10 +28,14 @@
   "item.extendedae_plus.infinity_biginteger_cell": "§4De§cvou§6rer §eof §aCo§bsmic §dSilence",
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon1": "§6Through ninefold sacrifice, the Void echoes§r—§8Iava, Lord of the Void§r, bestows upon thee this artifact",
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b—§4A §dUni§cverse §eWith§ain §6A §bSin§5gle §9Point",
+  "tooltip.extendedae_plus.encode_button_description": "\n§a[Ctrl] §7Upload patterns",
+
 
   "screen.extendedae_plus.title": "ExtendedAE Plus Config",
   "config.extendedae_plus": "ExtendedAE Plus",
   "config.extendedae_plus.override_ae2wt_picking": "Override AE2WT Picking",
+  "config.extendedae_plus.independence_uploading_button": "Independence Upload Button",
+
 
   "extendedae_plus.configuration.general": "General",
   "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Page Multiplier",

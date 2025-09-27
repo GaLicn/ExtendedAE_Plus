@@ -1,4 +1,4 @@
-package com.extendedae_plus.client.ui;
+package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;

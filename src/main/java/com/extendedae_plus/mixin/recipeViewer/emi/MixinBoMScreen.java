@@ -1,9 +1,9 @@
-package com.extendedae_plus.mixin.emi;
+package com.extendedae_plus.mixin.recipeViewer.emi;
 
 import appeng.integration.modules.emi.EmiStackHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.integration.emi.HandlerBoMRecipes;
-import com.extendedae_plus.integration.emi.PatternFillingHelper;
+import com.extendedae_plus.integration.RecipeViewer.emi.HandlerBoMRecipes;
+import com.extendedae_plus.integration.RecipeViewer.emi.PatternFillingHelper;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import dev.emi.emi.api.stack.EmiStack;

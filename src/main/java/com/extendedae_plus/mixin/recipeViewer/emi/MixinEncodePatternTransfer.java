@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.emi;
+package com.extendedae_plus.mixin.recipeViewer.emi;
 
 import appeng.integration.modules.emi.EmiEncodePatternHandler;
 import appeng.integration.modules.itemlists.EncodingHelper;

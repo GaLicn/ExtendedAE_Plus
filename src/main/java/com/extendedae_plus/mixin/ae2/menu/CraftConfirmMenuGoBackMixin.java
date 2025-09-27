@@ -1,12 +1,11 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
+import appeng.api.stacks.GenericStack;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
-import dev.emi.emi.api.stack.EmiIngredient;
-import dev.emi.emi.runtime.EmiFavorites;
+import com.extendedae_plus.integration.RecipeViewer.RecipeViewerHelper;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.crafting.Ingredient;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -45,12 +44,9 @@ public class CraftConfirmMenuGoBackMixin {
             for (CraftingPlanSummaryEntry entry : entries) {
                 if (entry.getMissingAmount() > 0) {
                     try {
-                        var display = entry.getWhat().wrapForDisplayOrFilter();
-                        if (display != null && !display.isEmpty()) {
-                            // wrapForDisplayOrFilter 返回 ItemStack
-//                            JeiRuntimeProxy.addBookmark(display);
-                            EmiFavorites.addFavorite(EmiIngredient.of(Ingredient.of(display)));
-                        }
+                        var display = entry.getWhat();
+                        if (display != null)
+                            RecipeViewerHelper.addFavorite(new GenericStack(display, entry.getMissingAmount()));
                     } catch (Throwable ignored) {}
                 }
             }

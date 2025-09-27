@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.ui.ProviderSelectScreen;
+import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;

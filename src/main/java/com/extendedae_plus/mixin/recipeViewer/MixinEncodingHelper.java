@@ -1,14 +1,10 @@
-package com.extendedae_plus.mixin.emi;
+package com.extendedae_plus.mixin.recipeViewer;
 
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.common.GridInventoryEntry;
 import appeng.menu.me.common.MEStorageMenu;
-import dev.emi.emi.runtime.EmiFavorites;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.material.Fluid;
+import com.extendedae_plus.integration.RecipeViewer.RecipeViewerHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,12 +21,9 @@ public class MixinEncodingHelper {
     private static void epp$addJeiIngredientPriorities(MEStorageMenu menu, Comparator<GridInventoryEntry> comparator, CallbackInfoReturnable<Map<AEKey, Integer>> cir){
         Map<AEKey, Integer> result = cir.getReturnValue();
         AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
-        EmiFavorites.favorites.forEach(favorite -> {
-            Object stack = favorite.getEmiStacks().getFirst().getKey();
-            if (stack instanceof Item item) result.put(AEItemKey.of(item), index.getAndDecrement());
-            else if (stack instanceof Fluid fluid) result.put(AEFluidKey.of(fluid), index.getAndDecrement());
+        RecipeViewerHelper.getFavorites().forEach(favorite -> {
+            if (favorite != null) result.put(favorite.what(), index.getAndDecrement());
         });
         cir.setReturnValue(result);
-
     }
 }

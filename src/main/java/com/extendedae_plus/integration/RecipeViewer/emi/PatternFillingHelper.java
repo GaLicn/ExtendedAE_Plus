@@ -1,4 +1,4 @@
-package com.extendedae_plus.integration.emi;
+package com.extendedae_plus.integration.RecipeViewer.emi;
 
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;

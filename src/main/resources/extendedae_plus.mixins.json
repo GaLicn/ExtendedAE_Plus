@@ -26,15 +26,17 @@
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
-    "emi.MixinEncodePatternTransfer",
-    "emi.MixinRecipeFillButton",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "recipeViewer.emi.MixinEncodePatternTransfer",
+    "recipeViewer.emi.MixinRecipeFillButton",
+    "recipeViewer.jei.accessor.AccessorBookmarkOverlay"
   ],
   "client": [
+    "ModelBakeryMixin",
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
@@ -52,14 +54,13 @@
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
-    "emi.MixinBoMScreen",
-    "emi.MixinEncodingHelper",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
-    "hooks.ModelBakeryMixin"
+    "recipeViewer.MixinEncodingHelper",
+    "recipeViewer.emi.MixinBoMScreen"
   ],
   "injectors": {
     "defaultRequire": 1

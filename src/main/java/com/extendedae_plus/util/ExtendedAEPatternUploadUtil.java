@@ -963,7 +963,7 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
         // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {

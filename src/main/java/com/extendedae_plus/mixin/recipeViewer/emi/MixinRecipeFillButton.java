@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.emi;
+package com.extendedae_plus.mixin.recipeViewer.emi;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import dev.emi.emi.api.widget.RecipeFillButtonWidget;

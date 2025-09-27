@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.hooks;
+package com.extendedae_plus.mixin;
 
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import net.minecraft.client.resources.model.ModelBakery;
