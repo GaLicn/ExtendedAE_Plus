@@ -3,7 +3,7 @@ package com.extendedae_plus.network.provider;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
@@ -31,7 +31,7 @@ public class ToggleSmartDoublingC2SPacket {
             if (player == null) return;
             var containerMenu = player.containerMenu;
             if (containerMenu instanceof PatternProviderMenu menu) {
-                var accessor = (PatternProviderMenuAdvancedAccessor) menu;
+                var accessor = (PatternProviderMenuAccessor) menu;
                 var logic = accessor.eap$logic();
                 if (logic instanceof ISmartDoublingHolder holder) {
                     boolean current = holder.eap$getSmartDoubling();

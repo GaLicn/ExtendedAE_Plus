@@ -16,11 +16,11 @@ import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPageAccessor;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
+import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,17 +39,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AEBaseScreen.class)
 public abstract class AEBaseScreenMixin {
-
-    @Unique
-    private ScreenStyle eap$getStyle(Object self) {
-        try {
-            var f = self.getClass().getDeclaredField("style");
-            f.setAccessible(true);
-            Object v = f.get(self);
-            if (v instanceof ScreenStyle s) return s;
-        } catch (Throwable ignored) {}
-        return null;
-    }
 
     /**
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+左键，
@@ -75,14 +64,9 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            // Debug: 标记一次发送
-            try {
-                LogUtils.getLogger().info("EAP: Send CraftingMonitorJumpC2SPacket: {}", key);
-            } catch (Throwable ignored2) {}
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorJumpC2SPacket(key));
             cir.setReturnValue(true);
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
     }
 
     /**
@@ -109,14 +93,9 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            // Debug: 标记一次发送（打开供应器UI）
-            try {
-                LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
-            } catch (Throwable ignored2) {}
             ModNetwork.CHANNEL.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
     }
 
     @Unique
@@ -289,7 +268,7 @@ public abstract class AEBaseScreenMixin {
 
             String pageText = "第" + cur + "页" + "/" + max + "页";
 
-            ScreenStyle style = eap$getStyle(self);
+            ScreenStyle style = ((AEBaseScreenAccessor<?>) this).eap$getStyle();
             int color = 0xFFFFFFFF;
             if (style != null) {
                 try {
@@ -307,10 +286,8 @@ public abstract class AEBaseScreenMixin {
                 guiGraphics.drawString(font, pageText, lineWidth + padding, 0, color, false);
                 guiGraphics.pose().popPose();
             }
-        } catch (Throwable ignored) {
-        }
+        } catch (Throwable ignored) {}
     }
-
 
     @Shadow(remap = false)
     protected void setTextContent(String id, Component content) {};

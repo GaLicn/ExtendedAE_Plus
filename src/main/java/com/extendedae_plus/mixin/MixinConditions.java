@@ -1,6 +1,5 @@
 package com.extendedae_plus.mixin;
 
-import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -27,7 +26,6 @@ public class MixinConditions implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         // 对于升级相关的Mixin，检查appflux是否存在
         if (mixinClassName.contains("PatternProviderMenuUpgradesMixin") ||
-            mixinClassName.contains("PatternProviderScreenUpgradesMixin") ||
             mixinClassName.contains("PatternProviderLogicUpgradesMixin") ||
             mixinClassName.contains("PatternProviderLogicHostUpgradesMixin")) {
             

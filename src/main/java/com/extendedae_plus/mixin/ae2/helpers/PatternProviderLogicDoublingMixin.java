@@ -5,7 +5,7 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicPatternsAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,7 +33,7 @@ public class PatternProviderLogicDoublingMixin implements ISmartDoublingHolder {
         this.eap$smartDoubling = value;
         // 立即将开关状态应用到当前 Provider 的样板上，避免等待下一次 updatePatterns
         try {
-            var list = ((PatternProviderLogicPatternsAccessor) this).eap$patterns();
+            var list = ((PatternProviderLogicAccessor) this).eap$patterns();
             for (IPatternDetails details : list) {
                 if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
                     aware.eap$setAllowScaling(value);
@@ -60,7 +60,7 @@ public class PatternProviderLogicDoublingMixin implements ISmartDoublingHolder {
     @Inject(method = "updatePatterns", at = @At("TAIL"))
     private void eap$applySmartDoublingToPatterns(CallbackInfo ci) {
         try {
-            var list = ((PatternProviderLogicPatternsAccessor) this).eap$patterns();
+            var list = ((PatternProviderLogicAccessor) this).eap$patterns();
             boolean allow = this.eap$smartDoubling;
             for (IPatternDetails details : list) {
                 if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {

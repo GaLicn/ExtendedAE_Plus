@@ -2,7 +2,6 @@ package com.extendedae_plus.compat;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
-import appeng.api.upgrades.UpgradeInventories;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
@@ -41,15 +40,7 @@ public class UpgradeSlotCompat {
      */
     public static boolean shouldEnableUpgradeSlots() {
         boolean appfluxExists = isAppfluxPresent();
-        ExtendedAELogger.LOGGER.info("ExtendedAE-appflux模组检测: {}", appfluxExists ? "存在" : "不存在");
-        
-        if (appfluxExists) {
-            ExtendedAELogger.LOGGER.info("检测到ExtendedAE-appflux模组，跳过我们的升级卡槽功能");
-            return false;
-        } else {
-            ExtendedAELogger.LOGGER.info("未检测到ExtendedAE-appflux模组，启用我们的升级卡槽功能");
-            return true;
-        }
+        return !appfluxExists;
     }
     
     /**
@@ -100,8 +91,6 @@ public class UpgradeSlotCompat {
                 if (menu instanceof IUpgradeableMenuCompat compatMenu) {
                     compatMenu.setCompatToolbox(toolbox);
                 }
-                
-                ExtendedAELogger.LOGGER.debug("成功为PatternProviderMenu初始化升级功能");
                 return true;
             }
         } catch (Exception e) {
@@ -147,8 +136,6 @@ public class UpgradeSlotCompat {
                         ToolboxPanel toolboxPanel = new ToolboxPanel(style, toolbox.getName());
                         addMethod.invoke(widgets, "toolbox", toolboxPanel);
                     }
-                    
-                    ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板");
                     return true;
                 } catch (NoSuchMethodException e) {
                     // 尝试其他可能的方法签名
@@ -173,8 +160,6 @@ public class UpgradeSlotCompat {
                             ToolboxPanel toolboxPanel = new ToolboxPanel(style, toolbox.getName());
                             putMethod.invoke(widgets, "toolbox", toolboxPanel);
                         }
-                        
-                        ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板（使用put方法）");
                         return true;
                     } catch (Exception e2) {
                         ExtendedAELogger.LOGGER.error("反射调用widgets方法失败", e2);
