@@ -4,12 +4,15 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.energy.IEnergyService;
+import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
+import appeng.api.storage.MEStorage;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
@@ -35,10 +38,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -254,21 +259,49 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     /**
-     * 提取网络能量并更新状态。
-     * @param requiredPower 所需能量
-     * @return 是否成功提取
+     * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
+     * @param requiredPower 所需能量（AE 单位）
+     * @return 是否成功提取足够能量
      */
     private boolean extractPower(double requiredPower) {
-        var energyService = getMainNode().getGrid().getEnergyService();
+        IEnergyService energyService = getMainNode().getGrid().getEnergyService();
+        MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
+        IActionSource source = IActionSource.ofMachine(this);
+
+        // 优先尝试提取 AE 能量
         double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated < requiredPower) {
-            updateNetworkEnergySufficient(false);
-            return false;
+        if (simulated >= requiredPower) {
+            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            boolean sufficient = extracted >= requiredPower;
+            updateNetworkEnergySufficient(sufficient);
+            return sufficient;
         }
-        double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-        boolean sufficient = extracted >= requiredPower;
-        updateNetworkEnergySufficient(sufficient);
-        return sufficient;
+        updateNetworkEnergySufficient(false);
+
+        // AE 能量不足，尝试从磁盘提取 FE 能量（如果 Applied Flux 存在）
+        if (ModList.get().isLoaded("appflux")) {
+            try {
+                Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+                Method extractMethod = helperClass.getMethod(
+                        "extractFE",
+                        IEnergyService.class,
+                        MEStorage.class,
+                        long.class,
+                        IActionSource.class
+                );
+                long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
+                long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
+                if (feExtracted >= feRequired) {
+                    updateNetworkEnergySufficient(true);
+                    return true;
+                }
+            } catch (Exception e) {
+                // 如果反射失败，视为 FE 不可用
+            }
+            updateNetworkEnergySufficient(false);
+        }
+
+        return false;
     }
 
     /**
