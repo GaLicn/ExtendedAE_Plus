@@ -1,10 +1,13 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.entitySpeed;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
  * 配置解析工具类：用于解析黑名单与倍率配置的字符串
  */
@@ -23,35 +26,32 @@ public final class ConfigParsingUtils {
 
     /**
      * 编译用户提供的匹配串。支持简单的 glob 语法（'*' 和 '?'）以及完整的正则表达式。
-     * 规则：
-     * - 如果字符串包含 ".*" 或其他正则元字符，优先尝试按正则编译（若失败则回退到 glob 转换）。
-     * - 否则若包含 '*' 或 '?'，将按 glob 语法转换为正则。
-     * - 否则按字面量匹配处理。
      */
     public static Pattern compilePattern(String raw) {
-        if (raw == null) throw new IllegalArgumentException("pattern is null");
+        if (raw == null || raw.trim().isEmpty()) {
+            LOGGER.warn("Invalid pattern: {}", raw);
+            throw new IllegalArgumentException("Pattern is null or empty");
+        }
         raw = raw.trim();
-        if (raw.isEmpty()) throw new IllegalArgumentException("pattern is empty");
 
-        // If it looks like regex (contains '.*' or regex metachar), try regex first
+        // Try regex first if it contains regex metacharacters
         if (raw.contains(".*") || raw.matches(".*[\\[\\(\\+\\{\\\\].*")) {
             try {
                 return Pattern.compile("^" + raw + "$");
-            } catch (PatternSyntaxException ignored) {
-                // fallback to glob below
+            } catch (PatternSyntaxException e) {
+                LOGGER.warn("Failed to compile regex pattern '{}': {}", raw, e.getMessage());
+                // Fallback to glob
             }
         }
 
-        // If contains glob chars, convert to regex
+        // Convert glob to regex
         if (raw.contains("*") || raw.contains("?")) {
-            StringBuilder sb = new StringBuilder();
-            sb.append('^');
+            StringBuilder sb = new StringBuilder("^");
             for (char c : raw.toCharArray()) {
                 switch (c) {
                     case '*': sb.append(".*"); break;
                     case '?': sb.append('.'); break;
                     default:
-                        // escape regex special chars
                         if (".\\+[]{}()^$|".indexOf(c) >= 0) {
                             sb.append('\\');
                         }
@@ -62,41 +62,71 @@ public final class ConfigParsingUtils {
             return Pattern.compile(sb.toString());
         }
 
-        // Otherwise treat as a literal (match exact)
+        // Literal match
         return Pattern.compile("^" + Pattern.quote(raw) + "$");
     }
 
     /**
-     * Parse multiplier entries like 'modid:block 2x' into MultiplierEntry objects.
-     * Accepts values with optional trailing 'x' (case-insensitive).
+     * 解析倍率条目，如 'modid:block 2x'。
      */
     public static MultiplierEntry parseMultiplierEntry(String entry) {
-        if (entry == null) return null;
+        if (entry == null || entry.trim().isEmpty()) return null;
         String[] parts = entry.trim().split("\\s+");
-        if (parts.length < 2) return null;
+        if (parts.length < 2) {
+            LOGGER.warn("Invalid multiplier entry: {}", entry);
+            return null;
+        }
         String key = parts[0];
         String val = parts[1].toLowerCase();
         if (val.endsWith("x")) val = val.substring(0, val.length() - 1);
-        double m;
+        double multiplier;
         try {
-            m = Double.parseDouble(val);
-        } catch (NumberFormatException ex) {
+            multiplier = Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Invalid multiplier value in '{}': {}", entry, val);
             return null;
         }
         try {
-            Pattern p = compilePattern(key);
-            return new MultiplierEntry(p, m);
+            Pattern pattern = compilePattern(key);
+            return new MultiplierEntry(pattern, multiplier);
         } catch (IllegalArgumentException e) {
+            LOGGER.warn("Failed to compile pattern in '{}': {}", entry, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 检查方块是否在黑名单中。
+     */
+    public static boolean isBlockBlacklisted(String blockId, List<? extends String> blacklist) {
+        if (blockId == null) return false;
+        return getCachedBlacklist(blacklist).stream().anyMatch(p -> p.matcher(blockId).matches());
+    }
+
+    /**
+     * 获取方块的倍率。
+     */
+    public static double getMultiplierForBlock(String blockId, List<? extends String> multipliers) {
+        if (blockId == null) return 1.0;
+        double maxMultiplier = 1.0;
+        for (MultiplierEntry me : getCachedMultiplierEntries(multipliers)) {
+            if (me.pattern.matcher(blockId).matches()) {
+                maxMultiplier = Math.max(maxMultiplier, me.multiplier);
+            }
+        }
+        return maxMultiplier;
     }
 
     public static List<Pattern> compilePatterns(List<? extends String> raw) {
         List<Pattern> out = new ArrayList<>();
         if (raw == null) return out;
         for (String s : raw) {
-            if (s == null || s.isBlank()) continue;
-            try { out.add(compilePattern(s)); } catch (IllegalArgumentException ignored) {}
+            if (s == null || s.trim().isEmpty()) continue;
+            try {
+                out.add(compilePattern(s));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Failed to compile pattern '{}': {}", s, e.getMessage());
+            }
         }
         return out;
     }
@@ -121,14 +151,11 @@ public final class ConfigParsingUtils {
     /**
      * 获取已解析并缓存的黑名单（线程安全、懒加载）。
      */
-    public static List<Pattern> getCachedBlacklist(java.util.List<? extends String> source) {
+    public static List<Pattern> getCachedBlacklist(List<? extends String> source) {
         List<String> normalized = normalizeSource(source);
-
-        // fast path: identical snapshot reference or equal contents
         if (cachedBlacklist != null && listEquals(cachedBlacklistSourceSnapshot, normalized)) {
             return Collections.unmodifiableList(cachedBlacklist);
         }
-
         synchronized (CACHE_LOCK) {
             if (cachedBlacklist == null || !listEquals(cachedBlacklistSourceSnapshot, normalized)) {
                 cachedBlacklist = compilePatterns(normalized);
@@ -141,13 +168,11 @@ public final class ConfigParsingUtils {
     /**
      * 获取已解析并缓存的倍率列表（线程安全、懒加载）。
      */
-    public static List<MultiplierEntry> getCachedMultiplierEntries(java.util.List<? extends String> source) {
+    public static List<MultiplierEntry> getCachedMultiplierEntries(List<? extends String> source) {
         List<String> normalized = normalizeSource(source);
-
         if (cachedMultiplierEntries != null && listEquals(cachedMultiplierSourceSnapshot, normalized)) {
             return Collections.unmodifiableList(cachedMultiplierEntries);
         }
-
         synchronized (CACHE_LOCK) {
             if (cachedMultiplierEntries == null || !listEquals(cachedMultiplierSourceSnapshot, normalized)) {
                 cachedMultiplierEntries = parseMultiplierList(normalized);
@@ -158,7 +183,7 @@ public final class ConfigParsingUtils {
     }
 
     // Normalize the incoming source list: trim entries, drop blanks, keep stable ordering
-    private static List<String> normalizeSource(java.util.List<? extends String> source) {
+    private static List<String> normalizeSource(List<? extends String> source) {
         List<String> out = new ArrayList<>();
         if (source == null) return out;
         for (String s : source) {
@@ -188,8 +213,8 @@ public final class ConfigParsingUtils {
         synchronized (CACHE_LOCK) {
             cachedBlacklist = null;
             cachedMultiplierEntries = null;
+            cachedBlacklistSourceSnapshot = null;
+            cachedMultiplierSourceSnapshot = null;
         }
     }
 }
-
-

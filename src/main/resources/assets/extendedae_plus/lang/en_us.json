@@ -94,6 +94,7 @@
   "extendedae_plus.configuration.entityTickerCost": "Entity Ticker Base Energy Cost",
   "extendedae_plus.configuration.entityTickerBlackList": "Entity Ticker Blacklist",
   "extendedae_plus.configuration.entityTickerMultipliers": "Entity Ticker Extra Cost Multipliers",
+  "extendedae_plus.configuration.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
 
   "extendedae_plus.configuration.state_on": "On",
   "extendedae_plus.configuration.state_off": "Off"

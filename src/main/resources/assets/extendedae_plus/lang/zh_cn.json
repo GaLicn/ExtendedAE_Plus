@@ -94,6 +94,7 @@
   "extendedae_plus.configuration.entityTickerCost": "实体加速器能量消耗基础值",
   "extendedae_plus.configuration.entityTickerBlackList": "实体加速器黑名单",
   "extendedae_plus.configuration.entityTickerMultipliers": "实体加速器额外消耗倍率",
+  "extendedae_plus.configuration.prioritizeDiskEnergy": "优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
 
   "extendedae_plus.configuration.state_on": "开",
   "extendedae_plus.configuration.state_off": "关"

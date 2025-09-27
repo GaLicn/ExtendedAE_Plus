@@ -13,6 +13,7 @@ public final class ModConfigs {
     public static final ModConfigSpec CLIENT_SPEC;
     public static final ModConfigSpec.BooleanValue SHOW_ENCODER_PATTERN_PLAYER;
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
+    public static final ModConfigSpec.BooleanValue PRIORITIZE_DISK_ENERGY;
 
     // Server 配置
     public static final ModConfigSpec SERVER_SPEC;
@@ -124,6 +125,12 @@ public final class ModConfigs {
                         () -> "",
                         obj -> obj instanceof String
                 );
+        PRIORITIZE_DISK_ENERGY = serverBuilder
+                .comment(
+                        "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+                        "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
+                )
+                .define("prioritizeDiskEnergy", true);
         serverBuilder.pop();
         SERVER_SPEC = serverBuilder.build();
     }
