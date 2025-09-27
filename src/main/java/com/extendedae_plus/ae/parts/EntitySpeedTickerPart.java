@@ -4,12 +4,15 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.energy.IEnergyService;
+import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
+import appeng.api.storage.MEStorage;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
@@ -22,9 +25,8 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.util.ConfigParsingUtils;
-import com.extendedae_plus.util.PowerUtils;
-import net.minecraft.core.BlockPos;
+import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
+import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -36,11 +38,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.regex.Pattern;
+import java.lang.reflect.Method;
 
 /**
  * EntitySpeedTickerPart 是一个可升级的 AE2 部件<p>
@@ -63,24 +65,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
     }
 
+    public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
+    private boolean accelerateEnabled = true;       // 是否启用加速
+    private boolean networkEnergySufficient = true; // 网络能量是否充足
+
+
     /**
-     * 构造函数，初始化部件并设置网络节点属性
+     * 构造函数，初始化部件并设置网络节点属性。
      * @param partItem 部件物品
      */
     public EntitySpeedTickerPart(IPartItem<?> partItem) {
         super(partItem);
-        // 设置网络节点属性：需要通道、空闲功耗为1，并注册为 IGridTickable 服务
         this.getMainNode()
                 .setFlags(GridFlags.REQUIRE_CHANNEL)
                 .setIdlePowerUsage(1)
                 .addService(IGridTickable.class, this);
     }
-    // 当前打开的菜单实例（如果有）
-    public EntitySpeedTickerMenu menu;
-    // 控制是否启用加速（默认启用）
-    private boolean accelerateEnabled = true;
-    // 标记网络中能量是否充足（用于 GUI 提示，默认充足）
-    private boolean networkEnergySufficient = true;
 
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
@@ -90,29 +90,33 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         return this.networkEnergySufficient;
     }
 
-    public void setAccelerateEnabled(boolean accelerateEnabled) {
-        this.accelerateEnabled = accelerateEnabled;
-    }
-
     /**
-     * 更新网络能量充足标记并在菜单存在且状态变化时触发同步
-     * @param sufficient 是否能量充足
+     * 设置加速开关状态并通知菜单。
+     * @param enabled 是否启用加速
      */
-    private void updateNetworkEnergySufficient(boolean sufficient) {
-        // 保持部件内部状态一致（部件为权威来源）
-        this.networkEnergySufficient = sufficient;
-        if (this.menu != null) {
-            try {
-                // 使用菜单的封装方法更新并广播，以保持封装性
-                this.menu.setNetworkEnergySufficient(sufficient);
-            } catch (Exception ignored) {}
+    public void setAccelerateEnabled(boolean enabled) {
+        this.accelerateEnabled = enabled;
+        if (menu != null) {
+            menu.setAccelerateEnabled(enabled);
         }
     }
 
     /**
-     * 获取当前状态下的静态模型（用于渲染）
+     * 更新网络能量充足状态并通知菜单。
+     * @param sufficient 是否能量充足
+     */
+    private void updateNetworkEnergySufficient(boolean sufficient) {
+        this.networkEnergySufficient = sufficient;
+        if (menu != null) {
+            menu.setNetworkEnergySufficient(sufficient);
+        }
+    }
+
+    /**
+     * 获取当前状态的渲染模型。
      * @return 当前状态的模型
      */
+    @Override
     public IPartModel getStaticModels() {
         if (this.isActive() && this.isPowered()) {
             return MODELS_HAS_CHANNEL;
@@ -196,87 +200,149 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     /**
-     * 以指定速度对目标方块实体进行 tick 操作
-     *
-     * @param blockEntity 需要被 tick 的方块实体
-     * @param <T>         方块实体类型
+     * 对目标方块实体执行加速 tick 操作。
+     * @param blockEntity 目标方块实体
+     * @param <T> 方块实体类型
      */
     private <T extends BlockEntity> void ticker(@NotNull T blockEntity) {
-        if (this.getGridNode() == null
-                || this.getMainNode() == null
-                || this.getMainNode().getGrid() == null) {
+        if (!isValidForTicking()) {
             return;
         }
 
-        // 获取方块实体的位置
-        BlockPos pos = blockEntity.getBlockPos();
-        if (blockEntity.getLevel() == null) return;
-
-
-        // 检查黑名单（支持通配符/正则）
         String blockId = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock()).toString();
-
-        // 使用工具类的缓存接口（工具类内部负责懒加载/线程安全）
-        List<Pattern> compiledBlacklist = ConfigParsingUtils.getCachedBlacklist(ModConfigs.ENTITY_TICKER_BLACK_LIST.get());
-        for (Pattern p : compiledBlacklist) {
-            if (p.matcher(blockId).matches()) return;
+        if (ConfigParsingUtils.isBlockBlacklisted(blockId, ModConfigs.ENTITY_TICKER_BLACK_LIST.get())) {
+            return;
         }
 
-        // 获取该方块实体的 Ticker
-        @SuppressWarnings("unchecked")
-        BlockEntityTicker<T> blockEntityTicker = this.getLevel()
-                .getBlockState(pos)
-                .getTicker(this.getLevel(), (BlockEntityType<T>) blockEntity.getType());
-        if (blockEntityTicker == null) return;
+        BlockEntityTicker<T> ticker = getTicker(blockEntity);
+        if (ticker == null) {
+            return;
+        }
 
-        // 使用集中定义的 CardDef 列表，支持以后添加等级或改倍率而无需修改此逻辑
-        int energyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+        int speed = calculateSpeed();
+        if (speed <= 0) {
+            return;
+        }
 
-        // 使用已注册的单一 Item 计算已安装卡数量（总计，用于能耗计算）
+        double requiredPower = calculateRequiredPower(speed, blockId);
+        if (!extractPower(requiredPower)) {
+            return;
+        }
+
+        performTicks(blockEntity, ticker, speed);
+    }
+
+    /**
+     * 检查网络节点是否有效。
+     * @return 是否可以执行 tick
+     */
+    private boolean isValidForTicking() {
+        return getGridNode() != null && getMainNode() != null && getMainNode().getGrid() != null;
+    }
+
+    /**
+     * 获取目标方块实体的 ticker。
+     * @param blockEntity 目标方块实体
+     * @return ticker 或 null
+     */
+    private <T extends BlockEntity> BlockEntityTicker<T> getTicker(T blockEntity) {
+        return getLevel().getBlockState(blockEntity.getBlockPos())
+                .getTicker(getLevel(), (BlockEntityType<T>) blockEntity.getType());
+    }
+
+    /**
+     * 计算加速倍率。
+     * @return 生效的加速倍率
+     */
+    private int calculateSpeed() {
         int entitySpeedCardCount = getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
+        if (entitySpeedCardCount <= 0) return 0;
+        return (int) PowerUtils.computeProductWithCap(getUpgrades(), 8);
+    }
 
-        // 使用工具方法从槽位直接计算乘积并应用 cap（最多 8 张卡）
-        long product = PowerUtils.computeProductWithCapFromStacks(this.getUpgrades(), 8);
+    /**
+     * 计算所需能量。
+     * @param speed 加速倍率
+     * @param blockId 目标方块ID
+     * @return 所需能量
+     */
+    private double calculateRequiredPower(int speed, String blockId) {
+        int energyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+        double multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, ModConfigs.ENTITY_TICKER_MULTIPLIERS.get());
+        return PowerUtils.computeFinalPowerForProduct(speed, energyCardCount) * multiplier;
+    }
 
-        // 如果没有任何实体加速卡，则不进行加速且不消耗额外能量（只保留部件的被动功耗）
-        if (entitySpeedCardCount <= 0) return;
+    /**
+     * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
+     * @param requiredPower 所需能量（AE 单位）
+     * @return 是否成功提取足够能量
+     */
+    private boolean extractPower(double requiredPower) {
+        IEnergyService energyService = getMainNode().getGrid().getEnergyService();
+        MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
+        IActionSource source = IActionSource.ofMachine(this);
+        boolean appFluxLoaded = ModList.get().isLoaded("appflux");
+        boolean preferDiskEnergy = appFluxLoaded && ModConfigs.PRIORITIZE_DISK_ENERGY.get();
 
-        // 计算本次 tick 所需能量：使用工具类根据 product 计算最终能耗
-        double requiredPower = PowerUtils.computeFinalPowerForProduct(product, energyCardCount);
-
-        int speed = (int) product;
-
-        double multiplier = 1.0;
-        for (ConfigParsingUtils.MultiplierEntry me : ConfigParsingUtils.getCachedMultiplierEntries(ModConfigs.ENTITY_TICKER_MULTIPLIERS.get())) {
-            if (me.pattern.matcher(blockId).matches()) {
-                multiplier = Math.max(multiplier, me.multiplier);
+        // 如果 appflux 存在且优先磁盘能量，尝试提取 FE 能量
+        if (appFluxLoaded && preferDiskEnergy) {
+            if (tryExtractFE(energyService, storage, requiredPower, source)) {
+                return true;
             }
         }
 
-        requiredPower *= multiplier;
-
-// 先模拟提取以检查网络中是否有足够能量，再真正抽取
-        double simulated = getMainNode().getGrid().getEnergyService()
-                .extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated < requiredPower) {
-            updateNetworkEnergySufficient(false); // 能量不足
-            return;
+        // 尝试提取 AE 能量（当 appflux 不存在、优先 AE 能量或 FE 提取失败时）
+        double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        if (simulated >= requiredPower) {
+            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            boolean sufficient = extracted >= requiredPower;
+            updateNetworkEnergySufficient(sufficient);
+            return sufficient;
         }
+        updateNetworkEnergySufficient(false);
 
-        double extractedPower = getMainNode().getGrid().getEnergyService()
-                .extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-        if (extractedPower < requiredPower) {
-            updateNetworkEnergySufficient(false); // 能量不足
-            return;
+        // 如果 appflux 存在且优先 AE 能量，尝试提取 FE 能量作为备用
+        if (appFluxLoaded && !preferDiskEnergy) {
+            return tryExtractFE(energyService, storage, requiredPower, source);
         }
-        updateNetworkEnergySufficient(true); // 能量充足
+        return false;
+    }
 
-        // 计算加速倍数：基于 2 的次方，并把 8 张映射到最大 1024x（2^10）
-        // 已由 product 计算得到 speed；上面已在没有卡时提前返回
+    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
+        try {
+            Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+            Method extractMethod = helperClass.getMethod(
+                    "extractFE",
+                    IEnergyService.class,
+                    MEStorage.class,
+                    long.class,
+                    IActionSource.class
+            );
+            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
+            long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
+            if (feExtracted >= feRequired) {
+                updateNetworkEnergySufficient(true);
+                return true;
+            }
+        } catch (Exception e) {
+            // 如果反射失败，视为 FE 不可用
+        }
+        updateNetworkEnergySufficient(false);
+        return false;
+    }
 
-        // 执行 tick 操作
+    /**
+     * 执行加速 tick 操作。
+     * @param blockEntity 目标方块实体
+     * @param ticker 方块实体 ticker
+     * @param speed 加速倍率
+     */
+    private <T extends BlockEntity> void performTicks(T blockEntity,
+                                                      BlockEntityTicker<T> ticker,
+                                                      int speed) {
+        // 执行 speed-1 次额外 tick（原生 tick 已包含 1 次）
         for (int i = 0; i < speed - 1; i++) {
-            blockEntityTicker.tick(
+            ticker.tick(
                     blockEntity.getLevel(),
                     blockEntity.getBlockPos(),
                     blockEntity.getBlockState(),

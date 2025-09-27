@@ -20,11 +20,4 @@ public class CraftingTreeNodeMixin {
         // push the requestedAmount before addContainerItems is called
        RequestedAmountHolder.push(requestedAmount);
     }
-
-    @Inject(method = "request(Lappeng/crafting/inv/CraftingSimulationState;JLappeng/api/stacks/KeyCounter;)V",
-            at = @At(value = "RETURN"))
-    private void clearRequestedAmountOnReturn(CraftingSimulationState inv, long requestedAmount, KeyCounter containerItems, CallbackInfo ci) {
-        // pop the pushed requested amount on return
-        RequestedAmountHolder.pop();
-    }
 }
