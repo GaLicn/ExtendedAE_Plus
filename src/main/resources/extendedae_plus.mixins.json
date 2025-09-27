@@ -2,6 +2,7 @@
   "required": true,
   "package": "com.extendedae_plus.mixin",
   "compatibilityLevel": "JAVA_21",
+  "plugin": "com.extendedae_plus.mixin.ExtendedAEPlusMixinPlugin",
   "mixins": [
     "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
     "advancedae.accessor.AdvPatternProviderLogicPatternsAccessor",
@@ -9,7 +10,6 @@
     "advancedae.helpers.AdvPatternProviderLogicAdvancedMixin",
     "advancedae.helpers.AdvPatternProviderLogicDoublingMixin",
     "advancedae.menu.AdvPatternProviderMenuAdvancedMixin",
-    "advancedae.menu.AdvPatternProviderMenuDoublingMixin",
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",

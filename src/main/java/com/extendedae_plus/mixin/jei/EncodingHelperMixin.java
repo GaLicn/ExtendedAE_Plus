@@ -27,8 +27,8 @@ public class EncodingHelperMixin {
     private static void epp$addJeiIngredientPriorities(MEStorageMenu menu, Comparator<GridInventoryEntry> comparator, CallbackInfoReturnable<Map<AEKey, Integer>> cir){
         Map<AEKey, Integer> result = cir.getReturnValue();
         AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
-        List<? extends ITypedIngredient<?>> list = JeiRuntimeProxy.getBookmarkList();
-        for (ITypedIngredient<?> ingredient : list) {
+        		List<? extends ITypedIngredient<?>> list = (List<? extends ITypedIngredient<?>>) (List<?>) JeiRuntimeProxy.getBookmarkList();
+		for (ITypedIngredient<?> ingredient : list) {
             ingredient.getIngredient(VanillaTypes.ITEM_STACK).ifPresent(itemStack -> result.put(AEItemKey.of(itemStack), index.getAndDecrement()));
             ingredient.getIngredient(NeoForgeTypes.FLUID_STACK).ifPresent(fluidStack -> result.put(AEFluidKey.of(fluidStack), index.getAndDecrement()));
         }

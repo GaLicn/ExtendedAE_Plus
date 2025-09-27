@@ -1,16 +1,5 @@
 package com.extendedae_plus.integration.jei;
 
-import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;
-import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.IIngredientType;
-import mezz.jei.api.ingredients.ITypedIngredient;
-import mezz.jei.api.neoforge.NeoForgeTypes;
-import mezz.jei.api.runtime.IBookmarkOverlay;
-import mezz.jei.api.runtime.IIngredientListOverlay;
-import mezz.jei.api.runtime.IJeiRuntime;
-import mezz.jei.gui.bookmarks.BookmarkList;
-import mezz.jei.gui.bookmarks.IngredientBookmark;
-import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -23,238 +12,248 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 线程安全地缓存并访问 JEI Runtime。
+ * 线程安全地缓存并访问 JEI Runtime（纯反射，避免在未安装 JEI 时触发类加载）。
  */
 public final class JeiRuntimeProxy {
-    private static volatile IJeiRuntime RUNTIME;
+	// 持有为 Object，避免类加载
+	private static volatile Object RUNTIME;
 
-    private JeiRuntimeProxy() {}
+	private JeiRuntimeProxy() {}
 
-    static void setRuntime(IJeiRuntime runtime) {
-        RUNTIME = runtime;
-    }
+	static void setRuntime(Object runtime) {
+		RUNTIME = runtime;
+	}
 
-    @Nullable
-    public static IJeiRuntime get() {
-        return RUNTIME;
-    }
+	@Nullable
+	public static Object get() {
+		return RUNTIME;
+	}
 
-    public static Optional<ITypedIngredient<?>> getIngredientUnderMouse() {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null) return Optional.empty();
+	public static Optional<?> getIngredientUnderMouse() {
+		Object rt = RUNTIME;
+		if (rt == null) return Optional.empty();
+		try {
+			Method getIngredientListOverlay = rt.getClass().getMethod("getIngredientListOverlay");
+			Object list = getIngredientListOverlay.invoke(rt);
+			if (list != null) {
+				Method m = list.getClass().getMethod("getIngredientUnderMouse");
+				Object opt = m.invoke(list);
+				if (opt instanceof Optional<?> o && o.isPresent()) return o;
+			}
+			Method getBookmarkOverlay = rt.getClass().getMethod("getBookmarkOverlay");
+			Object bm = getBookmarkOverlay.invoke(rt);
+			if (bm != null) {
+				Method m = bm.getClass().getMethod("getIngredientUnderMouse");
+				Object opt = m.invoke(bm);
+				if (opt instanceof Optional<?> o && o.isPresent()) return o;
+			}
+		} catch (Throwable ignored) {}
+		return Optional.empty();
+	}
 
-        IIngredientListOverlay list = rt.getIngredientListOverlay();
-        if (list != null) {
-            var ing = list.getIngredientUnderMouse();
-            if (ing.isPresent()) return ing.map(i -> (ITypedIngredient<?>) i);
-        }
-        IBookmarkOverlay bm = rt.getBookmarkOverlay();
-        if (bm != null) {
-            var ing = bm.getIngredientUnderMouse();
-            if (ing.isPresent()) return ing.map(i -> (ITypedIngredient<?>) i);
-        }
-        return Optional.empty();
-    }
+	public static Optional<?> getIngredientUnderMouse(double mouseX, double mouseY) {
+		Object rt = RUNTIME;
+		if (rt == null) return Optional.empty();
+		try {
+			Method getRecipesGui = rt.getClass().getMethod("getRecipesGui");
+			Object gui = getRecipesGui.invoke(rt);
+			if (gui == null) return Optional.empty();
+			Object ingredientManager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			Class<?> vanillaTypes = Class.forName("mezz.jei.api.constants.VanillaTypes");
+			Object itemType = vanillaTypes.getField("ITEM_STACK").get(null);
+			Method getUnder = gui.getClass().getMethod("getIngredientUnderMouse", itemType.getClass());
+			Object valueOpt = getUnder.invoke(gui, itemType);
+			if (!(valueOpt instanceof Optional<?> value) || value.isEmpty()) return Optional.empty();
+			Method createTyped = ingredientManager.getClass().getMethod("createTypedIngredient", itemType.getClass(), Object.class);
+			Object typedOpt = createTyped.invoke(ingredientManager, itemType, value.get());
+			return typedOpt instanceof Optional<?> o ? o : Optional.empty();
+		} catch (Throwable ignored) {}
+		return Optional.empty();
+	}
 
-    /**
-     * 在 JEI 配方界面区域内，基于屏幕坐标查询鼠标下的配料（优先物品，其次流体）。
-     */
-    public static Optional<ITypedIngredient<?>> getIngredientUnderMouse(double mouseX, double mouseY) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null || rt.getRecipesGui() == null) return Optional.empty();
+	public static boolean isJeiCheatModeEnabled() {
+		try {
+			Class<?> internal = Class.forName("mezz.jei.common.Internal");
+			Object toggle = internal.getMethod("getClientToggleState").invoke(null);
+			Method isCheat = toggle.getClass().getMethod("isCheatItemsEnabled");
+			Object r = isCheat.invoke(toggle);
+			return r instanceof Boolean b && b;
+		} catch (Throwable t) {
+			return false;
+		}
+	}
 
-        var ingredientManager = rt.getIngredientManager();
+	public static String getTypedIngredientDisplayName(Object typed) {
+		Object rt = RUNTIME;
+		if (rt == null || typed == null) return "";
+		try {
+			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			Method getType = typed.getClass().getMethod("getType");
+			Object type = getType.invoke(typed);
+			Method getHelper = manager.getClass().getMethod("getIngredientHelper", type.getClass());
+			Object helper = getHelper.invoke(manager, type);
+			Method getIngredient = typed.getClass().getMethod("getIngredient");
+			Object ingredient = getIngredient.invoke(typed);
+			Object display = helper.getClass().getMethod("getDisplayName", ingredient.getClass()).invoke(helper, ingredient);
+			if (display == null) return "";
+			try {
+				Class<?> comp = Class.forName("net.minecraft.network.chat.Component");
+				if (comp.isInstance(display)) {
+					Method getString = comp.getMethod("getString");
+					Object s = getString.invoke(display);
+					return s == null ? "" : s.toString();
+				}
+			} catch (Throwable ignored) {}
+			return display.toString();
+		} catch (Throwable ignored) {}
+		return "";
+	}
 
-        // 支持物品（通用且所有版本可用）。如需流体可后续按版本判断再扩展
-        var item = rt.getRecipesGui().getIngredientUnderMouse(VanillaTypes.ITEM_STACK)
-                .flatMap(v -> ingredientManager.createTypedIngredient(VanillaTypes.ITEM_STACK, v))
-                .map(x -> (ITypedIngredient<?>) x);
-        if (item.isPresent()) return Optional.of(item.get());
+	public static List<?> getBookmarkList() {
+		Object rt = RUNTIME;
+		if (rt == null) return Collections.emptyList();
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return Collections.emptyList();
+			try {
+				Field f = overlay.getClass().getDeclaredField("bookmarkList");
+				f.setAccessible(true);
+				Object list = f.get(overlay);
+				Method getElements = list.getClass().getMethod("getElements");
+				Object elements = getElements.invoke(list);
+				if (elements instanceof List<?> l) {
+					// map(IElement::getTypedIngredient)
+					try {
+						Method getTyped = Class.forName("mezz.jei.gui.overlay.elements.IElement").getMethod("getTypedIngredient");
+						return l.stream().map(e -> {
+							try { return getTyped.invoke(e); } catch (Throwable ignored) { return null; }
+						}).filter(x -> x != null).toList();
+					} catch (Throwable ignored) {}
+				}
+			} catch (Throwable ignored) {}
+		} catch (Throwable ignored) {}
+		return Collections.emptyList();
+	}
 
-        return Optional.empty();
-    }
+	public static void addBookmark(ItemStack stack) {
+		Object rt = RUNTIME;
+		if (rt == null || stack == null || stack.isEmpty()) return;
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return;
+			Field f = overlay.getClass().getDeclaredField("bookmarkList");
+			f.setAccessible(true);
+			Object list = f.get(overlay);
+			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			Object itemType = Class.forName("mezz.jei.api.constants.VanillaTypes").getField("ITEM_STACK").get(null);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", itemType.getClass(), Object.class);
+			Object typedOpt = createTyped.invoke(manager, itemType, stack);
+			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
+				Object typed = opt.get();
+				Class<?> ibCls = Class.forName("mezz.jei.gui.bookmarks.IngredientBookmark");
+				Method create = null;
+				for (Method m : ibCls.getMethods()) {
+					if (m.getName().equals("create") && m.getParameterCount() == 2) {
+						create = m; break;
+					}
+				}
+				if (create != null) {
+					Object bookmark = create.invoke(null, typed, manager);
+					list.getClass().getMethod("add", ibCls).invoke(list, bookmark);
+				}
+			}
+		} catch (Throwable ignored) {}
+	}
 
-    /**
-     * 检测 JEI 是否开启了作弊模式（给物品）。
-     * 使用 JEI 内部开关，若 JEI 未初始化或异常则返回 false。
-     */
-    public static boolean isJeiCheatModeEnabled() {
-        try {
-            // 使用完全限定名以避免在源码缺失时的编译依赖问题
-            return mezz.jei.common.Internal.getClientToggleState().isCheatItemsEnabled();
-        } catch (Throwable t) {
-            return false;
-        }
-    }
+	public static void addBookmark(FluidStack fluidStack) {
+		Object rt = RUNTIME;
+		if (rt == null) return;
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return;
+			Field f = overlay.getClass().getDeclaredField("bookmarkList");
+			f.setAccessible(true);
+			Object list = f.get(overlay);
+			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			Object fluidType = Class.forName("mezz.jei.api.neoforge.NeoForgeTypes").getField("FLUID_STACK").get(null);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", fluidType.getClass(), Object.class);
+			Object typedOpt = createTyped.invoke(manager, fluidType, fluidStack);
+			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
+				Object typed = opt.get();
+				Class<?> ibCls = Class.forName("mezz.jei.gui.bookmarks.IngredientBookmark");
+				Method create = null;
+				for (Method m : ibCls.getMethods()) {
+					if (m.getName().equals("create") && m.getParameterCount() == 2) { create = m; break; }
+				}
+				if (create != null) {
+					Object bookmark = create.invoke(null, typed, manager);
+					list.getClass().getMethod("add", ibCls).invoke(list, bookmark);
+				}
+			}
+		} catch (Throwable ignored) {}
+	}
 
-    /**
-     * 将文本写入 JEI 的搜索过滤框。
-     * 若 JEI runtime 不可用则静默返回。
-     */
-    public static void setIngredientFilterText(String text) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null) return;
-        try {
-            rt.getIngredientFilter().setFilterText(text == null ? "" : text);
-        } catch (Throwable ignored) {
-            // 兼容不同 JEI 版本或在启动阶段尚未就绪
-        }
-    }
+	public static void addBookmark(Object chemicalStack) {
+		if (!ModList.get().isLoaded("mekanism") && !ModList.get().isLoaded("appmek")) return;
+		Object rt = RUNTIME;
+		if (rt == null || chemicalStack == null) return;
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return;
+			Field f = overlay.getClass().getDeclaredField("bookmarkList");
+			f.setAccessible(true);
+			Object list = f.get(overlay);
+			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			String mekanismJeiClass = "mekanism.client.recipe_viewer.jei.MekanismJEI";
+			Class<?> jeiCls = Class.forName(mekanismJeiClass);
+			Field typeField = null;
+			if ("mekanism.api.chemical.ChemicalStack".equals(chemicalStack.getClass().getName())) {
+				typeField = jeiCls.getField("TYPE_CHEMICAL");
+			}
+			if (typeField == null) return;
+			Object typeConst = typeField.get(null);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", typeConst.getClass(), Object.class);
+			Object typedOpt = createTyped.invoke(manager, typeConst, chemicalStack);
+			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
+				Object typed = opt.get();
+				Class<?> ibCls = Class.forName("mezz.jei.gui.bookmarks.IngredientBookmark");
+				Method create = null;
+				for (Method m : ibCls.getMethods()) {
+					if (m.getName().equals("create") && m.getParameterCount() == 2) { create = m; break; }
+				}
+				if (create != null) {
+					Object bookmark = create.invoke(null, typed, manager);
+					list.getClass().getMethod("add", ibCls).invoke(list, bookmark);
+				}
+			}
+		} catch (Throwable ignored) {}
+	}
 
-    /**
-     * 通用获取 JEI 悬浮配料的本地化显示名称（适配物品/流体等）。
-     * 若无法安全获取，则返回空字符串。
-     */
-    public static <T> String getTypedIngredientDisplayName(ITypedIngredient<T> typed) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null || typed == null) return "";
-        try {
-            var manager = rt.getIngredientManager();
-            var helper = manager.getIngredientHelper(typed.getType());
-            // JEI 的 IIngredientHelper#getDisplayName 返回 Component（新版本）或 String（旧版本）
-            // 统一转为字符串，使用 toString() 兜底
-            Object display = helper.getDisplayName(typed.getIngredient());
-            if (display == null) return "";
-            // 新版：net.minecraft.network.chat.Component
-            if (display instanceof net.minecraft.network.chat.Component comp) {
-                String s = comp.getString();
-                return s == null ? "" : s;
-            }
-            String s = display.toString();
-            return s == null ? "" : s;
-        } catch (Throwable ignored) {
-        }
-        return "";
-    }
-
-    /**
-     * 获取JEI书签列表
-     */
-    public static List<? extends ITypedIngredient<?>> getBookmarkList() {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null) return Collections.emptyList();
-        IBookmarkOverlay bookmarkOverlay = rt.getBookmarkOverlay();
-        if (bookmarkOverlay instanceof BookmarkOverlayAccessor accessor) {
-            BookmarkList bookmarkList = accessor.eap$getBookmarkList();
-            return bookmarkList.getElements().stream().map(IElement::getTypedIngredient).toList();
-        }
-        return Collections.emptyList();
-    }
-
-    /**
-     * 将物品添加到 JEI 书签
-     */
-    public static void addBookmark(ItemStack stack) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null || stack == null || stack.isEmpty()) return;
-
-        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
-        if (overlay instanceof BookmarkOverlayAccessor accessor) {
-            BookmarkList list = accessor.eap$getBookmarkList();
-            try {
-                var typedOpt = rt.getIngredientManager().createTypedIngredient(VanillaTypes.ITEM_STACK, stack);
-                typedOpt.ifPresent(typed -> {
-                    IngredientBookmark<ItemStack> bookmark = IngredientBookmark.create(typed, rt.getIngredientManager());
-                    list.add(bookmark); // add 内部会自动保存到配置
-                });
-            } catch (Throwable ignored) {}
-        }
-    }
-
-    public static void addBookmark(FluidStack fluidStack) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null) return;
-
-        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
-        if (overlay instanceof BookmarkOverlayAccessor accessor) {
-            BookmarkList list = accessor.eap$getBookmarkList();
-            Optional<ITypedIngredient<FluidStack>> typedOpt = rt.getIngredientManager()
-                    .createTypedIngredient(NeoForgeTypes.FLUID_STACK, fluidStack);
-            typedOpt.ifPresent(typed -> {
-                IngredientBookmark<FluidStack> bookmark = IngredientBookmark.create(typed, rt.getIngredientManager());
-                list.add(bookmark); // add 内部会自动保存到配置
-            });
-        }
-    }
-
-    /**
-     * 如果存在 Mekanism/appmek，则将 Mekanism 化学堆栈添加到 JEI 书签。
-     */
-    public static void addBookmark(Object chemicalStack) {
-        if (!ModList.get().isLoaded("mekanism") && !ModList.get().isLoaded("appmek")) return;
-
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null) return;
-
-        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
-        if (overlay instanceof BookmarkOverlayAccessor accessor) {
-            BookmarkList list = accessor.eap$getBookmarkList();
-            try {
-                if (chemicalStack == null) return;
-
-                // Determine Mekanism JEI ingredient type constant by runtime class name
-                String clsName = chemicalStack.getClass().getName();
-                String mekanismJeiClass = "mekanism.client.recipe_viewer.jei.MekanismJEI";
-                Class<?> jeiCls = Class.forName(mekanismJeiClass);
-                Field typeField = null;
-                if ("mekanism.api.chemical.ChemicalStack".equals(clsName)) {
-                    typeField = jeiCls.getField("TYPE_CHEMICAL");
-                }
-                if (typeField == null) return;
-                Object typeConst = typeField.get(null);
-
-                // Use ingredient manager reflectively to create a typed ingredient
-                Object ingredientManager = rt.getIngredientManager();
-                Method createTypedIngredient = ingredientManager.getClass().getMethod("createTypedIngredient", IIngredientType.class, Object.class);
-                Object opt = createTypedIngredient.invoke(ingredientManager, typeConst, chemicalStack);
-                if (!(opt instanceof Optional<?> typedOpt)) return;
-                if (typedOpt.isPresent()) {
-                    Object typed = typedOpt.get();
-                    // Find a compatible static create(...) method on IngredientBookmark where
-                    // the second parameter is assignable from the actual ingredientManager instance.
-                    Method createMethod = null;
-                    for (Method m : IngredientBookmark.class.getMethods()) {
-                        if (!m.getName().equals("create")) continue;
-                        Class<?>[] params = m.getParameterTypes();
-                        if (params.length != 2) continue;
-                        // first param should accept the typed ingredient
-                        boolean firstOk = params[0].isAssignableFrom(typed.getClass()) || params[0].isAssignableFrom(ITypedIngredient.class);
-                        boolean secondOk = params[1].isAssignableFrom(ingredientManager.getClass());
-                        if (firstOk && secondOk) {
-                            createMethod = m;
-                            break;
-                        }
-                    }
-                    if (createMethod != null) {
-                        Object bookmark = createMethod.invoke(null, typed, ingredientManager);
-                        if (bookmark != null) {
-                            list.add((IngredientBookmark) bookmark);
-                        }
-                    }
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * 从 JEI 书签移除物品
-     */
-    public static void removeBookmark(ItemStack stack) {
-        IJeiRuntime rt = RUNTIME;
-        if (rt == null || stack == null || stack.isEmpty()) return;
-
-        IBookmarkOverlay overlay = rt.getBookmarkOverlay();
-        if (overlay instanceof BookmarkOverlayAccessor accessor) {
-            BookmarkList list = accessor.eap$getBookmarkList();
-            try {
-                var typedOpt = rt.getIngredientManager().createTypedIngredient(VanillaTypes.ITEM_STACK, stack);
-                typedOpt.ifPresent(typed -> {
-                    IngredientBookmark<ItemStack> bookmark = IngredientBookmark.create(typed, rt.getIngredientManager());
-                    list.remove(bookmark);
-                });
-            } catch (Throwable ignored) {}
-        }
-    }
+	public static void removeBookmark(ItemStack stack) {
+		Object rt = RUNTIME;
+		if (rt == null || stack == null || stack.isEmpty()) return;
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return;
+			Field f = overlay.getClass().getDeclaredField("bookmarkList");
+			f.setAccessible(true);
+			Object list = f.get(overlay);
+			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
+			Object itemType = Class.forName("mezz.jei.api.constants.VanillaTypes").getField("ITEM_STACK").get(null);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", itemType.getClass(), Object.class);
+			Object typedOpt = createTyped.invoke(manager, itemType, stack);
+			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
+				Object typed = opt.get();
+				Class<?> ibCls = Class.forName("mezz.jei.gui.bookmarks.IngredientBookmark");
+				Method create = null;
+				for (Method m : ibCls.getMethods()) {
+					if (m.getName().equals("create") && m.getParameterCount() == 2) { create = m; break; }
+				}
+				if (create != null) {
+					Object bookmark = create.invoke(null, typed, manager);
+					list.getClass().getMethod("remove", ibCls).invoke(list, bookmark);
+				}
+			}
+		} catch (Throwable ignored) {}
+	}
 }
