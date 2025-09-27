@@ -31,6 +31,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.createEntitySpeedCardStack((byte) 4));
                         output.accept(ModItems.createEntitySpeedCardStack((byte) 8));
                         output.accept(ModItems.createEntitySpeedCardStack((byte) 16));
+
+                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
                     })
                     .build());
 

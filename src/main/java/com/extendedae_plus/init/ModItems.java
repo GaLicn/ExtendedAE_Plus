@@ -4,6 +4,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.ae.items.ChannelCardItem;
+import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -68,6 +69,11 @@ public final class ModItems {
             "channel_card",
             () -> new ChannelCardItem(new Item.Properties())
     );
+
+    public static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+            "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
+    );
+
 
     /**
      * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
