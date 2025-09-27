@@ -27,6 +27,12 @@
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b—§4A §dUni§cverse §eWith§ain §6A §bSin§5gle §9Point",
   "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
   "tooltip.extendedae_plus.entity_speed_card.max": "Max effective: %s x",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip": "Assembler Matrix Upload Core",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload": "Upload to Assembler Matrix",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_success": "Pattern uploaded to Assembler Matrix",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_not_crafting": "Only crafting patterns supported, processing patterns ignored",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_no_matrix": "No formed Assembler Matrix found in network",
+  "block.extendedae_plus.assembler_matrix_upload_core.tooltip.upload_fail_full": "Assembler Matrix pattern storage full or cannot insert",
 
   "block.extendedae_plus.wireless_transceiver": "Wireless Transceiver",
   "block.extendedae_plus.4x_crafting_accelerator": "4x Crafting Accelerator",
@@ -88,11 +94,13 @@
   "config.extendedae_plus.option.entityTickerBlackList": "Entity Ticker Blacklist",
   "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold",
-  "block.extendedae_plus.assembler_matrix_upload_core": "Assembler Matrix Upload Core",
+  "config.extendedae_plus.option.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
 
   "item.extendedae_plus.channel_card": "Channel Card",
   "item.extendedae_plus.channel_card.channel": "Frequency: %s",
   "item.extendedae_plus.channel_card.channel.unset": "Frequency: Unset",
   "item.extendedae_plus.channel_card.set": "Frequency set to: %s",
+  "group.pattern_provider.name": "Pattern Provider",
+  "group.entity_ticker.name": "Entity Accelerator",
   "group.storage.name": "StorageBus"
 }

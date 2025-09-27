@@ -267,8 +267,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         IEnergyService energyService = getMainNode().getGrid().getEnergyService();
         MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
         IActionSource source = IActionSource.ofMachine(this);
+        boolean appFluxLoaded = ModList.get().isLoaded("appflux");
+        boolean preferDiskEnergy = appFluxLoaded && ModConfig.INSTANCE.prioritizeDiskEnergy;
 
-        // 优先尝试提取 AE 能量
+        // 如果 appflux 存在且优先磁盘能量，尝试提取 FE 能量
+        if (appFluxLoaded && preferDiskEnergy) {
+            if (tryExtractFE(energyService, storage, requiredPower, source)) {
+                return true;
+            }
+        }
+
+        // 尝试提取 AE 能量（当 appflux 不存在、优先 AE 能量或 FE 提取失败时）
         double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
         if (simulated >= requiredPower) {
             double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
@@ -278,29 +287,33 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         }
         updateNetworkEnergySufficient(false);
 
-        // AE 能量不足，尝试从磁盘提取 FE 能量（如果 Applied Flux 存在）
-        if (ModList.get().isLoaded("appflux")) {
-            try {
-                Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
-                Method extractMethod = helperClass.getMethod(
-                        "extractFE",
-                        IEnergyService.class,
-                        MEStorage.class,
-                        long.class,
-                        IActionSource.class
-                );
-                long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
-                long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
-                if (feExtracted >= feRequired) {
-                    updateNetworkEnergySufficient(true);
-                    return true;
-                }
-            } catch (Exception e) {
-                // 如果反射失败，视为 FE 不可用
-            }
-            updateNetworkEnergySufficient(false);
+        // 如果 appflux 存在且优先 AE 能量，尝试提取 FE 能量作为备用
+        if (appFluxLoaded && !preferDiskEnergy) {
+            return tryExtractFE(energyService, storage, requiredPower, source);
         }
+        return false;
+    }
 
+    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
+        try {
+            Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+            Method extractMethod = helperClass.getMethod(
+                    "extractFE",
+                    IEnergyService.class,
+                    MEStorage.class,
+                    long.class,
+                    IActionSource.class
+            );
+            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
+            long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
+            if (feExtracted >= feRequired) {
+                updateNetworkEnergySufficient(true);
+                return true;
+            }
+        } catch (Exception e) {
+            // 如果反射失败，视为 FE 不可用
+        }
+        updateNetworkEnergySufficient(false);
         return false;
     }
 
