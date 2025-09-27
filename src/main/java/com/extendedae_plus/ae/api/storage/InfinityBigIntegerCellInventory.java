@@ -326,8 +326,11 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (amount == 0){
             return 0;
         }
-        // 不允许存储无限单元自身
-        if (what instanceof AEItemKey itemKey && itemKey.getItem() instanceof InfinityBigIntegerCellItem) {
+        // 不允许存储有物品的无限单元
+        if (what instanceof AEItemKey itemKey &&
+                itemKey.getItem() instanceof InfinityBigIntegerCellItem &&
+                itemKey.hasTag()
+        ) {
             return 0;
         }
 
