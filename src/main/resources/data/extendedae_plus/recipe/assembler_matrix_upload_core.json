@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "extendedae:assembler_matrix_wall" },
+    { "item": "minecraft:lever" }
+  ],
+  "result": { "id": "extendedae_plus:assembler_matrix_upload_core", "count": 1 }
+} 

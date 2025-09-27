@@ -24,7 +24,7 @@ license="All Rights Reserved"
 modId="extendedae_plus" #mandatory
 
 # The version number of the mod
-version="1.21.1-1.4.4" #mandatory
+version="1.21.1-1.4.3" #mandatory
 
 # A display name for the mod
 displayName="ExtendedAE-Plus" #mandatory

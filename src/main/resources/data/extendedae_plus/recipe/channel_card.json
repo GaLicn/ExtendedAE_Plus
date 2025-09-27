@@ -4,5 +4,5 @@
     { "item": "ae2:advanced_card" },
     { "item": "extendedae_plus:wireless_transceiver" }
   ],
-  "result": { "item": "extendedae_plus:channel_card", "count": 1 }
-}
+  "result": { "id": "extendedae_plus:channel_card", "count": 1 }
+} 
