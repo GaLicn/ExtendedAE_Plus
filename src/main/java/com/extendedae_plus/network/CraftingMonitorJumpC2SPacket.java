@@ -28,6 +28,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,6 +89,7 @@ public record CraftingMonitorJumpC2SPacket(AEKey what) implements CustomPacketPa
             List<Direction> delayedBlocks = new ArrayList<>();
 
             // 尝试对邻居打开 GUI（优先通过 MenuProvider）
+            // 这功能真是太™有效了, 是个大点的mod就不用menuProvider😅
             for (Direction dir : host.getTargets()) {
                 BlockPos targetPos = pbe.getBlockPos().relative(dir);
 
@@ -104,14 +107,25 @@ public record CraftingMonitorJumpC2SPacket(AEKey what) implements CustomPacketPa
                 }
 
                 // awc这AE怎么这么坏啊😭😭😭
-                if (!(tbe instanceof AEBaseBlockEntity)) continue;
-                switch (tbe) {
-                    case InterfaceBlockEntity ignored -> delayedBlocks.addFirst(dir);
-                    case PatternProviderBlockEntity ignored -> delayedBlocks.addLast(dir);
-                    case CableBusBlockEntity bus when bus.getCableBus().getPart(dir.getOpposite()) != null ->
-                            delayedBlocks.addFirst(dir);
-                    default -> tState.useWithoutItem(level, player,
-                            new BlockHitResult(player.position(), dir.getOpposite(), targetPos, false));
+                if (tbe instanceof AEBaseBlockEntity) {
+                    switch (tbe) {
+                        case InterfaceBlockEntity ignored -> delayedBlocks.addFirst(dir);
+                        case PatternProviderBlockEntity ignored -> delayedBlocks.addLast(dir);
+                        case CableBusBlockEntity bus when bus.getCableBus().getPart(dir.getOpposite()) != null ->
+                                delayedBlocks.addFirst(dir);
+                        default -> tState.useWithoutItem(level, player,
+                                new BlockHitResult(player.position(), dir.getOpposite(), targetPos, false));
+                    }
+                }
+
+                if (tbe == null) continue;
+                String blockEntityClassName = tbe.getClass().getName().toLowerCase();
+                if (blockEntityClassName.contains("mekanism") && blockEntityClassName.contains("tile")) {
+                    try {
+                        Method methodOpenGui = tbe.getClass().getMethod("openGui", Player.class);
+                        methodOpenGui.invoke(tbe, player);
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {}
+                    return;
                 }
             }
             if (delayedBlocks.isEmpty()) return;

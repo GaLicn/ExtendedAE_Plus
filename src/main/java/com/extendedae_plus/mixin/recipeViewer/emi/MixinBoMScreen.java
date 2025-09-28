@@ -4,7 +4,7 @@ import appeng.integration.modules.emi.EmiStackHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.integration.RecipeViewer.emi.HandlerBoMRecipes;
 import com.extendedae_plus.integration.RecipeViewer.emi.PatternFillingHelper;
-import com.extendedae_plus.network.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.RequestUploadingC2SPacket;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.bom.BoM;
@@ -87,7 +87,7 @@ public abstract class MixinBoMScreen {
                             ExtendedAEPatternUploadUtil.addLastProcessingNameList(
                                     node.recipe.getId().toString().split("/")[0]);
 
-                            PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
+                            PacketDistributor.sendToServer(RequestUploadingC2SPacket.INSTANCE);
                         }
                         Minecraft.getInstance().player.playSound(SoundEvents.UI_BUTTON_CLICK.value());
                     }

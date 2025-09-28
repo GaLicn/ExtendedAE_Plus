@@ -56,7 +56,7 @@ public abstract class MEStorageMenuMixin {
                             placeholder = serverValue;
                         }
                         // 使用辅助方法，统一进行受检的泛型转换后再注册
-                        eap$registerSettingCompat(client, setting, placeholder);
+                        eap$registerSettingCompact(client, setting, placeholder);
                     } catch (Throwable ignore) {
                         // 防御：不让异常影响主流程
                     }
@@ -88,7 +88,7 @@ public abstract class MEStorageMenuMixin {
 
     @Unique
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static <T extends Enum<T>> void eap$registerSettingCompat(
+    private static <T extends Enum<T>> void eap$registerSettingCompact(
             IConfigManager client, Setting<?> setting, Object value) {
         // 前置校验：仅处理枚举类型的设置值
         if (!(value instanceof Enum<?>)) {

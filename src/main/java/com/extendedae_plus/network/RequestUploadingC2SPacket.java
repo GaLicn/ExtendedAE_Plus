@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -18,26 +19,33 @@ import java.util.List;
 /**
  * C2S: 请求当前终端可见的样板供应器列表（用于弹窗选择）。
  */
-public class RequestProvidersListC2SPacket implements CustomPacketPayload {
-    public static final Type<RequestProvidersListC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
+public class RequestUploadingC2SPacket implements CustomPacketPayload {
+    public static final Type<RequestUploadingC2SPacket> TYPE = new Type<>(
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_uploading"));
 
-    public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket();
+    public static final RequestUploadingC2SPacket INSTANCE = new RequestUploadingC2SPacket();
 
-    public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC =
+    public static final StreamCodec<FriendlyByteBuf, RequestUploadingC2SPacket> STREAM_CODEC =
             StreamCodec.unit(INSTANCE);
 
-    public RequestProvidersListC2SPacket() {}
+    public RequestUploadingC2SPacket() {}
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
-    public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
+    public static void handle(final RequestUploadingC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
+
+            if (encMenu.getMode() != EncodingMode.PROCESSING) {
+                try {
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(player, encMenu);
+                } catch (Throwable ignored) {}
+                return;
+            }
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
             PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);

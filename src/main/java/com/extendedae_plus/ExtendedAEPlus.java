@@ -33,14 +33,6 @@ public class ExtendedAEPlus {
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
         modEventBus.addListener(ModCapabilities::onRegisterCapabilities);
 
-        /*
-          TODO
-           将这literal地狱烧成灰(bushi
-           反正就是引入dataGeneration, 多写点translatable
-           顺便不小心露出我无敌的component工具类(
-           算了算了,我真不敢动aaa
-         */
-
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);

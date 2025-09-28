@@ -22,6 +22,6 @@ public record C2SPacketEncodeFinished() implements CustomPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, C2SPacketEncodeFinished> STREAM_CODEC = StreamCodec.unit(INSTANCE);
 
     public static void handle(final C2SPacketEncodeFinished packet, final IPayloadContext context) {
-        if (context.player().level().isClientSide) PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
+        if (context.player().level().isClientSide) PacketDistributor.sendToServer(RequestUploadingC2SPacket.INSTANCE);
     }
 }

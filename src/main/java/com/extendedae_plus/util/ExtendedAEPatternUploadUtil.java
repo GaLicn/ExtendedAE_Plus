@@ -767,10 +767,7 @@ public class ExtendedAEPatternUploadUtil {
         try {
             // 通过反射访问byId字段（ExtendedAE继承了这个字段）
             Field byIdField = findByIdField(menu.getClass());
-            if (byIdField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到byId字段");
-                return null;
-            }
+            if (byIdField == null) return null;
             
             byIdField.setAccessible(true);
             
@@ -784,16 +781,12 @@ public class ExtendedAEPatternUploadUtil {
 
             // 从ContainerTracker中获取PatternContainer
             Field containerField = findContainerField(containerTracker.getClass());
-            if (containerField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到container字段");
-                return null;
-            }
+            if (containerField == null) return null;
             
             containerField.setAccessible(true);
             return (PatternContainer) containerField.get(containerTracker);
             
         } catch (Exception e) {
-            System.err.println("ExtendedAE Plus: 无法获取PatternContainer，错误: " + e.getMessage());
             return null;
         }
     }
