@@ -18,6 +18,7 @@
   "item.extendedae_plus.1024x_crafting_accelerator": "1024x并行处理单元",
   "item.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
   "item.extendedae_plus.entity_speed_card": "实体加速卡",
+  "item.extendedae_plus.entity_speed_card.x1": "§k§l?#@§r§8不§k§l1§r限§k§l0§r存于§k§l%§r现实的§c实§k&0%§r体加§k§l*§r速卡§k§l...§r",
   "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
   "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
   "item.extendedae_plus.entity_speed_card.x8": "实体加速卡 (x8)",
