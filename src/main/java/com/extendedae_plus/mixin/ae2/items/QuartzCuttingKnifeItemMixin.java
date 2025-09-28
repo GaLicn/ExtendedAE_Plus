@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2;
+package com.extendedae_plus.mixin.ae2.items;
 
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;

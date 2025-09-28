@@ -23,8 +23,8 @@ import java.util.Map;
  * 实体加速器界面，显示加速状态、卡数量、能耗和倍率信息。
  */
 public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends UpgradeableScreen<C> {
-    private boolean eap$entitySpeedTickerEnabled = false;           // 本地缓存的加速开关状态
-    private final SettingToggleButton<YesNo> eap$entitySpeedTickerToggle; // 加速开关按钮
+    private boolean eap$entitySpeedTickerEnabled = false;                   // 本地缓存的加速开关状态
+    private final SettingToggleButton<YesNo> eap$entitySpeedTickerToggle;   // 加速开关按钮
 
     /**
      * 构造函数，初始化界面和控件。

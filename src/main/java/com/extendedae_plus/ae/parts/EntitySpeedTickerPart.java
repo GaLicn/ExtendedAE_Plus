@@ -2,6 +2,7 @@ package com.extendedae_plus.ae.parts;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
+import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyService;
@@ -62,7 +63,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
 
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
-    private boolean accelerateEnabled = true;       // 是否启用加速
     private boolean networkEnergySufficient = true; // 网络能量是否充足
 
     /**
@@ -75,14 +75,16 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                 .setFlags(GridFlags.REQUIRE_CHANNEL)
                 .setIdlePowerUsage(1)
                 .addService(IGridTickable.class, this);
+
+        // 注册可记忆的配置（YES/NO）
+        this.getConfigManager().registerSetting(
+                com.extendedae_plus.ae.api.config.Settings.ACCELERATE,
+                YesNo.YES
+        );
     }
 
     public boolean getAccelerateEnabled() {
-        return this.accelerateEnabled;
-    }
-
-    public boolean isNetworkEnergySufficient() {
-        return this.networkEnergySufficient;
+        return this.getConfigManager().getSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE) == YesNo.YES;
     }
 
     /**
@@ -90,10 +92,15 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @param enabled 是否启用加速
      */
     public void setAccelerateEnabled(boolean enabled) {
-        this.accelerateEnabled = enabled;
+        this.getConfigManager().putSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
+        // 是否启用加速
         if (menu != null) {
             menu.setAccelerateEnabled(enabled);
         }
+    }
+
+    public boolean isNetworkEnergySufficient() {
+        return this.networkEnergySufficient;
     }
 
     /**

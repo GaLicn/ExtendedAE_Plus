@@ -6,14 +6,8 @@ import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.core.localization.GuiText;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_PATTERN_PROVIDER;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_PATTERN_PROVIDER_PART;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_INTERFACE;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_INTERFACE_PART;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.OVERSIZE_INTERFACE;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.OVERSIZE_INTERFACE_PART;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_IMPORT_BUS;
-import static com.glodblock.github.extendedae.common.EPPItemAndBlock.EX_EXPORT_BUS;
+
+import static com.glodblock.github.extendedae.common.EPPItemAndBlock.*;
 
 /**
  * 

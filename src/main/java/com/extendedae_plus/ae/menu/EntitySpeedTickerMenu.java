@@ -13,6 +13,7 @@ import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -93,7 +94,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      * @param slot 发生变化的槽位
      */
     @Override
-    public void onSlotChange(net.minecraft.world.inventory.Slot slot) {
+    public void onSlotChange(Slot slot) {
         super.onSlotChange(slot);
         if (isClientSide()) {
             updateCardCounts();
