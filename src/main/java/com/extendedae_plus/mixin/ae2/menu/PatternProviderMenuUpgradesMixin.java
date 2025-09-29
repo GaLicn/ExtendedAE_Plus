@@ -7,7 +7,7 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.ToolboxMenu;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.bridge.IUpgradableMenu;
+import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;

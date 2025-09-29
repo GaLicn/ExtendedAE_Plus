@@ -16,7 +16,6 @@ public class PatternProviderCloseMixin {
 			if (((Object) this) instanceof PatternProviderScreen) {
 				ClientPatternHighlightStore.clearAll();
 			}
-		} catch (Throwable ignored) {
-		}
+		} catch (Throwable ignored) {}
 	}
 }

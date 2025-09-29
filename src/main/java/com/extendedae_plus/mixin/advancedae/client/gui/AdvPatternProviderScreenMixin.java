@@ -5,18 +5,17 @@ import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
+import com.extendedae_plus.api.IExPatternButtonsAccessor;
+import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.init.ModNetwork;
-import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
-import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
+import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
+import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.pedroksl.advanced_ae.client.gui.AdvPatternProviderScreen;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
-import org.checkerframework.checker.units.qual.C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,15 +44,15 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
     @Unique
     private boolean eap$SmartDoublingEnabled = false;
 
-    public AdvPatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
-        super((AdvPatternProviderMenu) menu, playerInventory, title, style);
+    public AdvPatternProviderScreenMixin(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super(menu, playerInventory, title, style);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void eap$initAdvancedBlocking(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 使用 @GuiSync 初始化
         try {
-            if (menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
             }
         } catch (Throwable t) {
@@ -86,7 +85,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
 
         // 智能翻倍按钮：与高级阻挡同款样式，点击仅发送C2S，状态由@GuiSync驱动
         try {
-            if (menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
             }
         } catch (Throwable t) {
@@ -120,7 +119,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
     private void eap$updateAdvancedBlocking(CallbackInfo ci) {
         if (this.eap$AdvancedBlockingToggle != null) {
             boolean desired = this.eap$AdvancedBlockingEnabled;
-            if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (this.menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 desired = sync.eap$getAdvancedBlockingSynced();
             }
             this.eap$AdvancedBlockingEnabled = desired;
@@ -129,7 +128,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
 
         if (this.eap$SmartDoublingToggle != null) {
             boolean desired2 = this.eap$SmartDoublingEnabled;
-            if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (this.menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 desired2 = sync2.eap$getSmartDoublingSynced();
             }
             this.eap$SmartDoublingEnabled = desired2;
@@ -138,7 +137,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
 
         if ((Object) this instanceof GuiExPatternProvider) {
             try {
-                ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
+                ((IExPatternButtonsAccessor) this).eap$updateButtonsLayout();
             } catch (Throwable t) {
                 LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
             }

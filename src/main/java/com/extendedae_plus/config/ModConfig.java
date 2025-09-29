@@ -125,4 +125,11 @@ public final class ModConfig {
     @Configurable.Range(min = 100, max = Integer.MAX_VALUE)
     public int craftingPauseThreshold = 100000;
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+            "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
+    })
+    @Configurable.Synchronized
+    public boolean prioritizeDiskEnergy = true;
 }

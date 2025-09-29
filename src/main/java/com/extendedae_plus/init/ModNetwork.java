@@ -2,6 +2,11 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.*;
+import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
+import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
+import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.provider.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;

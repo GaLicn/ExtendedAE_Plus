@@ -3,17 +3,15 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.implementations.InterfaceScreen;
 import appeng.menu.AEBaseMenu;
-import com.extendedae_plus.NewIcon;
-import com.extendedae_plus.init.ModNetwork;
-import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
 import appeng.menu.SlotSemantics;
-import net.minecraft.world.inventory.Slot;
+import appeng.menu.implementations.InterfaceMenu;
+import com.extendedae_plus.ae.client.gui.NewIcon;
+import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
+import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.network.chat.Component;
-import com.mojang.logging.LogUtils;
+import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -170,7 +168,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             // 获取菜单与配置槽列表
             var screen = (AEBaseScreen<?>) (Object) this;
             var menu = screen.getMenu();
-            if (!(menu instanceof appeng.menu.implementations.InterfaceMenu interfaceMenu)) {
+            if (!(menu instanceof InterfaceMenu interfaceMenu)) {
                 return;
             }
             var configSlots = interfaceMenu.getSlots(SlotSemantics.CONFIG);
@@ -273,7 +271,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             }
             var screen = (AEBaseScreen<?>) (Object) this;
             var menu = screen.getMenu();
-            if (!(menu instanceof appeng.menu.implementations.InterfaceMenu interfaceMenu)) {
+            if (!(menu instanceof InterfaceMenu interfaceMenu)) {
                 return;
             }
             var configSlots = interfaceMenu.getSlots(SlotSemantics.CONFIG);

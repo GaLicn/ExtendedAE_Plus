@@ -4,8 +4,9 @@ import appeng.client.gui.Icon;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
-import com.extendedae_plus.NewIcon;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.extendedae_plus.ae.client.gui.NewIcon;
+import com.extendedae_plus.api.IExPatternButtonsAccessor;
+import com.extendedae_plus.api.IExPatternPageAccessor;
 import com.extendedae_plus.config.ModConfig;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -26,7 +27,7 @@ import java.lang.reflect.Method;
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(GuiExPatternProvider.class)
-public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements ExPatternButtonsAccessor, com.extendedae_plus.api.ExPatternPageAccessor {
+public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButtonsAccessor, IExPatternPageAccessor {
 
     @Unique
     ScreenStyle eap$screenStyle;
