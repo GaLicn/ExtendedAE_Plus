@@ -18,19 +18,18 @@ public final class PowerUtils {
     private static final int[] VALID_MULTIPLIERS = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
     private static final int[] VALID_ENERGY_CARD_COUNTS = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     private static final AtomicInteger checkCounter = new AtomicInteger(0); // 原子计数器
-    private static final int CHECK_COUNTER_THRESHOLD = 100;       // 配置检查阈值
+    private static final int CHECK_COUNTER_THRESHOLD = 100;         // 配置检查阈值
     private static final int CHECK_COUNTER_RESET_THRESHOLD = 10000; // 计数器重置阈值
     private static volatile Map<Integer, Map<Integer, Double>> powerCache = new HashMap<>();
     private static volatile Map<Integer, Double> ratioCache = new HashMap<>();
-    private static volatile int lastEntityTickerCost = -1; // 使用 int，与 entityTickerCost 类型一致
+    private static volatile int lastEntityTickerCost = -1;
 
     // 静态初始化块，预计算缓存
     static {
         initializeCaches();
     }
 
-    private PowerUtils() {
-    }
+    private PowerUtils() {}
 
     /**
      * 初始化所有可能的缓存条目
@@ -124,13 +123,13 @@ public final class PowerUtils {
     }
 
     /**
-     * 计算最终能耗。
+     * 直接从缓存获取能耗值
      *
      * @param product         加速卡乘积
      * @param energyCardCount 能量卡数量
-     * @return 最终能耗值
+     * @return 缓存的能耗值
      */
-    public static double computeFinalPowerForProduct(int product, int energyCardCount) {
+    public static double getCachedPower(int product, int energyCardCount) {
         if (product <= 1) return 0.0;
         // 每 100 次调用检查一次配置
         if (checkCounter.getAndIncrement() % CHECK_COUNTER_THRESHOLD == 0) {
@@ -143,26 +142,10 @@ public final class PowerUtils {
                 }
             }
         }
-        // 查找缓存
-        return getCachedPower(product, energyCardCount);
-    }
-
-    /**
-     * 直接从缓存获取能耗值（无配置检查）。
-     *
-     * @param product         加速卡乘积
-     * @param energyCardCount 能量卡数量
-     * @return 缓存的能耗值
-     */
-    public static double getCachedPower(int product, int energyCardCount) {
         Map<Integer, Double> energyCardMap = powerCache.get(product);
-        if (energyCardMap == null) {
-            return 0.0;
-        }
+        if (energyCardMap == null) return 0.0;
         Double cachedPower = energyCardMap.get(energyCardCount);
-        if (cachedPower == null) {
-            return 0.0;
-        }
+        if (cachedPower == null) return 0.0;
         return cachedPower;
     }
 
@@ -174,9 +157,7 @@ public final class PowerUtils {
      */
     public static double getCachedRatio(int energyCardCount) {
         Double cachedRatio = ratioCache.get(energyCardCount);
-        if (cachedRatio == null) {
-            return 1.0;
-        }
+        if (cachedRatio == null) return 1.0;
         return cachedRatio;
     }
 

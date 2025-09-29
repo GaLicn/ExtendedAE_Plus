@@ -64,6 +64,9 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
     private boolean networkEnergySufficient = true; // 网络能量是否充足
+    private int cachedSpeed = -1;                    // 缓存的加速倍率
+    private int cachedEnergyCardCount = -1;          // 缓存的能量卡数量
+
 
     private static volatile Method cachedFEExtractMethod;
     private static volatile boolean FE_UNAVAILABLE;
@@ -190,6 +193,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
      */
     @Override
     public void upgradesChanged() {
+        // 更新缓存的升级卡数量和加速倍率
+        this.cachedEnergyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+        this.cachedSpeed = calculateSpeed();
+
         if (menu != null) {
             menu.broadcastChanges();
         }
@@ -233,17 +240,24 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
             return;
         }
 
-        int speed = calculateSpeed();
-        if (speed <= 0) {
+        // 如果缓存未初始化（第一次 tick），计算并更新缓存
+        if (cachedEnergyCardCount == -1 || cachedSpeed == -1) {
+            this.cachedEnergyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
+            this.cachedSpeed = calculateSpeed();
+        }
+
+        if (cachedSpeed <= 0) {
             return;
         }
 
-        double requiredPower = calculateRequiredPower(speed, blockId);
+        // 使用 PowerUtils 的缓存获取能耗，并应用方块特定的倍率
+        double requiredPower = PowerUtils.getCachedPower(cachedSpeed, cachedEnergyCardCount)
+                * ConfigParsingUtils.getMultiplierForBlock(blockId, List.of(ModConfig.INSTANCE.entityTickerMultipliers));
         if (!extractPower(requiredPower)) {
             return;
         }
 
-        performTicks(blockEntity, ticker, speed);
+        performTicks(blockEntity, ticker, cachedSpeed);
     }
 
     /**
@@ -272,18 +286,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         int entitySpeedCardCount = getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
         if (entitySpeedCardCount <= 0) return 0;
         return PowerUtils.computeProductWithCap(getUpgrades(), 8);
-    }
-
-    /**
-     * 计算所需能量。
-     * @param speed 加速倍率
-     * @param blockId 目标方块ID
-     * @return 所需能量
-     */
-    private double calculateRequiredPower(int speed, String blockId) {
-        int energyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
-        double multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, List.of(ModConfig.INSTANCE.entityTickerMultipliers));
-        return PowerUtils.computeFinalPowerForProduct(speed, energyCardCount) * multiplier;
     }
 
     /**
