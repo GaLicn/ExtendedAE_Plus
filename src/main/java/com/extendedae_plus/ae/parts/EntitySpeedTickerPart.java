@@ -28,6 +28,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -65,7 +66,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     private boolean networkEnergySufficient = true; // 网络能量是否充足
     private int cachedSpeed = -1;                    // 缓存的加速倍率
     private int cachedEnergyCardCount = -1;          // 缓存的能量卡数量
-
+    private BlockEntity cachedTarget = null;
+    private BlockPos cachedTargetPos = null;
 
     private static volatile Method cachedFEExtractMethod;
     private static volatile boolean FE_UNAVAILABLE;
@@ -209,12 +211,12 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
      */
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
-        if (!this.getAccelerateEnabled()) {
+        if (!getAccelerateEnabled()) {
             return TickRateModulation.IDLE;
         }
-        BlockEntity target = getLevel().getBlockEntity(getBlockEntity().getBlockPos().relative(getSide()));
-        if (target != null && isActive()) {
-            ticker(target);
+        updateCachedTarget();
+        if (cachedTarget != null && isActive()) {
+            ticker(cachedTarget);
         }
         return TickRateModulation.IDLE;
     }
@@ -267,6 +269,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         return getGridNode() != null && getMainNode() != null && getMainNode().getGrid() != null;
     }
 
+    /**
+     * 更新缓存的目标方块实体引用。
+     */
+    private void updateCachedTarget() {
+        BlockPos targetPos = getBlockEntity().getBlockPos().relative(getSide());
+        if (!targetPos.equals(cachedTargetPos) || cachedTarget == null || cachedTarget.isRemoved() ||
+                cachedTarget.getType() != getLevel().getBlockEntity(targetPos).getType()) {
+            cachedTargetPos = targetPos;
+            cachedTarget = getLevel().getBlockEntity(targetPos);
+        }
+    }
     /**
      * 获取目标方块实体的 ticker。
      * @param blockEntity 目标方块实体
@@ -378,5 +391,12 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     @Override
     protected int getUpgradeSlots() {
         return 8;
+    }
+
+    @Override
+    public void removeFromWorld() {
+        super.removeFromWorld();
+        cachedTarget = null;
+        cachedTargetPos = null;
     }
 }
