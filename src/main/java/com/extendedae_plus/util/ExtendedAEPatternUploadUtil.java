@@ -15,6 +15,7 @@ import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -280,13 +281,6 @@ public class ExtendedAEPatternUploadUtil {
         if (key == null) return null;
         // 先查别名（按 path 匹配）
         // 别名替换放在init做, 提前别名的次序
-//        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
-//        if (alias != null && !alias.isBlank()) return alias;
-        // 再查完整ID映射
-//        String custom = CUSTOM_NAMES.get(key);
-//        if (custom != null && !custom.isBlank()) {
-//            return custom;
-//        }
         return key.getPath();
     }
 
@@ -423,7 +417,7 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 读取已编码槽位的物品
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -462,7 +456,7 @@ public class ExtendedAEPatternUploadUtil {
                 player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
             }
             try {
-                var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
+                var accessor = (PatternEncodingTermMenuAccessor) menu;
                 var blankSlot = accessor.eap$getBlankPatternSlot();
                 ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
                 if (blankSlot != null && blankSlot.mayPlace(blanks)) {
@@ -548,7 +542,7 @@ public class ExtendedAEPatternUploadUtil {
                 }
                 idx++;
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         return result;
     }
@@ -575,7 +569,7 @@ public class ExtendedAEPatternUploadUtil {
                     }
                 }
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         // 1.21 暂不检查聚合能力视图，能力系统适配后再补充
         return false;
@@ -1032,7 +1026,7 @@ public class ExtendedAEPatternUploadUtil {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -1166,7 +1160,7 @@ public class ExtendedAEPatternUploadUtil {
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -1213,6 +1207,7 @@ public class ExtendedAEPatternUploadUtil {
      * 传入任意属于该集群的 Tile（如 Pattern/Crafter/Frame 等）。
      */
     private static boolean clusterHasSingleUploadCore(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase any) {
+        if (!EAEPConfig.NEEDS_UPLOADING_CORE.getAsBoolean()) return true;
         try {
             if (any == null || any.getCluster() == null) return false;
             int cores = 0;

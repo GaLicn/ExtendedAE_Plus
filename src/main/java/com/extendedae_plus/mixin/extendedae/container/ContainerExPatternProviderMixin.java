@@ -89,7 +89,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         if (scale <= 0) return;
         for (var slot : this.getSlots(SlotSemantics.ENCODED_PATTERN)) {
             var stack = slot.getItem();
-            if (stack.getItem() instanceof EncodedPatternItem pattern) {
+            if (stack.getItem() instanceof EncodedPatternItem<?>) {
                 var detail = PatternDetailsHelper.decodePattern(stack, this.getPlayer().level());
                 if (detail instanceof AEProcessingPattern process) {
                     var input = process.getSparseInputs(); // List<GenericStack>
@@ -116,7 +116,6 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
                     }
                 }
             }
-            return true;
         } else {
             for (var stack : stacks) {
                 if (stack != null) {
@@ -126,8 +125,8 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
                     }
                 }
             }
-            return true;
         }
+        return true;
     }
 
     @Unique

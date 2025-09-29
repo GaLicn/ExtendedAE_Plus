@@ -1,23 +1,25 @@
 package com.extendedae_plus.config;
 
-import com.extendedae_plus.util.GetKey;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-public final class ModConfig {
+import java.util.List;
+
+public final class EAEPConfig {
     // Common 配置
     public static final ModConfigSpec COMMON_SPEC;
     public static final ModConfigSpec.IntValue PAGE_MULTIPLIER;
     public static final ModConfigSpec.BooleanValue OVERRIDE_AE2WT_PICKING;
+    public static final ModConfigSpec.BooleanValue INDEPENDENT_UPLOADING_BUTTON;
 
     // Client 配置
     public static final ModConfigSpec CLIENT_SPEC;
     public static final ModConfigSpec.BooleanValue SHOW_ENCODER_PATTERN_PLAYER;
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ModConfigSpec.BooleanValue PRIORITIZE_DISK_ENERGY;
-    public static final ModConfigSpec.BooleanValue INDEPENDENT_UPLOADING_BUTTON;
 
     // Server 配置
     public static final ModConfigSpec SERVER_SPEC;
+    public static final ModConfigSpec.BooleanValue NEEDS_UPLOADING_CORE;
     public static final ModConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
     public static final ModConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
     public static final ModConfigSpec.IntValue CRAFTING_PAUSE_THRESHOLD;
@@ -30,7 +32,6 @@ public final class ModConfig {
     static {
         // Common 配置
         ModConfigSpec.Builder commonBuilder = new ModConfigSpec.Builder();
-        commonBuilder.push("common");
         PAGE_MULTIPLIER = commonBuilder
                 .comment(
                         "扩展样板供应器总槽位容量的倍率",
@@ -39,18 +40,16 @@ public final class ModConfig {
                 )
                 .defineInRange("pageMultiplier", 1, 1, 64);
         OVERRIDE_AE2WT_PICKING = commonBuilder
-                .translation(new GetKey(GetKey.CONFIG)
-                        .addStr("override_ae2wt_picking").buildRaw())
                 .comment("是否覆盖AE2WT使用中键从终端选取方块的逻辑",
-                        "开启后选取方块的数量将不被限制在32个",
-                        "(不建议使用,在EMI环境下可能出现奇怪bug)")
+                        "开启后选取方块的数量将不被限制在32个")
                 .define("overrideAE2WTPicking", false);
-        commonBuilder.pop();
+        INDEPENDENT_UPLOADING_BUTTON = commonBuilder
+                .comment("启用后,在样板编码终端会出现一个独立的按钮用于上传样板")
+                .define("independentUploadingButton", false);
         COMMON_SPEC = commonBuilder.build();
 
         // Client 配置
         ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
-        clientBuilder.push("client");
         SHOW_ENCODER_PATTERN_PLAYER = clientBuilder
                 .comment(
                         "是否显示样板编码玩家",
@@ -61,12 +60,6 @@ public final class ModConfig {
                         "样板终端默认是否显示槽位",
                         "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示")
                 .define("patternTerminalShowSlotsDefault", true);
-        INDEPENDENT_UPLOADING_BUTTON = builder
-                .translation(new GetKey(GetKey.CONFIG)
-                        .addStr("independence_uploading_button").buildRaw())
-                .comment("启用后,在样板编码终端会出现一个独立的按钮用于上传样板")
-                .define("independentUploadingButton", false);
-        clientBuilder.pop();
         CLIENT_SPEC = clientBuilder.build();
 
         // Server 配置
@@ -142,8 +135,11 @@ public final class ModConfig {
                 )
                 .define("prioritizeDiskEnergy", true);
         serverBuilder.pop();
+        NEEDS_UPLOADING_CORE = serverBuilder
+                .comment("启用后, 样板只能被上传到装有上传核心的装配矩阵")
+                .define("needsUploadingCore", true);
         SERVER_SPEC = serverBuilder.build();
     }
 
-    private ModConfig() {}
+    private EAEPConfig() {}
 }

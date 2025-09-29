@@ -7,8 +7,7 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
@@ -20,6 +19,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -47,10 +47,10 @@ public class ExtendedAEPlus {
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
-        // 注册配置：接入自定义的 ModConfigs
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
-        modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
-        modContainer.registerConfig(ModConfig.Type.SERVER, ModConfigs.SERVER_SPEC, "extendedae_plus-server.toml");
+        // 注册配置：接入自定义的 EAEPConfig
+        modContainer.registerConfig(ModConfig.Type.COMMON, EAEPConfig.COMMON_SPEC, "extendedae_plus-common.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, EAEPConfig.CLIENT_SPEC, "extendedae_plus-client.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, EAEPConfig.SERVER_SPEC, "extendedae_plus-server.toml");
     }
 
     public static ResourceLocation id(String path) {

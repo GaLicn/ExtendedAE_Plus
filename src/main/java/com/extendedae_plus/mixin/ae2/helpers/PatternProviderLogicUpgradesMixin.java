@@ -2,7 +2,6 @@ package com.extendedae_plus.mixin.ae2.helpers;
 
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.upgrades.IUpgradeInventory;
-import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
@@ -19,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -75,7 +74,7 @@ public abstract class PatternProviderLogicUpgradesMixin {
                 Field f = this.getClass().getDeclaredField("af_upgrades");
                 f.setAccessible(true);
                 existingUpgrades = (IUpgradeInventory) f.get(this);
-            } catch (Throwable t) {
+            } catch (Throwable ignored) {
             }
             
             if (existingUpgrades != null && existingUpgrades != UpgradeInventories.empty()) {
@@ -108,15 +107,14 @@ public abstract class PatternProviderLogicUpgradesMixin {
                         Field f = this.getClass().getDeclaredField("af_upgrades");
                         f.setAccessible(true);
                         f.set(this, this.eap$upgrades);
-                    } catch (Throwable t) {
+                    } catch (Throwable ignored) {
                     }
-                    
-                    this.eap$upgradesInitialized = true;
+
                 } else {
                     // AppliedFlux 或其他模组已经提供了足够的槽位
                     this.eap$upgrades = existingUpgrades;
-                    this.eap$upgradesInitialized = true;
                 }
+                this.eap$upgradesInitialized = true;
             } else {
                 // AppliedFlux 还没初始化升级槽，或者出了问题，我们创建默认的
                 this.eap$upgrades = UpgradeInventories.forMachine(
@@ -129,7 +127,7 @@ public abstract class PatternProviderLogicUpgradesMixin {
                     Field f = this.getClass().getDeclaredField("af_upgrades");
                     f.setAccessible(true);
                     f.set(this, this.eap$upgrades);
-                } catch (Throwable t) {
+                } catch (Throwable ignored) {
                 }
                 this.eap$upgradesInitialized = true;
             }
@@ -164,7 +162,7 @@ public abstract class PatternProviderLogicUpgradesMixin {
                     afMethod.invoke(this);
                 } catch (NoSuchMethodException e) {
                     // AppliedFlux 的方法不存在，这是正常的
-                } catch (Throwable t) {
+                } catch (Throwable ignored) {
                 }
             }
             

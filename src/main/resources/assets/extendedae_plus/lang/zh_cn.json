@@ -32,7 +32,7 @@
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b——§4方§d寸§c之§e间§a, §6自§b有§5千§9寰",
   "tooltip.extendedae_plus.entity_speed_card.multiplier": "乘数: %s",
   "tooltip.extendedae_plus.entity_speed_card.max": "最大生效: %s 倍",
-  "tooltip.extendedae_plus.encode_button_description": "\n§a[Ctrl] §7上传样板",
+  "tooltip.extendedae_plus.encode_button.upload_pattern": "\n§a[Ctrl] §7上传样板",
 
   "block.extendedae_plus.wireless_transceiver": "无线收发器",
   "block.extendedae_plus.4x_crafting_accelerator": "4x并行处理单元",
@@ -79,15 +79,13 @@
   "screen.extendedae_plus.title": "ExtendedAE Plus 配置",
   "config.extendedae_plus": "ExtendedAE Plus",
 
-  "extendedae_plus.configuration.common": "通用配置",
   "extendedae_plus.configuration.pageMultiplier": "扩展样板供应器槽位倍率",
   "extendedae_plus.configuration.pageMultiplier_with_range": "扩展样板供应器槽位倍率 (1-64)",
-  "extendedae_plus.configuration.override_ae2wt_picking": "覆盖AE2WT选取",
+  "extendedae_plus.configuration.overrideAE2WTPicking": "覆盖AE2WT选取",
 
-  "extendedae_plus.configuration.client": "显示配置",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "显示样板编码玩家",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "样板终端默认显示槽位",
-  "extendedae_plus.configuration.independence_uploading_button": "独立上传按钮",
+  "extendedae_plus.configuration.independentUploadingButton": "独立上传按钮",
 
   "extendedae_plus.configuration.ae": "AE2配置",
   "extendedae_plus.configuration.craftingPauseThreshold": "AE合成计算暂停检查阈值",
@@ -104,6 +102,7 @@
   "extendedae_plus.configuration.entityTickerBlackList": "实体加速器黑名单",
   "extendedae_plus.configuration.entityTickerMultipliers": "实体加速器额外消耗倍率",
   "extendedae_plus.configuration.prioritizeDiskEnergy": "优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+  "extendedae_plus.configuration.needsUploadingCore": "需要装配矩阵上传核心",
 
   "extendedae_plus.configuration.state_on": "开",
   "extendedae_plus.configuration.state_off": "关"

@@ -4,9 +4,7 @@ import appeng.block.crafting.CraftingUnitBlock;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
-import appeng.block.crafting.CraftingUnitBlock;
-import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.core.definitions.AEBlockEntities;
+import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -42,37 +40,27 @@ public final class ModBlocks {
     // Crafting Accelerators (reuse MAE2 textures/models)
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_4x = BLOCKS.register(
             "4x_crafting_accelerator",
-            () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_4x);
-            }
+            () -> new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_4x)
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_16x = BLOCKS.register(
             "16x_crafting_accelerator",
-            () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_16x);
-            }
+            () -> new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_16x)
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_64x = BLOCKS.register(
             "64x_crafting_accelerator",
-            () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_64x);
-            }
+            () -> new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_64x)
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_256x = BLOCKS.register(
             "256x_crafting_accelerator",
-            () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_256x);
-            }
+            () -> new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_256x)
     );
 
     public static final DeferredBlock<CraftingUnitBlock> ACCELERATOR_1024x = BLOCKS.register(
             "1024x_crafting_accelerator",
-            () -> {
-                return new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x);
-            }
+            () -> new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x)
     );
 
     // 装配矩阵上传核心方块

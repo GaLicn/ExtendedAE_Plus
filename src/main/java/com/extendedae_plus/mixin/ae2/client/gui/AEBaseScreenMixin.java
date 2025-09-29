@@ -19,7 +19,6 @@ import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

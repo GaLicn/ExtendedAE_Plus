@@ -27,7 +27,7 @@ import java.util.List;
 
 @Mixin(BoMScreen.class)
 public abstract class MixinBoMScreen {
-    @Inject(method = "mouseClicked", at = @At("HEAD"))
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (!(button == GLFW.GLFW_MOUSE_BUTTON_MIDDLE && Screen.hasControlDown())) return;
         try {
@@ -94,5 +94,6 @@ public abstract class MixinBoMScreen {
                 }
             }
         } catch (Exception ignored) {}
+        cir.cancel();
     }
 }

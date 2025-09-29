@@ -13,7 +13,7 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.client.PatternEncodingTermMenuMixinHelper;
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import com.extendedae_plus.network.C2SPacketEncodeFinished;
 import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
@@ -171,7 +171,7 @@ public abstract class PatternEncodingTermMenuMixin implements PatternEncodingTer
 
     @Inject(method = "encode", at = @At("TAIL"))
     private void eaep$onEncode(CallbackInfo ci) {
-        if (ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
+        if (EAEPConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
         var self = (PatternEncodingTermMenu) (Object) this;
         if (self.isClientSide()) return;
         if (!eaep$isCtrlPressed) return;

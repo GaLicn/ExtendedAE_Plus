@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.common;
 
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +18,7 @@ public abstract class TileExPatternProviderMixin {
             index = 2
     )
     private int eap$multiplyCapacity(int original) {
-        int mult = ModConfig.PAGE_MULTIPLIER.get();
+        int mult = EAEPConfig.PAGE_MULTIPLIER.get();
         if (mult < 1) mult = 1;
         if (mult > 64) mult = 64;
         return Math.max(1, original) * mult;

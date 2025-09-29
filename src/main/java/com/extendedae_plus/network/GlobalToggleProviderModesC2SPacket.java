@@ -141,8 +141,8 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
         try {
             Class<?> cls = Class.forName(className);
             // 收集全部与在线两类机器
-            Set<?> all = grid.getMachines((Class) cls);
-            Set<?> active = grid.getActiveMachines((Class) cls);
+            Set<?> all = grid.getMachines((Class<?>) cls);
+            Set<?> active = grid.getActiveMachines((Class<?>) cls);
             for (Object o : all) addLogicIfPresent(out, o);
             for (Object o : active) addLogicIfPresent(out, o);
         } catch (Throwable ignored) {}

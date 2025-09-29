@@ -22,7 +22,7 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
@@ -210,7 +210,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         }
 
         String blockId = BuiltInRegistries.BLOCK.getKey(blockEntity.getBlockState().getBlock()).toString();
-        if (ConfigParsingUtils.isBlockBlacklisted(blockId, ModConfigs.ENTITY_TICKER_BLACK_LIST.get())) {
+        if (ConfigParsingUtils.isBlockBlacklisted(blockId, EAEPConfig.ENTITY_TICKER_BLACK_LIST.get())) {
             return;
         }
 
@@ -268,7 +268,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     private double calculateRequiredPower(int speed, String blockId) {
         int energyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
-        double multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, ModConfigs.ENTITY_TICKER_MULTIPLIERS.get());
+        double multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, EAEPConfig.ENTITY_TICKER_MULTIPLIERS.get());
         return PowerUtils.computeFinalPowerForProduct(speed, energyCardCount) * multiplier;
     }
 
@@ -282,7 +282,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
         IActionSource source = IActionSource.ofMachine(this);
         boolean appFluxLoaded = ModList.get().isLoaded("appflux");
-        boolean preferDiskEnergy = appFluxLoaded && ModConfigs.PRIORITIZE_DISK_ENERGY.get();
+        boolean preferDiskEnergy = appFluxLoaded && EAEPConfig.PRIORITIZE_DISK_ENERGY.get();
 
         // 如果 appflux 存在且优先磁盘能量，尝试提取 FE 能量
         if (appFluxLoaded && preferDiskEnergy) {

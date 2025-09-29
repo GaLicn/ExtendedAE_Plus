@@ -31,7 +31,7 @@ public abstract class MEStorageMenuMixin {
             return;
         }
         try {
-            var acc = (MEStorageMenuAccessor) (Object) self;
+            var acc = (MEStorageMenuAccessor) self;
             IConfigManager server = acc.getServerCM();
             IConfigManager client = acc.getClientCM();
             if (server == null || client == null) {
@@ -75,7 +75,7 @@ public abstract class MEStorageMenuMixin {
         }
         Class<? extends Enum<?>> enumClass = sv.getDeclaringClass();
         Object[] constants = enumClass.getEnumConstants();
-        if (constants == null || constants.length == 0) {
+        if (constants == null) {
             return null;
         }
         for (Object c : constants) {

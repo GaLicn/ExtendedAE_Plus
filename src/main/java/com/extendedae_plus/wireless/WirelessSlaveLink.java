@@ -4,8 +4,7 @@ import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
 import appeng.me.service.helpers.ConnectionWrapper;
-import com.extendedae_plus.config.ModConfig;
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.config.EAEPConfig;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.Objects;
@@ -13,7 +12,7 @@ import java.util.Objects;
 /**
  * 从收发器连接器：
  * - 通过频率查找同维度主收发器；
- * - 校验距离（<= ModConfigs.WIRELESS_MAX_RANGE）；
+ * - 校验距离（<= EAEPConfig.WIRELESS_MAX_RANGE）；
  * - 动态创建/销毁 AE2 连接（GridConnection），实现“一主多从”。
  */
 public class WirelessSlaveLink {
@@ -66,12 +65,12 @@ public class WirelessSlaveLink {
         shutdown = false;
         distance = 0.0D;
 
-        boolean crossDim = ModConfig.WIRELESS_CROSS_DIM_ENABLE.get();
+        boolean crossDim = EAEPConfig.WIRELESS_CROSS_DIM_ENABLE.get();
         if (master != null && !master.isEndpointRemoved() && (crossDim || master.getServerLevel() == level)) {
             if (!crossDim) {
                 distance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
             }
-            double maxRange = ModConfig.WIRELESS_MAX_RANGE.get();
+            double maxRange = EAEPConfig.WIRELESS_MAX_RANGE.get();
             if (crossDim || distance <= maxRange) {
                 // 保持/建立连接
                 try {

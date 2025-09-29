@@ -249,8 +249,6 @@ public class ProviderSelectScreen extends Screen {
             long id = ids.get(i);
             int slots = emptySlots.get(i);
             Group g = nameMap.computeIfAbsent(name, k -> new Group());
-//            if (!i18nKey.isBlank() && !keyMap.containsKey(i18nKey))
-//                keyMap.put(i18nKey, name);
             g.count++;
             g.totalSlots += Math.max(0, slots);
             // 挑选空位最多的作为代表 id；若并列，保留先到者

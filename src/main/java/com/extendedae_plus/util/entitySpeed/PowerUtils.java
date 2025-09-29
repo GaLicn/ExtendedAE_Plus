@@ -2,7 +2,7 @@ package com.extendedae_plus.util.entitySpeed;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.EAEPConfig;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -63,7 +63,7 @@ public final class PowerUtils {
      */
     public static double computeFinalPowerForProduct(long product, int energyCardCount) {
         if (product <= 1L) return 0.0;
-        double base = ModConfigs.ENTITY_TICKER_COST.get();
+        double base = EAEPConfig.ENTITY_TICKER_COST.get();
         double log2 = Math.log(product) / Math.log(2.0);
         double raw;
         if (product == 2L) {

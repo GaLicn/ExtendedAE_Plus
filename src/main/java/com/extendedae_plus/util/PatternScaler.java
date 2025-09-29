@@ -5,7 +5,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.content.ScaledProcessingPattern;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public final class PatternScaler {
         int targetOutIndex = -1;
         for (int i = 0; i < baseOutputs.size(); i++) {
             var out = baseOutputs.get(i);
-            if (out != null && target != null && out.what() != null && out.what().equals(target)) {
+            if (out != null && out.what() != null && out.what().equals(target)) {
                 targetOutIndex = i;
                 break;
             }
@@ -59,11 +59,11 @@ public final class PatternScaler {
         long multiplier = 1L;
         if (requestedAmount > 0) {
             long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
-            multiplier = needed <= 1L ? 1L : needed;
+            multiplier = Math.max(needed, 1L);
         }
         // 应用配置的最大倍数上限（0 表示不限制）
         try {
-            int maxMul = ModConfig.SMART_SCALING_MAX_MULTIPLIER.get();
+            int maxMul = EAEPConfig.SMART_SCALING_MAX_MULTIPLIER.get();
             if (maxMul > 0 && multiplier > maxMul) {
                 multiplier = maxMul;
             }
@@ -85,8 +85,7 @@ public final class PatternScaler {
 
         // 构建压缩输出（List）
         List<GenericStack> scaledCondensedOutputs = new ArrayList<>(baseOutputs.size());
-        for (int i = 0; i < baseOutputs.size(); i++) {
-            GenericStack out = baseOutputs.get(i);
+        for (GenericStack out : baseOutputs) {
             if (out != null) {
                 scaledCondensedOutputs.add(new GenericStack(out.what(), out.amount() * multiplier));
             } else {
@@ -96,8 +95,7 @@ public final class PatternScaler {
 
         // 构建稀疏表示（List，直接按 multiplier 放大）
         List<GenericStack> scaledSparseInputs = new ArrayList<>(baseSparseInputs.size());
-        for (int i = 0; i < baseSparseInputs.size(); i++) {
-            var in = baseSparseInputs.get(i);
+        for (GenericStack in : baseSparseInputs) {
             if (in != null) {
                 scaledSparseInputs.add(new GenericStack(in.what(), in.amount() * multiplier));
             } else {
@@ -105,8 +103,7 @@ public final class PatternScaler {
             }
         }
         List<GenericStack> scaledSparseOutputs = new ArrayList<>(baseSparseOutputs.size());
-        for (int i = 0; i < baseSparseOutputs.size(); i++) {
-            var out = baseSparseOutputs.get(i);
+        for (GenericStack out : baseSparseOutputs) {
             if (out != null) {
                 scaledSparseOutputs.add(new GenericStack(out.what(), out.amount() * multiplier));
             } else {

@@ -35,7 +35,7 @@ public class ModJeiPlugin implements IModPlugin {
         registration.registerSubtypeInterpreter(
                 VanillaTypes.ITEM_STACK,
                 com.extendedae_plus.init.ModItems.ENTITY_SPEED_CARD.get(),
-                new ISubtypeInterpreter<ItemStack>() {
+                new ISubtypeInterpreter<>() {
                     @Override
                     public @NotNull Object getSubtypeData(@NotNull ItemStack ingredient, @NotNull UidContext context) {
                         // 返回你想让 JEI 区分子类型的数据，这里用 multiplier

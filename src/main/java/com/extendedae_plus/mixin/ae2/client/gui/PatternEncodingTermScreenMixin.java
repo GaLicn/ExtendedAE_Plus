@@ -6,7 +6,7 @@ import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
 import appeng.client.gui.widgets.IconButton;
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -37,7 +37,7 @@ public abstract class PatternEncodingTermScreenMixin {
     private void eap$addUploadButton(CallbackInfo ci) {
         // 仅在图样编码终端界面中添加按钮
         if (!(((Object) this) instanceof PatternEncodingTermScreen)) return;
-        if (!ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
+        if (!EAEPConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> PacketDistributor
@@ -141,7 +141,7 @@ public abstract class PatternEncodingTermScreenMixin {
     @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
     private void eap$ensureUploadButton(CallbackInfo ci) {
         if (!(((Object) this) instanceof PatternEncodingTermScreen &&
-                ModConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()))
+                EAEPConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()))
             return;
         if (eap$uploadBtn == null) {
             return;

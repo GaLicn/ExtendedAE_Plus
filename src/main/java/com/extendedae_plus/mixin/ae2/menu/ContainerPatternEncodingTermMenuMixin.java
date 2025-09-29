@@ -53,9 +53,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     private void eap$writeEncodePlayerToPattern(CallbackInfoReturnable<ItemStack> cir) {
         ItemStack itemStack = cir.getReturnValue();
         if (itemStack != null && !itemStack.isEmpty()) {
-            CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> {
-                tag.putString("encodePlayer", this.epp$player.getGameProfile().getName());
-            });
+            CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> tag.putString("encodePlayer", this.epp$player.getGameProfile().getName()));
             cir.setReturnValue(itemStack);
         }
     }

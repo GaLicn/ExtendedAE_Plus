@@ -70,15 +70,14 @@ public class InterfaceAdjustConfigAmountC2SPacket implements CustomPacketPayload
                         int factor = Math.max(1, msg.factor);
                         long next;
                         if (msg.divide) {
-                            if (factor <= 1) continue;
+                            if (factor == 1) continue;
                             if (current % factor != 0) continue;
                             next = current / factor;
-                            if (next < 1) next = 1;
                         } else {
-                            if (factor <= 1) continue;
+                            if (factor == 1) continue;
                             next = current * factor;
-                            if (next < 1) next = 1;
                         }
+                        if (next < 1) next = 1;
 
                         GenericStack newStack = new GenericStack(st.what(), next);
                         config.setStack(idx, newStack);
@@ -92,16 +91,15 @@ public class InterfaceAdjustConfigAmountC2SPacket implements CustomPacketPayload
                     long next;
                     if (msg.divide) {
                         // 只能整除，且至少为 1
-                        if (factor <= 1) return;
+                        if (factor == 1) return;
                         if (current % factor != 0) return; // 不能整除则跳过
                         next = current / factor;
-                        if (next < 1) next = 1;
                     } else {
                         // 倍增，至少为 1
-                        if (factor <= 1) return;
+                        if (factor == 1) return;
                         next = current * factor;
-                        if (next < 1) next = 1;
                     }
+                    if (next < 1) next = 1;
 
                     // 应用
                     GenericStack newStack = new GenericStack(stack.what(), next);

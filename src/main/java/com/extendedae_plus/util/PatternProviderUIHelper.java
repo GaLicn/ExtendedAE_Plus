@@ -21,8 +21,8 @@ public class PatternProviderUIHelper {
         Minecraft mc = Minecraft.getInstance();
         Screen currentScreen = mc.screen;
         
-        if (currentScreen instanceof PatternProviderScreen patternScreen) {
-            PatternProviderMenu menu = (PatternProviderMenu) patternScreen.getMenu();
+        if (currentScreen instanceof PatternProviderScreen<?> patternScreen) {
+            PatternProviderMenu menu = patternScreen.getMenu();
             
             // 通过反射安全地访问protected字段
             try {
@@ -53,11 +53,11 @@ public class PatternProviderUIHelper {
      * 
      * @return PatternProviderScreen对象，如果当前没有打开样板供应器界面则返回null
      */
-    public static PatternProviderScreen getCurrentPatternProviderScreen() {
+    public static PatternProviderScreen<?> getCurrentPatternProviderScreen() {
         Minecraft mc = Minecraft.getInstance();
         Screen currentScreen = mc.screen;
         
-        if (currentScreen instanceof PatternProviderScreen patternScreen) {
+        if (currentScreen instanceof PatternProviderScreen<?> patternScreen) {
             return patternScreen;
         }
         

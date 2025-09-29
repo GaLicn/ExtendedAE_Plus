@@ -1,6 +1,5 @@
 package com.extendedae_plus.compat;
 
-import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.ModList;
 
 public final class UpgradeSlotCompat {
@@ -35,8 +34,6 @@ public final class UpgradeSlotCompat {
                     Class.forName("com.glodblock.github.appflux.mixins.MixinPatternProviderScreen");
                     APPFLUX_PATTERN_PROVIDER_MIXIN_ACTIVE = true;
                 }
-            } catch (ClassNotFoundException e) {
-                APPFLUX_PATTERN_PROVIDER_MIXIN_ACTIVE = false;
             } catch (Throwable t) {
                 APPFLUX_PATTERN_PROVIDER_MIXIN_ACTIVE = false;
             }

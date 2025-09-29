@@ -1,8 +1,6 @@
 package com.extendedae_plus.compat;
 
 import appeng.client.gui.implementations.PatternProviderScreen;
-import appeng.client.gui.widgets.UpgradesPanel;
-import com.extendedae_plus.util.ExtendedAELogger;
 
 /**
  * AppliedFlux 兼容性处理工具类
@@ -18,13 +16,10 @@ public final class AppliedFluxCompat {
      */
     public static boolean hasAppliedFluxUpgradePanel(PatternProviderScreen<?> screen) {
         // 如果AppliedFlux未加载，肯定没有其升级面板
-        if (!UpgradeSlotCompat.shouldUseLowPriorityMode()) {
-            return false;
-        }
+        return UpgradeSlotCompat.shouldUseLowPriorityMode();
         
         // 如果 AppliedFlux 加载了，假设它会添加升级面板
         // 这是一个保守的假设，避免冲突
-        return true;
     }
     
     /**

@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin;
 
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.network.PickFromWirelessC2SPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -27,7 +27,7 @@ public class PickFromWirelessMixin {
 
     @Inject(method = "pickBlock", at = @At("HEAD"), cancellable = true)
     private void onPickBlock(CallbackInfo ci) {
-        if (ModConfig.OVERRIDE_AE2WT_PICKING.getAsBoolean() && eaep$overridePicking())
+        if (EAEPConfig.OVERRIDE_AE2WT_PICKING.getAsBoolean() && eaep$overridePicking())
             ci.cancel();
     }
 

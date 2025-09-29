@@ -67,7 +67,7 @@ public class NumberFormatUtil {
     private static String formatDecimal(double value, String suffix) {
         // 对于接近整数的值，使用整数显示
         if (Math.abs(value - Math.round(value)) < 0.001) {
-            return String.valueOf(Math.round(value)) + suffix;
+            return Math.round(value) + suffix;
         } else {
             // 使用一位小数显示，去掉末尾 .0
             String formatted = String.format("%.1f", value).replaceAll("\\.0$", "");

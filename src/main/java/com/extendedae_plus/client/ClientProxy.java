@@ -7,6 +7,7 @@ import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
+import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -61,17 +62,7 @@ public final class ClientProxy {
         // 菜单 -> 屏幕 绑定（显式 ScreenConstructor，避免泛型推断问题）
         event.register(
                 ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
-                        com.extendedae_plus.menu.NetworkPatternControllerMenu,
-                        com.extendedae_plus.client.screen.GlobalProviderModesScreen>() {
-                    @Override
-                    public com.extendedae_plus.client.screen.GlobalProviderModesScreen create(
-                            com.extendedae_plus.menu.NetworkPatternControllerMenu menu,
-                            net.minecraft.world.entity.player.Inventory inv,
-                            net.minecraft.network.chat.Component title) {
-                        return new com.extendedae_plus.client.screen.GlobalProviderModesScreen(menu, inv, title);
-                    }
-                }
+                GlobalProviderModesScreen::new
         );
 
         /**

@@ -9,7 +9,6 @@ import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -76,7 +75,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         }
 
         // 注册到渲染与交互列表
-        var accessor = (ScreenAccessor) (Object) this;
+        var accessor = (ScreenAccessor) this;
         if (!accessor.eap$getRenderables().contains(eap$divideBy2Button)) accessor.eap$getRenderables().add(eap$divideBy2Button);
         if (!accessor.eap$getChildren().contains(eap$divideBy2Button)) accessor.eap$getChildren().add(eap$divideBy2Button);
         if (!accessor.eap$getRenderables().contains(eap$x2Button)) accessor.eap$getRenderables().add(eap$x2Button);
@@ -98,7 +97,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         if (!eap$isSupportedInterfaceScreen()) {
             return;
         }
-        var accessor = (ScreenAccessor) (Object) this;
+        var accessor = (ScreenAccessor) this;
         if (eap$divideBy2Button != null && !accessor.eap$getRenderables().contains(eap$divideBy2Button)) {
             accessor.eap$getRenderables().add(eap$divideBy2Button);
             accessor.eap$getChildren().add(eap$divideBy2Button);
@@ -124,10 +123,10 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             accessor.eap$getChildren().add(eap$x10Button);
         }
 
-        int curLeft = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-        int curTop = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-        int curImgW = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-        int curImgH = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
+        int curLeft = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+        int curTop = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+        int curImgW = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
+        int curImgH = ((AbstractContainerScreenAccessor<?>) this).eap$getImageHeight();
         if (curLeft != eap$lastLeftPos || curTop != eap$lastTopPos || curImgW != eap$lastImageWidth || curImgH != eap$lastImageHeight) {
             eap$lastLeftPos = curLeft;
             eap$lastTopPos = curTop;
@@ -144,7 +143,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             if (!eap$isSupportedInterfaceScreen()) {
                 return;
             }
-            Slot hovered = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getHoveredSlot();
+            Slot hovered = ((AbstractContainerScreenAccessor<?>) this).eap$getHoveredSlot();
             var screen = (AEBaseScreen<?>) (Object) this;
             var menu = screen.getMenu();
             if (!(menu instanceof appeng.menu.implementations.InterfaceMenu interfaceMenu)) {
@@ -217,9 +216,9 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
     @Unique
     private void eap$relayoutButtons() {
         try {
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            int leftPos = ((AbstractContainerScreenAccessor<?>) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
             int bx = leftPos + imageWidth + 1;
             int by = topPos + 70;
             int spacing = 22;
@@ -238,7 +237,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             if (!(((Object) this) instanceof InterfaceScreen)) {
                 return;
             }
-            Slot hovered = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getHoveredSlot();
+            Slot hovered = ((AbstractContainerScreenAccessor<?>) this).eap$getHoveredSlot();
             if (hovered == null) {
                 return;
             }

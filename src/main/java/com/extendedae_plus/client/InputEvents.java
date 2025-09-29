@@ -23,6 +23,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
+@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class InputEvents {
 	private InputEvents() {}
 
@@ -56,7 +57,9 @@ public final class InputEvents {
         if (event.getKeyCode() == GLFW.GLFW_KEY_F) {
             // 仅当鼠标确实悬停在 JEI 配料上时触发
             // 大概会在一格有多个(?)stack的时候出bug, 但是真的会有那种时候吗?
-            String name = RecipeViewerHelper.getHoveredStacks().getFirst().what().getDisplayName().getString();
+            GenericStack stack = RecipeViewerHelper.getHoveredStacks().getFirst();
+            if (stack == null) return;
+            String name = stack.what().getDisplayName().getString();
 
             // 写入 AE2 终端的搜索框
             var screen = Minecraft.getInstance().screen;

@@ -12,7 +12,7 @@ loaderVersion="[1,)" #mandatory
 
 # The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
 # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
-license="All Rights Reserved"
+license="LGPL-3.0-or-later"
 
 # A URL to refer people to when problems occur with this mod
 #issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
@@ -42,11 +42,10 @@ displayName="ExtendedAE-Plus" #mandatory
 #credits="" #optional
 
 # A text field displayed in the mod UI
-authors="YourNameHere, OtherNameHere" #optional
+authors="GaLicn, XianYuFish001" #optional
 
 # The description text for the mod (multi line!) (#mandatory)
-description='''Example mod description.
-Newline characters can be used and will be replaced properly.'''
+description=''''''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 [[mixins]]
@@ -95,6 +94,13 @@ config="extendedae_plus.mixins.json"
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
+
+[[dependencies.extendedae_plus]]
+modId="expandedae"
+type="discouraged"
+versionRange="*"
+ordering="AFTER"
+side="BOTH"
 
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

@@ -1,6 +1,6 @@
 package com.extendedae_plus.wireless;
 
-import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.config.EAEPConfig;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -63,7 +63,7 @@ public final class WirelessMasterRegistry {
     }
 
     private static boolean useGlobal() {
-        return ModConfig.WIRELESS_CROSS_DIM_ENABLE.get();
+        return EAEPConfig.WIRELESS_CROSS_DIM_ENABLE.get();
     }
 
     private record Key(ResourceKey<Level> dim, long freq) {

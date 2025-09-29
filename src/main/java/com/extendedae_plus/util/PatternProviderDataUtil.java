@@ -8,7 +8,6 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.mojang.logging.LogUtils;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -143,7 +142,7 @@ public class PatternProviderDataUtil {
             if (outputs.isEmpty()) {
                 return 0;
             }
-            return outputs.get(0).getAmount();
+            return outputs.getFirst().getAmount();
         }
 
         /**
@@ -250,7 +249,7 @@ public class PatternProviderDataUtil {
                 if (patternDetails != null) {
                     patternDataList.add(new PatternData(patternDetails, patternStack, i));
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -570,7 +569,7 @@ public class PatternProviderDataUtil {
                 if (d != null && d.getDefinition().equals(targetDefinition)) {
                     return i;
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
         return -1;
@@ -667,7 +666,6 @@ public class PatternProviderDataUtil {
                     if (!canScalePatternExtendedAEStyle(originalPattern, scaleFactor)) {
                         errors.add("槽位 " + i + ": 样板数量无法按指定比例缩放");
                         failedPatterns++;
-                        continue;
                     }
                 }
 
@@ -687,7 +685,7 @@ public class PatternProviderDataUtil {
             try {
                 // 解码原始样板
                 IPatternDetails originalPattern = PatternDetailsHelper.decodePattern(patternStack, level);
-                if (originalPattern == null || !isPatternScalable(originalPattern)) {
+                if (!isPatternScalable(originalPattern)) {
                     continue;
                 }
 

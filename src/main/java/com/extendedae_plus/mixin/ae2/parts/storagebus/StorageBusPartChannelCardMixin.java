@@ -5,14 +5,13 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.parts.storagebus.StorageBusPart;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
+import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -99,7 +98,7 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
             if (eap$link == null) {
                 var endpoint = new GenericNodeEndpointImpl(
                         () -> ((appeng.parts.AEBasePart)(Object)this).getHost().getBlockEntity(),
-                        () -> ((IActionHost)(Object)this).getActionableNode()
+                        () -> ((IActionHost) this).getActionableNode()
                 );
                 eap$link = new WirelessSlaveLink(endpoint);
             }

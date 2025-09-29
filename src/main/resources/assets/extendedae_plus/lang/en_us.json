@@ -32,6 +32,7 @@
   "tooltip.extendedae_plus.infinity_biginteger_cell.summon2": "§b—§4A §dUni§cverse §eWith§ain §6A §bSin§5gle §9Point",
   "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
   "tooltip.extendedae_plus.entity_speed_card.max": "Maximum Effect: %s Times",
+  "tooltip.extendedae_plus.encode_button.upload_pattern": "\n§a[Ctrl] §7Upload patterns",
 
   "block.extendedae_plus.wireless_transceiver": "Wireless Transceiver",
   "block.extendedae_plus.4x_crafting_accelerator": "4x Crafting Accelerator",
@@ -74,20 +75,17 @@
   "extendedae_plus.tooltip.frequency": "Frequency: %d",
   "extendedae_plus.tooltip.master_mode": "Mode: %s",
   "extendedae_plus.tooltip.locked": "Lock Status: %s",
-  "tooltip.extendedae_plus.encode_button_description": "\n§a[Ctrl] §7Upload patterns",
 
   "screen.extendedae_plus.title": "ExtendedAE Plus Configuration",
   "config.extendedae_plus": "ExtendedAE Plus",
 
-  "extendedae_plus.configuration.common": "Common Configuration",
   "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Slot Multiplier",
   "extendedae_plus.configuration.pageMultiplier_with_range": "Pattern Provider Slot Multiplier (1-64)",
-  "extendedae_plus.configuration.override_ae2wt_picking": "Override AE2WT Picking",
+  "extendedae_plus.configuration.overrideAE2WTPicking": "Override AE2WT Picking",
 
-  "extendedae_plus.configuration.client": "Display Configuration",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Pattern Encoder Player",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots by Default",
-  "extendedae_plus.configuration.independence_uploading_button": "Independence Upload Button",
+  "extendedae_plus.configuration.independentUploadingButton": "Independent Upload Button",
 
 
   "extendedae_plus.configuration.ae": "AE2 Configuration",
@@ -105,6 +103,7 @@
   "extendedae_plus.configuration.entityTickerBlackList": "Entity Ticker Blacklist",
   "extendedae_plus.configuration.entityTickerMultipliers": "Entity Ticker Extra Cost Multipliers",
   "extendedae_plus.configuration.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
+  "extendedae_plus.configuration.needsUploadingCore": "Needs Upload Core",
 
   "extendedae_plus.configuration.state_on": "On",
   "extendedae_plus.configuration.state_off": "Off"

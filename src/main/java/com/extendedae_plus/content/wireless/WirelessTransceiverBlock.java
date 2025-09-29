@@ -83,7 +83,6 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
                 }
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
         } else {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
@@ -95,8 +94,8 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             if (!level.isClientSide) {
                 player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
@@ -120,7 +119,6 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
                 }
             }
-            return InteractionResult.sidedSuccess(level.isClientSide);
         } else {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
@@ -132,8 +130,8 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             if (!level.isClientSide) {
                 player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
             }
-            return InteractionResult.sidedSuccess(level.isClientSide);
         }
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override

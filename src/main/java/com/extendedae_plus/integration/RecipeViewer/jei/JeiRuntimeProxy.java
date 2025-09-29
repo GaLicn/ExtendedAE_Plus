@@ -184,13 +184,11 @@ public final class JeiRuntimeProxy {
                     if (createMethod != null) {
                         Object bookmark = createMethod.invoke(null, typed, ingredientManager);
                         if (bookmark != null) {
-                            list.add((IngredientBookmark) bookmark);
+                            list.add((IngredientBookmark<?>) bookmark);
                         }
                     }
                 }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
+            } catch (Throwable ignored) {}
         }
     }
 }

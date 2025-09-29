@@ -29,14 +29,14 @@ import java.util.Objects;
  */
 public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
-    private IManagedGridNode managedNode;
+    private final IManagedGridNode managedNode;
 
     private long frequency = 1L;
     private boolean masterMode = false;
     private boolean locked = false;
 
-    private WirelessMasterLink masterLink;
-    private WirelessSlaveLink slaveLink;
+    private final WirelessMasterLink masterLink;
+    private final WirelessSlaveLink slaveLink;
 
     public WirelessTransceiverBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.WIRELESS_TRANSCEIVER_BE.get(), pos, state);

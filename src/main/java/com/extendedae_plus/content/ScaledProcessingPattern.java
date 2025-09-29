@@ -9,8 +9,6 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,10 +35,10 @@ public final class ScaledProcessingPattern implements IPatternDetails {
     ) {
         this.original = Objects.requireNonNull(original);
         this.definition = Objects.requireNonNull(definition);
-        this.sparseInputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseInputs)));
-        this.sparseOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseOutputs)));
+        this.sparseInputs = List.copyOf(Objects.requireNonNull(sparseInputs));
+        this.sparseOutputs = List.copyOf(Objects.requireNonNull(sparseOutputs));
         this.inputs = Objects.requireNonNull(inputs);
-        this.condensedOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(condensedOutputs)));
+        this.condensedOutputs = List.copyOf(Objects.requireNonNull(condensedOutputs));
     }
 
     /* -------------------- API 实现 -------------------- */
@@ -74,7 +72,7 @@ public final class ScaledProcessingPattern implements IPatternDetails {
 
     @Override
     public GenericStack getPrimaryOutput() {
-        if (!condensedOutputs.isEmpty()) return condensedOutputs.get(0);
+        if (!condensedOutputs.isEmpty()) return condensedOutputs.getFirst();
         return original.getPrimaryOutput();
     }
 
