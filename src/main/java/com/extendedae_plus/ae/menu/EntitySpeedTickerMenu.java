@@ -6,7 +6,6 @@ import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
-import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
@@ -16,8 +15,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.List;
 
 /**
  * 实体加速器菜单，负责管理客户端与服务端的数据同步，处理加速卡、能量卡和目标方块的状态。
@@ -135,8 +132,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
             return;
         }
         String blockId = ForgeRegistries.BLOCKS.getKey(target.getBlockState().getBlock()).toString();
-        this.multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, List.of(ModConfig.INSTANCE.entityTickerMultipliers));
-        this.targetBlacklisted = ConfigParsingUtils.isBlockBlacklisted(blockId, List.of(ModConfig.INSTANCE.entityTickerBlackList));
+        this.multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId);
+        this.targetBlacklisted = ConfigParsingUtils.isBlockBlacklisted(blockId);
     }
 
     /**

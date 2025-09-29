@@ -45,7 +45,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * 实体加速器部件，用于加速目标方块实体的 tick 速率，消耗 AE 网络能量，支持加速卡和能量卡升级。
@@ -231,7 +230,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         }
 
         String blockId = ForgeRegistries.BLOCKS.getKey(blockEntity.getBlockState().getBlock()).toString();
-        if (ConfigParsingUtils.isBlockBlacklisted(blockId, List.of(ModConfig.INSTANCE.entityTickerBlackList))) {
+        if (ConfigParsingUtils.isBlockBlacklisted(blockId)) {
             return;
         }
 
@@ -252,7 +251,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
         // 使用 PowerUtils 的缓存获取能耗，并应用方块特定的倍率
         double requiredPower = PowerUtils.getCachedPower(cachedSpeed, cachedEnergyCardCount)
-                * ConfigParsingUtils.getMultiplierForBlock(blockId, List.of(ModConfig.INSTANCE.entityTickerMultipliers));
+                * ConfigParsingUtils.getMultiplierForBlock(blockId);
         if (!extractPower(requiredPower)) {
             return;
         }
