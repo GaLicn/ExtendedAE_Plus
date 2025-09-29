@@ -80,9 +80,6 @@ public class ScalePatternsC2SPacket implements CustomPacketPayload {
                         factor, result.getTotalPatterns(), result.getScaledPatterns(), result.getFailedPatterns());
                 player.displayClientMessage(net.minecraft.network.chat.Component.literal("[EAP] " + summary), true);
 
-                for (String err : result.getErrors()) {
-                    ExtendedAELogger.LOGGER.debug("[EAP] scale error: {}", err);
-                }
             } catch (Throwable t) {
                 ExtendedAELogger.LOGGER.error("[EAP] Handle ScalePatternsC2SPacket failed", t);
             }

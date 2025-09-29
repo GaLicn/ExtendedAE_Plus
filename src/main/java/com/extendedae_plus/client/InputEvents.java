@@ -23,9 +23,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class InputEvents {
-    private InputEvents() {}
+	private InputEvents() {}
 
     @SubscribeEvent
     public static void onMouseButtonPre(InputEvent.MouseButton.Pre event) {
@@ -47,13 +46,10 @@ public final class InputEvents {
             GenericStack stack = stacks.isEmpty() ? null : stacks.getFirst();
             if (stack == null) return;
 
-            // 发送到服务端，让其验证并打开 CraftAmountMenu
-            PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
-
-            // 消费此次点击，避免 JEI/原版对中键的其它处理
-            event.setCanceled(true);
-        }
-    }
+			PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
+			event.setCanceled(true);
+		}
+	}
 
     @SubscribeEvent
     public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {

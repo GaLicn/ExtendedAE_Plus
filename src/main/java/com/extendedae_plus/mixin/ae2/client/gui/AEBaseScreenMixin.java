@@ -105,10 +105,6 @@ public abstract class AEBaseScreenMixin {
             if (key == null) {
                 return;
             }
-            // Debug: 标记一次发送（打开供应器UI）
-            try {
-                LogUtils.getLogger().info("EAP: Send CraftingMonitorOpenProviderC2SPacket: {}", key);
-            } catch (Throwable ignored2) {}
             PacketDistributor.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
             cir.setReturnValue(true);
         } catch (Throwable ignored) {

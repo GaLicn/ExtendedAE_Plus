@@ -6,6 +6,7 @@ import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.extendedae_plus.integration.RecipeViewer.RecipeViewerHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

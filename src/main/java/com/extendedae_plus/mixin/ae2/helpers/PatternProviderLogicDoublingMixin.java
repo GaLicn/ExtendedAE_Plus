@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = PatternProviderLogic.class, remap = false)
 public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
     @Unique
-    private static final String EPP_SMART_DOUBLING_KEY = "epp_smart_doubling";
+    private static final String EAP_SMART_DOUBLING_KEY = "epp_smart_doubling";
 
     @Unique
     private boolean eap$smartDoubling = false;
@@ -46,13 +46,13 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$writeSmartDoublingToNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
-        tag.putBoolean(EPP_SMART_DOUBLING_KEY, this.eap$smartDoubling);
+        tag.putBoolean(EAP_SMART_DOUBLING_KEY, this.eap$smartDoubling);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$readSmartDoublingFromNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
-        if (tag.contains(EPP_SMART_DOUBLING_KEY)) {
-            this.eap$smartDoubling = tag.getBoolean(EPP_SMART_DOUBLING_KEY);
+        if (tag.contains(EAP_SMART_DOUBLING_KEY)) {
+            this.eap$smartDoubling = tag.getBoolean(EAP_SMART_DOUBLING_KEY);
         }
     }
 

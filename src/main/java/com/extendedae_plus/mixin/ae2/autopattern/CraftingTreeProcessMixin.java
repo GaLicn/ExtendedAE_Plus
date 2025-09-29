@@ -55,6 +55,7 @@ public abstract class CraftingTreeProcessMixin {
             CraftingTreeNodeAccessor parentAcc = (CraftingTreeNodeAccessor) craftingTreeNode;
             AEKey parentTarget = parentAcc.eap$getWhat();
             long requested = RequestedAmountHolder.get();
+            RequestedAmountHolder.pop();
 
             // 根据配置决定是否在 provider 间轮询分配请求量（默认开启）
             long perProvider = 1L;

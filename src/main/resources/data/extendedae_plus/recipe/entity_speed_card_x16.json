@@ -1,0 +1,41 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SAS",
+    "QXQ",
+    "SBS"
+  ],
+  "key": {
+    "S": {
+      "type": "neoforge:components",
+      "items": "extendedae_plus:entity_speed_card",
+      "components": {
+        "minecraft:custom_data": {
+          "EAS:mult": 8
+        }
+      },
+      "strict": true
+    },
+    "A": {
+      "item": "minecraft:nether_star"
+    },
+    "B": {
+      "item": "minecraft:beacon"
+    },
+    "Q": {
+      "item": "ae2:spatial_cell_component_128"
+    },
+    "X": {
+      "item": "minecraft:dragon_egg"
+    }
+  },
+  "result": {
+    "id": "extendedae_plus:entity_speed_card",
+    "count": 1,
+    "components": {
+      "minecraft:custom_data": {
+        "EAS:mult": 16
+      }
+    }
+  }
+}

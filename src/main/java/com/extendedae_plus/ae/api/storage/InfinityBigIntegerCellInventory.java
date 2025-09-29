@@ -8,127 +8,70 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
+import appeng.core.AELog;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.util.storage.InfinityConstants;
 import com.extendedae_plus.util.storage.InfinityDataStorage;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * InfinityBigIntegerCellInventory
- * <p>
- * 本类实现 AE2 的 StorageCell，表示单个 Infinity 存储单元的运行时数据与行为。
- * 主要职责：
- * - 在内存中维护条目映射 (AEKey -> BigInteger 数量)
- * - 提供插入/提取/列举/持久化等操作的实现
- * - 通过 UUID 将 ItemStack 与世界级的 SavedData 关联以实现持久化
- * <p>
- * 重要字段：
- * - stack: 关联的 ItemStack，NB T 中保存 UUID 与缓存信息
- * - container: AE2 提供的保存回调 (ISaveProvider)，用于合并与触发持久化
- * - storedMap: 延迟初始化的内存映射，减少未使用时内存占用
- * - totalStored: 缓存的总数量 (BigInteger)，避免频繁全表扫描
- * - isPersisted: 标记内存状态是否已同步到持久层
+ * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
+ * Original copyright (c) Technici4n<p>
  */
 public class InfinityBigIntegerCellInventory implements StorageCell {
-
-    // 待持久化队列（用于 debounce：在服务器 tick 中合并持久化）
-    private static final ConcurrentLinkedQueue<InfinityBigIntegerCellInventory> PENDING_PERSIST = new ConcurrentLinkedQueue<>();
-    // 数字格式化对象，保留两位小数（复用以减少对象分配）
-    private static final DecimalFormat DF = new DecimalFormat("#.##");
-
-    // 关联的 ItemStack（含可能的 uuid NBT）
-    private final ItemStack stack;
+    private final InfinityBigIntegerCellItem cell;
+    // 磁盘本身
+    private final ItemStack self;
+    @Nullable
+    private final InfinityStorageManager storageManager;
     // AE2 提供的保存提供者，用于在容器中批量保存时触发回调
     private final ISaveProvider container;
-    // 内存中的键-数量映射（使用 BigInteger 支持超长数量，延迟初始化）
-    private Object2ObjectMap<AEKey, BigInteger> storedMap = null;
+    // 存储物品键和数量的映射
+    private Object2ObjectMap<AEKey, BigInteger> AEKey2AmountsMap;
+    // 存储的物品种类数量
+    private int totalAEKeyType;
+    // 存储的物品总数
+    private BigInteger totalAEKey2Amounts = BigInteger.ZERO;
     // 标记是否已持久化到 SavedData
     private boolean isPersisted = true;
-    // 缓存的总存储量，避免每次调用进行全表扫描
-    private BigInteger totalStored = BigInteger.ZERO;
 
-    /**
-     * 私有构造器：通过 createInventory 工厂方法调用
-     *
-     * @param stack        关联的物品堆
-     * @param saveProvider AE2 的保存回调（可为 null）
-     */
-    private InfinityBigIntegerCellInventory(ItemStack stack, ISaveProvider saveProvider) {
-        this.stack = stack;
-        container = saveProvider;
-        // 不在构造时创建 storedMap，推迟到实际访问或首次写入时初始化
-        this.storedMap = null;
-    }
 
-    // 创建存储单元库存实例的静态方法
-    static InfinityBigIntegerCellInventory createInventory(ItemStack stack, ISaveProvider saveProvider) {
-        if (stack.getItem() instanceof InfinityBigIntegerCellItem) {
-            return new InfinityBigIntegerCellInventory(stack, saveProvider);
-        }
-        return null;
-    }
-
-    // 获取全局存储实例
-    private static InfinityStorageManager getStorageInstance() {
-        return InfinityStorageManager.INSTANCE;
-    }
-
-    // 服务器 tick 回调：合并并执行待持久化项
-    public static void onServerTick(ServerTickEvent.Post event) {
-        // NeoForge 提供 Pre/Post 子类以区分阶段，Post 对应原来的 Phase.END
-        InfinityBigIntegerCellInventory inv;
-        // 处理本次 tick 中的全部待持久化项
-        while ((inv = PENDING_PERSIST.poll()) != null) {
-            try {
-                if (!inv.isPersisted) {
-                    inv.persist();
-                }
-            } catch (Throwable ignored) {
-                // 忽略单项错误，继续处理其余队列
-            }
-        }
-    }
-
-    // 在服务器停止时被调用，立即强制持久化队列中的所有实例
-    public static void onServerStopping(ServerStoppingEvent event) {
-        InfinityBigIntegerCellInventory inv;
-        while ((inv = PENDING_PERSIST.poll()) != null) {
-            try {
-                if (!inv.isPersisted) {
-                    inv.persist();
-                }
-            } catch (Throwable ignored) {
-                // 忽略单项错误，继续尝试持久化其它实例
-            }
-        }
-        // 额外尝试将全局存储管理器标记为脏以确保 SavedData 被写回（在单人模式下可能直接由系统触发）
-        try {
-            var stor = getStorageInstance();
-            if (stor != null) stor.setDirty();
-        } catch (Throwable ignored) {
-        }
+    public InfinityBigIntegerCellInventory(InfinityBigIntegerCellItem cell,
+                                           ItemStack stack,
+                                           ISaveProvider saveProvider,
+                                           @Nullable InfinityStorageManager storageManager) {
+        // 保存存储单元类型（InfinityBigIntegerCellItem 实例），用于访问磁盘属性
+        this.cell = cell;
+        // 保存物品堆栈，表示磁盘本身，包含运行时的 NBT 数据
+        this.self = stack;
+        // 保存提供者，用于触发数据保存
+        this.container = saveProvider;
+        // 初始化 storedAmounts 为 null，延迟加载物品数据
+        this.AEKey2AmountsMap = null;
+        this.storageManager = storageManager;
+        // 初始化磁盘数据
+        initData();
     }
 
     // 将 BigInteger 格式化为带单位的字符串，保留两位小数
     public static String formatBigInteger(BigInteger number) {
-        // 使用局部 DF（非线程安全），但 Minecraft 通常在主线程运行
+        // 使用方法局部的 DecimalFormat，避免静态共享的非线程安全问题
+        java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
         BigDecimal bd = new BigDecimal(number);
         BigDecimal thousand = new BigDecimal(1000);
         String[] units = new String[]{"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
@@ -140,26 +83,60 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (idx == 0) {
             return bd.setScale(0, RoundingMode.DOWN).toPlainString();
         }
-        return DF.format(bd.doubleValue()) + units[idx];
+        return df.format(bd.doubleValue()) + units[idx];
     }
 
-    // 获取当前存储单元的数据存储对象
+    // 静态方法，创建存储单元库存
+    public static InfinityBigIntegerCellInventory createInventory(ItemStack stack,
+                                                                  ISaveProvider saveProvider,
+                                                                  @Nullable InfinityStorageManager storageManager) {
+        // 检查物品堆栈是否为空
+        Objects.requireNonNull(stack, "Cannot create cell inventory for null itemstack");
+        // 检查物品是否为 IDISKCellItem 类型
+        if (!(stack.getItem() instanceof InfinityBigIntegerCellItem cell)) {
+            return null;
+        }
+        // 创建并返回新的 DISKCellInventory 实例
+        return new InfinityBigIntegerCellInventory(cell, stack, saveProvider, storageManager);
+    }
+
+    // 获取磁盘的 InfinityDataStorage 数据
     private InfinityDataStorage getCellStorage() {
-        if (this.getUUID() == null) {
-            // 如果没有UUID，返回空存储
-            return InfinityDataStorage.EMPTY;
+        // 如果磁盘有 UUID，返回对应的 InfinityDataStorage
+        if (getUUID() != null && this.storageManager != null) {
+            return storageManager.getOrCreateCell(getUUID());
         } else {
-            // 否则获取或创建对应UUID的存储
-            return getStorageInstance().getOrCreateCell(getUUID());
+            // 否则返回空的 InfinityDataStorage
+            return InfinityDataStorage.EMPTY;
         }
     }
 
-    // 获取存储单元状态（空/非空）
+    // 初始化磁盘数据
+    private void initData() {
+        // 如果磁盘有 UUID，加载存储的物品数据
+        if (hasUUID()) {
+            this.totalAEKeyType = getCellStorage().amounts.size();
+            this.totalAEKey2Amounts = getCellStorage().itemCount.equals(BigInteger.ZERO) ?
+                    BigInteger.ZERO :
+                    getCellStorage().itemCount;
+
+        } else {
+            // 否则初始化为空
+            this.totalAEKeyType = 0;
+            this.totalAEKey2Amounts = BigInteger.ZERO;
+            // 加载物品数据
+            getCellStoredMap();
+        }
+    }
+
+    // 获取存储单元的状态（空、部分填充）
     @Override
     public CellState getStatus() {
-        if (this.getCellStoredMap().isEmpty()) {
+        // 如果没有存储任何物品，返回空状态
+        if (this.getTotalAEKey2Amounts().equals(BigInteger.ZERO)) {
             return CellState.EMPTY;
         }
+        // 否则返回满状态
         return CellState.NOT_EMPTY;
     }
 
@@ -169,222 +146,236 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return 512;
     }
 
+    // 持久化存储单元数据到全局存储
+    @Override
+    public void persist() {
+        if (this.isPersisted || this.storageManager == null)
+            return;
+
+        if (this.totalAEKey2Amounts.equals(BigInteger.ZERO)) {
+            if (hasUUID()) {
+                this.storageManager.removeCell(getUUID());
+                // 从 DataComponents.CUSTOM_DATA 里移除对应字段
+                CustomData data = self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                CompoundTag tag = data.copyTag();
+                tag.remove(InfinityConstants.INFINITY_CELL_UUID);
+                tag.remove(InfinityConstants.INFINITY_ITEM_TOTAL);
+                tag.remove(InfinityConstants.INFINITY_ITEM_TYPES);
+                // backward compat
+                tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
+
+                self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+
+                initData();
+            }
+            return;
+        }
+
+        // 创建物品键列表
+        ListTag keys = new ListTag();
+        // 创建物品数量列表
+        ListTag amounts = new ListTag();
+        // 初始化物品总数
+        BigInteger itemCount = BigInteger.ZERO;
+
+        for (var entry : this.AEKey2AmountsMap.object2ObjectEntrySet()) {
+            BigInteger amount = entry.getValue();
+            // 如果数量大于 0，添加到键和数量列表
+            if (amount.compareTo(BigInteger.ZERO) > 0) {
+                keys.add(entry.getKey().toTagGeneric(this.storageManager.getRegistries()));
+                CompoundTag amountTag = new CompoundTag();
+                amountTag.putByteArray("value", amount.toByteArray());
+                amounts.add(amountTag);
+
+                itemCount = itemCount.add(amount);
+            }
+        }
+
+        if (keys.isEmpty()) {
+            this.storageManager.updateCell(getUUID(), new InfinityDataStorage());
+        } else {
+            this.storageManager.modifyDisk(getUUID(), keys, amounts, itemCount);
+        }
+
+        // 更新存储的物品种类数量
+        this.totalAEKeyType = this.AEKey2AmountsMap.size();
+        // 更新存储的物品总数
+        this.totalAEKey2Amounts = itemCount;
+        // 将物品总数与种类数量存入物品堆栈的 NBT（用于快捷查看／tooltip），同时保留旧字段以兼容历史版本
+
+        // 写回 DataComponents.CUSTOM_DATA（替代 getOrCreateTag）
+        CompoundTag tag = self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        tag.putByteArray(InfinityConstants.INFINITY_ITEM_TOTAL, itemCount.toByteArray());
+        tag.putInt(InfinityConstants.INFINITY_ITEM_TYPES, this.totalAEKeyType);
+        tag.putByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT, itemCount.toByteArray());
+        self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        // 标记数据已持久化
+        this.isPersisted = true;
+    }
+
     // 获取存储单元的描述（此处返回null，可自定义）
     @Override
     public Component getDescription() {
         return null;
     }
 
+    // 获取存储的物品总数
+    public BigInteger getTotalAEKey2Amounts() {
+        return this.totalAEKey2Amounts;
+    }
+
+    // 获取存储的物品种类数量
+    public int getTotalAEKeyType() {
+        return this.totalAEKeyType;
+    }
+
     // 判断物品堆栈是否有UUID
     public boolean hasUUID() {
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return false;
-        CompoundTag tag = customData.copyTag();
-        return tag != null && tag.contains("uuid");
+        CustomData data = self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        return !data.isEmpty() && data.copyTag().contains(InfinityConstants.INFINITY_CELL_UUID);
     }
 
     // 获取物品堆栈的UUID
     public UUID getUUID() {
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return null;
-        CompoundTag tag = customData.copyTag();
-        if (tag != null && tag.contains("uuid")) {
-            return tag.getUUID("uuid");
+        CustomData data = self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (!data.isEmpty() && data.copyTag().contains(InfinityConstants.INFINITY_CELL_UUID)) {
+            return data.copyTag().getUUID(InfinityConstants.INFINITY_CELL_UUID);
         }
         return null;
     }
 
     // 获取或初始化存储映射
     private Object2ObjectMap<AEKey, BigInteger> getCellStoredMap() {
-        if (storedMap == null) {
-            storedMap = new Object2ObjectOpenHashMap<>();
+        if (AEKey2AmountsMap == null) {
+            AEKey2AmountsMap = new Object2ObjectOpenHashMap<>();
             this.loadCellStoredMap();
         }
-        return storedMap;
-    }
-
-    // 从存储中加载物品映射
-    private void loadCellStoredMap() {
-        boolean corruptedTag = false; // 标记数据是否损坏
-        if (!this.hasUUID()) return;
-
-        ListTag keys = this.getCellStorage().keys;
-        ListTag amounts = this.getCellStorage().amounts;
-
-        int len = Math.min(keys.size(), amounts.size());
-
-        HolderLookup.Provider registries = getStorageInstance().getRegistries();
-
-        for (int i = 0; i < len; i++) {
-            AEKey key = AEKey.fromTagGeneric(registries,keys.getCompound(i));
-            CompoundTag amtTag = amounts.getCompound(i);
-            try {
-                BigInteger amount;
-                if (amtTag.contains("l")) {
-                    long v = amtTag.getLong("l");
-                    amount = BigInteger.valueOf(v);
-                } else if (amtTag.contains("s")) {
-                    amount = new BigInteger(amtTag.getString("s"));
-                } else {
-                    corruptedTag = true;
-                    continue;
-                }
-                if (amount.compareTo(BigInteger.ZERO) <= 0 || key == null) {
-                    corruptedTag = true;
-                } else {
-                    // storedMap 已在 getCellStoredMap() 中初始化，直接使用字段以避免额外方法开销
-                    storedMap.put(key, amount);
-                    // 更新缓存的总数
-                    totalStored = totalStored.add(amount);
-                }
-            } catch (NumberFormatException ex) {
-                corruptedTag = true;
-            }
-        }
-        // 如果有损坏，保存修正后的数据
-        if (corruptedTag) {
-            this.saveChanges();
-        }
-    }
-
-    // 标记数据需要保存，并通知容器或直接持久化
-    private void saveChanges() {
-        // 标记为未持久化，交由容器或延迟任务合并写入以减少 I/O
-        isPersisted = false;
-        if (container != null) {
-            // 当存在容器时，优先让容器统一处理持久化
-            container.saveChanges();
-        } else {
-            // 如果没有容器，入队等待服务器 tick 在主线程统一持久化，避免频繁 I/O
-            if (!PENDING_PERSIST.contains(this)) {
-                PENDING_PERSIST.offer(this);
-            }
-        }
+        return AEKey2AmountsMap;
     }
 
     // 获取所有可用的物品堆栈及其数量
     @Override
     public void getAvailableStacks(KeyCounter out) {
         BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
-        Object2ObjectMap<AEKey, BigInteger> map = getCellStoredMap();
-        for (Object2ObjectMap.Entry<AEKey, BigInteger> entry : map.object2ObjectEntrySet()) {
+        if (this.getCellStoredMap() == null) return;
+        for (var entry : this.getCellStoredMap().object2ObjectEntrySet()) {
             AEKey key = entry.getKey();
             BigInteger value = entry.getValue();
 
-            // 当前 KeyCounter 中已有的值（long）
+            // 获取 KeyCounter 中已有的值
             long existing = out.get(key);
 
-            // 将 existing 与当前 value 做 BigInteger 累加并饱和到 Long.MAX_VALUE
+            // 计算总和并限制到 Long.MAX_VALUE
             BigInteger sum = BigInteger.valueOf(existing).add(value);
             long toSet = sum.compareTo(maxLong) > 0 ? Long.MAX_VALUE : sum.longValue();
-
-            // KeyCounter 没有 set(key,long) 的统一接口暴露（只有 add/remove），所以先移除已存在的值再设置。
-            // 为避免读取-写入竞争，我们计算出要新增的 delta 并调用 add(key, delta)
+            // 更新 KeyCounter
             if (existing == Long.MAX_VALUE) {
-                // 已经饱和，无需再添加
                 continue;
             }
-            long delta;
-            if (toSet == Long.MAX_VALUE) {
-                delta = Long.MAX_VALUE - existing;
-            } else {
-                delta = toSet - existing;
-            }
+            long delta = toSet - existing;
             if (delta != 0) {
                 out.add(key, delta);
             }
         }
     }
 
-    // 持久化存储单元数据到全局存储
-    @Override
-    public void persist() {
-        if (this.isPersisted)
-            return;
-        Object2ObjectMap<AEKey, BigInteger> map = this.getCellStoredMap();
-        if (map.isEmpty()) {
-            // 如果存储为空，移除UUID和全局存储中的数据
-            if (this.hasUUID()) {
-                getStorageInstance().removeCell(getUUID());
-                // 从 CustomData 中移除缓存字段
-                try {
-                    CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-                        tag.remove("uuid");
-                        tag.remove("total");
-                    });
-                } catch (Throwable ignored) {
-                }
-            }
+
+    // 从存储中加载物品映射
+    private void loadCellStoredMap() {
+        if (this.storageManager == null) {
             return;
         }
-        // 构建要保存的Key和数量列表（混合表示：long 或 string）
-        ListTag amountTags = new ListTag();
-        ListTag keys = new ListTag();
-        for (Object2ObjectMap.Entry<AEKey, BigInteger> entry : map.object2ObjectEntrySet()) {
-            BigInteger amount = entry.getValue();
-            if (amount.compareTo(BigInteger.ZERO) > 0) {
-                keys.add(entry.getKey().toTagGeneric(getStorageInstance().getRegistries()));
-                CompoundTag amt = new CompoundTag();
-                if (amount.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0) {
-                    amt.putLong("l", amount.longValue());
-                } else {
-                    amt.putString("s", amount.toString());
-                }
-                amountTags.add(amt);
+
+        boolean dataCorruption = false;
+        if (self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).isEmpty()) return;
+
+        var keys = getCellStorage().keys;
+        var amounts = getCellStorage().amounts;
+        // 数据损坏
+        if (keys.size() != amounts.size()) {
+            AELog.warn("Loading storage cell with mismatched amounts/tags: %d != %d", amounts.size(), keys.size());
+        }
+
+        var registries = this.storageManager.getRegistries();
+
+        // 遍历数量和键，加载到 AEKey2AmountsMap
+        for (int i = 0; i < amounts.size(); i++) {
+            AEKey key = AEKey.fromTagGeneric(registries,keys.getCompound(i));
+            BigInteger amount = new BigInteger(amounts.getCompound(i).getByteArray("value"));
+            // 检查数据是否损坏
+            if (amount.compareTo(BigInteger.ZERO) <= 0 || key == null) {
+                dataCorruption = true;
+            } else {
+                AEKey2AmountsMap.put(key, amount);
             }
         }
-        // 如果没有Key，更新为空存储，否则保存数据
-        if (keys.isEmpty()) {
-            getStorageInstance().updateCell(this.getUUID(), new InfinityDataStorage());
+        if (dataCorruption) {
+            this.saveChanges();
+        }
+    }
+
+    // 标记数据需要保存，并通知容器或直接持久化
+    private void saveChanges() {
+        // 更新存储的物品种类数量
+        this.totalAEKeyType = this.AEKey2AmountsMap.size();
+        // 重置物品总数
+        this.totalAEKey2Amounts = BigInteger.ZERO;
+        // 计算物品总数
+        for (BigInteger AEKey2Amounts : this.AEKey2AmountsMap.values()) {
+            this.totalAEKey2Amounts = this.totalAEKey2Amounts.add(AEKey2Amounts);
+        }
+        // 标记数据未持久化
+        this.isPersisted = false;
+        // 如果有保存提供者，通知保存
+        if (this.container != null) {
+            this.container.saveChanges();
         } else {
-            // amounts 现在为 CompoundTag 列表
-            getStorageInstance().modifyCell(this.getUUID(), keys, amountTags);
+            // 否则立即持久化
+            this.persist();
         }
-        // 将缓存的 totalStored 同步到 ItemStack 的 CustomData（优先使用 long）
-        try {
-            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
-                if (totalStored.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) <= 0) {
-                    tag.putLong("total", totalStored.longValue());
-                } else {
-                    tag.putString("total", totalStored.toString());
-                }
-                // 将当前已存储的不同物品种类数缓存到 CustomData（键名: "types"），用于客户端 tooltip 显示
-                int typesCount = this.getCellStoredMap().size();
-                tag.putInt("types", typesCount);
-            });
-        } catch (Throwable ignored) {
-        }
-        isPersisted = true;
     }
 
     // 插入物品到存储单元
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         // 数量为0或类型不匹配直接返回
-        if (amount == 0)
+        if (amount == 0) {
             return 0;
-        // 不允许存储无限单元自身
-        if (what instanceof AEItemKey itemKey && itemKey.getItem() instanceof InfinityBigIntegerCellItem)
-            return 0;
-        // 如果没有UUID，生成UUID并初始化存储
-        if (!this.hasUUID()) {
-            UUID id = UUID.randomUUID();
-            try {
-                CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putUUID("uuid", id));
-            } catch (Throwable ignored) {
-            }
-            getStorageInstance().getOrCreateCell(getUUID());
-            // 确保 storedMap 初始化并从持久层加载数据
-            this.getCellStoredMap();
         }
-        Object2ObjectMap<AEKey, BigInteger> map = this.getCellStoredMap();
-        BigInteger currentAmount = map.getOrDefault(what, BigInteger.ZERO);
+        // 不允许存储无限单元自身
+        if (what instanceof AEItemKey itemKey &&
+                itemKey.getItem() instanceof InfinityBigIntegerCellItem &&
+                itemKey.get(DataComponents.CUSTOM_DATA) != null
+        ) {
+            return 0;
+        }
+
+        // 如果没有 UUID，且服务器端存储管理器已就绪，则生成 UUID 并初始化存储
+        if (storageManager != null && !this.hasUUID()) {
+            // 取出自定义 NBT（如果没有就返回空）
+            CustomData data = self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+            CompoundTag tag = data.copyTag();
+
+            // 生成新的 UUID 并写入
+            UUID newUUID = UUID.randomUUID();
+            tag.putUUID(InfinityConstants.INFINITY_CELL_UUID, newUUID);
+
+            // 回写到 ItemStack
+            self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+
+            // 初始化存储
+            this.storageManager.getOrCreateCell(newUUID);
+
+            // 加载已存储的映射
+            loadCellStoredMap();
+        }
+        // 获取当前物品数量
+        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BigInteger.ZERO);
+
         if (mode == Actionable.MODULATE) {
             // 实际插入，更新数量并保存
             BigInteger newAmount = currentAmount.add(BigInteger.valueOf(amount));
-            map.put(what, newAmount);
-            // 更新 cached total
-            totalStored = totalStored.add(BigInteger.valueOf(amount));
+            getCellStoredMap().put(what, newAmount);
             this.saveChanges();
         }
         return amount;
@@ -393,35 +384,26 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 从存储单元提取物品
     @Override
     public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
-        Object2ObjectMap<AEKey, BigInteger> map = this.getCellStoredMap();
-        BigInteger currentAmount = map.getOrDefault(what, BigInteger.ZERO);
+        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BigInteger.ZERO);
+        // 如果有物品可提取
         if (currentAmount.compareTo(BigInteger.ZERO) > 0) {
+
             BigInteger requested = BigInteger.valueOf(amount);
-            if (currentAmount.compareTo(requested) <= 0) {
-                // 提取全部
-                long ret;
-                if (currentAmount.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0) {
-                    ret = Long.MAX_VALUE;
-                } else {
-                    ret = currentAmount.longValue();
-                }
+
+            // 如果提取数量大于等于当前数量
+            if (requested.compareTo(currentAmount) >= 0) {
                 if (mode == Actionable.MODULATE) {
-                    map.remove(what);
-                    // 更新 cached total
-                    // 如果 currentAmount 大于 Long.MAX_VALUE，totalStored 减去 currentAmount 会保留大整数
-                    totalStored = totalStored.subtract(currentAmount);
+                    getCellStoredMap().remove(what);
                     this.saveChanges();
                 }
-                return ret;
+                return currentAmount.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0 ? Long.MAX_VALUE : currentAmount.longValue();
             } else {
-                // 提取部分
+                // 提取部分数量
                 if (mode == Actionable.MODULATE) {
-                    map.put(what, currentAmount.subtract(requested));
-                    // 更新 cached total
-                    totalStored = totalStored.subtract(requested);
+                    getCellStoredMap().put(what, currentAmount.subtract(requested));
                     this.saveChanges();
                 }
-                return amount;
+                return requested.longValue();
             }
         }
         return 0;
@@ -430,6 +412,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取存储单元内所有物品的总数量（格式化字符串）
     public String getTotalStorage() {
         // 使用缓存的 totalStored，避免每次全表扫描
-        return formatBigInteger(totalStored);
+        return formatBigInteger(totalAEKey2Amounts);
     }
 }

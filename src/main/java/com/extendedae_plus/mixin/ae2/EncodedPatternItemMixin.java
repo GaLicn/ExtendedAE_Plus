@@ -21,7 +21,7 @@ public class EncodedPatternItemMixin {
     // 客户端：在 HoverText 显示样板的编码玩家
     @Inject(method = "appendHoverText", at = @At("TAIL"))
     public void epp$appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> lines, TooltipFlag advancedTooltips, CallbackInfo ci){
-        if (ModConfig.SHOW_ENCODE_PATTERN_PLAYER.get()) {
+        if (ModConfigs.SHOW_ENCODER_PATTERN_PLAYER.get()) {
             var customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
             var tag = customData.copyTag();
             if (tag.contains("encodePlayer")) {

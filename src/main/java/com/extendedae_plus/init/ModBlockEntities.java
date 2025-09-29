@@ -3,8 +3,8 @@ package com.extendedae_plus.init;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
-import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
-import net.minecraft.core.registries.Registries;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import appeng.blockentity.crafting.CraftingBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -42,4 +42,10 @@ public final class ModBlockEntities {
                         ref.set(type);
                         return type;
                     });
+
+    // 装配矩阵上传核心方块实体
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<UploadCoreBlockEntity>> UPLOAD_CORE_BE =
+            BLOCK_ENTITY_TYPES.register("upload_core",
+                    () -> BlockEntityType.Builder.of(UploadCoreBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get()).build(null));
 }

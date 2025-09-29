@@ -21,7 +21,7 @@ import java.util.Collections;
 @Mixin(value = PatternProviderLogic.class, remap = false)
 public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
     @Unique
-    private static final String EPP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
+    private static final String EAP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
 
     @Unique
     private boolean eap$advancedBlocking = false;
@@ -38,13 +38,13 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$writeAdvancedToNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
-        tag.putBoolean(EPP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
+        tag.putBoolean(EAP_ADV_BLOCKING_KEY, this.eap$advancedBlocking);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$readAdvancedFromNbt(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
-        if (tag.contains(EPP_ADV_BLOCKING_KEY)) {
-            this.eap$advancedBlocking = tag.getBoolean(EPP_ADV_BLOCKING_KEY);
+        if (tag.contains(EAP_ADV_BLOCKING_KEY)) {
+            this.eap$advancedBlocking = tag.getBoolean(EAP_ADV_BLOCKING_KEY);
         }
     }
 

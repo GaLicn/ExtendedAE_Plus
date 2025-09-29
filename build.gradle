@@ -132,7 +132,7 @@ configurations {
 dependencies {
     // --- Added dependencies for target mods ---
     implementation "curse.maven:glodium-957920:5821676"
-    implementation "org.appliedenergistics:appliedenergistics2:19.2.8"
+    implementation "org.appliedenergistics:appliedenergistics2:19.2.15"
     implementation "org.appliedenergistics:guideme:2.5.1"
     // jarJar configuration not set in this build; use implementation for API for now
     implementation "de.mari_023:ae2wtlib_api:19.2.0"
@@ -159,9 +159,21 @@ dependencies {
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
     runtimeOnly "curse.maven:jade-324717:5427817"
     runtimeOnly "curse.maven:mega-cells-622112:6005043"
+
+    runtimeOnly "curse.maven:mekanism-268560:6895130"
+    runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
+
     runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
-    // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
+    //aea
+    implementation "curse.maven:advancedae-1084104:6932981"
+
+    //geckolib
+    runtimeOnly "curse.maven:geckolib-388172:7009924"
+
+
+    runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
+
     runtimeOnly "dev.emi:emi-neoforge:${emi_version}+1.21"
     runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
     runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"

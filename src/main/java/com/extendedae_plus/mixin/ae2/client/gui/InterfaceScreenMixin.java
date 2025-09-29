@@ -44,7 +44,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         if (!eap$isSupportedInterfaceScreen()) {
             return;
         }
-        try { LogUtils.getLogger().info("[EAP][InterfaceMixin] init tail reached, preparing scale buttons."); } catch (Throwable ignored) {}
         if (eap$x2Button == null) {
             eap$x2Button = new ActionEPPButton((b) -> eap$sendAdjustForAllConfigs(false, 2), NewIcon.MULTIPLY2);
             eap$x2Button.setTooltip(null);
@@ -92,7 +91,6 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         if (!accessor.eap$getChildren().contains(eap$x10Button)) accessor.eap$getChildren().add(eap$x10Button);
 
         eap$relayoutButtons();
-        try { LogUtils.getLogger().info("[EAP][InterfaceMixin] buttons added and laid out."); } catch (Throwable ignored) {}
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"))
@@ -223,7 +221,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
             int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
             int bx = leftPos + imageWidth + 1;
-            int by = topPos + 20;
+            int by = topPos + 70;
             int spacing = 22;
             if (eap$divideBy2Button != null) { eap$divideBy2Button.setX(bx); eap$divideBy2Button.setY(by); }
             if (eap$x2Button != null) { eap$x2Button.setX(bx); eap$x2Button.setY(by + spacing); }

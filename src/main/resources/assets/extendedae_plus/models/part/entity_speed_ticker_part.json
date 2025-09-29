@@ -1,0 +1,9 @@
+{
+  "parent": "ae2:part/interface_base",
+  "textures": {
+    "front": "extendedae_plus:part/entity_speed_ticker_font",
+    "sides": "extendedae_plus:part/entity_speed_ticker_sides",
+    "back": "extendedae_plus:part/entity_speed_ticker_back",
+    "particle": "extendedae_plus:part/entity_speed_ticker_back"
+  }
+}

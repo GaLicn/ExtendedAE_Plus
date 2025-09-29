@@ -2,6 +2,7 @@ package com.extendedae_plus.content.wireless;
 
 import appeng.api.networking.*;
 import appeng.api.util.AECableType;
+import appeng.blockentity.AEBaseBlockEntity;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.wireless.IWirelessEndpoint;
@@ -13,7 +14,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ import java.util.Objects;
  * - 集成 AE2 节点；
  * - 集成无线主/从逻辑。
  */
-public class WirelessTransceiverBlockEntity extends BlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
+public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
     private IManagedGridNode managedNode;
 
@@ -55,7 +55,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     @Override
-    public appeng.api.util.AECableType getCableConnectionType(Direction dir) {
+    public AECableType getCableConnectionType(Direction dir) {
         // 根据相邻方块的实际连接类型渲染（优先采用相邻主机返回的类型），回退为 GLASS。
         if (this.level == null) return AECableType.GLASS;
         var adjacentPos = this.worldPosition.relative(dir);
@@ -188,7 +188,7 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
 
     /* ===================== NBT ===================== */
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
@@ -199,8 +199,8 @@ public class WirelessTransceiverBlockEntity extends BlockEntity implements IWire
     }
 
     @Override
-    public void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
+    public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadTag(tag, registries);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");
