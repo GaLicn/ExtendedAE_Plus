@@ -1,6 +1,6 @@
 package com.extendedae_plus.compat;
 
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.Logger;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -13,28 +13,28 @@ public class CompatibilityTest {
      * 测试模组兼容性检测
      */
     public static void testCompatibility() {
-        ExtendedAELogger.LOGGER.info("=== ExtendedAE_Plus 兼容性测试开始 ===");
+        Logger.EAP$LOGGER.info("=== ExtendedAE_Plus 兼容性测试开始 ===");
         
         // 测试appflux模组检测
         boolean appfluxExists = ModList.get().isLoaded("appflux");
-        ExtendedAELogger.LOGGER.info("ExtendedAE-appflux模组检测结果: {}", appfluxExists ? "存在" : "不存在");
+        Logger.EAP$LOGGER.info("ExtendedAE-appflux模组检测结果: {}", appfluxExists ? "存在" : "不存在");
         
         // 测试升级卡槽功能启用状态
         boolean shouldEnableUpgrades = UpgradeSlotCompat.shouldEnableUpgradeSlots();
-        ExtendedAELogger.LOGGER.info("升级卡槽功能启用状态: {}", shouldEnableUpgrades ? "启用" : "禁用");
+        Logger.EAP$LOGGER.info("升级卡槽功能启用状态: {}", shouldEnableUpgrades ? "启用" : "禁用");
         
         // 测试Screen升级面板添加状态
         boolean shouldAddPanel = UpgradeSlotCompat.shouldAddUpgradePanelToScreen();
-        ExtendedAELogger.LOGGER.info("Screen升级面板添加状态: {}", shouldAddPanel ? "启用" : "禁用");
+        Logger.EAP$LOGGER.info("Screen升级面板添加状态: {}", shouldAddPanel ? "启用" : "禁用");
         
         // 输出兼容性策略
         if (appfluxExists) {
-            ExtendedAELogger.LOGGER.info("兼容性策略: 检测到ExtendedAE-appflux模组，将使用其升级卡槽功能");
+            Logger.EAP$LOGGER.info("兼容性策略: 检测到ExtendedAE-appflux模组，将使用其升级卡槽功能");
         } else {
-            ExtendedAELogger.LOGGER.info("兼容性策略: 未检测到ExtendedAE-appflux模组，将使用我们自己的升级卡槽功能");
+            Logger.EAP$LOGGER.info("兼容性策略: 未检测到ExtendedAE-appflux模组，将使用我们自己的升级卡槽功能");
         }
         
-        ExtendedAELogger.LOGGER.info("=== ExtendedAE_Plus 兼容性测试完成 ===");
+        Logger.EAP$LOGGER.info("=== ExtendedAE_Plus 兼容性测试完成 ===");
     }
     
     /**

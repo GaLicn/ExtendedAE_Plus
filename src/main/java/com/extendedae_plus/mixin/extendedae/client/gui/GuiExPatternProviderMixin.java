@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 @Mixin(GuiExPatternProvider.class)
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButtonsAccessor, IExPatternPageAccessor {
@@ -127,7 +127,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         try { cfgPages = Math.max(1, ModConfig.INSTANCE.pageMultiplier); } catch (Throwable ignored) {}
         int calcPages = Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
         int desiredMaxPage = Math.max(cfgPages, calcPages);
-        LOGGER.info("[EAP] GuiExPatternProvider init: totalSlots={}, cfgPages={}, calcPages={}, desiredMaxPage={}", totalSlots, cfgPages, calcPages, desiredMaxPage);
+        EAP$LOGGER.info("[EAP] GuiExPatternProvider init: totalSlots={}, cfgPages={}, calcPages={}, desiredMaxPage={}", totalSlots, cfgPages, calcPages, desiredMaxPage);
         // 更新本地最大页
         this.eap$maxPageLocal = Math.max(1, desiredMaxPage);
         this.eap$currentPage = 0;
@@ -159,7 +159,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 // 同步到本地 GUI 页码
                 this.eap$currentPage = newPage;
                 // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
-                LOGGER.info("[EAP] PrevPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                EAP$LOGGER.info("[EAP] PrevPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
@@ -186,7 +186,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 // 同步到本地 GUI 页码
                 this.eap$currentPage = newPage;
                 // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
-                LOGGER.info("[EAP] NextPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                EAP$LOGGER.info("[EAP] NextPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;

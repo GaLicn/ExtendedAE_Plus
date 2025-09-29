@@ -98,8 +98,8 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
      */
     private void textData() {
         Map<String, Component> textContents = new HashMap<>();
-        if (getMenu().targetBlacklisted) {
-            // 黑名单禁用时的默认显示
+        if (getMenu().targetBlacklisted || !getMenu().getAccelerateEnabled()) {
+            // 黑名单禁用或加速关闭时的默认显示
             textContents.put("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.enable"));
             textContents.put("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", 0));
             textContents.put("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(0.0, false)));
@@ -110,8 +110,8 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
             int energyCardCount = getMenu().energyCardCount;
             double multiplier = getMenu().multiplier;
             int effectiveSpeed = getMenu().effectiveSpeed;
-            double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
-            double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
+            double finalPower = PowerUtils.getCachedPower(effectiveSpeed, energyCardCount);
+            double remainingRatio = PowerUtils.getCachedRatio(energyCardCount);
 
             textContents.put("enable", getMenu().networkEnergySufficient ? null :
                     Component.translatable("screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient"));

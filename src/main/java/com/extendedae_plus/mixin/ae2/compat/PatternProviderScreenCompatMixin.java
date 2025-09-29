@@ -10,6 +10,7 @@ import appeng.core.localization.GuiText;
 import appeng.menu.SlotSemantics;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +39,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
             }
         } catch (Exception e) {
             // 静默处理异常，确保不会因为升级功能导致崩溃
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("PatternProviderScreen兼容性升级面板初始化失败", e);
+            Logger.EAP$LOGGER.error("PatternProviderScreen兼容性升级面板初始化失败", e);
         }
     }
     
@@ -58,7 +59,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
                 }
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("直接添加升级面板失败", e);
+            Logger.EAP$LOGGER.error("直接添加升级面板失败", e);
         }
     }
 
@@ -75,7 +76,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
                 }
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("获取兼容升级列表失败", e);
+            Logger.EAP$LOGGER.error("获取兼容升级列表失败", e);
         }
         
         return list;

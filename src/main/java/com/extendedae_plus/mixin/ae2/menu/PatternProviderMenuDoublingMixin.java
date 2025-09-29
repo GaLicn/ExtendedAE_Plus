@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 @Mixin(PatternProviderMenu.class)
 public abstract class PatternProviderMenuDoublingMixin implements IPatternProviderMenuDoublingSync {
@@ -47,7 +47,7 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing smart doubling sync", t);
+            EAP$LOGGER.error("Error initializing smart doubling sync", t);
         }
     }
 
@@ -59,7 +59,7 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing smart doubling sync", t);
+            EAP$LOGGER.error("Error initializing smart doubling sync", t);
         }
     }
 

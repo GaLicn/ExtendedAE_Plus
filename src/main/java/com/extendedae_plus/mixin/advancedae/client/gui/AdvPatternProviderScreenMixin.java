@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
  * 为高级ae样板供应器界面添加“高级阻挡模式”按钮。
@@ -56,7 +56,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
                 this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing advanced sync", t);
+            EAP$LOGGER.error("Error initializing advanced sync", t);
         }
 
         // 使用 SettingToggleButton<YesNo> 的外观（原版图标），但自定义悬停描述为“智能阻挡”
@@ -89,7 +89,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
                 this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing smart doubling sync", t);
+            EAP$LOGGER.error("Error initializing smart doubling sync", t);
         }
 
         this.eap$SmartDoublingToggle = new SettingToggleButton<>(
@@ -139,7 +139,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
             try {
                 ((IExPatternButtonsAccessor) this).eap$updateButtonsLayout();
             } catch (Throwable t) {
-                LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
+                EAP$LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
             }
         }
     }

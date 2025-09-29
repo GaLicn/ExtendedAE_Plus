@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 @Mixin(PatternProviderMenu.class)
 public abstract class PatternProviderMenuAdvancedMixin implements IPatternProviderMenuAdvancedSync {
@@ -61,7 +61,7 @@ public abstract class PatternProviderMenuAdvancedMixin implements IPatternProvid
                 this.eap$AdvancedBlocking = holder.eap$getAdvancedBlocking();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing advanced sync", t);
+            EAP$LOGGER.error("Error initializing advanced sync", t);
         }
     }
 

@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
  * 为 AE2 石英切割刀添加：潜行 + 右键 指向世界中的方块/部件（如线缆）时，复制其名称到剪贴板。
@@ -196,10 +196,10 @@ public abstract class QuartzCuttingKnifeItemMixin {
                 }
             }
         } catch (ClassNotFoundException e) {
-            LOGGER.info("GregTech CEu 类未找到，跳过配方翻译处理");
+            EAP$LOGGER.info("GregTech CEu 类未找到，跳过配方翻译处理");
             return null; // GTCEu 不可用
         } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
-            LOGGER.error("处理 GTCEu 配方翻译失败: {}", e.getMessage());
+            EAP$LOGGER.error("处理 GTCEu 配方翻译失败: {}", e.getMessage());
             return null; // 反射失败
         }
         return null; // 非 GTCEu 方块实体
@@ -248,7 +248,7 @@ public abstract class QuartzCuttingKnifeItemMixin {
             try {
                 latch.await();
             } catch (InterruptedException e) {
-                LOGGER.error("剪贴板复制线程中断: {}", e.getMessage());
+                EAP$LOGGER.error("剪贴板复制线程中断: {}", e.getMessage());
             }
             return result.get();
         } else {

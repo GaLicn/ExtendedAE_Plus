@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
  * 注入 CraftingTreeProcess 构造器尾部：将 AEProcessingPattern 替换为 ScaledProcessingPattern
@@ -92,7 +92,7 @@ public abstract class CraftingTreeProcessMixin {
             var scaled = PatternScaler.scale(proc, parentTarget, perProvider);
             return scaled != null ? scaled : original;
         } catch (Exception e) {
-            LOGGER.warn("构建倍增样板出错", e);
+            EAP$LOGGER.warn("构建倍增样板出错", e);
             e.printStackTrace();
             return original;
         }

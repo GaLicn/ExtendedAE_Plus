@@ -10,7 +10,7 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.ToolboxMenu;
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.fml.ModList;
@@ -83,7 +83,7 @@ public class UpgradeSlotCompat {
                     setupUpgradesMethod.setAccessible(true);
                     setupUpgradesMethod.invoke(menu, upgradeableHost.getUpgrades());
                 } catch (Exception e) {
-                    ExtendedAELogger.LOGGER.error("反射调用setupUpgrades失败", e);
+                    Logger.EAP$LOGGER.error("反射调用setupUpgrades失败", e);
                     return false;
                 }
                 
@@ -94,7 +94,7 @@ public class UpgradeSlotCompat {
                 return true;
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("初始化PatternProviderMenu升级功能时出错", e);
+            Logger.EAP$LOGGER.error("初始化PatternProviderMenu升级功能时出错", e);
         }
         
         return false;
@@ -162,13 +162,13 @@ public class UpgradeSlotCompat {
                         }
                         return true;
                     } catch (Exception e2) {
-                        ExtendedAELogger.LOGGER.error("反射调用widgets方法失败", e2);
+                        Logger.EAP$LOGGER.error("反射调用widgets方法失败", e2);
                         return false;
                     }
                 }
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("为PatternProviderScreen添加升级面板时出错", e);
+            Logger.EAP$LOGGER.error("为PatternProviderScreen添加升级面板时出错", e);
         }
         
         return false;
@@ -187,7 +187,7 @@ public class UpgradeSlotCompat {
                 list.addAll(appeng.api.upgrades.Upgrades.getTooltipLinesForMachine(upgrades.getUpgradableItem()));
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("获取兼容升级列表时出错", e);
+            Logger.EAP$LOGGER.error("获取兼容升级列表时出错", e);
         }
         
         return list;

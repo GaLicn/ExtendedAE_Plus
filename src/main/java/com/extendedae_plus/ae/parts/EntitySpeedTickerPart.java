@@ -51,7 +51,7 @@ import java.util.List;
  * 实体加速器部件，用于加速目标方块实体的 tick 速率，消耗 AE 网络能量，支持加速卡和能量卡升级。
  * 灵感来源于 <a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>。
  */
-public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject {
+public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTickable, MenuProvider, IUpgradeableObject {
     public static final ResourceLocation MODEL_BASE = new ResourceLocation(
             ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
 
