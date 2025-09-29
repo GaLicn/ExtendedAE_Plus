@@ -296,44 +296,32 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         IEnergyService energyService = getMainNode().getGrid().getEnergyService();
         MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
         IActionSource source = IActionSource.ofMachine(this);
-        boolean appFluxLoaded = ModList.get().isLoaded("appflux");
-        boolean preferDiskEnergy = appFluxLoaded && ModConfig.INSTANCE.prioritizeDiskEnergy;
 
-        // 如果 appflux 存在且优先磁盘能量，尝试提取 FE 能量
-        if (appFluxLoaded && preferDiskEnergy) {
-            if (tryExtractFE(energyService, storage, requiredPower, source)) {
-                return true;
+        // 优先级：FE（如果优先磁盘） -> AE -> FE（如果未优先磁盘）
+        boolean[] attempts = ModConfig.INSTANCE.prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, false};
+
+        for (int i = 0; i < attempts.length; i++) {
+            if (!attempts[i]) continue;
+            if (i == 0 || i == 2) { // FE 提取
+                if (!FE_UNAVAILABLE && cachedFEExtractMethod != null) {
+                    try {
+                        long feRequired = (long) requiredPower << 1;
+                        long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
+                        if (feExtracted >= feRequired) {
+                            updateNetworkEnergySufficient(true);
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        FE_UNAVAILABLE = true;
+                    }
+                }
+            } else { // AE 提取
+                double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+                if (extracted >= requiredPower) {
+                    updateNetworkEnergySufficient(true);
+                    return true;
+                }
             }
-        }
-
-        // 尝试提取 AE 能量（当 appflux 不存在、优先 AE 能量或 FE 提取失败时）
-        double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated >= requiredPower) {
-            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-            boolean sufficient = extracted >= requiredPower;
-            updateNetworkEnergySufficient(sufficient);
-            return sufficient;
-        }
-        updateNetworkEnergySufficient(false);
-
-        // 如果 appflux 存在且优先 AE 能量，尝试提取 FE 能量作为备用
-        if (appFluxLoaded && !preferDiskEnergy) {
-            return tryExtractFE(energyService, storage, requiredPower, source);
-        }
-        return false;
-    }
-
-    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
-        if (FE_UNAVAILABLE || cachedFEExtractMethod == null) return false;
-        try {
-            long feRequired = (long) requiredPower << 1;
-            long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
-            if (feExtracted >= feRequired) {
-                updateNetworkEnergySufficient(true);
-                return true;
-            }
-        } catch (Exception e) {
-            FE_UNAVAILABLE = true;
         }
         updateNetworkEnergySufficient(false);
         return false;
