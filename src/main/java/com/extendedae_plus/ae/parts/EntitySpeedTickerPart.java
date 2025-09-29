@@ -65,6 +65,27 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
     private boolean networkEnergySufficient = true; // 网络能量是否充足
 
+    private static volatile Method cachedFEExtractMethod;
+    private static volatile boolean FE_UNAVAILABLE;
+
+    // ===== 静态块：反射初始化 FE 方法 =====
+    static {
+        if (ModList.get().isLoaded("appflux")) {
+            try {
+                Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+                cachedFEExtractMethod = helperClass.getMethod(
+                        "extractFE",
+                        IEnergyService.class,
+                        MEStorage.class,
+                        long.class,
+                        IActionSource.class
+                );
+                FE_UNAVAILABLE = false;
+            } catch (Exception e) {
+                FE_UNAVAILABLE = true;
+            }
+        }
+    }
     /**
      * 构造函数，初始化部件并设置网络节点属性。
      * @param partItem 部件物品
@@ -250,7 +271,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     private int calculateSpeed() {
         int entitySpeedCardCount = getUpgrades().getInstalledUpgrades(ModItems.ENTITY_SPEED_CARD.get());
         if (entitySpeedCardCount <= 0) return 0;
-        return (int) PowerUtils.computeProductWithCap(getUpgrades(), 8);
+        return PowerUtils.computeProductWithCap(getUpgrades(), 8);
     }
 
     /**
@@ -302,23 +323,16 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     }
 
     private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
+        if (FE_UNAVAILABLE || cachedFEExtractMethod == null) return false;
         try {
-            Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
-            Method extractMethod = helperClass.getMethod(
-                    "extractFE",
-                    IEnergyService.class,
-                    MEStorage.class,
-                    long.class,
-                    IActionSource.class
-            );
-            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
-            long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
+            long feRequired = (long) requiredPower << 1;
+            long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
             if (feExtracted >= feRequired) {
                 updateNetworkEnergySufficient(true);
                 return true;
             }
         } catch (Exception e) {
-            // 如果反射失败，视为 FE 不可用
+            FE_UNAVAILABLE = true;
         }
         updateNetworkEnergySufficient(false);
         return false;
