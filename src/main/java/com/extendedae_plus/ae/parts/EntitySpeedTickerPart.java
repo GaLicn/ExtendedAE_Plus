@@ -69,10 +69,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     // 静态块：初始化缓存
     static {
-        // 优先磁盘 -> FE 然后 AE；否则 AE 然后 FE
-        cachedAttempts = ModConfig.INSTANCE.prioritizeDiskEnergy ?
-                new boolean[]{ true, true, false } :
-                new boolean[]{ false, true, true };
+        cachedAttempts = ModConfig.INSTANCE.prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, true};
         if (ModList.get().isLoaded("appflux")) {
             try {
                 Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
@@ -121,13 +118,9 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     public static void updateCachedAttempts(boolean prioritizeDiskEnergy) {
         synchronized (EntitySpeedTickerPart.class) {
-            // 优先磁盘 -> FE 然后 AE；否则 AE 然后 FE
-            cachedAttempts = prioritizeDiskEnergy ?
-                    new boolean[]{ true, true, false } :
-                    new boolean[]{ false, true, true };
+            cachedAttempts = prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, true};
         }
     }
-
 
     public boolean getAccelerateEnabled() {
         return this.getConfigManager().getSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE) == YesNo.YES;
@@ -343,38 +336,34 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
         for (int i = 0; i < cachedAttempts.length; i++) {
             if (!cachedAttempts[i]) continue;
-
-            // FE 提取
-            if ((i == 0 || i == 2) && !FE_UNAVAILABLE && cachedFEExtractMethod != null) {
-                try {
-                    long feRequired = (long) requiredPower << 1;
-                    long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
-                    if (feExtracted >= feRequired) {
-                        updateNetworkEnergySufficient(true);
-                        return true;
+            if (i == 0 || i == 2) { // FE 提取
+                if (!FE_UNAVAILABLE && cachedFEExtractMethod != null) {
+                    try {
+                        long feRequired = (long) requiredPower << 1;
+                        long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
+                        if (feExtracted >= feRequired) {
+                            updateNetworkEnergySufficient(true);
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        FE_UNAVAILABLE = true;
                     }
-                } catch (Exception e) {
-                    FE_UNAVAILABLE = true;
-                    continue;
                 }
-            }
-            // AE 提取
-            else {
+            } else { // AE 提取
                 double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-                if (simulated >= requiredPower) { // 模拟足够
+                if (simulated >= requiredPower) {
                     double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
                     boolean sufficient = extracted >= requiredPower;
                     updateNetworkEnergySufficient(sufficient);
-                    if (sufficient) return true;
+                    if (sufficient) {
+                        return true;
+                    }
                 }
             }
         }
-
-        // 所有尝试都不够
         updateNetworkEnergySufficient(false);
         return false;
     }
-
 
     /**
      * 执行加速 tick 操作。
