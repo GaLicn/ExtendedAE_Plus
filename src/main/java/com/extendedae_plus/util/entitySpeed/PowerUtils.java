@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 用于计算实体加速器的能耗与加速倍率的工具类
@@ -17,12 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class PowerUtils {
     private static final int[] VALID_MULTIPLIERS = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
     private static final int[] VALID_ENERGY_CARD_COUNTS = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-    private static final AtomicInteger checkCounter = new AtomicInteger(0); // 原子计数器
-    private static final int CHECK_COUNTER_THRESHOLD = 100;         // 配置检查阈值
-    private static final int CHECK_COUNTER_RESET_THRESHOLD = 10000; // 计数器重置阈值
     private static volatile Map<Integer, Map<Integer, Double>> powerCache = new HashMap<>();
     private static volatile Map<Integer, Double> ratioCache = new HashMap<>();
-    private static volatile int lastEntityTickerCost = -1;
 
     // 静态初始化块，预计算缓存
     static {
@@ -34,7 +29,7 @@ public final class PowerUtils {
     /**
      * 初始化所有可能的缓存条目
      */
-    private static void initializeCaches() {
+    public static void initializeCaches() {
         synchronized (PowerUtils.class) {
             powerCache.clear();
             ratioCache.clear();
@@ -54,7 +49,6 @@ public final class PowerUtils {
                 }
                 powerCache.put(product, energyCardMap);
             }
-            lastEntityTickerCost = ModConfig.INSTANCE.entityTickerCost;
         }
     }
 
@@ -131,17 +125,6 @@ public final class PowerUtils {
      */
     public static double getCachedPower(int product, int energyCardCount) {
         if (product <= 1) return 0.0;
-        // 每 100 次调用检查一次配置
-        if (checkCounter.getAndIncrement() % CHECK_COUNTER_THRESHOLD == 0) {
-            checkCounter.set(checkCounter.get() % CHECK_COUNTER_RESET_THRESHOLD);
-            if (lastEntityTickerCost != ModConfig.INSTANCE.entityTickerCost) {
-                synchronized (PowerUtils.class) {
-                    if (lastEntityTickerCost != ModConfig.INSTANCE.entityTickerCost) {
-                        initializeCaches();
-                    }
-                }
-            }
-        }
         Map<Integer, Double> energyCardMap = powerCache.get(product);
         if (energyCardMap == null) return 0.0;
         Double cachedPower = energyCardMap.get(energyCardCount);

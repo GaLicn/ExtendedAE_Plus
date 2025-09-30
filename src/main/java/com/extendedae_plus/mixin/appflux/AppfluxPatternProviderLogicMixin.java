@@ -28,12 +28,8 @@ public class AppfluxPatternProviderLogicMixin {
             at = @At("TAIL"))
     private void eap$modifyAppfluxUpgradeSlots(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
-            Logger.EAP$LOGGER.info("AppfluxPatternProviderLogicMixin被调用！");
-            
             // 只有当appflux存在且不启用我们的升级槽时才修改数量
             if (!UpgradeSlotCompat.shouldEnableUpgradeSlots() && UpgradeSlotCompat.shouldEnableChannelCard()) {
-                Logger.EAP$LOGGER.info("尝试修改appflux升级槽数量为2个");
-                
                 // 使用反射找到appflux的升级槽字段并替换
                 try {
                     Field upgradesField = this.getClass().getDeclaredField("af_$upgrades");
@@ -41,8 +37,6 @@ public class AppfluxPatternProviderLogicMixin {
                     IUpgradeInventory currentUpgrades = (IUpgradeInventory) upgradesField.get(this);
                     
                     if (currentUpgrades != null) {
-                        Logger.EAP$LOGGER.info("找到appflux升级槽，当前大小: {}", currentUpgrades.size());
-                        
                         // 创建新的2槽升级槽
                         IUpgradeInventory newUpgrades = UpgradeInventories.forMachine(
                             host.getTerminalIcon().getItem(), 
@@ -66,7 +60,6 @@ public class AppfluxPatternProviderLogicMixin {
                         
                         // 替换升级槽
                         upgradesField.set(this, newUpgrades);
-                        Logger.EAP$LOGGER.info("成功将appflux升级槽替换为2个槽");
                     }
                 } catch (Exception e) {
                     Logger.EAP$LOGGER.error("反射修改appflux升级槽失败", e);

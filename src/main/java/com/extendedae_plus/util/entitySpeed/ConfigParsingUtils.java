@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -33,8 +32,6 @@ public final class ConfigParsingUtils {
     private static volatile Map<String, Boolean> blacklistResultCache = new HashMap<>();
     private static volatile Map<String, Double> multiplierResultCache = new HashMap<>();
     private static final Object CACHE_LOCK = new Object();
-    private static final AtomicLong callCounter = new AtomicLong(0);
-    private static final long CHECK_INTERVAL = 100;
 
     /*
       初始化缓存，在模组加载时调用
@@ -121,7 +118,6 @@ public final class ConfigParsingUtils {
         if (blockId == null || BLACKLIST_SUPPLIER.get() == null || BLACKLIST_SUPPLIER.get().length == 0) {
             return false;
         }
-        checkConfigChange();
         return blacklistResultCache.computeIfAbsent(blockId, id ->
                 getCachedBlacklist().values().stream().anyMatch(p -> p.matcher(id).matches())
         );
@@ -134,7 +130,6 @@ public final class ConfigParsingUtils {
         if (blockId == null || MULTIPLIERS_SUPPLIER.get() == null || MULTIPLIERS_SUPPLIER.get().length == 0) {
             return 1.0;
         }
-        checkConfigChange();
         return multiplierResultCache.computeIfAbsent(blockId, id -> {
             double maxMultiplier = 1.0;
             for (MultiplierEntry me : getCachedMultiplierEntries().values()) {
@@ -214,22 +209,6 @@ public final class ConfigParsingUtils {
     }
 
     /**
-     * 每 100 次调用检查配置是否变化。
-     */
-    private static void checkConfigChange() {
-        if (callCounter.incrementAndGet() % CHECK_INTERVAL == 0) {
-            String[] currentBlacklist = BLACKLIST_SUPPLIER.get();
-            String[] currentMultipliers = MULTIPLIERS_SUPPLIER.get();
-            synchronized (CACHE_LOCK) {
-                if (cachedBlacklistSourceSnapshot == null || !Arrays.equals(cachedBlacklistSourceSnapshot, currentBlacklist) ||
-                        cachedMultiplierSourceSnapshot == null || !Arrays.equals(cachedMultiplierSourceSnapshot, currentMultipliers)) {
-                    reload();
-                }
-            }
-        }
-    }
-
-    /**
      * 清空缓存，下一次获取时将重新解析。
      */
     public static void reload() {
@@ -240,7 +219,6 @@ public final class ConfigParsingUtils {
             cachedMultiplierSourceSnapshot = null;
             blacklistResultCache.clear();
             multiplierResultCache.clear();
-            callCounter.set(0);
         }
     }
 }
