@@ -85,7 +85,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     private void eap$onAppfluxUpgradesChanged(CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                Logger.EAP$LOGGER.info("监听到appflux升级变化，处理频道卡");
                 // 升级变更，重置并尝试初始化频道卡
                 eap$compatLastChannel = -1;
                 eap$compatHasInitialized = false;
@@ -100,12 +99,8 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             at = @At("TAIL"))
     private void eap$compatInitUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
-            Logger.EAP$LOGGER.info("兼容性PatternProviderLogic初始化被调用");
-            
             boolean upgradeSlots = UpgradeSlotCompat.shouldEnableUpgradeSlots();
             boolean channelCard = UpgradeSlotCompat.shouldEnableChannelCard();
-            
-            Logger.EAP$LOGGER.info("升级槽功能: {}, 频道卡功能: {}", upgradeSlots, channelCard);
             
             if (upgradeSlots) {
                 // 只有在升级槽功能启用时才创建升级槽
@@ -114,12 +109,9 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     1, 
                     this::eap$compatOnUpgradesChanged
                 );
-                Logger.EAP$LOGGER.info("创建了完整的升级槽");
             } else if (channelCard) {
                 // 如果装了appflux，我们不创建自己的升级槽，而是监听appflux的升级槽
-                Logger.EAP$LOGGER.info("装了appflux，将监听其升级槽来处理频道卡");
             } else {
-                Logger.EAP$LOGGER.info("跳过升级槽创建");
             }
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级初始化失败", e);
@@ -188,7 +180,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         } else {
             // 装了appflux时，这个方法不应该被调用，因为appflux的Mixin会覆盖它
             // 但是为了安全起见，返回空的升级槽
-            Logger.EAP$LOGGER.debug("装了appflux时getUpgrades被调用，这不应该发生");
             return UpgradeInventories.empty();
         }
     }
@@ -250,7 +241,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     if (this instanceof IUpgradeableObject) {
                         IUpgradeableObject upgradeableThis = (IUpgradeableObject) this;
                         upgrades = upgradeableThis.getUpgrades();
-                        Logger.EAP$LOGGER.debug("从appflux获取到升级槽: {}", upgrades != null);
                     }
                 } catch (Exception e) {
                     Logger.EAP$LOGGER.error("获取appflux升级槽失败", e);
@@ -262,7 +252,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                         channel = ChannelCardItem.getChannel(stack);
                         found = true;
-                        Logger.EAP$LOGGER.info("找到频道卡，频道: {}", channel);
                         break;
                     }
                 }

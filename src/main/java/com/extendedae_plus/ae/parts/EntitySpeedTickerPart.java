@@ -51,7 +51,7 @@ import java.lang.reflect.Method;
  * 实体加速器部件，用于加速目标方块实体的 tick 速率，消耗 AE 网络能量，支持加速卡和能量卡升级。
  * 灵感来源于 <a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>。
  */
-public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTickable, MenuProvider, IUpgradeableObject {
+public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject {
     public static final ResourceLocation MODEL_BASE = new ResourceLocation(
             ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
 
@@ -62,18 +62,14 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
     @PartModels
     public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
 
-    public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
-    private boolean networkEnergySufficient = true; // 网络能量是否充足
-    private int cachedSpeed = -1;                    // 缓存的加速倍率
-    private int cachedEnergyCardCount = -1;          // 缓存的能量卡数量
-    private BlockEntity cachedTarget = null;
-    private BlockPos cachedTargetPos = null;
+    private static volatile boolean[] cachedAttempts;
 
     private static volatile Method cachedFEExtractMethod;
     private static volatile boolean FE_UNAVAILABLE;
 
-    // ===== 静态块：反射初始化 FE 方法 =====
+    // 静态块：初始化缓存
     static {
+        cachedAttempts = ModConfig.INSTANCE.prioritizeDiskEnergy ? new boolean[]{false, true, true} : new boolean[]{true, false, true};
         if (ModList.get().isLoaded("appflux")) {
             try {
                 Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
@@ -90,8 +86,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
             }
         }
     }
+
+    public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
+    private boolean networkEnergySufficient = true; // 网络能量是否充足
+    private int cachedSpeed = -1;                    // 缓存的加速倍率
+    private int cachedEnergyCardCount = -1;          // 缓存的能量卡数量
+    private BlockEntity cachedTarget = null;
+    private BlockPos cachedTargetPos = null;
+
     /**
      * 构造函数，初始化部件并设置网络节点属性。
+     *
      * @param partItem 部件物品
      */
     public EntitySpeedTickerPart(IPartItem<?> partItem) {
@@ -108,17 +113,26 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         );
     }
 
+    /**
+     * 更新缓存的 attempts 数组，由 ModConfig 调用。
+     */
+    public static void updateCachedAttempts(boolean prioritizeDiskEnergy) {
+        synchronized (EntitySpeedTickerPart.class) {
+            cachedAttempts = prioritizeDiskEnergy ? new boolean[]{false, true, true} : new boolean[]{true, false, true};
+        }
+    }
+
     public boolean getAccelerateEnabled() {
         return this.getConfigManager().getSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE) == YesNo.YES;
     }
 
     /**
      * 设置加速开关状态并通知菜单。
+     *
      * @param enabled 是否启用加速
      */
     public void setAccelerateEnabled(boolean enabled) {
         this.getConfigManager().putSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
-        // 是否启用加速
         if (menu != null) {
             menu.setAccelerateEnabled(enabled);
         }
@@ -130,6 +144,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 更新网络能量充足状态并通知菜单。
+     *
      * @param sufficient 是否能量充足
      */
     private void updateNetworkEnergySufficient(boolean sufficient) {
@@ -141,6 +156,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 获取当前状态的渲染模型。
+     *
      * @return 当前状态的模型
      */
     @Override
@@ -156,9 +172,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 处理玩家右键激活部件，打开菜单。
+     *
      * @param player 玩家
-     * @param hand 手
-     * @param pos 点击位置
+     * @param hand   手
+     * @param pos    点击位置
      * @return 总是返回 true
      */
     @Override
@@ -171,6 +188,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 定义部件的碰撞箱。
+     *
      * @param bch 碰撞辅助器
      */
     @Override
@@ -181,6 +199,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 获取定时请求，指定 tick 频率。
+     *
      * @param iGridNode 网络节点
      * @return TickingRequest 对象
      */
@@ -205,7 +224,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 网络定时回调，处理目标方块实体的加速。
-     * @param iGridNode 网络节点
+     *
+     * @param iGridNode          网络节点
      * @param ticksSinceLastCall 距离上次调用的 tick 数
      * @return TickRateModulation.IDLE
      */
@@ -223,8 +243,9 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 对目标方块实体执行加速 tick 操作。
+     *
      * @param blockEntity 目标方块实体
-     * @param <T> 方块实体类型
+     * @param <T>         方块实体类型
      */
     private <T extends BlockEntity> void ticker(@NotNull T blockEntity) {
         if (!isValidForTicking()) {
@@ -241,7 +262,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
             return;
         }
 
-        // 如果缓存未初始化（第一次 tick），计算并更新缓存
         if (cachedEnergyCardCount == -1 || cachedSpeed == -1) {
             this.cachedEnergyCardCount = getUpgrades().getInstalledUpgrades(AEItems.ENERGY_CARD);
             this.cachedSpeed = calculateSpeed();
@@ -251,7 +271,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
             return;
         }
 
-        // 使用 PowerUtils 的缓存获取能耗，并应用方块特定的倍率
         double requiredPower = PowerUtils.getCachedPower(cachedSpeed, cachedEnergyCardCount)
                 * ConfigParsingUtils.getMultiplierForBlock(blockId);
         if (!extractPower(requiredPower)) {
@@ -263,6 +282,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 检查网络节点是否有效。
+     *
      * @return 是否可以执行 tick
      */
     private boolean isValidForTicking() {
@@ -280,8 +300,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
             cachedTarget = getLevel().getBlockEntity(targetPos);
         }
     }
+
     /**
      * 获取目标方块实体的 ticker。
+     *
      * @param blockEntity 目标方块实体
      * @return ticker 或 null
      */
@@ -292,6 +314,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 计算加速倍率。
+     *
      * @return 生效的加速倍率
      */
     private int calculateSpeed() {
@@ -302,6 +325,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
+     *
      * @param requiredPower 所需能量（AE 单位）
      * @return 是否成功提取足够能量
      */
@@ -310,11 +334,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
         MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
         IActionSource source = IActionSource.ofMachine(this);
 
-        // 优先级：FE（如果优先磁盘） -> AE -> FE（如果未优先磁盘）
-        boolean[] attempts = ModConfig.INSTANCE.prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, false};
-
-        for (int i = 0; i < attempts.length; i++) {
-            if (!attempts[i]) continue;
+        for (int i = 0; i < cachedAttempts.length; i++) {
+            if (!cachedAttempts[i]) continue;
             if (i == 0 || i == 2) { // FE 提取
                 if (!FE_UNAVAILABLE && cachedFEExtractMethod != null) {
                     try {
@@ -329,10 +350,14 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
                     }
                 }
             } else { // AE 提取
-                double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-                if (extracted >= requiredPower) {
-                    updateNetworkEnergySufficient(true);
-                    return true;
+                double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+                if (simulated >= requiredPower) {
+                    double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+                    boolean sufficient = extracted >= requiredPower;
+                    updateNetworkEnergySufficient(sufficient);
+                    if (sufficient) {
+                        return true;
+                    }
                 }
             }
         }
@@ -342,14 +367,14 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 执行加速 tick 操作。
+     *
      * @param blockEntity 目标方块实体
-     * @param ticker 方块实体 ticker
-     * @param speed 加速倍率
+     * @param ticker      方块实体 ticker
+     * @param speed       加速倍率
      */
     private <T extends BlockEntity> void performTicks(T blockEntity,
                                                       BlockEntityTicker<T> ticker,
                                                       int speed) {
-        // 执行 speed-1 次额外 tick（原生 tick 已包含 1 次）
         for (int i = 0; i < speed - 1; i++) {
             ticker.tick(
                     blockEntity.getLevel(),
@@ -372,9 +397,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 创建菜单实例。
-     * @param containerId 容器ID
+     *
+     * @param containerId     容器ID
      * @param playerInventory 玩家背包
-     * @param player 玩家
+     * @param player          玩家
      * @return 菜单实例
      */
     @Override
@@ -386,6 +412,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart  implements IGridTick
 
     /**
      * 获取升级卡槽数量。
+     *
      * @return 升级卡槽数量
      */
     @Override

@@ -1,18 +1,30 @@
 package com.extendedae_plus.config;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
+import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
+import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import dev.toma.configuration.Configuration;
+import dev.toma.configuration.client.IValidationHandler;
 import dev.toma.configuration.config.Config;
 import dev.toma.configuration.config.Configurable;
 import dev.toma.configuration.config.format.ConfigFormats;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 @Config(id = ExtendedAEPlus.MODID)
 public final class ModConfig {
 
     public static ModConfig INSTANCE;
     private static final Object lock = new Object();
-
+    private static final long DEBOUNCE_INTERVAL = 1000; // 防抖间隔，单位：毫秒
+    private static final AtomicLong lastUpdateTime = new AtomicLong(0);
 
     public static void init() {
         synchronized (lock) {
@@ -21,6 +33,7 @@ public final class ModConfig {
             }
         }
     }
+
     @Configurable
     @Configurable.Comment(value = {
             "扩展样板供应器总槽位容量的倍率。",
@@ -95,6 +108,7 @@ public final class ModConfig {
     })
     @Configurable.Range(min = 0, max = Integer.MAX_VALUE)
     @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerCostUpdate")
     public int entityTickerCost = 512;
 
     @Configurable
@@ -103,9 +117,8 @@ public final class ModConfig {
             "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
     })
     @Configurable.Synchronized
-    public String[] entityTickerBlackList = {
-
-    };
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerBlackListUpdate")
+    public String[] entityTickerBlackList = {};
 
     @Configurable
     @Configurable.Comment(value = {
@@ -113,9 +126,8 @@ public final class ModConfig {
             "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
     })
     @Configurable.Synchronized
-    public String[] entityTickerMultipliers = {
-
-    };
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
+    public String[] entityTickerMultipliers = {};
 
     @Configurable
     @Configurable.Comment(value = {
@@ -131,5 +143,45 @@ public final class ModConfig {
             "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
     })
     @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onPrioritizeDiskEnergyUpdate")
     public boolean prioritizeDiskEnergy = true;
+
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static ScheduledFuture<?> pendingPowerTask;
+    private static final Object POWER_LOCK = new Object();
+
+    private void onEntityTickerCostUpdate(int newValue, IValidationHandler handler) {
+        synchronized (POWER_LOCK) {
+            if (pendingPowerTask != null) {
+                pendingPowerTask.cancel(false);
+            }
+            pendingPowerTask = EXECUTOR.schedule(() -> {
+                synchronized (PowerUtils.class) {
+                    PowerUtils.initializeCaches();
+                }
+            }, 1000, TimeUnit.MILLISECONDS); // 1000ms 防抖
+        }
+    }
+
+
+    private void onEntityTickerBlackListUpdate(String[] newValue, IValidationHandler handler) {
+        synchronized (ConfigParsingUtils.class) {
+            EAP$LOGGER.info("onEntityTickerBlackListUpdate");
+            ConfigParsingUtils.reload();
+        }
+    }
+
+    private void onEntityTickerMultipliersUpdate(String[] newValue, IValidationHandler handler) {
+        synchronized (ConfigParsingUtils.class) {
+            EAP$LOGGER.info("onEntityTickerMultipliersUpdate");
+            ConfigParsingUtils.reload();
+        }
+    }
+
+    private void onPrioritizeDiskEnergyUpdate(boolean newValue, dev.toma.configuration.client.IValidationHandler handler) {
+        synchronized (EntitySpeedTickerPart.class) {
+            EAP$LOGGER.info("onPrioritizeDiskEnergyUpdate");
+            EntitySpeedTickerPart.updateCachedAttempts(newValue);
+        }
+    }
 }
