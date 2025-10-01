@@ -329,41 +329,61 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @param requiredPower 所需能量（AE 单位）
      * @return 是否成功提取足够能量
      */
+    /**
+     * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
+     * @param requiredPower 所需能量（AE 单位）
+     * @return 是否成功提取足够能量
+     */
     private boolean extractPower(double requiredPower) {
         IEnergyService energyService = getMainNode().getGrid().getEnergyService();
         MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
         IActionSource source = IActionSource.ofMachine(this);
 
-        for (int i = 0; i < cachedAttempts.length; i++) {
-            if (!cachedAttempts[i]) continue;
-            if (i == 0 || i == 2) { // FE 提取
-                if (!FE_UNAVAILABLE && cachedFEExtractMethod != null) {
-                    try {
-                        long feRequired = (long) requiredPower << 1;
-                        long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
-                        if (feExtracted >= feRequired) {
-                            updateNetworkEnergySufficient(true);
-                            return true;
-                        }
-                    } catch (Exception e) {
-                        FE_UNAVAILABLE = true;
-                    }
-                }
-            } else { // AE 提取
-                double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-                if (simulated >= requiredPower) {
-                    double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-                    boolean sufficient = extracted >= requiredPower;
-                    updateNetworkEnergySufficient(sufficient);
-                    if (sufficient) {
-                        return true;
-                    }
-                }
+        boolean preferDiskEnergy = ModConfig.INSTANCE.prioritizeDiskEnergy;
+
+        // 如果优先磁盘能量，先尝试 FE
+        if (preferDiskEnergy && tryExtractFE(energyService, storage, requiredPower, source)) {
+            return true;
+        }
+
+        // 先尝试 AE 能量
+        double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        if (simulated >= requiredPower) {
+            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            boolean sufficient = extracted >= requiredPower;
+            updateNetworkEnergySufficient(sufficient);
+            return sufficient;
+        }
+        updateNetworkEnergySufficient(false);
+
+        // 如果没成功，且不是优先磁盘能量，再尝试 FE
+        if (!preferDiskEnergy) {
+            return tryExtractFE(energyService, storage, requiredPower, source);
+        }
+
+        return false;
+    }
+
+    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
+        if (FE_UNAVAILABLE || cachedFEExtractMethod == null) {
+            updateNetworkEnergySufficient(false);
+            return false;
+        }
+        try {
+            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
+            long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
+            if (feExtracted >= feRequired) {
+                updateNetworkEnergySufficient(true);
+                return true;
             }
+        } catch (Exception e) {
+            // 如果反射调用失败，标记为不可用，避免下次继续尝试
+            FE_UNAVAILABLE = true;
         }
         updateNetworkEnergySufficient(false);
         return false;
     }
+
 
     /**
      * 执行加速 tick 操作。
