@@ -99,9 +99,11 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             at = @At("TAIL"))
     private void eap$compatInitUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
+
             boolean upgradeSlots = UpgradeSlotCompat.shouldEnableUpgradeSlots();
             boolean channelCard = UpgradeSlotCompat.shouldEnableChannelCard();
             
+
             if (upgradeSlots) {
                 // 只有在升级槽功能启用时才创建升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(

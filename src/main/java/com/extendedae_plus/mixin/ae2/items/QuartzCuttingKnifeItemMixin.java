@@ -196,7 +196,6 @@ public abstract class QuartzCuttingKnifeItemMixin {
                 }
             }
         } catch (ClassNotFoundException e) {
-            EAP$LOGGER.info("GregTech CEu 类未找到，跳过配方翻译处理");
             return null; // GTCEu 不可用
         } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException e) {
             EAP$LOGGER.error("处理 GTCEu 配方翻译失败: {}", e.getMessage());

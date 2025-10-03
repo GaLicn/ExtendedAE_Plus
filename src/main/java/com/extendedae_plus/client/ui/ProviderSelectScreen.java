@@ -183,10 +183,29 @@ public class ProviderSelectScreen extends Screen {
         }
     }
 
+    /**
+     * 将服务器发送的名称（可能是 Component JSON）反序列化为本地化文本
+     */
+    private String deserializeComponentName(String name) {
+        try {
+            // 如果名称是 JSON 格式的 Component，反序列化后获取本地化文本
+            if (name.startsWith("{") || name.startsWith("\"")) {
+                Component component = Component.Serializer.fromJson(name);
+                if (component != null) {
+                    return component.getString();
+                }
+            }
+        } catch (Exception e) {
+            // 如果不是 JSON 或解析失败，使用原始字符串
+        }
+        return name;
+    }
+
     private String buildLabel(int idx) {
         String name = fNames.get(idx);
         int totalSlots = fTotalSlots.get(idx);
         int count = fCount.get(idx);
+        
         // 不显示具体 id，显示合并统计：名称（总空位）x数量
         return name + "  (" + totalSlots + ")  x" + count;
     }
@@ -215,7 +234,11 @@ public class ProviderSelectScreen extends Screen {
             String name = names.get(i);
             long id = ids.get(i);
             int slots = emptySlots.get(i);
-            Group g = map.computeIfAbsent(name, k -> new Group());
+            
+            // 将 Component JSON 转换为本地化文本用于分组键
+            String groupKey = deserializeComponentName(name);
+            
+            Group g = map.computeIfAbsent(groupKey, k -> new Group());
             g.count++;
             g.totalSlots += Math.max(0, slots);
             // 挑选空位最多的作为代表 id；若并列，保留先到者

@@ -28,8 +28,10 @@ public class AppfluxPatternProviderLogicMixin {
             at = @At("TAIL"))
     private void eap$modifyAppfluxUpgradeSlots(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
+
             // 只有当appflux存在且不启用我们的升级槽时才修改数量
             if (!UpgradeSlotCompat.shouldEnableUpgradeSlots() && UpgradeSlotCompat.shouldEnableChannelCard()) {
+
                 // 使用反射找到appflux的升级槽字段并替换
                 try {
                     Field upgradesField = this.getClass().getDeclaredField("af_$upgrades");
@@ -37,6 +39,7 @@ public class AppfluxPatternProviderLogicMixin {
                     IUpgradeInventory currentUpgrades = (IUpgradeInventory) upgradesField.get(this);
                     
                     if (currentUpgrades != null) {
+
                         // 创建新的2槽升级槽
                         IUpgradeInventory newUpgrades = UpgradeInventories.forMachine(
                             host.getTerminalIcon().getItem(), 

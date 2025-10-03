@@ -127,7 +127,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         try { cfgPages = Math.max(1, ModConfig.INSTANCE.pageMultiplier); } catch (Throwable ignored) {}
         int calcPages = Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
         int desiredMaxPage = Math.max(cfgPages, calcPages);
-        EAP$LOGGER.info("[EAP] GuiExPatternProvider init: totalSlots={}, cfgPages={}, calcPages={}, desiredMaxPage={}", totalSlots, cfgPages, calcPages, desiredMaxPage);
         // 更新本地最大页
         this.eap$maxPageLocal = Math.max(1, desiredMaxPage);
         this.eap$currentPage = 0;
@@ -158,8 +157,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 } catch (Exception ignored) {}
                 // 同步到本地 GUI 页码
                 this.eap$currentPage = newPage;
-                // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
-                EAP$LOGGER.info("[EAP] PrevPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                // 强制重排（放在更新本地页码之后，确保布局读取到新页）
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
@@ -185,8 +183,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 } catch (Exception ignored) {}
                 // 同步到本地 GUI 页码
                 this.eap$currentPage = newPage;
-                // 日志与强制重排（放在更新本地页码之后，确保布局读取到新页）
-                EAP$LOGGER.info("[EAP] NextPage clicked: {} -> {} (max={})", currentPage, newPage, maxPage);
+                // 强制重排（放在更新本地页码之后，确保布局读取到新页）
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
@@ -329,7 +326,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
         // 定位到 GUI 右缘外侧一点（使用绝对屏幕坐标）
         int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
-        int by = this.topPos + 20;
+        int by = this.topPos + 50; // 向下偏移25px (从20改为45)
         int spacing = 22;
         // 翻页按钮交由左侧工具栏布局，无需手动定位
         if (this.divideBy2Button != null) {

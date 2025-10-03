@@ -941,7 +941,9 @@ public class ExtendedAEPatternUploadUtil {
             // 尝试获取供应器的组信息来构建显示名称
             var group = container.getTerminalGroup();
             if (group != null) {
-                return group.name().getString();
+                // 使用 Component 序列化来保持翻译键，而不是直接 getString()
+                // 这样客户端可以根据自己的语言设置进行翻译
+                return Component.Serializer.toJson(group.name());
             }
         } catch (Exception e) {
             // 忽略异常，使用默认名称
@@ -1183,7 +1185,11 @@ public class ExtendedAEPatternUploadUtil {
         if (container == null) return "未知供应器";
         try {
             var group = container.getTerminalGroup();
-            if (group != null) return group.name().getString();
+            if (group != null) {
+                // 使用 Component 序列化来保持翻译键，而不是直接 getString()
+                // 这样客户端可以根据自己的语言设置进行翻译
+                return Component.Serializer.toJson(group.name());
+            }
         } catch (Throwable ignored) {
         }
         return "样板供应器";
