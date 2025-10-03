@@ -72,9 +72,12 @@
   "config.jade.plugin_extendedae_plus.wt_master_location": "Show Master Position",
   "config.jade.plugin_extendedae_plus.wt_locked": "Show Locked State",
   "config.jade.plugin_extendedae_plus.wt_network_usable": "Show Network Online State",
+  "config.jade.plugin_extendedae_plus.wt_channels": "Show Channel Usage",
   "extendedae_plus.tooltip.frequency": "Frequency: %d",
   "extendedae_plus.tooltip.master_mode": "Mode: %s",
   "extendedae_plus.tooltip.locked": "Locked: %s",
+  "extendedae_plus.tooltip.channels": "Channels: %d",
+  "extendedae_plus.tooltip.channels_of": "Channels: %d / %d",
 
   "config.screen.extendedae_plus": "ExtendedAE Plus Config",
   "config.extendedae_plus.option.pageMultiplier": "Pattern Provider Page Multiplier",

@@ -66,6 +66,23 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 tooltip.add(Component.literal((usable ? "设备在线" : "设备离线")));
             }
         }
+    },
+    CHANNELS("wt_channels") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("usedChannels") && data.contains("maxChannels")) {
+                int usedChannels = data.getInt("usedChannels");
+                int maxChannels = data.getInt("maxChannels");
+                // 参考AE2的显示方式
+                if (maxChannels <= 0) {
+                    // 无限频道或未设置
+                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels", usedChannels));
+                } else {
+                    // 显示 "已使用/最大"
+                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels_of", usedChannels, maxChannels));
+                }
+            }
+        }
     };
 
     private final ResourceLocation uid;

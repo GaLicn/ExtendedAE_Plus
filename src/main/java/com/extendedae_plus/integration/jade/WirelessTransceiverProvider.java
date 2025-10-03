@@ -40,6 +40,28 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                 }
             }
             data.putBoolean("networkUsable", networkUsable);
+            
+            // 添加频道使用信息（参考AE2的 IUsedChannelProvider 实现）
+            int usedChannels = 0;
+            int maxChannels = 0;
+            if (node != null && node.isActive()) {
+                // 遍历该节点的所有连接，取使用频道数的最大值
+                for (var connection : node.getConnections()) {
+                    usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
+                }
+                // 获取节点的最大频道容量（致密线缆为32）
+                if (node instanceof appeng.me.GridNode gridNode) {
+                    var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
+                    if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                        maxChannels = -1; // 无限频道
+                    } else {
+                        maxChannels = gridNode.getMaxChannels();
+                    }
+                }
+            }
+            data.putInt("usedChannels", usedChannels);
+            data.putInt("maxChannels", maxChannels);
+            
             // 如果是从模式，查询主节点位置与维度
             if (!blockEntity.isMasterMode()) {
                 var level = blockEntity.getServerLevel();
