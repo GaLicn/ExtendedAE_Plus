@@ -28,6 +28,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -396,12 +397,41 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                                                       BlockEntityTicker<T> ticker,
                                                       int speed) {
         for (int i = 0; i < speed - 1; i++) {
-            ticker.tick(
-                    blockEntity.getLevel(),
-                    blockEntity.getBlockPos(),
-                    blockEntity.getBlockState(),
-                    blockEntity
-            );
+            try {
+                ticker.tick(
+                        blockEntity.getLevel(),
+                        blockEntity.getBlockPos(),
+                        blockEntity.getBlockState(),
+                        blockEntity
+                );
+            } catch (IllegalStateException e) {
+                // 捕获随机数生成器的多线程访问异常
+                // 这通常发生在某些模组（如 Thermal）的机器使用随机数时
+                // 由于加速导致在同一tick内多次访问随机数生成器而触发 ThreadingDetector
+                if (e.getMessage() != null && e.getMessage().contains("LegacyRandomSource")) {
+                    // 记录警告并停止当前加速循环，避免崩溃
+                    Logger.EAP$LOGGER.warn(
+                            "检测到方块实体 {} 在位置 {} 的随机数访问冲突，已停止本次加速以避免崩溃。" +
+                            "建议将此方块类型添加到配置黑名单中。",
+                            blockEntity.getType().toString(),
+                            blockEntity.getBlockPos()
+                    );
+                    break; // 停止后续的加速 tick
+                } else {
+                    // 如果是其他类型的 IllegalStateException，继续抛出
+                    throw e;
+                }
+            } catch (Exception e) {
+                // 捕获其他可能的异常，防止崩溃
+                Logger.EAP$LOGGER.error(
+                        "在加速方块实体 {} 位置 {} 时发生错误: {}",
+                        blockEntity.getType().toString(),
+                        blockEntity.getBlockPos(),
+                        e.getMessage(),
+                        e
+                );
+                break; // 停止后续的加速 tick
+            }
         }
     }
 
