@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
-import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.IGridConnection;
+import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -9,13 +9,13 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
-import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -110,7 +110,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     // 这里我们先记录一下，实际的检查会在tick中进行
                 }
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
     }
 
@@ -230,20 +230,20 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
             
             // 双重保险：如果主要方式失败，尝试备用方式
-            if (upgrades == null || !eap$hasChannelCard(upgrades)) {
+            if (!eap$hasChannelCard(upgrades)) {
                 
                 if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                     // 如果我们的槽无频道卡，尝试检查是否有AppliedFlux的槽
                     try {
                         IUpgradeInventory backupUpgrades = eap$getAppliedFluxUpgrades();
-                        if (backupUpgrades != null && eap$hasChannelCard(backupUpgrades)) {
+                        if (eap$hasChannelCard(backupUpgrades)) {
                             upgrades = backupUpgrades;
                         }
-                    } catch (Throwable t) {
+                    } catch (Throwable ignored) {
                     }
                 } else {
                     // 如果AppliedFlux的槽无频道卡，尝试我们的兼容槽
-                    if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
+                    if (eap$hasChannelCard(this.eap$compatUpgrades)) {
                         upgrades = this.eap$compatUpgrades;
                     }
                 }
@@ -347,7 +347,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             // 安装了AppliedFlux时，定期检查升级槽变化
             try {
                 IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
-                if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
+                if (eap$hasChannelCard(afUpgrades)) {
                     // 检查频道是否发生变化
                     for (ItemStack stack : afUpgrades) {
                         if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
@@ -366,7 +366,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     eap$compatHasInitialized = false;
                     eap$compatInitializeChannelLink();
                 }
-            } catch (Throwable t) {
+            } catch (Throwable ignored) {
             }
         }
     }
@@ -395,7 +395,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 }
                 try {
                     IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
-                    if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
+                    if (eap$hasChannelCard(afUpgrades)) {
                         // 槽中有频道卡，保持tick以尽快完成连接
                         return true;
                     }
@@ -404,7 +404,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 return false;
             }
             // 未安装 AppliedFlux：当存在频道卡但连接尚未建立时保持tick
-            if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
+            if (eap$hasChannelCard(this.eap$compatUpgrades)) {
                 if (eap$compatLink == null || !eap$compatLink.isConnected()) {
                     return true;
                 }

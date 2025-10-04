@@ -39,7 +39,7 @@ public class GuiUtil {
         if (outputs == null || outputs.isEmpty()) {
             return "";
         }
-        GenericStack out = outputs.get(0);
+        GenericStack out = outputs.getFirst();
         long amount = out.amount();
         long perUnit = out.what().getAmountPerUnit();
         if (amount <= 0 || perUnit <= 0) {

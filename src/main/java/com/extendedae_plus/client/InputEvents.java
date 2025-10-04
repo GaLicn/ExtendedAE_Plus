@@ -2,163 +2,97 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
+import appeng.core.AEConfig;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.integration.RecipeViewer.RecipeViewerHelper;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
+import com.extendedae_plus.network.C2SPacketTargetKeyTriggered;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
-import java.lang.reflect.Method;
-import java.util.Optional;
+import java.util.List;
 
+@EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class InputEvents {
 	private InputEvents() {}
 
-	private static Optional<?> getIngredientUnderMouse() {
-		try {
-			Class<?> cls = Class.forName("com.extendedae_plus.integration.jei.JeiRuntimeProxy");
-			Method m = cls.getMethod("getIngredientUnderMouse");
-			Object r = m.invoke(null);
-			return (Optional<?>) r;
-		} catch (Throwable ignored) {
-			return Optional.empty();
-		}
-	}
+    @SubscribeEvent
+    public static void onMouseButtonPre(InputEvent.MouseButton.Pre event) {
+        if (event.getAction() != GLFW.GLFW_PRESS) return;
+        if (Minecraft.getInstance().screen == null) return;
+        // 优先处理：Shift + 左键（拉取或下单）
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown() &&
+                !RecipeViewerHelper.isCheatMode()) {
+            List<GenericStack> stacks = RecipeViewerHelper.getHoveredStacks();
+            GenericStack stack = stacks.isEmpty() ? null : stacks.getFirst();
+            if (stack == null) return;
+            PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+        }
 
-	private static Optional<?> getIngredientUnderMouse(double mouseX, double mouseY) {
-		try {
-			Class<?> cls = Class.forName("com.extendedae_plus.integration.jei.JeiRuntimeProxy");
-			Method m = cls.getMethod("getIngredientUnderMouse", double.class, double.class);
-			Object r = m.invoke(null, mouseX, mouseY);
-			return (Optional<?>) r;
-		} catch (Throwable ignored) {
-			return Optional.empty();
-		}
-	}
-
-	private static boolean isJeiCheatModeEnabled() {
-		try {
-			Class<?> cls = Class.forName("com.extendedae_plus.integration.jei.JeiRuntimeProxy");
-			Method m = cls.getMethod("isJeiCheatModeEnabled");
-			Object r = m.invoke(null);
-			return r instanceof Boolean b && b;
-		} catch (Throwable ignored) {
-			return false;
-		}
-	}
-
-	private static String getTypedIngredientDisplayName(Object typed) {
-		try {
-			Class<?> cls = Class.forName("com.extendedae_plus.integration.jei.JeiRuntimeProxy");
-			Method m = cls.getMethod("getTypedIngredientDisplayName", Object.class);
-			Object r = m.invoke(null, typed);
-			return r instanceof String s ? s : "";
-		} catch (Throwable ignored) {
-			return "";
-		}
-	}
-
-	// 在缺少 AE2 的 JEI 辅助类时，仅尝试从 JEI 提供的原生 ItemStack 获取；否则不处理。
-	private static GenericStack toGenericStack(Object typed) {
-		try {
-			// typed.getItemStack(): Optional<ItemStack>
-			Method getItemStack = typed.getClass().getMethod("getItemStack");
-			Object maybe = getItemStack.invoke(typed);
-			if (maybe instanceof Optional<?> opt && opt.isPresent()) {
-				Object val = opt.get();
-				if (val instanceof ItemStack is) {
-					try {
-						return GenericStack.fromItemStack(is);
-					} catch (Throwable ignored) {
-						return null;
-					}
-				}
-			}
-		} catch (Throwable ignored) {
-		}
-		return null;
-	}
-
-	@SubscribeEvent
-	public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
-		// 优先处理：Shift + 左键（拉取或下单）
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-			double mouseX = event.getMouseX();
-			double mouseY = event.getMouseY();
-			Optional<?> hovered = getIngredientUnderMouse(mouseX, mouseY);
-			if (hovered.isEmpty()) {
-				hovered = getIngredientUnderMouse();
-			}
-			if (hovered.isPresent()) {
-				if (isJeiCheatModeEnabled()) {
-					return;
-				}
-				Object typed = hovered.get();
-				GenericStack stack = toGenericStack(typed);
-				if (stack != null) {
-					PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
-					event.setCanceled(true);
-					return;
-				}
-			}
-		}
-
-		// 中键：打开 AE 下单界面（保持原有功能）
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-			double mouseX = event.getMouseX();
-			double mouseY = event.getMouseY();
-			Optional<?> hovered = getIngredientUnderMouse(mouseX, mouseY);
-			if (hovered.isEmpty()) {
-				hovered = getIngredientUnderMouse();
-			}
-			if (hovered.isEmpty()) return;
-
-			if (isJeiCheatModeEnabled()) {
-				return;
-			}
-			Object typed = hovered.get();
-			GenericStack stack = toGenericStack(typed);
-			if (stack == null) return;
+        // 中键：打开 AE 下单界面（保持原有功能）
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+            // 优先在 JEI 配方界面基于坐标获取；若无，再从覆盖层/书签获取
+            List<GenericStack> stacks = RecipeViewerHelper.getHoveredStacks();
+            GenericStack stack = stacks.isEmpty() ? null : stacks.getFirst();
+            if (stack == null) return;
 
 			PacketDistributor.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
 			event.setCanceled(true);
 		}
 	}
 
-	@SubscribeEvent
-	public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
-		if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
+    @SubscribeEvent
+    public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
+        if (event.getKeyCode() == GLFW.GLFW_KEY_F) {
+            // 仅当鼠标确实悬停在 JEI 配料上时触发
+            // 大概会在一格有多个(?)stack的时候出bug, 但是真的会有那种时候吗?
+            GenericStack stack = RecipeViewerHelper.getHoveredStacks().getFirst();
+            if (stack == null) return;
+            String name = stack.what().getDisplayName().getString();
 
-		Optional<?> hovered = getIngredientUnderMouse();
-		if (hovered.isEmpty()) return;
+            // 写入 AE2 终端的搜索框
+            var screen = Minecraft.getInstance().screen;
+            if (screen instanceof MEStorageScreen<?> me) {
+                try {
+                    // 如果用EMI搜索框
+                    if (AEConfig.instance().isUseExternalSearch()) RecipeViewerHelper.setSearchText(name);
+                    else {
+                        MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
+                        acc.eap$getSearchField().setValue(name);
+                        acc.eap$setSearchText(name); // 同步到 Repo 并刷新
+                    }
+                    event.setCanceled(true);
+                } catch (Throwable ignored) {
+                }
+            } else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+                try {
+                    if (AEConfig.instance().isUseExternalSearch()) RecipeViewerHelper.setSearchText(name);
+                    else {
+                        GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                        acc.getSearchField().setValue(name);
+                    }
+                    event.setCanceled(true);
+                } catch (Throwable ignored) {
+                }
+            }
+        } else if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_CONTROL)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.CTRL_DOWN));
+    }
 
-		Object typed = hovered.get();
-		String name = getTypedIngredientDisplayName(typed);
-		if (name == null || name.isEmpty()) return;
-
-		var screen = Minecraft.getInstance().screen;
-		if (screen instanceof MEStorageScreen<?> me) {
-			try {
-				MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;
-				acc.eap$getSearchField().setValue(name);
-				acc.eap$setSearchText(name);
-				event.setCanceled(true);
-				return;
-			} catch (Throwable ignored) {
-			}
-		}else if (screen instanceof GuiExPatternTerminal<?> gpt) {
-			try {
-				GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
-				acc.getSearchField().setValue(name);
-				event.setCanceled(true);
-			}catch (Throwable ignored) {}
-		}
-	}
+    @SubscribeEvent
+    public static void onKeyReleasePre(ScreenEvent.KeyReleased.Pre event) {
+        if (event.getKeyCode() == GLFW.GLFW_KEY_LEFT_CONTROL)
+            PacketDistributor.sendToServer(new C2SPacketTargetKeyTriggered(C2SPacketTargetKeyTriggered.KeyType.CTRL_UP));
+    }
 }

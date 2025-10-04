@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
+import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.stacks.AEItemKey;
@@ -8,12 +9,20 @@ import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
 import appeng.helpers.IPatternTerminalMenuHost;
-import appeng.menu.me.common.MEStorageMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
+import appeng.parts.encoding.EncodingMode;
+import com.extendedae_plus.client.PatternEncodingTermMenuMixinHelper;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
+import com.extendedae_plus.network.C2SPacketEncodeFinished;
+import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -21,15 +30,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(PatternEncodingTermMenu.class)
-public abstract class PatternEncodingTermMenuMixin {
+import java.util.Objects;
 
+@Mixin(PatternEncodingTermMenu.class)
+public abstract class PatternEncodingTermMenuMixin implements PatternEncodingTermMenuMixinHelper {
     // 防止重复执行
     @Unique
     private boolean eap$blankAutoFilled = false;
-
-    @Shadow
+    @Shadow @Final
     private RestrictedInputSlot blankPatternSlot;
+    @Shadow
+    @Final
+    private RestrictedInputSlot encodedPatternSlot;
+    @Unique
+    public boolean eaep$isCtrlPressed = false;
+
+    @Unique
+    public void eaep$setCtrlPressed(boolean press) {
+        eaep$isCtrlPressed = press;
+    }
 
     @Unique
     private void eap$tryFill(IPatternTerminalMenuHost host, Inventory ip) {
@@ -40,10 +59,10 @@ public abstract class PatternEncodingTermMenuMixin {
                 return;
             }
             // 必须可与网络交互
-            var acc = (MEStorageMenuAccessor) (Object) ((MEStorageMenu) self);
+            var acc = (MEStorageMenuAccessor) self;
             MEStorage storage = acc.getStorage();
             IEnergySource power = acc.getEnergySource();
-            boolean canInteract = storage != null && power != null && ((MEStorageMenu) self).getLinkStatus().connected();
+            boolean canInteract = storage != null && power != null && self.getLinkStatus().connected();
             if (!canInteract) {
                 return;
             }
@@ -106,14 +125,14 @@ public abstract class PatternEncodingTermMenuMixin {
         }
         // 仅在服务器端执行
         var self = (PatternEncodingTermMenu) (Object) this;
-        var acc = (MEStorageMenuAccessor) (Object) ((MEStorageMenu) self);
+        var acc = (MEStorageMenuAccessor) self;
         MEStorage storage = acc.getStorage();
         IEnergySource power = acc.getEnergySource();
         var player = self.getPlayerInventory().player;
         if (player.level().isClientSide()) {
             return;
         }
-        boolean canInteract = storage != null && power != null && ((MEStorageMenu) self).getLinkStatus().connected();
+        boolean canInteract = storage != null && power != null && self.getLinkStatus().connected();
         if (!canInteract) {
             return;
         }
@@ -148,5 +167,23 @@ public abstract class PatternEncodingTermMenuMixin {
             StorageHelper.poweredInsert(power, storage, blankKey, leftover, self.getActionSource());
         }
         this.eap$blankAutoFilled = true;
+    }
+
+    @Inject(method = "encode", at = @At("TAIL"))
+    private void eaep$onEncode(CallbackInfo ci) {
+        if (EAEPConfig.INDEPENDENT_UPLOADING_BUTTON.getAsBoolean()) return;
+        var self = (PatternEncodingTermMenu) (Object) this;
+        if (self.isClientSide()) return;
+        if (!eaep$isCtrlPressed) return;
+        eaep$isCtrlPressed = false;
+        ItemStack pattern = this.encodedPatternSlot.getItem();
+        if (pattern == null || !PatternDetailsHelper.isEncodedPattern(pattern)) return;
+        Objects.requireNonNull(self.getPlayer().getServer()).execute(() -> {
+            try {
+                if (self.getMode() == EncodingMode.PROCESSING)
+                    PacketDistributor.sendToPlayer((ServerPlayer) self.getPlayer(), C2SPacketEncodeFinished.INSTANCE);
+                else ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix((ServerPlayer) self.getPlayer(), self);
+            } catch (Throwable ignored) {}
+        });
     }
 }

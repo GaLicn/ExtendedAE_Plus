@@ -1,8 +1,8 @@
 package com.extendedae_plus.menu.host;
 
+import appeng.api.storage.ISubMenuHost;
 import appeng.menu.ISubMenu;
 import appeng.menu.locator.ItemMenuHostLocator;
-import appeng.api.storage.ISubMenuHost;
 import de.mari_023.ae2wtlib.api.terminal.ItemWT;
 import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.world.entity.player.Player;

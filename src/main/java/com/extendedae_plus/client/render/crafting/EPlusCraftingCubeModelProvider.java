@@ -30,21 +30,21 @@ public class EPlusCraftingCubeModelProvider
     private static final List<Material> MATERIALS = new ArrayList<>();
 
     //将环形边框与基础发光底图放在本模组命名空间
-    protected static final Material RING_CORNER = texture(ExtendedAEPlus.MODID, "ring_corner");
-    protected static final Material RING_SIDE_HOR = texture(ExtendedAEPlus.MODID, "ring_side_hor");
-    protected static final Material RING_SIDE_VER = texture(ExtendedAEPlus.MODID, "ring_side_ver");
-    protected static final Material LIGHT_BASE = texture(ExtendedAEPlus.MODID, "light_base");
+    protected static final Material RING_CORNER = texture("ring_corner");
+    protected static final Material RING_SIDE_HOR = texture("ring_side_hor");
+    protected static final Material RING_SIDE_VER = texture("ring_side_ver");
+    protected static final Material LIGHT_BASE = texture("light_base");
 
     // 亮面贴图（formed 时使用）
-    protected static final Material ACCELERATOR_4X_LIGHT = texture(ExtendedAEPlus.MODID,
+    protected static final Material ACCELERATOR_4X_LIGHT = texture(
             "4x_accelerator_light");
-    protected static final Material ACCELERATOR_16X_LIGHT = texture(ExtendedAEPlus.MODID,
+    protected static final Material ACCELERATOR_16X_LIGHT = texture(
             "16x_accelerator_light");
-    protected static final Material ACCELERATOR_64X_LIGHT = texture(ExtendedAEPlus.MODID,
+    protected static final Material ACCELERATOR_64X_LIGHT = texture(
             "64x_accelerator_light");
-    protected static final Material ACCELERATOR_256X_LIGHT = texture(ExtendedAEPlus.MODID,
+    protected static final Material ACCELERATOR_256X_LIGHT = texture(
             "256x_accelerator_light");
-    protected static final Material ACCELERATOR_1024X_LIGHT = texture(ExtendedAEPlus.MODID,
+    protected static final Material ACCELERATOR_1024X_LIGHT = texture(
             "1024x_accelerator_light");
 
     public EPlusCraftingCubeModelProvider(EPlusCraftingUnitType type) {
@@ -80,9 +80,9 @@ public class EPlusCraftingCubeModelProvider
         };
     }
 
-    private static Material texture(String namespace, String name) {
+    private static Material texture(String name) {
         var mat = new Material(TextureAtlas.LOCATION_BLOCKS,
-                ResourceLocation.fromNamespaceAndPath(namespace, "block/crafting/" + name));
+                ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "block/crafting/" + name));
         MATERIALS.add(mat);
         return mat;
     }

@@ -7,7 +7,6 @@ import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.service.CraftingService;
-import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
@@ -17,13 +16,12 @@ import com.glodblock.github.extendedae.util.FCClientUtil;
 import com.glodblock.github.glodium.util.GlodUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -70,7 +68,7 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
 
             // 通过菜单的 target（可能是 BlockEntity/Part/ItemHost），按 IActionHost 获取 Grid
             IGrid grid = null;
-            Object target = ((AEBaseMenu) menu).getTarget();
+            Object target = menu.getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
                 grid = host.getActionableNode().getGrid();
             }
@@ -129,8 +127,8 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
 
                             // 最后发送高亮包，保证界面已打开
                             var outs = pattern.getOutputs();
-                            if (outs != null && !outs.isEmpty() && outs.get(0) != null) {
-                                AEKey key = outs.get(0).what();
+                            if (outs != null && !outs.isEmpty() && outs.getFirst() != null) {
+                                AEKey key = outs.getFirst().what();
                                 player.connection.send(new SetPatternHighlightS2CPacket(key, true));
                             }
 

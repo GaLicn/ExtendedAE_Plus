@@ -3,7 +3,6 @@ package com.extendedae_plus.content.matrix;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixFunction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
@@ -13,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class UploadCoreBlockEntity extends TileAssemblerMatrixFunction {
 
     public UploadCoreBlockEntity(BlockPos pos, BlockState state) {
-        super((BlockEntityType<?>) com.extendedae_plus.init.ModBlockEntities.UPLOAD_CORE_BE.get(), pos, state);
+        super(com.extendedae_plus.init.ModBlockEntities.UPLOAD_CORE_BE.get(), pos, state);
     }
 
     @Override

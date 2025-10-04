@@ -6,7 +6,7 @@ import appeng.menu.implementations.UpgradeableMenu;
 import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
@@ -133,8 +133,8 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
             return;
         }
         String blockId = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(target.getBlockState().getBlock()).toString();
-        this.multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, ModConfigs.ENTITY_TICKER_MULTIPLIERS.get());
-        this.targetBlacklisted = ConfigParsingUtils.isBlockBlacklisted(blockId, ModConfigs.ENTITY_TICKER_BLACK_LIST.get());
+        this.multiplier = ConfigParsingUtils.getMultiplierForBlock(blockId, EAEPConfig.ENTITY_TICKER_MULTIPLIERS.get());
+        this.targetBlacklisted = ConfigParsingUtils.isBlockBlacklisted(blockId, EAEPConfig.ENTITY_TICKER_BLACK_LIST.get());
     }
 
     /**
@@ -157,7 +157,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      * 客户端刷新界面。
      */
     private void refreshClientGui() {
-        if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen screen) {
+        if (Minecraft.getInstance().screen instanceof EntitySpeedTickerScreen<?> screen) {
             screen.refreshGui();
         }
     }

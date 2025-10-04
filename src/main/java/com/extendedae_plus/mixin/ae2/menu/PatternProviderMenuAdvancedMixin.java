@@ -1,15 +1,11 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.helpers.patternprovider.PatternProviderLogic;
-import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.util.ExtendedAELogger;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;

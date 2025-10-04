@@ -1,4 +1,4 @@
-package com.extendedae_plus.integration.jei;
+package com.extendedae_plus.integration.RecipeViewer.jei;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
@@ -14,8 +14,9 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 @JeiPlugin
-public class ExtendedAEJeiPlugin implements IModPlugin {
-    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
+public class ModJeiPlugin implements IModPlugin {
+    private static final ResourceLocation UID =
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
 
     @Override
     public ResourceLocation getPluginUid() {
@@ -34,7 +35,7 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
         registration.registerSubtypeInterpreter(
                 VanillaTypes.ITEM_STACK,
                 com.extendedae_plus.init.ModItems.ENTITY_SPEED_CARD.get(),
-                new ISubtypeInterpreter<ItemStack>() {
+                new ISubtypeInterpreter<>() {
                     @Override
                     public @NotNull Object getSubtypeData(@NotNull ItemStack ingredient, @NotNull UidContext context) {
                         // 返回你想让 JEI 区分子类型的数据，这里用 multiplier

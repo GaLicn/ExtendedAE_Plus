@@ -5,10 +5,9 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
@@ -22,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -32,20 +30,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.*;
 
 @Pseudo
 @Mixin(value = GuiExPatternTerminal.class, remap = false)
@@ -141,7 +133,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
 
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                // 改用我们自己的网络包，直接将玩家槽位与选择的供应器ID发送到服务器
+                // 什么逆天ide的中文语法检查(
+                // 改用我们自己的网络包，直接将玩家槽位 与 选择的供应器ID发送到服务器
                 try {
                     PacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
                             playerSlotIndex,
@@ -245,14 +238,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         }
     }
 
-    /**
-     * 重置当前选择的样板供应器ID
-     */
-    @Unique
-    public void resetCurrentlyChoicePatternProvider() {
-        this.eap$currentlyChoicePatterProvider = -1;
-    }
-
     @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false, require = 0)
     private void injectConstructor(com.glodblock.github.extendedae.container.ContainerExPatternTerminal menu,
                                    Inventory playerInventory,
@@ -261,7 +246,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                                    CallbackInfo ci) {
         // 根据配置初始化默认显示/隐藏状态
         try {
-            this.eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
+            this.eap$showSlots = EAEPConfig.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();
         } catch (Throwable ignored) {
         }
         // 创建切换槽位显示的按钮
@@ -276,11 +261,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     refreshMethod = this.getClass().getDeclaredMethod("refreshList");
                 } catch (NoSuchMethodException e1) {
                     // 如果当前类没有，尝试在父类中查找
-                    try {
-                        refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
-                    } catch (NoSuchMethodException e2) {
-                        throw e2;
-                    }
+                    refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
                 }
 
                 refreshMethod.setAccessible(true);
@@ -391,11 +372,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     rowsField = this.getClass().getDeclaredField("rows");
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
-                    try {
-                        rowsField = this.getClass().getSuperclass().getDeclaredField("rows");
-                    } catch (NoSuchFieldException e2) {
-                        throw e2;
-                    }
+                    rowsField = this.getClass().getSuperclass().getDeclaredField("rows");
                 }
                 rowsField.setAccessible(true);
                 java.util.ArrayList<?> rows = (java.util.ArrayList<?>) rowsField.get(this);
@@ -407,11 +384,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     highlightBtnsField = this.getClass().getDeclaredField("highlightBtns");
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
-                    try {
-                        highlightBtnsField = this.getClass().getSuperclass().getDeclaredField("highlightBtns");
-                    } catch (NoSuchFieldException e2) {
-                        throw e2;
-                    }
+                    highlightBtnsField = this.getClass().getSuperclass().getDeclaredField("highlightBtns");
                 }
                 highlightBtnsField.setAccessible(true);
                 @SuppressWarnings("unchecked")
@@ -449,7 +422,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
                 // 移除多余的行
                 while (rows.size() > newIndex) {
-                    rows.remove(rows.size() - 1);
+                    rows.removeLast();
                 }
 
                 // 更新highlightBtns
@@ -464,11 +437,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                         resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
                     } catch (NoSuchMethodException e1) {
                         // 如果当前类没有，尝试在父类中查找
-                        try {
-                            resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
-                        } catch (NoSuchMethodException e2) {
-                            throw e2;
-                        }
+                        resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
                     }
 
                     resetScrollbarMethod.setAccessible(true);
@@ -531,9 +500,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
                 Button btn = eap$openUIButtons.get(rowIndex);
                 if (btn == null) {
-                    btn = Button.builder(Component.literal("UI"), (b) -> {
-                        eap$tryOpenProviderUI(rowIndex);
-                    }).size(14, 12).build();
+                    btn = Button.builder(Component.literal("UI"), (b) -> eap$tryOpenProviderUI(rowIndex)).size(14, 12).build();
                     btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
                     eap$openUIButtons.put(rowIndex, btn);
                     this.addRenderableWidget(btn);
@@ -593,7 +560,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 if (ms instanceof Set<?> s) {
                     // 原始是 Set<ItemStack>
                     @SuppressWarnings("unchecked")
-                    Set<ItemStack> cast = (Set<ItemStack>) (Set<?>) s;
+                    Set<ItemStack> cast = (Set<ItemStack>) s;
                     matchedStack = cast;
                 }
             } catch (NoSuchFieldException ignored) {
@@ -604,7 +571,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 Object mp = fMp.get(this);
                 if (mp instanceof Set<?> s) {
                     @SuppressWarnings("unchecked")
-                    Set<PatternContainerRecord> cast = (Set<PatternContainerRecord>) (Set<?>) s;
+                    Set<PatternContainerRecord> cast = (Set<PatternContainerRecord>) s;
                     matchedProvider = cast;
                 }
             } catch (NoSuchFieldException ignored) {

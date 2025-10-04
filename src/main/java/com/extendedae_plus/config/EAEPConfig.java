@@ -4,10 +4,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.List;
 
-public final class ModConfigs {
+public final class EAEPConfig {
     // Common 配置
     public static final ModConfigSpec COMMON_SPEC;
     public static final ModConfigSpec.IntValue PAGE_MULTIPLIER;
+    public static final ModConfigSpec.BooleanValue OVERRIDE_AE2WT_PICKING;
+    public static final ModConfigSpec.BooleanValue INDEPENDENT_UPLOADING_BUTTON;
 
     // Client 配置
     public static final ModConfigSpec CLIENT_SPEC;
@@ -17,6 +19,7 @@ public final class ModConfigs {
 
     // Server 配置
     public static final ModConfigSpec SERVER_SPEC;
+    public static final ModConfigSpec.BooleanValue NEEDS_UPLOADING_CORE;
     public static final ModConfigSpec.BooleanValue PROVIDER_ROUND_ROBIN_ENABLE;
     public static final ModConfigSpec.IntValue SMART_SCALING_MAX_MULTIPLIER;
     public static final ModConfigSpec.IntValue CRAFTING_PAUSE_THRESHOLD;
@@ -29,7 +32,6 @@ public final class ModConfigs {
     static {
         // Common 配置
         ModConfigSpec.Builder commonBuilder = new ModConfigSpec.Builder();
-        commonBuilder.push("common");
         PAGE_MULTIPLIER = commonBuilder
                 .comment(
                         "扩展样板供应器总槽位容量的倍率",
@@ -37,25 +39,27 @@ public final class ModConfigs {
                         "建议范围 1-16"
                 )
                 .defineInRange("pageMultiplier", 1, 1, 64);
-        commonBuilder.pop();
+        OVERRIDE_AE2WT_PICKING = commonBuilder
+                .comment("是否覆盖AE2WT使用中键从终端选取方块的逻辑",
+                        "开启后选取方块的数量将不被限制在32个")
+                .define("overrideAE2WTPicking", false);
+        INDEPENDENT_UPLOADING_BUTTON = commonBuilder
+                .comment("启用后,在样板编码终端会出现一个独立的按钮用于上传样板")
+                .define("independentUploadingButton", false);
         COMMON_SPEC = commonBuilder.build();
 
         // Client 配置
         ModConfigSpec.Builder clientBuilder = new ModConfigSpec.Builder();
-        clientBuilder.push("client");
         SHOW_ENCODER_PATTERN_PLAYER = clientBuilder
                 .comment(
                         "是否显示样板编码玩家",
-                        "开启后将在样板 HoverText 上添加样板的编码玩家"
-                )
+                        "开启后将在样板 HoverText 上添加样板的编码玩家")
                 .define("showEncoderPatternPlayer", true);
         PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT = clientBuilder
                 .comment(
                         "样板终端默认是否显示槽位",
-                        "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
-                )
+                        "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示")
                 .define("patternTerminalShowSlotsDefault", true);
-        clientBuilder.pop();
         CLIENT_SPEC = clientBuilder.build();
 
         // Server 配置
@@ -65,8 +69,7 @@ public final class ModConfigs {
                 .comment(
                         "智能倍增时是否对样板供应器轮询分配",
                         "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
-                        "注意：所有相关供应器需开启智能倍增，否则可能失效",
-                        "默认: true"
+                        "注意：所有相关供应器需开启智能倍增，否则可能失效"
                 )
                 .define("providerRoundRobinEnable", true);
         SMART_SCALING_MAX_MULTIPLIER = serverBuilder
@@ -132,9 +135,11 @@ public final class ModConfigs {
                 )
                 .define("prioritizeDiskEnergy", true);
         serverBuilder.pop();
+        NEEDS_UPLOADING_CORE = serverBuilder
+                .comment("启用后, 样板只能被上传到装有上传核心的装配矩阵")
+                .define("needsUploadingCore", true);
         SERVER_SPEC = serverBuilder.build();
     }
 
-    private ModConfigs() {
-    }
+    private EAEPConfig() {}
 }

@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
+import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
@@ -10,18 +11,17 @@ import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.AdvancedBlockingHolder;
 import com.extendedae_plus.api.SmartDoublingHolder;
-import appeng.api.networking.IInWorldGridNodeHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * C2S：全网批量切换样板供应器的三种模式：
@@ -141,8 +141,8 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
         try {
             Class<?> cls = Class.forName(className);
             // 收集全部与在线两类机器
-            Set<?> all = grid.getMachines((Class) cls);
-            Set<?> active = grid.getActiveMachines((Class) cls);
+            Set<?> all = grid.getMachines((Class<?>) cls);
+            Set<?> active = grid.getActiveMachines((Class<?>) cls);
             for (Object o : all) addLogicIfPresent(out, o);
             for (Object o : active) addLogicIfPresent(out, o);
         } catch (Throwable ignored) {}

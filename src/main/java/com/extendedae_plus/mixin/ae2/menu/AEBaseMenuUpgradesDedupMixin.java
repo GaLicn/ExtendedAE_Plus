@@ -1,10 +1,9 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
+import appeng.api.upgrades.IUpgradeInventory;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.implementations.PatternProviderMenu;
-import appeng.api.upgrades.IUpgradeInventory;
-import com.extendedae_plus.util.ExtendedAELogger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

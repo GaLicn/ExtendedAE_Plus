@@ -58,7 +58,7 @@ public abstract class HighlightButtonMixin {
 						if (posEqual && faceEqual) {
 							// 选中当前供应器：使用 mixin 新增的 setter（通过反射调用以兼容编译期）
 							try {
-								long serverId = (long) entry.getKey();
+								long serverId = entry.getKey();
 								var setter = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
 								setter.setAccessible(true);
 								setter.invoke(terminal, serverId);

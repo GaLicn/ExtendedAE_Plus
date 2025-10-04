@@ -4,20 +4,19 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridNode;
-import appeng.core.definitions.AEItems;
-import appeng.menu.AEBaseMenu;
 import appeng.api.networking.security.IActionHost;
+import appeng.core.definitions.AEItems;
 import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
+import appeng.menu.AEBaseMenu;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.config.EAEPConfig;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
-import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -35,8 +34,12 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
@@ -123,10 +126,10 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
-    public static volatile String lastProcessingName = null;
+    public static volatile List<String> lastProcessingNameList = new ArrayList<>();
 
-    public static void setLastProcessingName(String name) {
-        lastProcessingName = name;
+    public static void addLastProcessingNameList(String name) {
+        lastProcessingNameList.add(name);
     }
 
     /**
@@ -256,19 +259,14 @@ public class ExtendedAEPatternUploadUtil {
         String id = key.toString();
         String path = key.getPath();
         // 常见原版类型映射
-        switch (path) {
-            case "smelting":
-                return "熔炉"; // 熔炉
-            case "blasting":
-                return "高炉";
-            case "smoking":
-                return "烟熏";
-            case "campfire_cooking":
-                return "营火";
-            default:
-                // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
-                return id;
-        }
+        return switch (path) {
+            case "smelting" -> "熔炉"; // 熔炉
+            case "blasting" -> "高炉";
+            case "smoking" -> "烟熏";
+            case "campfire_cooking" -> "营火";
+            // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
+            default -> id;
+        };
     }
 
     /**
@@ -282,13 +280,7 @@ public class ExtendedAEPatternUploadUtil {
         ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key == null) return null;
         // 先查别名（按 path 匹配）
-        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
-        if (alias != null && !alias.isBlank()) return alias;
-        // 再查完整ID映射
-        String custom = CUSTOM_NAMES.get(key);
-        if (custom != null && !custom.isBlank()) {
-            return custom;
-        }
+        // 别名替换放在init做, 提前别名的次序
         return key.getPath();
     }
 
@@ -369,6 +361,25 @@ public class ExtendedAEPatternUploadUtil {
         return s;
     }
 
+    public static String findMapping(String key) {
+        if (key == null || key.isBlank()) return null;
+
+        if (CUSTOM_ALIASES.containsKey(key.toLowerCase()))
+            return CUSTOM_ALIASES.get(key.toLowerCase());
+
+        if (key.contains(":")) {
+            try {
+                ResourceLocation location = ResourceLocation.tryParse(key);
+                if (location != null && CUSTOM_NAMES.containsKey(location))
+                    return CUSTOM_NAMES.get(location);
+            } catch (Exception ignored) {}
+        }
+
+        if (!Pattern.matches(".*[:._/\\-].*", key)) return key;
+
+        return null;
+    }
+
     /**
      * 获取玩家当前的样板访问终端菜单（支持ExtendedAE和原版AE2）
      * 
@@ -406,7 +417,7 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 读取已编码槽位的物品
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -445,7 +456,7 @@ public class ExtendedAEPatternUploadUtil {
                 player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
             }
             try {
-                var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
+                var accessor = (PatternEncodingTermMenuAccessor) menu;
                 var blankSlot = accessor.eap$getBlankPatternSlot();
                 ItemStack blanks = AEItems.BLANK_PATTERN.stack(stack.getCount());
                 if (blankSlot != null && blankSlot.mayPlace(blanks)) {
@@ -470,8 +481,7 @@ public class ExtendedAEPatternUploadUtil {
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
         List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
         if (!inventories.isEmpty()) {
-            for (int i = 0; i < inventories.size(); i++) {
-                var inv = inventories.get(i);
+            for (InternalInventory inv : inventories) {
                 ItemStack toInsert = stack.copy();
                 ItemStack remain = inv.addItems(toInsert);
                 if (remain.getCount() < stack.getCount()) {
@@ -490,8 +500,7 @@ public class ExtendedAEPatternUploadUtil {
         // 回退：尝试 Forge 能力（可能为聚合图样仓），同样遍历所有矩阵
         List<?> handlers = findAllMatrixPatternHandlers(grid);
         if (!handlers.isEmpty()) {
-            for (int i = 0; i < handlers.size(); i++) {
-                var cap = handlers.get(i);
+            for (Object cap : handlers) {
                 ItemStack toInsert = stack.copy();
                 ItemStack remain = insertIntoAnySlot(cap, toInsert);
                 if (remain.getCount() < stack.getCount()) {
@@ -533,7 +542,7 @@ public class ExtendedAEPatternUploadUtil {
                 }
                 idx++;
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         return result;
     }
@@ -560,7 +569,7 @@ public class ExtendedAEPatternUploadUtil {
                     }
                 }
             }
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
         }
         // 1.21 暂不检查聚合能力视图，能力系统适配后再补充
         return false;
@@ -752,10 +761,7 @@ public class ExtendedAEPatternUploadUtil {
         try {
             // 通过反射访问byId字段（ExtendedAE继承了这个字段）
             Field byIdField = findByIdField(menu.getClass());
-            if (byIdField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到byId字段");
-                return null;
-            }
+            if (byIdField == null) return null;
             
             byIdField.setAccessible(true);
             
@@ -769,16 +775,12 @@ public class ExtendedAEPatternUploadUtil {
 
             // 从ContainerTracker中获取PatternContainer
             Field containerField = findContainerField(containerTracker.getClass());
-            if (containerField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到container字段");
-                return null;
-            }
+            if (containerField == null) return null;
             
             containerField.setAccessible(true);
             return (PatternContainer) containerField.get(containerTracker);
             
         } catch (Exception e) {
-            System.err.println("ExtendedAE Plus: 无法获取PatternContainer，错误: " + e.getMessage());
             return null;
         }
     }
@@ -870,9 +872,35 @@ public class ExtendedAEPatternUploadUtil {
         return "样板供应器 #" + providerId;
     }
 
+    /** 获取供应器显示名（优先组名） */
+    public static String getProviderDisplayName(PatternContainer container) {
+        if (container == null) return "未知供应器";
+        try {
+            var group = container.getTerminalGroup();
+            if (group != null) return group.name().getString();
+        } catch (Throwable ignored) {
+        }
+        return "样板供应器";
+    }
+
+    public static String getProviderI18nName(Long providerId, PatternAccessTermMenu menu) {
+        return getProviderI18nName(getPatternContainerById(menu, providerId));
+    }
+
+    /** 获取样板供应器默认选取的方块名称 */
+    public static String getProviderI18nName(PatternContainer container) {
+        if (container == null) return "";
+        try {
+            var group = container.getTerminalGroup();
+            var name = group.name();
+            return name.toString().contains("literal") ? "" : name.toString();
+        } catch (Throwable ignored) {}
+        return "";
+    }
+
     /**
      * 验证样板供应器是否可用
-     * 
+     *
      * @param providerId 供应器ID
      * @param menu 样板访问终端菜单
      * @return 是否可用
@@ -894,7 +922,7 @@ public class ExtendedAEPatternUploadUtil {
 
     /**
      * 获取当前终端类型的描述
-     * 
+     *
      * @param player 玩家
      * @return 终端类型描述
      */
@@ -922,7 +950,7 @@ public class ExtendedAEPatternUploadUtil {
             return false;
         }
         // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -998,7 +1026,7 @@ public class ExtendedAEPatternUploadUtil {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -1077,14 +1105,14 @@ public class ExtendedAEPatternUploadUtil {
         List<PatternContainer> list = new ArrayList<>();
         if (menu == null) return list;
         try {
-        IGrid grid = null;
-        if (menu instanceof AEBaseMenu abm) {
-            Object target = abm.getTarget();
-            if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                grid = host.getActionableNode().getGrid();
+            IGrid grid = null;
+            if (menu instanceof AEBaseMenu abm) {
+                Object target = abm.getTarget();
+                if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                    grid = host.getActionableNode().getGrid();
+                }
             }
-        }
-        if (grid == null) return list;
+            if (grid == null) return list;
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
                     @SuppressWarnings("unchecked")
@@ -1095,7 +1123,10 @@ public class ExtendedAEPatternUploadUtil {
                         if (inv == null || inv.size() <= 0) continue;
                         boolean hasEmpty = false;
                         for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
+                            if (inv.getStackInSlot(i).isEmpty()) {
+                                hasEmpty = true;
+                                break;
+                            }
                         }
                         if (hasEmpty) list.add(container);
                     }
@@ -1104,17 +1135,6 @@ public class ExtendedAEPatternUploadUtil {
         } catch (Throwable ignored) {
         }
         return list;
-    }
-
-    /** 获取供应器显示名（优先组名） */
-    public static String getProviderDisplayName(PatternContainer container) {
-        if (container == null) return "未知供应器";
-        try {
-            var group = container.getTerminalGroup();
-            if (group != null) return group.name().getString();
-        } catch (Throwable ignored) {
-        }
-        return "样板供应器";
     }
 
     /** 计算供应器空槽位数量 */
@@ -1140,7 +1160,7 @@ public class ExtendedAEPatternUploadUtil {
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
+        var encodedSlot = ((PatternEncodingTermMenuAccessor) menu)
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
@@ -1187,6 +1207,7 @@ public class ExtendedAEPatternUploadUtil {
      * 传入任意属于该集群的 Tile（如 Pattern/Crafter/Frame 等）。
      */
     private static boolean clusterHasSingleUploadCore(com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase any) {
+        if (!EAEPConfig.NEEDS_UPLOADING_CORE.getAsBoolean()) return true;
         try {
             if (any == null || any.getCluster() == null) return false;
             int cores = 0;

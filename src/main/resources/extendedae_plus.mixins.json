@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.extendedae_plus.mixin.ExtendedAEPlusMixinPlugin",
   "mixins": [
+    "MixinPlayer",
     "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
     "advancedae.accessor.AdvPatternProviderLogicPatternsAccessor",
     "advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor",
@@ -43,14 +44,17 @@
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
-    "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "recipeViewer.emi.MixinEncodePatternTransfer",
+    "recipeViewer.emi.MixinRecipeFillButton",
+    "recipeViewer.jei.accessor.AccessorBookmarkOverlay"
   ],
   "client": [
+    "ModelBakeryMixin",
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
@@ -64,6 +68,8 @@
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.InterfaceScreenMixin",
+    "ae2.client.gui.MixinActionButton",
+    "ae2.client.gui.InterfaceScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
     "ae2.client.gui.PatternProviderCloseMixin",
     "ae2.client.gui.PatternProviderScreenMixin",
@@ -76,11 +82,8 @@
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
-    "hooks.ModelBakeryMixin",
-    "jei.AE2JeiEncodePatternTransferHandlerMixin",
-    "jei.EncodePatternTransferHandlerMixin",
-    "jei.EncodingHelperMixin",
-    "jei.accessor.BookmarkOverlayAccessor"
+    "recipeViewer.MixinEncodingHelper",
+    "recipeViewer.emi.MixinBoMScreen"
   ],
   "injectors": {
     "defaultRequire": 1

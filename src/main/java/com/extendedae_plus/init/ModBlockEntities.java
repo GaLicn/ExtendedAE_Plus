@@ -1,12 +1,12 @@
 package com.extendedae_plus.init;
 
+import appeng.blockentity.crafting.CraftingBlockEntity;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
-import appeng.blockentity.crafting.CraftingBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 

@@ -1,8 +1,8 @@
 package com.extendedae_plus.menu.host;
 
-import appeng.items.tools.powered.WirelessTerminalItem;
-import appeng.helpers.WirelessTerminalMenuHost;
 import appeng.api.storage.ISubMenuHost;
+import appeng.helpers.WirelessTerminalMenuHost;
+import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.ISubMenu;
 import appeng.menu.locator.ItemMenuHostLocator;
 import net.minecraft.world.entity.player.Player;

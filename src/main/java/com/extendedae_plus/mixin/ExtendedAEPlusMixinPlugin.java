@@ -29,7 +29,7 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		if (!isJeiPresent()) {
 			// Disable all JEI package mixins and any mixins that reference JEI-only helpers
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.jei")) return false;
-			if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.menu.CraftConfirmMenuGoBackMixin")) return false;
+            return !mixinClassName.equals("com.extendedae_plus.mixin.ae2.menu.CraftConfirmMenuGoBackMixin");
 		}
 		return true;
 	}

@@ -19,7 +19,6 @@ import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -178,8 +177,8 @@ public abstract class AEBaseScreenMixin {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level);
             try {
                 if (details != null && details.getOutputs() != null && !details.getOutputs().isEmpty()) {
-                    AEKey key = details.getOutputs().get(0).what();
-                    if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
+                    AEKey key = details.getOutputs().getFirst().what();
+                    if (ClientPatternHighlightStore.hasHighlight(key)) {
                         try {
                             GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
                         } catch (Throwable ignored) {}
@@ -219,7 +218,7 @@ public abstract class AEBaseScreenMixin {
             // 只关心第一行（标题类文本无换行或 maxWidth<=0）
             var contentLine = (text.getMaxWidth() <= 0)
                     ? content.getVisualOrderText()
-                    : font.split(content, text.getMaxWidth()).get(0);
+                    : font.split(content, text.getMaxWidth()).getFirst();
             int lineWidth = font.width(contentLine);
 
             int x = pos.getX();
@@ -305,13 +304,13 @@ public abstract class AEBaseScreenMixin {
 
 
     @Shadow
-    protected void setTextContent(String id, Component content) {};
+    protected void setTextContent(String id, Component content) {}
 
     @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
     private void onUpdateBeforeRender(CallbackInfo ci) {
         try {
             AEBaseScreen<?> self = (AEBaseScreen<?>) (Object) this;
-            if (self instanceof PatternProviderScreen screen){
+            if (self instanceof PatternProviderScreen<?> screen){
                 Component t = screen.getTitle();
                 if (t != null && !t.getString().isEmpty()) {
                     this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);

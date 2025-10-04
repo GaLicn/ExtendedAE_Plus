@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮。
+ * 为 AE2 原版样板供应器界面添加“智能阻挡模式”按钮。
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
@@ -64,7 +64,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
                     // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
-                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleAdvancedBlockingC2SPacket.INSTANCE);
                 }
@@ -98,7 +97,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
                 Settings.BLOCKING_MODE,
                 this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) -> {
-                    // debug removed
                     var conn = Minecraft.getInstance().getConnection();
                     if (conn != null) conn.send(ToggleSmartDoublingC2SPacket.INSTANCE);
                 }

@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2;
 
 import appeng.crafting.CraftingCalculation;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.EAEPConfig;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -16,6 +16,6 @@ public abstract class CraftingCalculationMixin {
     // 增大此值可以减少 wait/notify 的频率（提升吞吐量但降低响应速度）。
     @ModifyConstant(method = "handlePausing", constant = @Constant(intValue = 100))
     private int modifyIncTimeThreshold(int original) {
-        return ModConfigs.CRAFTING_PAUSE_THRESHOLD.get();
+        return EAEPConfig.CRAFTING_PAUSE_THRESHOLD.get();
     }
 }

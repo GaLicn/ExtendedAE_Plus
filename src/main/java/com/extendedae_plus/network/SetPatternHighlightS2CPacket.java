@@ -1,8 +1,8 @@
 package com.extendedae_plus.network;
 
 import appeng.api.stacks.AEKey;
-import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.ClientPatternHighlightStore;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;

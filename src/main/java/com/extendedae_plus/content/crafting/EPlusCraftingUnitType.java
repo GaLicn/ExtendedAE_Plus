@@ -1,9 +1,8 @@
 package com.extendedae_plus.content.crafting;
 
 import appeng.block.crafting.ICraftingUnitType;
-import net.minecraft.world.item.Item;
-
 import com.extendedae_plus.init.ModItems;
+import net.minecraft.world.item.Item;
 
 public enum EPlusCraftingUnitType implements ICraftingUnitType {
     ACCELERATOR_4x(0, 4),
