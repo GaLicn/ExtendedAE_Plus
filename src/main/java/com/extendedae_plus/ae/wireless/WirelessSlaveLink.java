@@ -63,11 +63,12 @@ public class WirelessSlaveLink {
             return;
         }
         final ServerLevel level = host.getServerLevel();
-        if (level == null || frequency == 0L || placerId == null) {
+        if (level == null || frequency == 0L) {
             destroyConnection();
             return;
         }
 
+        // placerId可以为null（公共收发器模式）
         IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency, placerId);
         shutdown = false;
         distance = 0.0D;

@@ -51,7 +51,8 @@ public class WirelessMasterLink {
 
     public boolean register() {
         ServerLevel level = host.getServerLevel();
-        if (level == null || frequency == 0L || placerId == null) return false;
+        if (level == null || frequency == 0L) return false;
+        // placerId可以为null（公共收发器模式）
         boolean ok = WirelessMasterRegistry.register(level, frequency, placerId, host);
         this.registered = ok;
         return ok;
@@ -59,7 +60,8 @@ public class WirelessMasterLink {
 
     public void unregister() {
         ServerLevel level = host.getServerLevel();
-        if (!registered || level == null || frequency == 0L || placerId == null) return;
+        if (!registered || level == null || frequency == 0L) return;
+        // placerId可以为null（公共收发器模式）
         WirelessMasterRegistry.unregister(level, frequency, placerId, host);
         registered = false;
     }

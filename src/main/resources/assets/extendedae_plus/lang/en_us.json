@@ -112,6 +112,7 @@
   
   "extendedae_plus.tooltip.owner": "Owner: %s",
   "extendedae_plus.tooltip.owner.unset": "Owner: Unset",
+  "extendedae_plus.tooltip.owner.public": "Owner: Public",
   
   "group.pattern_provider.name": "Pattern Provider",
   "group.entity_ticker.name": "Entity Accelerator",

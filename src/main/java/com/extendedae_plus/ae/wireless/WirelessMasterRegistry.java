@@ -17,19 +17,30 @@ import java.util.UUID;
  * 无线主端注册中心：按 维度 + 频率 + 所有者 唯一注册一个主收发器端点。
  * 从端通过本注册中心按频率查找主端，实现一对多连接。
  * 所有者隔离：有FTBTeams时同队共享，没有时每个玩家独立。
+ * 公共模式：placerId为null时使用公共UUID，所有人都能访问（向下兼容旧版本）。
  */
 public final class WirelessMasterRegistry {
     private WirelessMasterRegistry() {}
 
     private static final Map<Key, WeakReference<IWirelessEndpoint>> MASTERS = new HashMap<>();
+    
+    /**
+     * 公共收发器UUID（用于没有设置所有者的收发器）
+     * 所有placerId为null的收发器都使用这个UUID，实现公共访问
+     */
+    public static final UUID PUBLIC_NETWORK_UUID = new UUID(0, 0);
 
     public static synchronized boolean register(ServerLevel level, long frequency, @Nullable UUID placerId, IWirelessEndpoint endpoint) {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(endpoint, "endpoint");
-        if (frequency == 0L || placerId == null) return false;
+        if (frequency == 0L) return false;
         
-        // 获取网络所有者UUID（FTBTeams队伍UUID或玩家UUID）
-        UUID ownerUUID = WirelessTeamUtil.getNetworkOwnerUUID(level, placerId);
+        // 获取网络所有者UUID
+        // placerId为null时使用公共UUID（向下兼容旧版本收发器）
+        UUID ownerUUID = placerId != null 
+            ? WirelessTeamUtil.getNetworkOwnerUUID(level, placerId)
+            : PUBLIC_NETWORK_UUID;
+        
         final Key key = new Key(useGlobal() ? null : level.dimension(), frequency, ownerUUID);
         
         cleanupIfCleared(key);
@@ -44,9 +55,12 @@ public final class WirelessMasterRegistry {
     }
 
     public static synchronized void unregister(ServerLevel level, long frequency, @Nullable UUID placerId, IWirelessEndpoint endpoint) {
-        if (frequency == 0L || level == null || placerId == null) return;
+        if (frequency == 0L || level == null) return;
         
-        UUID ownerUUID = WirelessTeamUtil.getNetworkOwnerUUID(level, placerId);
+        UUID ownerUUID = placerId != null 
+            ? WirelessTeamUtil.getNetworkOwnerUUID(level, placerId)
+            : PUBLIC_NETWORK_UUID;
+        
         final Key key = new Key(useGlobal() ? null : level.dimension(), frequency, ownerUUID);
         
         var ref = MASTERS.get(key);
@@ -59,9 +73,12 @@ public final class WirelessMasterRegistry {
     }
 
     public static synchronized IWirelessEndpoint get(ServerLevel level, long frequency, @Nullable UUID placerId) {
-        if (frequency == 0L || level == null || placerId == null) return null;
+        if (frequency == 0L || level == null) return null;
         
-        UUID ownerUUID = WirelessTeamUtil.getNetworkOwnerUUID(level, placerId);
+        UUID ownerUUID = placerId != null 
+            ? WirelessTeamUtil.getNetworkOwnerUUID(level, placerId)
+            : PUBLIC_NETWORK_UUID;
+        
         final Key key = new Key(useGlobal() ? null : level.dimension(), frequency, ownerUUID);
         
         cleanupIfCleared(key);
