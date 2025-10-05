@@ -22,6 +22,11 @@
   "item.extendedae_plus.channel_card.channel": "Channel: %d",
   "item.extendedae_plus.channel_card.channel.unset": "Channel: Unset",
   "item.extendedae_plus.channel_card.set": "Channel set to: %d",
+  "item.extendedae_plus.channel_card.owner.unset": "Owner: Unbound",
+  "item.extendedae_plus.channel_card.owner.team": "Owner: %s",
+  "item.extendedae_plus.channel_card.owner.player": "Owner: %s",
+  "item.extendedae_plus.channel_card.owner.bound": "Bound to: %s",
+  "item.extendedae_plus.channel_card.owner.cleared": "Binding cleared",
   "item.extendedae_plus.entity_speed_card": "Entity Speed Card",
   "item.extendedae_plus.entity_speed_card.x2": "Entity Speed Card (x2)",
   "item.extendedae_plus.entity_speed_card.x4": "Entity Speed Card (x4)",
@@ -103,5 +108,17 @@
   "extendedae_plus.configuration.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
 
   "extendedae_plus.configuration.state_on": "On",
-  "extendedae_plus.configuration.state_off": "Off"
+  "extendedae_plus.configuration.state_off": "Off",
+
+  "extendedae_plus.tooltip.owner": "Owner: %s",
+  "extendedae_plus.tooltip.owner.public": "Owner: Public",
+  "extendedae_plus.tooltip.channels": "Channels: %d",
+  "extendedae_plus.tooltip.channels_of": "Channels: %d / %d",
+  "extendedae_plus.tooltip.frequency": "Frequency: %d",
+  "extendedae_plus.tooltip.master_mode": "Mode: %s",
+  "extendedae_plus.tooltip.locked": "Status: %s",
+  
+  "group.pattern_provider.name": "Pattern Provider",
+  "group.storage.name": "Storage Bus",
+  "group.entity_ticker.name": "Entity Ticker"
 }

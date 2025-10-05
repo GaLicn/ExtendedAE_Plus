@@ -22,6 +22,11 @@
   "item.extendedae_plus.channel_card.channel": "频道: %d",
   "item.extendedae_plus.channel_card.channel.unset": "频道: 未设置",
   "item.extendedae_plus.channel_card.set": "频道已设置为: %d",
+  "item.extendedae_plus.channel_card.owner.unset": "所有者: 未绑定",
+  "item.extendedae_plus.channel_card.owner.team": "所有者: %s",
+  "item.extendedae_plus.channel_card.owner.player": "所有者: %s",
+  "item.extendedae_plus.channel_card.owner.bound": "已绑定到: %s",
+  "item.extendedae_plus.channel_card.owner.cleared": "已清除绑定",
   "item.extendedae_plus.entity_speed_card": "实体加速卡",
   "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
   "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
@@ -103,5 +108,17 @@
   "extendedae_plus.configuration.prioritizeDiskEnergy": "优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
 
   "extendedae_plus.configuration.state_on": "开",
-  "extendedae_plus.configuration.state_off": "关"
+  "extendedae_plus.configuration.state_off": "关",
+
+  "extendedae_plus.tooltip.owner": "所有者: %s",
+  "extendedae_plus.tooltip.owner.public": "所有者: 公共",
+  "extendedae_plus.tooltip.channels": "频道: %d",
+  "extendedae_plus.tooltip.channels_of": "频道: %d / %d",
+  "extendedae_plus.tooltip.frequency": "频率: %d",
+  "extendedae_plus.tooltip.master_mode": "模式: %s",
+  "extendedae_plus.tooltip.locked": "状态: %s",
+  
+  "group.pattern_provider.name": "样板供应器",
+  "group.storage.name": "存储总线",
+  "group.entity_ticker.name": "实体加速器"
 }

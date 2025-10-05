@@ -171,6 +171,11 @@ dependencies {
     //geckolib
     runtimeOnly "curse.maven:geckolib-388172:7009924"
 
+    //ftbteams
+    runtimeOnly "curse.maven:ftb-teams-forge-404468:6930910"
+    runtimeOnly "curse.maven:ftb-library-forge-404465:7029003"
+    runtimeOnly "curse.maven:architectury-api-419699:5786327"
+
 
     runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 

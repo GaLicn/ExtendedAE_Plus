@@ -7,18 +7,22 @@ import appeng.me.service.helpers.ConnectionWrapper;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.server.level.ServerLevel;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 从收发器连接器：
  * - 通过频率查找同维度主收发器；
  * - 校验距离（<= ModConfigs.WIRELESS_MAX_RANGE）；
- * - 动态创建/销毁 AE2 连接（GridConnection），实现“一主多从”。
+ * - 动态创建/销毁 AE2 连接（GridConnection），实现"一主多从"。
  */
 public class WirelessSlaveLink {
     private final IWirelessEndpoint host;
     private long frequency; // 0 未设置
+    @Nullable
+    private UUID placerId; // 放置者UUID
 
     private ConnectionWrapper connection = new ConnectionWrapper(null);
     private boolean shutdown = true;
@@ -26,6 +30,10 @@ public class WirelessSlaveLink {
 
     public WirelessSlaveLink(IWirelessEndpoint host) {
         this.host = Objects.requireNonNull(host);
+    }
+    
+    public void setPlacerId(@Nullable UUID placerId) {
+        this.placerId = placerId;
     }
 
     public void setFrequency(long frequency) {
@@ -62,7 +70,8 @@ public class WirelessSlaveLink {
             return;
         }
 
-        IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency);
+        // placerId可以为null（公共收发器模式）
+        IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency, placerId);
         shutdown = false;
         distance = 0.0D;
 
