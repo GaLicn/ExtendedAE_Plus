@@ -114,6 +114,11 @@
   "extendedae_plus.tooltip.owner.unset": "Owner: Unset",
   "extendedae_plus.tooltip.owner.public": "Owner: Public",
   
+  "extendedae_plus.screen.frequency_input.title": "Set Frequency",
+  "extendedae_plus.screen.frequency_input.current": "Current Frequency: %s",
+  "extendedae_plus.screen.frequency_input.field": "Frequency",
+  "extendedae_plus.screen.frequency_input.confirm": "Confirm",
+  
   "group.pattern_provider.name": "Pattern Provider",
   "group.entity_ticker.name": "Entity Accelerator",
   "group.storage.name": "StorageBus"

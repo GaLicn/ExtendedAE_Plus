@@ -2,9 +2,11 @@ package com.extendedae_plus.hooks;
 
 import appeng.util.InteractionUtil;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.ui.FrequencyInputScreen;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import appeng.block.crafting.CraftingUnitBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -14,6 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -86,19 +90,24 @@ public final class WrenchHook {
                 }
             }
         } else if (!InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
-            // 未潜行 + 扳手：切换锁定状态
+            // 未潜行 + 扳手：打开频率输入界面
             BlockEntity be = level.getBlockEntity(hit.getBlockPos());
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                boolean newLocked = !te.isLocked();
-                te.setLocked(newLocked);
-                // 提示玩家
-                player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
+                if (level.isClientSide) {
+                    // 客户端打开GUI
+                    openFrequencyInputScreen(hit.getBlockPos(), te.getFrequency());
+                }
                 // 轻微反馈音效
-                level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
+                level.playSound(player, hit.getBlockPos(), SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.BLOCKS, 0.5F, 1.0F);
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
             }
         }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static void openFrequencyInputScreen(net.minecraft.core.BlockPos pos, long currentFrequency) {
+        Minecraft.getInstance().setScreen(new FrequencyInputScreen(pos, currentFrequency));
     }
 }
