@@ -8,7 +8,7 @@ modId = "extendedae_plus"
 version = "${version}"
 displayName = "ExtendedAE Plus"
 authors = "GaLi"
-description = '为extendedAE模组增强更多实用功能'
+description = "Add more practical features and auxiliary operations to the Applied Energistics 2 mod"
 logoFile = "extendedae_plus.png"
 
 [[dependencies.extendedae_plus]]
