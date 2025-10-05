@@ -121,6 +121,10 @@ dependencies {
     // compileOnly 供代码编译
     include "curse.maven:configuration-444699:4710266"
     modImplementation "curse.maven:configuration-444699:4710266"
+
+    //ftbteams
+    modRuntimeOnly "curse.maven:ftb-teams-forge-404468:6130786"
+    modRuntimeOnly "curse.maven:ftb-library-forge-404465:6807424"
 }
 
 allprojects {
