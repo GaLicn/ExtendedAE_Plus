@@ -103,6 +103,11 @@
   "item.extendedae_plus.channel_card.channel": "Frequency: %s",
   "item.extendedae_plus.channel_card.channel.unset": "Frequency: Unset",
   "item.extendedae_plus.channel_card.set": "Frequency set to: %s",
+  "item.extendedae_plus.channel_card.owner.unset": "Owner: Unbound",
+  "item.extendedae_plus.channel_card.owner.team": "Owner: %s",
+  "item.extendedae_plus.channel_card.owner.player": "Owner: Player %s",
+  "item.extendedae_plus.channel_card.owner.bound": "Bound to: %s",
+  "item.extendedae_plus.channel_card.owner.cleared": "Owner binding cleared",
   "group.pattern_provider.name": "Pattern Provider",
   "group.entity_ticker.name": "Entity Accelerator",
   "group.storage.name": "StorageBus"

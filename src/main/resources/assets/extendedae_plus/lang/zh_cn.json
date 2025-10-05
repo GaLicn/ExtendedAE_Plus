@@ -104,6 +104,11 @@
   "item.extendedae_plus.channel_card.channel": "频率：%s",
   "item.extendedae_plus.channel_card.channel.unset": "频率：未设置",
   "item.extendedae_plus.channel_card.set": "已设置频率：%s",
+  "item.extendedae_plus.channel_card.owner.unset": "所有者：未绑定",
+  "item.extendedae_plus.channel_card.owner.team": "所有者：%s",
+  "item.extendedae_plus.channel_card.owner.player": "所有者：玩家 %s",
+  "item.extendedae_plus.channel_card.owner.bound": "已绑定至：%s",
+  "item.extendedae_plus.channel_card.owner.cleared": "已清除所有者绑定",
   "group.pattern_provider.name": "样板供应器",
   "group.entity_ticker.name": "实体加速器",
   "group.storage.name": "存储总线"

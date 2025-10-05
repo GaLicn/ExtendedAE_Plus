@@ -69,10 +69,12 @@ public abstract class StorageBusPartChannelCardMixin implements IInterfaceWirele
         try {
             IUpgradeInventory inv = this.getUpgrades();
             long channel = 0L;
+            java.util.UUID ownerUUID = null;
             boolean found = false;
             for (var stack : inv) {
                 if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                     channel = ChannelCardItem.getChannel(stack);
+                    ownerUUID = ChannelCardItem.getOwnerUUID(stack);
                     found = true;
                     break;
                 }
@@ -106,6 +108,8 @@ public abstract class StorageBusPartChannelCardMixin implements IInterfaceWirele
                 Logger.EAP$LOGGER.debug("[服务端] StorageBus 创建新的无线链接");
             }
             
+            // 设置频道卡的所有者UUID（如果有的话）
+            eap$link.setPlacerId(ownerUUID);
             eap$link.setFrequency(channel);
             eap$link.updateStatus();
             Logger.EAP$LOGGER.debug("[服务端] StorageBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());

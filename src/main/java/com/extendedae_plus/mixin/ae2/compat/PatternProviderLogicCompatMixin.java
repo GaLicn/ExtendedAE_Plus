@@ -253,6 +253,11 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 for (ItemStack stack : upgrades) {
                     if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                         channel = ChannelCardItem.getChannel(stack);
+                        java.util.UUID ownerUUID = ChannelCardItem.getOwnerUUID(stack);
+                        if (ownerUUID != null) {
+                            // 保存ownerUUID到局部变量，后面设置到link
+                            channel |= ((long) ownerUUID.hashCode() << 32);  // 临时存储
+                        }
                         found = true;
                         break;
                     }
@@ -274,6 +279,18 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 eap$compatLink = new WirelessSlaveLink(endpoint);
             }
 
+            // 从频道卡重新读取ownerUUID并设置
+            java.util.UUID cardOwner = null;
+            if (upgrades != null) {
+                for (ItemStack stack : upgrades) {
+                    if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                        cardOwner = ChannelCardItem.getOwnerUUID(stack);
+                        channel = ChannelCardItem.getChannel(stack);  // 重新读取正确的频率
+                        break;
+                    }
+                }
+            }
+            eap$compatLink.setPlacerId(cardOwner);
             eap$compatLink.setFrequency(channel);
             eap$compatLink.updateStatus();
 

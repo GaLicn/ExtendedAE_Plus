@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 无线收发器方块实体（骨架）：
@@ -25,6 +26,7 @@ import java.util.Objects;
  * - 频率设置；
  * - 集成 AE2 节点；
  * - 集成无线主/从逻辑。
+ * - 支持FTBTeams队伍隔离（软依赖）
  */
 public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
 
@@ -33,6 +35,9 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     private long frequency = 1L;
     private boolean masterMode = false;
     private boolean locked = false;
+    
+    @Nullable
+    private UUID placerId; // 放置者UUID，用于队伍隔离
 
     private WirelessMasterLink masterLink;
     private WirelessSlaveLink slaveLink;
@@ -96,6 +101,30 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     /* ===================== 公共方法（交互调用） ===================== */
+    
+    /**
+     * 设置放置者UUID（在方块放置时调用）
+     */
+    public void setPlacerId(@Nullable UUID placerId) {
+        if (this.placerId != null && !this.placerId.equals(placerId)) {
+            // 如果所有者改变，需要重新注册
+            if (this.masterMode) {
+                masterLink.onUnloadOrRemove();
+            } else {
+                slaveLink.onUnloadOrRemove();
+            }
+        }
+        this.placerId = placerId;
+        this.masterLink.setPlacerId(placerId);
+        this.slaveLink.setPlacerId(placerId);
+        setChanged();
+    }
+    
+    @Nullable
+    public UUID getPlacerId() {
+        return placerId;
+    }
+    
     public long getFrequency() {
         return frequency;
     }
@@ -192,6 +221,9 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         tag.putLong("frequency", frequency);
         tag.putBoolean("master", masterMode);
         tag.putBoolean("locked", locked);
+        if (placerId != null) {
+            tag.putUUID("placerId", placerId);
+        }
         if (managedNode != null) {
             managedNode.saveToNBT(tag);
         }
@@ -203,6 +235,12 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");
+        
+        if (tag.hasUUID("placerId")) {
+            this.placerId = tag.getUUID("placerId");
+            this.masterLink.setPlacerId(this.placerId);
+            this.slaveLink.setPlacerId(this.placerId);
+        }
 
         if (managedNode != null) {
             managedNode.loadFromNBT(tag);

@@ -125,6 +125,12 @@ public class ModNetwork {
                 .decoder(CraftingMonitorOpenProviderC2SPacket::decode)
                 .consumerNetworkThread(CraftingMonitorOpenProviderC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(ChannelCardBindPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ChannelCardBindPacket::encode)
+                .decoder(ChannelCardBindPacket::decode)
+                .consumerNetworkThread(ChannelCardBindPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }
