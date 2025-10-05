@@ -9,7 +9,7 @@ version = "${version}"
 displayName = "ExtendedAE Plus"
 authors = "GaLi"
 description = '为extendedAE模组增强更多实用功能'
-#logoFile = ""
+logoFile = "extendedae_plus.png"
 
 [[dependencies.extendedae_plus]]
 modId = "forge"
