@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+## [1.4.4]
+### Added / 新增
+- 实体加速器支持对 AppliedFlux 存储电量的扣除
+  - Entity Accelerator now supports deducting energy from AppliedFlux storage.
+- 为无线收发器添加已使用频道数的 Jade 显示
+  - Added Jade HUD display showing used channel count for Wireless Transceivers.
+- 无线收发器支持绑定 FTB Teams，不同队伍将不再共用频率
+  - Wireless Transceivers now support FTB Teams binding; different teams no longer share the same frequency.
+- 频道卡新增潜行左键操作：绑定 team/uuid（必须绑定，否则无法连接无线收发器）
+  - Channel Card: new Shift+LMB operation to bind team/uuid (binding required to connect to Wireless Transceivers).
+- 添加使用扳手潜行左键无线收发器，可以快捷地调整频率
+  - Added Shift+LMB with wrench on Wireless Transceivers to quickly adjust frequency.
+
+### Changed / 变更
+- 优化实体加速器性能与逻辑
+  - Optimized Entity Accelerator performance and logic.
+
+### Fixed / 修复
+- 修复游戏未添加 JEI 时的崩溃问题
+  - Fixed crash when JEI mod is not present.
+- 修复选择上传样板供应器时，显示的名称为客户端语言
+  - Fixed pattern provider names being displayed in client language when selecting upload targets.
+
 ## [1.4.3]
 ### ⚠️ 重要提醒 / Important Notice
 - **更新会导致旧版的无限盘失效，如有需要请先导盘再更新**
