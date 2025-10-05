@@ -90,18 +90,46 @@ public final class WrenchHook {
                 }
             }
         } else if (!InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
-            // 未潜行 + 扳手：打开频率输入界面
+            // 未潜行 + 扳手：切换锁定状态
             BlockEntity be = level.getBlockEntity(hit.getBlockPos());
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                if (level.isClientSide) {
-                    // 客户端打开GUI
-                    openFrequencyInputScreen(hit.getBlockPos(), te.getFrequency());
-                }
+                boolean newLocked = !te.isLocked();
+                te.setLocked(newLocked);
+                // 提示玩家
+                player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
                 // 轻微反馈音效
-                level.playSound(player, hit.getBlockPos(), SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.BLOCKS, 0.5F, 1.0F);
+                level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        var player = event.getEntity();
+        var level = event.getLevel();
+        var pos = event.getPos();
+
+        // 非旁观者
+        if (player.isSpectator()) {
+            return;
+        }
+
+        ItemStack stack = player.getMainHandItem();
+        // 潜行 + 扳手 + 无线收发器：打开频率输入界面
+        if (InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof WirelessTransceiverBlockEntity te) {
+                if (level.isClientSide) {
+                    // 客户端打开GUI
+                    openFrequencyInputScreen(pos, te.getFrequency());
+                }
+                // 轻微反馈音效
+                level.playSound(player, pos, SoundEvents.UI_BUTTON_CLICK.get(), SoundSource.BLOCKS, 0.5F, 1.0F);
+
+                event.setCanceled(true);
             }
         }
     }

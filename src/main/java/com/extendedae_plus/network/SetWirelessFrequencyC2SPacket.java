@@ -52,13 +52,13 @@ public class SetWirelessFrequencyC2SPacket {
                 return;
             }
             
-            // 检查是否锁定
-            if (te.isLocked()) {
-                player.displayClientMessage(
-                    Component.literal("收发器已锁定，无法修改频道"), 
-                    true
-                );
-                return;
+            // 通过GUI设置频率时，忽略锁定状态
+            // 临时保存锁定状态
+            boolean wasLocked = te.isLocked();
+            
+            // 临时解锁以允许设置
+            if (wasLocked) {
+                te.setLocked(false);
             }
             
             // 设置频率
@@ -67,6 +67,11 @@ public class SetWirelessFrequencyC2SPacket {
                 newFreq = 0;
             }
             te.setFrequency(newFreq);
+            
+            // 恢复锁定状态
+            if (wasLocked) {
+                te.setLocked(true);
+            }
             
             // 发送反馈消息
             player.displayClientMessage(
