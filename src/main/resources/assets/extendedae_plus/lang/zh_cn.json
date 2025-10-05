@@ -74,6 +74,7 @@
   "config.jade.plugin_extendedae_plus.wt_locked": "显示锁定状态",
   "config.jade.plugin_extendedae_plus.wt_network_usable": "显示网络在线状态",
   "config.jade.plugin_extendedae_plus.wt_channels": "显示频道使用情况",
+  "config.jade.plugin_extendedae_plus.wt_owner": "显示所有者信息",
   "extendedae_plus.tooltip.frequency": "频率: %d",
   "extendedae_plus.tooltip.master_mode": "模式: %s",
   "extendedae_plus.tooltip.locked": "锁定状态: %s",
@@ -109,6 +110,10 @@
   "item.extendedae_plus.channel_card.owner.player": "所有者：玩家 %s",
   "item.extendedae_plus.channel_card.owner.bound": "已绑定至：%s",
   "item.extendedae_plus.channel_card.owner.cleared": "已清除所有者绑定",
+  
+  "extendedae_plus.tooltip.owner": "所有者: %s",
+  "extendedae_plus.tooltip.owner.unset": "所有者: 未设置",
+  
   "group.pattern_provider.name": "样板供应器",
   "group.entity_ticker.name": "实体加速器",
   "group.storage.name": "存储总线"

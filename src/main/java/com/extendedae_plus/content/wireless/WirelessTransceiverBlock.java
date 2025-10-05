@@ -39,7 +39,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         if (!level.isClientSide && placer instanceof Player player) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                te.setPlacerId(player.getUUID());
+                te.setPlacerId(player.getUUID(), player.getName().getString());
             }
         }
     }
@@ -87,15 +87,15 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         
         if (cardOwner != null) {
             // 写入频道卡的所有者到收发器
-            te.setPlacerId(cardOwner);
             String teamName = ChannelCardItem.getTeamName(channelCard);
+            te.setPlacerId(cardOwner, teamName);
             player.displayClientMessage(
                 Component.literal("已将收发器绑定至：" + (teamName != null ? teamName : cardOwner.toString().substring(0, 8))), 
                 true
             );
         } else {
             // 频道卡未绑定所有者，使用当前玩家
-            te.setPlacerId(player.getUUID());
+            te.setPlacerId(player.getUUID(), player.getName().getString());
             player.displayClientMessage(Component.literal("频道卡未绑定，已使用当前玩家"), true);
         }
     }

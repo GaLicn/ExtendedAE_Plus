@@ -83,6 +83,22 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 }
             }
         }
+    },
+    OWNER("wt_owner") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("ownerName")) {
+                String ownerName = data.getString("ownerName");
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", ownerName));
+            } else if (data.contains("placerId")) {
+                // 有placerId但没有名称，显示UUID
+                java.util.UUID placerId = data.getUUID("placerId");
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", placerId.toString().substring(0, 8) + "..."));
+            } else {
+                // 没有所有者信息（旧版本存档）
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner.unset"));
+            }
+        }
     };
 
     private final ResourceLocation uid;
