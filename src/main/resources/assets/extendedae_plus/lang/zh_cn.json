@@ -118,6 +118,13 @@
   "extendedae_plus.tooltip.master_mode": "模式: %s",
   "extendedae_plus.tooltip.locked": "状态: %s",
   
+  "gui.extendedae_plus.frequency_input.title": "设置频率",
+  "gui.extendedae_plus.frequency_input.field": "频率",
+  "gui.extendedae_plus.frequency_input.confirm": "确认",
+  "gui.extendedae_plus.frequency_input.cancel": "取消",
+  "extendedae_plus.wireless.locked": "已锁定收发器",
+  "extendedae_plus.wireless.unlocked": "已解锁收发器",
+  
   "group.pattern_provider.name": "样板供应器",
   "group.storage.name": "存储总线",
   "group.entity_ticker.name": "实体加速器"

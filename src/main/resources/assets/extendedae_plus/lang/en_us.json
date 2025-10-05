@@ -118,6 +118,13 @@
   "extendedae_plus.tooltip.master_mode": "Mode: %s",
   "extendedae_plus.tooltip.locked": "Status: %s",
   
+  "gui.extendedae_plus.frequency_input.title": "Set Frequency",
+  "gui.extendedae_plus.frequency_input.field": "Frequency",
+  "gui.extendedae_plus.frequency_input.confirm": "Confirm",
+  "gui.extendedae_plus.frequency_input.cancel": "Cancel",
+  "extendedae_plus.wireless.locked": "Transceiver Locked",
+  "extendedae_plus.wireless.unlocked": "Transceiver Unlocked",
+  
   "group.pattern_provider.name": "Pattern Provider",
   "group.storage.name": "Storage Bus",
   "group.entity_ticker.name": "Entity Ticker"

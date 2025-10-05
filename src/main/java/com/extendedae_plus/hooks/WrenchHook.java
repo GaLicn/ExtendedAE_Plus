@@ -2,6 +2,7 @@ package com.extendedae_plus.hooks;
 
 import appeng.util.InteractionUtil;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.ui.FrequencyInputScreen;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import appeng.block.crafting.CraftingUnitBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -90,7 +92,7 @@ public final class WrenchHook {
             // 未潜行 + 扳手：切换锁定状态
             BlockEntity be = level.getBlockEntity(hit.getBlockPos());
             if (be instanceof WirelessTransceiverBlockEntity te) {
-                // 仅在服务端切换与同步，避免仅客户端生效导致看起来“无效果”
+                // 仅在服务端切换与同步，避免仅客户端生效导致看起来"无效果"
                 if (!level.isClientSide) {
                     boolean newLocked = !te.isLocked();
                     te.setLocked(newLocked);
@@ -103,7 +105,9 @@ public final class WrenchHook {
                         ExtendedAEPlus.LOGGER.debug("sendBlockUpdated failed: {}", t.toString());
                     }
                     // 提示玩家（服务端消息下发到客户端）
-                    player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
+                    player.displayClientMessage(Component.translatable(
+                            newLocked ? "extendedae_plus.wireless.locked" : "extendedae_plus.wireless.unlocked"
+                    ), true);
                     // 轻微反馈音效
                     level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
                     ExtendedAEPlus.LOGGER.debug("Wrench toggle lock at {} -> {}", pos, newLocked);
@@ -113,6 +117,39 @@ public final class WrenchHook {
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        // 潜行左键触发：打开频率设置GUI
+        if (event.isCanceled()) {
+            return;
+        }
+        
+        var player = event.getEntity();
+        var level = event.getLevel();
+        var pos = event.getPos();
+        
+        // 非旁观者
+        if (player.isSpectator()) {
+            return;
+        }
+        
+        ItemStack stack = player.getMainHandItem();
+        
+        // 潜行 + 扳手：打开频率输入GUI
+        if (InteractionUtil.isInAlternateUseMode(player) && InteractionUtil.canWrenchRotate(stack)) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof WirelessTransceiverBlockEntity te) {
+                if (level.isClientSide) {
+                    // 客户端：打开频率输入GUI
+                    FrequencyInputScreen.open(pos, te.getFrequency());
+                    ExtendedAEPlus.LOGGER.debug("Opening frequency input GUI for transceiver at {}", pos);
+                }
+                
+                event.setCanceled(true);
             }
         }
     }

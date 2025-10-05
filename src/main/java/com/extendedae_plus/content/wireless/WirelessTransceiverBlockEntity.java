@@ -156,6 +156,21 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         setChanged();
     }
 
+    /**
+     * 强制设置频率，忽略锁定状态
+     * 用于扳手GUI等管理工具
+     */
+    public void setFrequencyForced(long frequency) {
+        if (this.frequency == frequency) return;
+        this.frequency = frequency;
+        if (isMasterMode()) {
+            masterLink.setFrequency(frequency);
+        } else {
+            slaveLink.setFrequency(frequency);
+        }
+        setChanged();
+    }
+
     public boolean isMasterMode() {
         return masterMode;
     }

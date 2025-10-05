@@ -38,5 +38,9 @@ public class ModNetwork {
         registrar.playToServer(com.extendedae_plus.network.ChannelCardBindPacket.TYPE,
                 com.extendedae_plus.network.ChannelCardBindPacket.STREAM_CODEC,
                 com.extendedae_plus.network.ChannelCardBindPacket::handle);
+        // 无线收发器频率设置
+        registrar.playToServer(com.extendedae_plus.network.SetWirelessFrequencyC2SPacket.TYPE,
+                com.extendedae_plus.network.SetWirelessFrequencyC2SPacket.STREAM_CODEC,
+                com.extendedae_plus.network.SetWirelessFrequencyC2SPacket::handle);
     }
 }
