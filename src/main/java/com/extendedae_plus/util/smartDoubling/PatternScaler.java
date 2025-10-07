@@ -4,8 +4,10 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.ae.api.crafting.ScaledProcessingPatternAdv;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
+import net.minecraftforge.fml.ModList;
 
 public final class PatternScaler {
     private PatternScaler() {
@@ -72,7 +74,19 @@ public final class PatternScaler {
         } catch (Throwable ignore) {
             // 配置读取异常时不施加上限
         }
-
+        if (ModList.get().isLoaded("advanced_ae")) {
+            // 如果加载了 Advanced AE 且 base 实现了 AdvPatternDetails，返回兼容版
+            try {
+                // 软依赖，不直接 import advIface
+                Class<?> advIface = Class.forName("net.pedroksl.advanced_ae.common.patterns.AdvPatternDetails");
+                if (advIface.isInstance(base)) {
+                    // 直接 new ScaledProcessingPatternAdv，父类字段会正常初始化
+                    return new ScaledProcessingPatternAdv(base, base.getDefinition(), multiplier);
+                }
+            } catch (Throwable ignore) {
+                // 如果 Advanced AE 不存在或反射失败，就忽略，继续走普通逻辑
+            }
+        }
         // 仅使用 multiplier 构建轻量化 ScaledProcessingPattern（具体视图按需计算）
         return new ScaledProcessingPattern(base, base.getDefinition(), multiplier);
     }

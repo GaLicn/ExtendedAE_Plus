@@ -15,7 +15,7 @@ import java.util.Objects;
  * 缩放后的处理样板，结构完全模拟 AEProcessingPattern。
  * 保持 sparse/condensed/inputs 的一致性，同时保存原始样板。
  */
-public final class ScaledProcessingPattern implements IPatternDetails {
+public class ScaledProcessingPattern implements IPatternDetails {
 
     // 最小化实例字段：只保留原始样板引用、定义和倍数
     private final AEProcessingPattern original; // 原始样板引用

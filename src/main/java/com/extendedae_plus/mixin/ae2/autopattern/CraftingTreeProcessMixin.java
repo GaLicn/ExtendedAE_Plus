@@ -36,20 +36,24 @@ public abstract class CraftingTreeProcessMixin {
             argsOnly = true,
             remap = false
     )
-    private static IPatternDetails eap$replaceDetailsAtHead(IPatternDetails original, ICraftingService cc, CraftingCalculation job, IPatternDetails details, CraftingTreeNode craftingTreeNode) {
+    private static IPatternDetails eap$replaceDetailsAtHead(IPatternDetails original,
+                                                            ICraftingService cc,
+                                                            CraftingCalculation job,
+                                                            IPatternDetails details,
+                                                            CraftingTreeNode craftingTreeNode) {
         try {
             // 若传入的 details 已经是缩放样板，且原始样板不允许缩放，则直接解包为原始样板
             if (details instanceof ScaledProcessingPattern sp) {
-                var proc0 = sp.getOriginal();
-                if (proc0 instanceof ISmartDoublingAwarePattern aware0 && !aware0.eap$allowScaling()) {
-                    return proc0;
+                var originalPattern = sp.getOriginal();
+                if (originalPattern instanceof ISmartDoublingAwarePattern scalingAwarePattern && !scalingAwarePattern.eap$allowScaling()) {
+                    return originalPattern;
                 }
             }
 
-            if (!(details instanceof AEProcessingPattern proc)) return original;
+            if (!(details instanceof AEProcessingPattern processingPattern)) return original;
 
             // 若样板标记为不允许缩放，则直接跳过
-            if (proc instanceof ISmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
+            if (processingPattern instanceof ISmartDoublingAwarePattern aware && !aware.eap$allowScaling()) {
                 return original;
             }
 
@@ -89,7 +93,7 @@ public abstract class CraftingTreeProcessMixin {
             }
 
             // 使用每-provider 的分配量来缩放样板
-            var scaled = PatternScaler.scale(proc, parentTarget, perProvider);
+            var scaled = PatternScaler.scale(processingPattern, parentTarget, perProvider);
             return scaled != null ? scaled : original;
         } catch (Exception e) {
             EAP$LOGGER.warn("构建倍增样板出错", e);
