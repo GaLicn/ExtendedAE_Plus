@@ -14,6 +14,7 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,6 +44,9 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
     @Unique
     private boolean eap$SmartDoublingEnabled = false;
+
+    @Unique
+    private net.minecraft.client.gui.components.EditBox eap$PerProviderLimitInput;
 
     public PatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -112,6 +116,34 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
         this.eap$SmartDoublingToggle.set(this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
         this.addToLeftToolbar(this.eap$SmartDoublingToggle);
+
+        // 占位：每-provider 缩放上限输入框（仅作为 UI 占位，不发送网络请求）
+        try {
+            // 使用与左侧工具栏一致的布局托管，避免绝对坐标问题
+            // 使用更短的输入框并去除前导 0（显示更紧凑）
+            this.eap$PerProviderLimitInput = new net.minecraft.client.gui.components.EditBox(this.font, 0, 0, 28, 12, net.minecraft.network.chat.Component.literal("Limit"));
+            this.eap$PerProviderLimitInput.setValue("0");
+            this.eap$PerProviderLimitInput.setMaxLength(6);
+            // 调试用：值变更时打印到控制台，同时去掉前导 0（如用户输入 012 -> 12），但保留单个 0
+            this.eap$PerProviderLimitInput.setResponder((s) -> {
+                try {
+                    if (s != null && s.length() > 0) {
+                        // 去掉前导0但保留单个0
+                        String trimmed = s.replaceFirst("^0+(?=.)", "");
+                        if (!trimmed.equals(s)) {
+                            this.eap$PerProviderLimitInput.setValue(trimmed);
+                            System.out.println("[EAP] PerProviderLimit changed (trimmed): " + trimmed);
+                            return;
+                        }
+                    }
+                    System.out.println("[EAP] PerProviderLimit changed: " + s);
+                } catch (Throwable ignored) {
+                }
+            });
+            // 初次加入渲染列表（后续在 updateBeforeRender 每帧更新 tooltip/位置）
+            this.addRenderableWidget(this.eap$PerProviderLimitInput);
+        } catch (Throwable ignored) {
+        }
     }
 
     // 每帧刷新：仅从菜单(@GuiSync)同步布尔值，保持按钮状态一致
@@ -141,6 +173,56 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             } catch (Throwable t) {
                 EAP$LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
             }
+        }
+        // 保证 EditBox 在每帧存在且定位到左侧工具栏旁边（参考已有左侧按钮位置）
+        try {
+            if (this.eap$PerProviderLimitInput != null) {
+                // 仅在智能倍增已启用时显示输入框
+                if (this.eap$SmartDoublingEnabled) {
+                    if (!this.renderables.contains(this.eap$PerProviderLimitInput)) {
+                        this.addRenderableWidget(this.eap$PerProviderLimitInput);
+                    }
+
+                    // 当输入框未获得焦点且内容为空时填充 0
+                    try {
+                        if (!this.eap$PerProviderLimitInput.isFocused() && this.eap$PerProviderLimitInput.getValue().trim().isEmpty()) {
+                            this.eap$PerProviderLimitInput.setValue("0");
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    // 优先参考已有的左侧按钮定位
+                    net.minecraft.client.gui.components.Button ref = eap$SmartDoublingToggle;
+
+                    if (ref != null) {
+                        int ex = ref.getX() - this.eap$PerProviderLimitInput.getWidth() - 5;
+                        int ey = ref.getY() + 2; // 向下移动 2 像素
+                        this.eap$PerProviderLimitInput.setX(ex);
+                        this.eap$PerProviderLimitInput.setY(ey);
+                    } else {
+                        // 回退到相对于 gui 的位置
+                        this.eap$PerProviderLimitInput.setX(this.leftPos - this.eap$PerProviderLimitInput.getWidth() - 4);
+                        this.eap$PerProviderLimitInput.setY(this.topPos + 7);
+                    }
+
+                    // 动态更新 tooltip，简短且包含当前值
+                    try {
+                        String cur = this.eap$PerProviderLimitInput.getValue();
+                        if (cur == null || cur.isBlank()) cur = "0";
+                        var tip = net.minecraft.network.chat.Component.literal("智能翻倍上限: " + cur);
+                        this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(tip));
+                    } catch (Throwable ignored) {}
+                } else {
+                    // 隐藏输入框
+                    try {
+                        if (this.renderables.contains(this.eap$PerProviderLimitInput)) {
+                            this.removeWidget(this.eap$PerProviderLimitInput);
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            }
+
+        } catch (Throwable ignored) {
         }
     }
 }
