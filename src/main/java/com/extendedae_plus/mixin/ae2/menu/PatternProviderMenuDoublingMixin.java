@@ -28,6 +28,14 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
     @Unique
     @GuiSync(21)
     public boolean eap$SmartDoubling = false;
+    @Unique
+    @GuiSync(22)
+    public int eap$PerProviderScalingLimit = 0; // 0 = no limit
+
+    public void eap$setPerProviderScalingLimit(int v) {
+        this.eap$PerProviderScalingLimit = Math.max(0, v);
+        // send to server via an existing packet channel or custom packet (not implemented here)
+    }
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
     private void eap$syncSmartDoubling(CallbackInfo ci) {

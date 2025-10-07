@@ -56,6 +56,24 @@ public final class PatternScaler {
             long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
             multiplier = needed <= 1L ? 1L : needed;
         }
+
+        // 优先应用模式级别的限制（若 base 支持），然后是全局配置
+        try {
+            int patternLimit = 0;
+            if (base instanceof ISmartDoublingAwarePattern aware) {
+                patternLimit = aware.eap$getScalingLimit();
+            }
+            if (patternLimit > 0 && multiplier > patternLimit) {
+                multiplier = patternLimit;
+            } else {
+                int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
+                if (maxMul > 0 && multiplier > maxMul) {
+                    multiplier = maxMul;
+                }
+            }
+        } catch (Throwable ignore) {
+            // ignore config read errors
+        }
         // 小请求绕过：若请求量小且不会带来收益，则不启用缩放（返回 null）
         try {
             int minBenefit = ModConfig.INSTANCE.smartScalingMinBenefitFactor;

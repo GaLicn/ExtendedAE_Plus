@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.Unique;
 public class AEProcessingPatternMixin implements ISmartDoublingAwarePattern {
     @Unique
     private boolean eap$allowScaling = false; // 默认不允许缩放
+    @Unique
+    private int eap$scalingLimit = 0; // 0 表示不限制
 
     @Override
     public boolean eap$allowScaling() {
@@ -18,5 +20,15 @@ public class AEProcessingPatternMixin implements ISmartDoublingAwarePattern {
     @Override
     public void eap$setAllowScaling(boolean allow) {
         this.eap$allowScaling = allow;
+    }
+
+    @Override
+    public int eap$getScalingLimit() {
+        return this.eap$scalingLimit;
+    }
+
+    @Override
+    public void eap$setScalingLimit(int limit) {
+        this.eap$scalingLimit = Math.max(0, limit);
     }
 }
