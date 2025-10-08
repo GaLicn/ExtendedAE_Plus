@@ -41,12 +41,14 @@ public class SetPerProviderScalingLimitC2SPacket {
                     var logic = accessor.eap$logic();
                     if (logic instanceof ISmartDoublingHolder handler) {
                         handler.eap$setProviderSmartDoublingLimit(msg.limit);
+                        logic.saveChanges();
                     }
                 } else if (containerMenu instanceof AdvPatternProviderMenu advMenu) {
                     var accessor = (AdvPatternProviderMenuAdvancedAccessor) advMenu;
                     var logic = accessor.eap$logic();
                     if (logic instanceof ISmartDoublingHolder handler) {
                         handler.eap$setProviderSmartDoublingLimit(msg.limit);
+                        logic.saveChanges();
                     }
                 }
             } catch (Throwable ignored) {
