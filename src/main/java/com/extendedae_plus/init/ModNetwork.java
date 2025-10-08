@@ -90,6 +90,12 @@ public class ModNetwork {
                 .consumerNetworkThread(ToggleSmartDoublingC2SPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::encode)
+                .decoder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::decode)
+                .consumerNetworkThread(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(GlobalToggleProviderModesC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(GlobalToggleProviderModesC2SPacket::encode)
                 .decoder(GlobalToggleProviderModesC2SPacket::decode)

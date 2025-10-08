@@ -66,6 +66,7 @@ public final class PatternScaler {
             if (patternLimit > 0 && multiplier > patternLimit) {
                 multiplier = patternLimit;
             } else {
+                // 应用配置的最大倍数上限（0 表示不限制）
                 int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
                 if (maxMul > 0 && multiplier > maxMul) {
                     multiplier = maxMul;
@@ -83,15 +84,7 @@ public final class PatternScaler {
         } catch (Throwable ignore) {
             // 配置读取异常时保持默认行为（不绕过）
         }
-        // 应用配置的最大倍数上限（0 表示不限制）
-        try {
-            int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
-            if (maxMul > 0 && multiplier > maxMul) {
-                multiplier = maxMul;
-            }
-        } catch (Throwable ignore) {
-            // 配置读取异常时不施加上限
-        }
+
         if (ModList.get().isLoaded("advanced_ae")) {
             // 如果加载了 Advanced AE 且 base 实现了 AdvPatternDetails，返回兼容版
             try {

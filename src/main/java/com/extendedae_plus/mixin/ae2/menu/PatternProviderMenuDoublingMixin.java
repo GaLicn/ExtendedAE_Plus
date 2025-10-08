@@ -32,17 +32,13 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
     @GuiSync(22)
     public int eap$PerProviderScalingLimit = 0; // 0 = no limit
 
-    public void eap$setPerProviderScalingLimit(int v) {
-        this.eap$PerProviderScalingLimit = Math.max(0, v);
-        // send to server via an existing packet channel or custom packet (not implemented here)
-    }
-
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
     private void eap$syncSmartDoubling(CallbackInfo ci) {
         if (!((AEBaseMenu) (Object) this).isClientSide()) {
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         }
     }
@@ -53,6 +49,7 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         } catch (Throwable t) {
             EAP$LOGGER.error("Error initializing smart doubling sync", t);
@@ -65,14 +62,21 @@ public abstract class PatternProviderMenuDoublingMixin implements IPatternProvid
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         } catch (Throwable t) {
             EAP$LOGGER.error("Error initializing smart doubling sync", t);
         }
     }
 
+
     @Override
     public boolean eap$getSmartDoublingSynced() {
         return this.eap$SmartDoubling;
+    }
+
+    @Override
+    public int eap$getScalingLimit() {
+        return this.eap$PerProviderScalingLimit;
     }
 }

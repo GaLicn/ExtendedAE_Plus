@@ -27,21 +27,11 @@ public class ScaledProcessingPattern implements IPatternDetails {
     private transient volatile GenericStack[] outputsCache;
     private transient volatile GenericStack[] sparseInputsCache;
     private transient volatile GenericStack[] sparseOutputsCache;
-    // per-provider scaling limit (0 = no limit). Can be updated from UI via provider settings.
-    private int perProviderScalingLimit = 0;
 
     public ScaledProcessingPattern(AEProcessingPattern original, AEItemKey definition, long multiplier) {
         this.original = Objects.requireNonNull(original);
         this.definition = Objects.requireNonNull(definition);
         this.multiplier = multiplier <= 0 ? 1L : multiplier;
-    }
-
-    public int getPerProviderScalingLimit() {
-        return this.perProviderScalingLimit;
-    }
-
-    public void setPerProviderScalingLimit(int limit) {
-        this.perProviderScalingLimit = Math.max(0, limit);
     }
 
     /* -------------------- API 实现 -------------------- */
