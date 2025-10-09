@@ -9,6 +9,7 @@ import appeng.client.gui.me.patternaccess.PatternSlot;
 import appeng.client.gui.widgets.SettingToggleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.function.IntConsumer;
 
 
 /**
@@ -203,5 +205,28 @@ public class GuiUtil {
                 return tooltipSupplier.get();
             }
         };
+    }
+
+    /**
+     * 创建用于每个提供者缩放上限的输入框，包含值清洗与回调处理
+     * @param font 字体对象
+     * @param initialValue 初始数值
+     * @param onCommit 当值解析成功后回调（以 int 形式提供）
+     */
+    public static EditBox createPerProviderLimitInput(Font font, int initialValue, IntConsumer onCommit) {
+        EditBox input = new EditBox(font, 0, 0, 28, 12, Component.literal("Limit"));
+        input.setMaxLength(6);
+        input.setValue(String.valueOf(initialValue));
+        input.setResponder(s -> {
+            try {
+                String sValue = (s == null || s.isBlank()) ? "0" : s.replaceFirst("^0+(?=.)", "");
+                if (!sValue.equals(s)) {
+                    input.setValue(sValue);
+                }
+                int limit = Integer.parseInt(sValue);
+                onCommit.accept(limit);
+            } catch (Throwable ignored) {}
+        });
+        return input;
     }
 } 

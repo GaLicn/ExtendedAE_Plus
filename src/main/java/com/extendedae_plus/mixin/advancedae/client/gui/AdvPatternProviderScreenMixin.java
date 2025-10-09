@@ -10,6 +10,7 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
+import com.extendedae_plus.util.GuiUtil;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
@@ -105,30 +106,12 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
         this.eap$SmartDoublingToggle.set(eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
         this.addToLeftToolbar(this.eap$SmartDoublingToggle);
 
-        // 缩放上限输入框
-        this.eap$PerProviderLimitInput = new EditBox(this.font, 0, 0, 28, 12, Component.literal("Limit"));
-        this.eap$PerProviderLimitInput.setMaxLength(6);
-        this.eap$PerProviderLimitInput.setValue(String.valueOf(eap$PerProviderScalingLimit));
-        this.eap$PerProviderLimitInput.setResponder(this::eap$handleLimitChanged);
+        // 缩放上限输入框（使用 GuiUtil 抽离）
+        this.eap$PerProviderLimitInput = GuiUtil.createPerProviderLimitInput(this.font, this.eap$PerProviderScalingLimit, limit -> {
+            this.eap$PerProviderScalingLimit = limit;
+            ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
+        });
         this.addRenderableWidget(this.eap$PerProviderLimitInput);
-    }
-
-    /** 输入框内容变化时调用 */
-    @Unique
-    private void eap$handleLimitChanged(String s) {
-        try {
-            // 去除前导0，空字符串视为0
-            String sValue = (s == null || s.isBlank()) ? "0" : s.replaceFirst("^0+(?=.)", "");
-            if (!sValue.equals(s)) {
-                this.eap$PerProviderLimitInput.setValue(sValue);
-            }
-            int limit = Integer.parseInt(sValue);
-            // 只有变化时才发送同步包
-            if (limit != this.eap$PerProviderScalingLimit) {
-                this.eap$PerProviderScalingLimit = limit;
-                ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
-            }
-        } catch (Throwable ignored) {}
     }
 
     /* ---------------------------- 注入点 ---------------------------- */
