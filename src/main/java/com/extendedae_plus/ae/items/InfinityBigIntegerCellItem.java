@@ -79,7 +79,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
 
     @Override
     public FuzzyMode getFuzzyMode(ItemStack itemStack) {
-        return null;
+        return FuzzyMode.IGNORE_ALL; // 这里返回什么都无所谓，cell inv最终被我们自行操作，但是出于安全考虑，还是不返回null
     }
 
     @Override
