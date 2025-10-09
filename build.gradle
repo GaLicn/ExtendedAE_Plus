@@ -129,10 +129,8 @@ dependencies {
     modRuntimeOnly "curse.maven:ftb-library-forge-404465:6807424"
 }
 
-allprojects {
-    tasks.withType(JavaCompile).configureEach {
-        options.compilerArgs << "-Xlint:-deprecation"
-    }
+compileJava {
+    options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal', '-Xlint:-unchecked']
 }
 
 processResources {

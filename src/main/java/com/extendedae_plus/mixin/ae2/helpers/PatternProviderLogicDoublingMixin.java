@@ -63,7 +63,6 @@ public class PatternProviderLogicDoublingMixin implements ISmartDoublingHolder {
         try {
             ((PatternProviderLogic) (Object) this).updatePatterns();
         } catch (Throwable ignored) {}
-
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))

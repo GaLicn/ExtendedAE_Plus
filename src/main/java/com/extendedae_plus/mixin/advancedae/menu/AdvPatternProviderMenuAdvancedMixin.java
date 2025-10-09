@@ -25,7 +25,7 @@ public abstract class AdvPatternProviderMenuAdvancedMixin implements IPatternPro
 
     // 选择一个未占用的 GUI 同步 id（AE2 已用到 7），这里使用 21 以避冲突
     @Unique
-    @GuiSync(22)
+    @GuiSync(20)
     public boolean eap$AdvancedBlocking = false;
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))

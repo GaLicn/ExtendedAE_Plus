@@ -24,8 +24,11 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternPro
     protected AdvPatternProviderLogic logic;
 
     @Unique
-    @GuiSync(23)
+    @GuiSync(21)
     public boolean eap$SmartDoubling = false;
+    @Unique
+    @GuiSync(22)
+    public int eap$PerProviderScalingLimit = 0; // 0 = no limit
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
     private void eap$syncSmartDoubling(CallbackInfo ci) {
@@ -33,6 +36,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternPro
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         }
     }
@@ -43,6 +47,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternPro
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         } catch (Throwable ignored) {}
     }
@@ -53,6 +58,7 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternPro
             var l = this.logic;
             if (l instanceof ISmartDoublingHolder holder) {
                 this.eap$SmartDoubling = holder.eap$getSmartDoubling();
+                this.eap$PerProviderScalingLimit = holder.eap$getProviderSmartDoublingLimit();
             }
         } catch (Throwable ignored) {}
     }
@@ -60,5 +66,10 @@ public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternPro
     @Override
     public boolean eap$getSmartDoublingSynced() {
         return this.eap$SmartDoubling;
+    }
+
+    @Override
+    public int eap$getScalingLimit() {
+        return this.eap$PerProviderScalingLimit;
     }
 }
