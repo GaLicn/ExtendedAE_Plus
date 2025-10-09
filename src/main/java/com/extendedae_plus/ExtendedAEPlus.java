@@ -9,11 +9,9 @@ import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
-import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,10 +20,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.server.ServerStoppedEvent;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
@@ -59,8 +54,6 @@ public class ExtendedAEPlus {
         // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
-        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
-        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
@@ -132,29 +125,6 @@ public class ExtendedAEPlus {
                 LOGGER.warn("Failed to bind block entities: {}", t.toString());
             }
         });
-    }
-
-    @Nullable
-    private static InfinityStorageManager storageManager;
-
-    @Nullable
-    private static MinecraftServer storageManagerServer;
-
-    private static void onServerStarted(ServerStartedEvent event) {
-        storageManagerServer = event.getServer();
-        storageManager = InfinityStorageManager.getInstance(event.getServer());
-    }
-
-    private static void onServerStopped(ServerStoppedEvent event) {
-        if (storageManagerServer == event.getServer()) {
-            storageManagerServer = null;
-            storageManager = null;
-        }
-    }
-
-    @Nullable
-    public static InfinityStorageManager currentStorageManager() {
-        return storageManager;
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
