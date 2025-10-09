@@ -1,6 +1,5 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
-import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.implementations.PatternProviderScreen;
@@ -27,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.function.Supplier;
 
+import static com.extendedae_plus.util.GuiUtil.createToggle;
 import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
@@ -59,26 +58,6 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         super(menu, playerInventory, title, style);
     }
 
-    /* ---------------------------- 工具方法 ---------------------------- */
-    /**
-     * 创建一个带有自定义点击事件和 tooltip 的切换按钮
-     */
-    @Unique
-    private SettingToggleButton<YesNo> eap$createToggle(boolean initial,
-                                                        Runnable onClick,
-                                                        Supplier<List<Component>> tooltipSupplier) {
-        return new SettingToggleButton<>(
-                Settings.BLOCKING_MODE,
-                initial ? YesNo.YES : YesNo.NO,
-                (btn, backwards) -> onClick.run()
-        ) {
-            @Override
-            public List<Component> getTooltipMessage() {
-                return tooltipSupplier.get();
-            }
-        };
-    }
-
     /** 同步服务端状态（初始化时调用） */
     @Unique
     private void eap$syncInitialState(C menu) {
@@ -100,7 +79,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     @Unique
     private void eap$createWidgets() {
         // 高级阻挡
-        this.eap$AdvancedBlockingToggle = eap$createToggle(
+        this.eap$AdvancedBlockingToggle = createToggle(
                 eap$AdvancedBlockingEnabled,
                 () -> ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket()),
                 () -> {
@@ -115,7 +94,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
 
         // 智能翻倍
-        this.eap$SmartDoublingToggle = eap$createToggle(
+        this.eap$SmartDoublingToggle = createToggle(
                 eap$SmartDoublingEnabled,
                 () -> ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket()),
                 () -> {

@@ -1,17 +1,22 @@
 package com.extendedae_plus.util;
 
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
+import appeng.client.gui.widgets.SettingToggleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 
 /**
@@ -183,5 +188,20 @@ public class GuiUtil {
         int borderColor = withAlpha(rainbowRgb, 0xA0);
         int backgroundColor = withAlpha(rainbowRgb, 0x3C);
         drawSlotBox(guiGraphics, sx, sy, borderColor, backgroundColor);
+    }
+
+    public static SettingToggleButton<YesNo> createToggle(boolean initial,
+                                                          Runnable onClick,
+                                                          Supplier<List<Component>> tooltipSupplier) {
+        return new SettingToggleButton<>(
+                Settings.BLOCKING_MODE,
+                initial ? YesNo.YES : YesNo.NO,
+                (btn, backwards) -> onClick.run()
+        ) {
+            @Override
+            public List<Component> getTooltipMessage() {
+                return tooltipSupplier.get();
+            }
+        };
     }
 } 
