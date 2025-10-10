@@ -1,5 +1,7 @@
 package com.extendedae_plus.util.smartDoubling;
 
+import appeng.api.stacks.AEFluidKey;
+import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
@@ -106,17 +108,48 @@ public final class PatternScaler {
 
             for (var input : proc.getInputs()) {
                 long amt = input.getMultiplier();
-                if (amt > 0) {
-                    // 保证翻倍限制至少为 1
-                    long allowedMul = Math.max(1, limit / amt);
-                    minMul = Math.min(minMul, allowedMul);
-                }
+                if (amt <= 0) continue;
+
+                AEKey key = input.getPossibleInputs()[0].what();
+
+                // 使用统一单位换算
+                long unitMultiplier = getUnitMultiplier(key);
+                long limitInAEUnit = limit * unitMultiplier;
+
+                // 计算该输入允许的倍数
+                long allowedMul = limitInAEUnit / amt;
+
+                // 保证至少为 1
+                allowedMul = Math.max(1, allowedMul);
+
+                // 取最小值，保证所有输入都不超过 limit
+                minMul = Math.min(minMul, allowedMul);
             }
 
             if (minMul != Long.MAX_VALUE) {
-                computedMul = (int) minMul;
+                computedMul = (int) Math.min(minMul, Integer.MAX_VALUE);
             }
         }
+
         return computedMul;
+    }
+
+    /**
+     * 获取 AEKey 的单位换算系数
+     * 物品默认 1，流体默认 1000，其它类型可通过扩展接口提供
+     */
+    private static long getUnitMultiplier(AEKey key) {
+        if (key instanceof AEItemKey) return 1L;
+        if (key instanceof AEFluidKey) return 1000L;
+
+        try {
+            // 反射判断扩展 Key 类型
+            if (key.getClass().getName().equals("me.ramidzkh.mekae2.ae2.MekanismKey")) {
+                return 1000L;
+            }
+            // 根据需要继续增加
+        } catch (Exception ignored) {}
+
+        return 1L; // 默认单位
     }
 }
