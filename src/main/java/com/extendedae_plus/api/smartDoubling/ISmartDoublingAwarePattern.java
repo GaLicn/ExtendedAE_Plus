@@ -5,6 +5,6 @@ public interface ISmartDoublingAwarePattern {
     void eap$setAllowScaling(boolean allow);
 
     // 翻倍限制：0 表示无限制
-    int eap$getScalingLimit();
-    void eap$setScalingLimit(int limit);
+    int eap$getMultiplierLimit();
+    void eap$setMultiplierLimit(int limit);
 }

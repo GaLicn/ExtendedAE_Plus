@@ -189,7 +189,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
             // 设置 tooltip
             String cur = this.eap$PerProviderLimitInput.getValue();
             if (cur.isBlank()) cur = "0";
-            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.literal("样板输入物品数量上限: " + cur)));
+            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.literal("单样物品发配数量上限: " + cur)));
 
             // 失焦时提交最新值
             boolean focusedNow = this.eap$PerProviderLimitInput.isFocused();

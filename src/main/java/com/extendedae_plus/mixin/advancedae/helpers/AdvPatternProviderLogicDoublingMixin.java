@@ -15,6 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.extendedae_plus.util.smartDoubling.PatternScaler.getComputedMul;
+
 @Mixin(value = AdvPatternProviderLogic.class, remap = false)
 public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolder {
     @Unique private static final String EAP_SMART_DOUBLING_KEY = "eap_smart_doubling";
@@ -51,18 +53,11 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
 
     @Override
     public void eap$setProviderSmartDoublingLimit(int limit) {
-        // 更新供应器级别上限并去抖保存
-        var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
-        this.eap$providerScalingLimit = Math.max(0, limit);
-        // 现在把防抖移到客户端屏幕端来处理，服务器端直接立即应用并保存
-        for (IPatternDetails d : list) {
-            if (d instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern a) {
-                try { a.eap$setScalingLimit(this.eap$providerScalingLimit); } catch (Throwable ignored) {}
-            }
-        }
         try {
             ((AdvPatternProviderLogic) (Object) this).updatePatterns();
         } catch (Throwable ignored) {}
+        // 更新供应器级别上限，用于 UI 显示
+        this.eap$providerScalingLimit = Math.max(0, limit);
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
@@ -89,9 +84,9 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
             boolean allow = this.eap$smartDoubling;
             int limit = this.eap$providerScalingLimit;
             for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
-                    aware.eap$setAllowScaling(allow);
-                    aware.eap$setScalingLimit(limit);
+                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern pattern) {
+                    pattern.eap$setAllowScaling(allow);
+                    pattern.eap$setMultiplierLimit(getComputedMul(proc, limit));
                 }
             }
         } catch (Throwable ignored) {}

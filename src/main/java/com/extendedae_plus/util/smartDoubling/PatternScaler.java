@@ -50,40 +50,36 @@ public final class PatternScaler {
             if (amt > 0) perOperationTarget = amt;
         }
 
-        // 使用最小整数倍（ceil）策略：直接选择满足请求的最小倍数
-        long multiplier = 1L;
-        if (requestedAmount > 0) {
-            long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
-            multiplier = needed <= 1L ? 1L : needed;
+        long multiplier = 1L; // 默认倍数
+
+        // ---------------------- 优先模式限制 ----------------------
+        boolean patternHasLimit = false;
+        if (base instanceof ISmartDoublingAwarePattern aware) {
+            int patternMulLimit = aware.eap$getMultiplierLimit();
+            if (patternMulLimit > 0) {
+                multiplier = patternMulLimit; // 直接使用模式限制作为倍数
+                patternHasLimit = true;
+            }
         }
 
-        // 优先应用模式级别的限制（若 base 支持），然后是全局配置
-        try {
-            int patternLimit = 0;
-            if (base instanceof ISmartDoublingAwarePattern aware) {
-                patternLimit = aware.eap$getScalingLimit();
-            }
-            if (patternLimit > 0 && multiplier > patternLimit) {
-                multiplier = patternLimit;
-            } else {
-                // 应用配置的最大倍数上限（0 表示不限制）
-                int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
-                if (maxMul > 0 && multiplier > maxMul) {
-                    multiplier = maxMul;
-                }
-            }
-        } catch (Throwable ignore) {
-            // ignore config read errors
+        // ---------------------- 全局逻辑（仅在没有模式限制时生效） ----------------------
+        if (!patternHasLimit && requestedAmount > 0) {
+            // 计算满足请求量的最小倍数
+            long needed = requestedAmount / perOperationTarget + ((requestedAmount % perOperationTarget) == 0 ? 0 : 1);
+            multiplier = Math.max(needed, 1L);
+
+            // 应用全局上限
+            int maxMul = ModConfig.INSTANCE.smartScalingMaxMultiplier;
+            if (maxMul > 0 && multiplier > maxMul) multiplier = maxMul;
         }
-        // 小请求绕过：若请求量小且不会带来收益，则不启用缩放（返回 null）
+
+        // ---------------------- 小请求绕过 ----------------------
         try {
             int minBenefit = ModConfig.INSTANCE.smartScalingMinBenefitFactor;
             if (minBenefit > 1 && requestedAmount > 0 && requestedAmount < perOperationTarget * (long) minBenefit) {
                 return null;
             }
-        } catch (Throwable ignore) {
-            // 配置读取异常时保持默认行为（不绕过）
-        }
+        } catch (Throwable ignore) {}
 
         if (ModList.get().isLoaded("advanced_ae")) {
             // 如果加载了 Advanced AE 且 base 实现了 AdvPatternDetails，返回兼容版
@@ -100,5 +96,27 @@ public final class PatternScaler {
         }
         // 仅使用 multiplier 构建轻量化 ScaledProcessingPattern（具体视图按需计算）
         return new ScaledProcessingPattern(base, base.getDefinition(), multiplier);
+    }
+
+    public static int getComputedMul(AEProcessingPattern proc, int limit) {
+        int computedMul = 0; // 默认 0 表示不限制
+
+        if (limit > 0) {
+            long minMul = Long.MAX_VALUE;
+
+            for (var input : proc.getInputs()) {
+                long amt = input.getMultiplier();
+                if (amt > 0) {
+                    // 保证翻倍限制至少为 1
+                    long allowedMul = Math.max(1, limit / amt);
+                    minMul = Math.min(minMul, allowedMul);
+                }
+            }
+
+            if (minMul != Long.MAX_VALUE) {
+                computedMul = (int) minMul;
+            }
+        }
+        return computedMul;
     }
 }

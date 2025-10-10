@@ -10,7 +10,7 @@ public class AEProcessingPatternMixin implements ISmartDoublingAwarePattern {
     @Unique
     private boolean eap$allowScaling = false; // 默认不允许缩放
     @Unique
-    private int eap$scalingLimit = 0; // 0 表示不限制
+    private int eap$multiplierLimit = 0; // 模式级别的倍数上限，0 表示不限制
 
     @Override
     public boolean eap$allowScaling() {
@@ -23,12 +23,12 @@ public class AEProcessingPatternMixin implements ISmartDoublingAwarePattern {
     }
 
     @Override
-    public int eap$getScalingLimit() {
-        return this.eap$scalingLimit;
+    public int eap$getMultiplierLimit() {
+        return this.eap$multiplierLimit;
     }
 
     @Override
-    public void eap$setScalingLimit(int limit) {
-        this.eap$scalingLimit = Math.max(0, limit);
+    public void eap$setMultiplierLimit(int limit) {
+        this.eap$multiplierLimit = Math.max(0, limit);
     }
 }
