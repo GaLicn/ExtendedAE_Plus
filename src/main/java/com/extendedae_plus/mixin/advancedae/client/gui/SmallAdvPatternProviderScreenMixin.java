@@ -50,8 +50,6 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
     @Unique private boolean eap$SmartDoublingEnabled = false;
     // 当前智能翻倍上限
     @Unique private int eap$PerProviderScalingLimit = 0;
-    // 输入框上次是否处于焦点
-    @Unique private boolean eap$PerProviderLimitWasFocused = false;
 
     public SmallAdvPatternProviderScreenMixin(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -190,15 +188,6 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
             String cur = this.eap$PerProviderLimitInput.getValue();
             if (cur.isBlank()) cur = "0";
             this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.literal("单样物品发配数量上限: " + cur)));
-
-            // 失焦时提交最新值
-            boolean focusedNow = this.eap$PerProviderLimitInput.isFocused();
-            if (this.eap$PerProviderLimitWasFocused && !focusedNow) {
-                int value = Integer.parseInt(cur);
-                this.eap$PerProviderScalingLimit = value;
-                ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(value));
-            }
-            this.eap$PerProviderLimitWasFocused = focusedNow;
         } else {
             // 智能翻倍未启用时，移除输入框
             this.removeWidget(this.eap$PerProviderLimitInput);

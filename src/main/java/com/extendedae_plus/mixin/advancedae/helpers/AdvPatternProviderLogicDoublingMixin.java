@@ -24,6 +24,7 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
 
     @Unique private boolean eap$smartDoubling = false;
     @Unique private int eap$providerScalingLimit = 0; // 供应器级别的上限，0 表示不限制
+    @Unique private boolean eap$multiplierDirty = false; // 标记是否需要重新计算 multiplier
 
     @Override
     public boolean eap$getSmartDoubling() {
@@ -33,14 +34,7 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
     @Override
     public void eap$setSmartDoubling(boolean value) {
         this.eap$smartDoubling = value;
-        // 立即将开关状态应用到当前 Provider 的样板上，避免等待下一次 updatePatterns
         try {
-            var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
-            for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
-                    aware.eap$setAllowScaling(value);
-                }
-            }
             // 触发一次刷新，让网络及时拿到最新状态（也会触发 ICraftingProvider.requestUpdate(mainNode)）
             ((AdvPatternProviderLogic) (Object) this).updatePatterns();
         } catch (Throwable ignored) {}
@@ -53,11 +47,11 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
 
     @Override
     public void eap$setProviderSmartDoublingLimit(int limit) {
+        this.eap$providerScalingLimit = limit;
+        this.eap$multiplierDirty = true;
         try {
             ((AdvPatternProviderLogic) (Object) this).updatePatterns();
         } catch (Throwable ignored) {}
-        // 更新供应器级别上限，用于 UI 显示
-        this.eap$providerScalingLimit = Math.max(0, limit);
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
@@ -86,10 +80,18 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoublingHolde
             for (IPatternDetails details : list) {
                 if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern pattern) {
                     pattern.eap$setAllowScaling(allow);
-                    pattern.eap$setMultiplierLimit(getComputedMul(proc, limit));
+                    if (this.eap$multiplierDirty) {
+                        pattern.eap$setMultiplierLimit(getComputedMul(proc, limit));
+                    }
                 }
             }
-        } catch (Throwable ignored) {}
+            // 如果刚刚重建了 multiplier 清除脏标记
+            if (this.eap$multiplierDirty) {
+                this.eap$multiplierDirty = false;
+            }
+        } catch (Throwable ignored) {
+            this.eap$multiplierDirty = true;
+        }
     }
 
     @Shadow
