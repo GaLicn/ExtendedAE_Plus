@@ -72,6 +72,12 @@ public class ModNetwork {
                 .consumerNetworkThread(SetPatternHighlightS2CPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(com.extendedae_plus.network.SetBlockHighlightS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(com.extendedae_plus.network.SetBlockHighlightS2CPacket::encode)
+                .decoder(com.extendedae_plus.network.SetBlockHighlightS2CPacket::decode)
+                .consumerNetworkThread(com.extendedae_plus.network.SetBlockHighlightS2CPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(SetProviderPageS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(SetProviderPageS2CPacket::encode)
                 .decoder(SetProviderPageS2CPacket::decode)
