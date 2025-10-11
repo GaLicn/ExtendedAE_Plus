@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2.helpers;
+package com.extendedae_plus.mixin.ae2.helpers.patternprovider;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
