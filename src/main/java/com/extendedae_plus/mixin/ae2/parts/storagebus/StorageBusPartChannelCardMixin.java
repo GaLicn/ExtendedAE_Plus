@@ -5,14 +5,13 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.parts.storagebus.StorageBusPart;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.wireless.WirelessSlaveLink;
-import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.util.Logger;
+import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * 给 AE2 的存储总线注入频道卡联动：在升级变更时读取频道并更新无线链接。
  */
 @Mixin(value = StorageBusPart.class, remap = false)
-public abstract class StorageBusPartChannelCardMixin implements InterfaceWirelessLinkBridge, IUpgradeableObject {
+public abstract class StorageBusPartChannelCardMixin implements IInterfaceWirelessLinkBridge, IUpgradeableObject {
 
     @Unique
     private WirelessSlaveLink eap$link;
@@ -70,10 +69,12 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
         try {
             IUpgradeInventory inv = this.getUpgrades();
             long channel = 0L;
+            java.util.UUID ownerUUID = null;
             boolean found = false;
             for (var stack : inv) {
                 if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                     channel = ChannelCardItem.getChannel(stack);
+                    ownerUUID = ChannelCardItem.getOwnerUUID(stack);
                     found = true;
                     break;
                 }
@@ -85,13 +86,13 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
             }
             eap$lastChannel = channel;
             
-            ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 初始化频道链接: found={}, channel={}", found, channel);
+            Logger.EAP$LOGGER.debug("[服务端] StorageBus 初始化频道链接: found={}, channel={}", found, channel);
             
             if (!found) {
                 if (eap$link != null) {
                     eap$link.setFrequency(0L);
                     eap$link.updateStatus();
-                    ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 断开频道链接");
+                    Logger.EAP$LOGGER.debug("[服务端] StorageBus 断开频道链接");
                     // 通知客户端状态变化
                     ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
                 }
@@ -104,17 +105,19 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
                         () -> ((IActionHost)(Object)this).getActionableNode()
                 );
                 eap$link = new WirelessSlaveLink(endpoint);
-                ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 创建新的无线链接");
+                Logger.EAP$LOGGER.debug("[服务端] StorageBus 创建新的无线链接");
             }
             
+            // 设置频道卡的所有者UUID（如果有的话）
+            eap$link.setPlacerId(ownerUUID);
             eap$link.setFrequency(channel);
             eap$link.updateStatus();
-            ExtendedAELogger.LOGGER.debug("[服务端] StorageBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());
+            Logger.EAP$LOGGER.debug("[服务端] StorageBus 设置频道: {}, 连接状态: {}", channel, eap$link.isConnected());
             
             // 通知客户端状态变化
             ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("[服务端] StorageBus 初始化频道链接失败", e);
+            Logger.EAP$LOGGER.error("[服务端] StorageBus 初始化频道链接失败", e);
         }
     }
 

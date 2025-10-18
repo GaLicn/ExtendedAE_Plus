@@ -2,6 +2,11 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.*;
+import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
+import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
+import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.provider.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -67,6 +72,12 @@ public class ModNetwork {
                 .consumerNetworkThread(SetPatternHighlightS2CPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(com.extendedae_plus.network.SetBlockHighlightS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(com.extendedae_plus.network.SetBlockHighlightS2CPacket::encode)
+                .decoder(com.extendedae_plus.network.SetBlockHighlightS2CPacket::decode)
+                .consumerNetworkThread(com.extendedae_plus.network.SetBlockHighlightS2CPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(SetProviderPageS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(SetProviderPageS2CPacket::encode)
                 .decoder(SetProviderPageS2CPacket::decode)
@@ -83,6 +94,12 @@ public class ModNetwork {
                 .encoder(ToggleSmartDoublingC2SPacket::encode)
                 .decoder(ToggleSmartDoublingC2SPacket::decode)
                 .consumerNetworkThread(ToggleSmartDoublingC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::encode)
+                .decoder(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::decode)
+                .consumerNetworkThread(com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(GlobalToggleProviderModesC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
@@ -119,6 +136,18 @@ public class ModNetwork {
                 .encoder(CraftingMonitorOpenProviderC2SPacket::encode)
                 .decoder(CraftingMonitorOpenProviderC2SPacket::decode)
                 .consumerNetworkThread(CraftingMonitorOpenProviderC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ChannelCardBindPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ChannelCardBindPacket::encode)
+                .decoder(ChannelCardBindPacket::decode)
+                .consumerNetworkThread(ChannelCardBindPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SetWirelessFrequencyC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SetWirelessFrequencyC2SPacket::encode)
+                .decoder(SetWirelessFrequencyC2SPacket::decode)
+                .consumerNetworkThread(SetWirelessFrequencyC2SPacket::handle)
                 .add();
     }
 

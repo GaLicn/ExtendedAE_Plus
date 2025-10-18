@@ -72,6 +72,7 @@ dependencies {
     //extendedAE
     modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
     modRuntimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
+
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
@@ -121,12 +122,16 @@ dependencies {
     // compileOnly 供代码编译
     include "curse.maven:configuration-444699:4710266"
     modImplementation "curse.maven:configuration-444699:4710266"
+
+    //ftbteams
+    modCompileOnly "curse.maven:ftb-teams-forge-404468:6130786"
+    modCompileOnly "curse.maven:ftb-library-forge-404465:6807424"
+    modRuntimeOnly "curse.maven:ftb-teams-forge-404468:6130786"
+    modRuntimeOnly "curse.maven:ftb-library-forge-404465:6807424"
 }
 
-allprojects {
-    tasks.withType(JavaCompile).configureEach {
-        options.compilerArgs << "-Xlint:-deprecation"
-    }
+compileJava {
+    options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal', '-Xlint:-unchecked']
 }
 
 processResources {

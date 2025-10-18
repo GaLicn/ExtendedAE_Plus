@@ -2,7 +2,7 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
-import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
+import com.extendedae_plus.network.provider.GlobalToggleProviderModesC2SPacket;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;

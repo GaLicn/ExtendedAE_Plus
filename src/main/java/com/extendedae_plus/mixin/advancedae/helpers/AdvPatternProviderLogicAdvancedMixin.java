@@ -5,7 +5,7 @@ import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderTarget;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.api.IAdvancedBlocking;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 
 @Mixin(value = AdvPatternProviderLogic.class, remap = false)
-public class AdvPatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
+public class AdvPatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
     @Unique
     private static final String EAP_ADV_BLOCKING_KEY = "eap_advanced_blocking";
 

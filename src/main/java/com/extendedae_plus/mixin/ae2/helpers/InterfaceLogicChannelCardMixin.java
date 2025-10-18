@@ -4,11 +4,10 @@ import appeng.api.upgrades.IUpgradeInventory;
 import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.InterfaceNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.wireless.WirelessSlaveLink;
-import com.extendedae_plus.wireless.endpoint.InterfaceNodeEndpointImpl;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InterfaceLogic.class)
-public abstract class InterfaceLogicChannelCardMixin implements InterfaceWirelessLinkBridge {
+public abstract class InterfaceLogicChannelCardMixin implements IInterfaceWirelessLinkBridge {
 
     @Shadow(remap = false) public abstract IUpgradeInventory getUpgrades();
 
@@ -107,10 +106,12 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
 
         try {
             long channel = 0L;
+            java.util.UUID ownerUUID = null;
             boolean found = false;
             for (ItemStack stack : getUpgrades()) {
                 if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                     channel = ChannelCardItem.getChannel(stack);
+                    ownerUUID = ChannelCardItem.getOwnerUUID(stack);
                     found = true;
                     break;
                 }
@@ -131,6 +132,8 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 eap$link = new WirelessSlaveLink(endpoint);
             }
 
+            // 设置频道卡的所有者UUID（如果有的话）
+            eap$link.setPlacerId(ownerUUID);
             eap$link.setFrequency(channel);
             eap$link.updateStatus();
             

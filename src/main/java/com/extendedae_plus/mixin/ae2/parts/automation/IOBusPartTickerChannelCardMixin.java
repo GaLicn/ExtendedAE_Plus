@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.ae2.parts.automation;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.parts.automation.IOBusPart;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,7 +17,7 @@ public abstract class IOBusPartTickerChannelCardMixin {
 
     @Inject(method = "tickingRequest", at = @At("TAIL"))
     private void eap$tickTail(IGridNode node, int ticksSinceLastCall, CallbackInfoReturnable<TickRateModulation> cir) {
-        if (this instanceof InterfaceWirelessLinkBridge bridge) {
+        if (this instanceof IInterfaceWirelessLinkBridge bridge) {
             bridge.eap$updateWirelessLink();
         }
     }

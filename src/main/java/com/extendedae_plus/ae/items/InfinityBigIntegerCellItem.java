@@ -17,8 +17,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchItem {
 
@@ -59,7 +61,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
             if (tag.contains(InfinityConstants.INFINITY_ITEM_TOTAL)) {
                 try {
                     byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_ITEM_TOTAL);
-                    java.math.BigInteger total = new java.math.BigInteger(bytes);
+                    BigInteger total = new BigInteger(bytes);
                     String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
                     tooltip.add(
                             Component.literal("Total: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
@@ -70,7 +72,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
             } else if (tag.contains(InfinityConstants.INFINITY_CELL_ITEM_COUNT)) {
                 try {
                     byte[] bytes = tag.getByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
-                    java.math.BigInteger total = new java.math.BigInteger(bytes);
+                    BigInteger total = new BigInteger(bytes);
                     String formatted = InfinityBigIntegerCellInventory.formatBigInteger(total);
                     tooltip.add(
                             Component.literal("Total: ").withStyle(ChatFormatting.GRAY).append(Component.literal(formatted).withStyle(ChatFormatting.AQUA))
@@ -85,7 +87,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
     /**
      * 创建一个带有指定 UUID 的 Infinity 磁盘 ItemStack
      */
-    public static ItemStack withUUID(java.util.UUID uuid) {
+    public static ItemStack withUUID(UUID uuid) {
         ItemStack stack = new ItemStack(Objects.requireNonNull(
                 ForgeRegistries.ITEMS.getValue(new ResourceLocation("extendedae_plus", "infinity_biginteger_cell")
         )));

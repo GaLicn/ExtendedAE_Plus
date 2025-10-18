@@ -1,17 +1,19 @@
 package com.extendedae_plus.mixin.advancedae.client.gui;
 
-import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
+import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.init.ModNetwork;
-import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
-import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
+import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
+import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
+import com.extendedae_plus.util.GuiUtil;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.pedroksl.advanced_ae.client.gui.AdvPatternProviderScreen;
@@ -22,7 +24,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+import java.util.List;
+
+import static com.extendedae_plus.util.GuiUtil.createToggle;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
  * 为高级ae样板供应器界面添加“高级阻挡模式”按钮。
@@ -31,116 +36,160 @@ import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
  */
 @Mixin(AdvPatternProviderScreen.class)
 public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatternProviderMenu> {
+    // 高级阻挡模式切换按钮
+    @Unique private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
+    // 智能翻倍切换按钮
+    @Unique private SettingToggleButton<YesNo> eap$SmartDoublingToggle;
+    // 智能翻倍上限输入框
+    @Unique private EditBox eap$PerProviderLimitInput;
 
-    @Unique
-    private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
-
-    @Unique
-    private boolean eap$AdvancedBlockingEnabled = false;
-
-    @Unique
-    private SettingToggleButton<YesNo> eap$SmartDoublingToggle;
-
-    @Unique
-    private boolean eap$SmartDoublingEnabled = false;
+    // 当前高级阻挡模式是否启用
+    @Unique private boolean eap$AdvancedBlockingEnabled = false;
+    // 当前智能翻倍是否启用
+    @Unique private boolean eap$SmartDoublingEnabled = false;
+    // 当前智能翻倍上限
+    @Unique private int eap$PerProviderScalingLimit = 0;
 
     public AdvPatternProviderScreenMixin(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void eap$initAdvancedBlocking(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
-        // 使用 @GuiSync 初始化
+    /** 同步服务端状态（初始化时调用） */
+    @Unique
+    private void eap$syncInitialState(AdvPatternProviderMenu menu) {
         try {
-            if (menu instanceof PatternProviderMenuAdvancedSync sync) {
+            // 同步高级阻挡和智能翻倍的服务端状态
+            if (menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
             }
-        } catch (Throwable t) {
-            LOGGER.error("Error initializing advanced sync", t);
-        }
-
-        // 使用 SettingToggleButton<YesNo> 的外观（原版图标），但自定义悬停描述为“智能阻挡”
-        this.eap$AdvancedBlockingToggle = new SettingToggleButton<>(
-                Settings.BLOCKING_MODE,
-                this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO,
-                (btn, backwards) -> {
-                    // 不做本地切换，点击仅发送自定义C2S，显示由@GuiSync回传
-                    ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket());
-                }
-        ) {
-            @Override
-            public java.util.List<Component> getTooltipMessage() {
-                boolean enabled = eap$AdvancedBlockingEnabled;
-                var title = Component.literal("智能阻挡");
-                var line = enabled
-                        ? Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
-                        : Component.literal("已禁用：这么好的功能为什么不打开呢");
-                return java.util.List.of(title, line);
-            }
-        };
-        // 初始化后立刻对齐当前@GuiSync状态，避免首帧显示不一致
-        this.eap$AdvancedBlockingToggle.set(this.eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
-
-        this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
-
-        // 智能翻倍按钮：与高级阻挡同款样式，点击仅发送C2S，状态由@GuiSync驱动
-        try {
-            if (menu instanceof PatternProviderMenuDoublingSync sync2) {
-                this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
+            if (menu instanceof IPatternProviderMenuDoublingSync sync) {
+                this.eap$SmartDoublingEnabled = sync.eap$getSmartDoublingSynced();
+                this.eap$PerProviderScalingLimit = sync.eap$getScalingLimit();
             }
         } catch (Throwable t) {
-            LOGGER.error("Error initializing smart doubling sync", t);
+            EAP$LOGGER.error("Error initializing sync", t);
         }
-
-        this.eap$SmartDoublingToggle = new SettingToggleButton<>(
-                Settings.BLOCKING_MODE,
-                this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO,
-                (btn, backwards) -> {
-                    ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket());
-                }
-        ) {
-            @Override
-            public java.util.List<Component> getTooltipMessage() {
-                boolean enabled = eap$SmartDoublingEnabled;
-                var title = Component.literal("智能翻倍");
-                var line = enabled
-                        ? Component.literal("已启用：根据请求量对处理样板进行智能缩放")
-                        : Component.literal("已禁用：按原始样板数量进行发配");
-                return java.util.List.of(title, line);
-            }
-        };
-
-        this.eap$SmartDoublingToggle.set(this.eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
-        this.addToLeftToolbar(this.eap$SmartDoublingToggle);
     }
 
-    // 每帧刷新：仅从菜单(@GuiSync)同步布尔值，保持按钮状态一致
+    /** 创建并添加按钮和输入框 */
+    @Unique
+    private void eap$createWidgets() {
+        // 高级阻挡
+        this.eap$AdvancedBlockingToggle = createToggle(
+                eap$AdvancedBlockingEnabled,
+                () -> ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket()),
+                () -> {
+                    var t = Component.literal("智能阻挡");
+                    var line = eap$AdvancedBlockingEnabled
+                            ? Component.literal("已启用：对于同一种配方将不再阻挡 (需要启用原版阻挡模式)")
+                            : Component.literal("已禁用：建议开启以获得更智能的阻挡行为");
+                    return List.of(t, line);
+                }
+        );
+        this.eap$AdvancedBlockingToggle.set(eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
+        this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
+
+        // 智能翻倍
+        this.eap$SmartDoublingToggle = createToggle(
+                eap$SmartDoublingEnabled,
+                () -> ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket()),
+                () -> {
+                    var t = Component.literal("智能翻倍");
+                    var line = eap$SmartDoublingEnabled
+                            ? Component.literal("已启用：根据请求量对处理样板进行智能缩放")
+                            : Component.literal("已禁用：按原始样板数量进行发配");
+                    return List.of(t, line);
+                }
+        );
+        this.eap$SmartDoublingToggle.set(eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
+        this.addToLeftToolbar(this.eap$SmartDoublingToggle);
+
+        // 缩放上限输入框（使用 GuiUtil 抽离）
+        this.eap$PerProviderLimitInput = GuiUtil.createPerProviderLimitInput(this.font, this.eap$PerProviderScalingLimit, limit -> {
+            this.eap$PerProviderScalingLimit = limit;
+            ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
+        });
+        this.addRenderableWidget(this.eap$PerProviderLimitInput);
+    }
+
+    /* ---------------------------- 注入点 ---------------------------- */
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void eap$onInit(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
+        // 初始化时同步服务端状态并创建控件
+        eap$syncInitialState(menu);
+        eap$createWidgets();
+    }
+
+    /** 每帧刷新：从服务端同步状态并更新 UI */
     @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
-    private void eap$updateAdvancedBlocking(CallbackInfo ci) {
-        if (this.eap$AdvancedBlockingToggle != null) {
-            boolean desired = this.eap$AdvancedBlockingEnabled;
-            if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
-                desired = sync.eap$getAdvancedBlockingSynced();
-            }
-            this.eap$AdvancedBlockingEnabled = desired;
-            this.eap$AdvancedBlockingToggle.set(desired ? YesNo.YES : YesNo.NO);
+    private void eap$updateBeforeRender(CallbackInfo ci) {
+        // 每帧刷新按钮和输入框状态
+        eap$updateToggles();
+        eap$updateLimitInput();
+    }
+
+    /* ---------------------------- 刷新逻辑 ---------------------------- */
+    /**
+     * 刷新切换按钮的状态（与服务端同步）
+     */
+    @Unique
+    private void eap$updateToggles() {
+        if (this.eap$AdvancedBlockingToggle != null && this.menu instanceof IPatternProviderMenuAdvancedSync sync) {
+            this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
+            this.eap$AdvancedBlockingToggle.set(eap$AdvancedBlockingEnabled ? YesNo.YES : YesNo.NO);
+        }
+        if (this.eap$SmartDoublingToggle != null && this.menu instanceof IPatternProviderMenuDoublingSync sync) {
+            this.eap$SmartDoublingEnabled = sync.eap$getSmartDoublingSynced();
+            this.eap$SmartDoublingToggle.set(eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
+        }
+    }
+
+    /**
+     * 刷新输入框的内容和可见性
+     */
+    @Unique
+    private void eap$updateLimitInput() {
+        if (this.eap$PerProviderLimitInput == null) return;
+
+        int remoteLimit = this.eap$PerProviderScalingLimit;
+        // 获取服务端最新的 scaling limit
+        if (this.menu instanceof IPatternProviderMenuDoublingSync sync) {
+            remoteLimit = sync.eap$getScalingLimit();
         }
 
-        if (this.eap$SmartDoublingToggle != null) {
-            boolean desired2 = this.eap$SmartDoublingEnabled;
-            if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
-                desired2 = sync2.eap$getSmartDoublingSynced();
-            }
-            this.eap$SmartDoublingEnabled = desired2;
-            this.eap$SmartDoublingToggle.set(desired2 ? YesNo.YES : YesNo.NO);
+        boolean focused = this.eap$PerProviderLimitInput.isFocused();
+        // 如果未聚焦且服务端有变化，则同步显示
+        if (!focused && remoteLimit != this.eap$PerProviderScalingLimit) {
+            this.eap$PerProviderScalingLimit = remoteLimit;
+            this.eap$PerProviderLimitInput.setValue(String.valueOf(remoteLimit));
         }
 
-        if ((Object) this instanceof GuiExPatternProvider) {
-            try {
-                ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
-            } catch (Throwable t) {
-                LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
+        if (this.eap$SmartDoublingEnabled) {
+            // 智能翻倍启用时，确保输入框可见
+            if (!this.renderables.contains(this.eap$PerProviderLimitInput)) {
+                this.addRenderableWidget(this.eap$PerProviderLimitInput);
             }
+            // 未聚焦且内容为空时，显示0
+            if (!focused && this.eap$PerProviderLimitInput.getValue().trim().isEmpty()) {
+                this.eap$PerProviderLimitInput.setValue("0");
+            }
+
+            // 定位输入框到智能翻倍按钮左侧
+            Button ref = eap$SmartDoublingToggle;
+            if (ref != null) {
+                int ex = ref.getX() - this.eap$PerProviderLimitInput.getWidth() - 5;
+                int ey = ref.getY() + 2;
+                this.eap$PerProviderLimitInput.setX(ex);
+                this.eap$PerProviderLimitInput.setY(ey);
+            }
+
+            // 设置 tooltip
+            String cur = this.eap$PerProviderLimitInput.getValue();
+            if (cur.isBlank()) cur = "0";
+            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.literal("单样物品发配数量上限: " + cur)));
+        } else {
+            // 智能翻倍未启用时，移除输入框
+            this.removeWidget(this.eap$PerProviderLimitInput);
         }
     }
 }

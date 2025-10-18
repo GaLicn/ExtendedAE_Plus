@@ -1,10 +1,13 @@
 package com.extendedae_plus.mixin.ae2.accessor;
 
+import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IManagedGridNode;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+
+import java.util.List;
 
 @Mixin(PatternProviderLogic.class)
 public interface PatternProviderLogicAccessor {
@@ -13,4 +16,7 @@ public interface PatternProviderLogicAccessor {
 
     @Accessor(value = "mainNode", remap = false)
     IManagedGridNode eap$mainNode();
+
+    @Accessor(value = "patterns" , remap = false)
+    List<IPatternDetails> eap$patterns();
 }

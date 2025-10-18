@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.ae2.autopattern;
 import appeng.api.stacks.KeyCounter;
 import appeng.crafting.CraftingTreeNode;
 import appeng.crafting.inv.CraftingSimulationState;
-import com.extendedae_plus.util.RequestedAmountHolder;
+import com.extendedae_plus.util.smartDoubling.RequestedAmountHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

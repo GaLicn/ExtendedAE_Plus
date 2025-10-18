@@ -8,11 +8,12 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.wireless.WirelessSlaveLink;
-import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -31,7 +32,7 @@ import java.util.List;
  * 根据appflux是否存在来决定是否实现IUpgradeableObject接口
  */
 @Mixin(value = PatternProviderLogic.class, priority = 500, remap = false)
-public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, InterfaceWirelessLinkBridge {
+public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, IInterfaceWirelessLinkBridge {
     
     @Unique
     private IUpgradeInventory eap$compatUpgrades = UpgradeInventories.empty();
@@ -75,7 +76,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 eap$compatInitializeChannelLink();
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级变更处理失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级变更处理失败", e);
         }
     }
     
@@ -90,7 +91,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 eap$compatInitializeChannelLink();
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("监听appflux升级变化失败", e);
+            Logger.EAP$LOGGER.error("监听appflux升级变化失败", e);
         }
     }
 
@@ -98,11 +99,11 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             at = @At("TAIL"))
     private void eap$compatInitUpgrades(IManagedGridNode mainNode, PatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
         try {
-            
+
             boolean upgradeSlots = UpgradeSlotCompat.shouldEnableUpgradeSlots();
             boolean channelCard = UpgradeSlotCompat.shouldEnableChannelCard();
             
-            
+
             if (upgradeSlots) {
                 // 只有在升级槽功能启用时才创建升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
@@ -115,7 +116,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             } else {
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级初始化失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级初始化失败", e);
         }
     }
 
@@ -126,7 +127,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 this.eap$compatUpgrades.writeToNBT(tag, "compat_upgrades");
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级保存失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级保存失败", e);
         }
     }
 
@@ -143,7 +144,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 }
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级加载失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级加载失败", e);
         }
     }
 
@@ -158,7 +159,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 }
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级掉落失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级掉落失败", e);
         }
     }
 
@@ -169,7 +170,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 this.eap$compatUpgrades.clear();
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性升级清理失败", e);
+            Logger.EAP$LOGGER.error("兼容性升级清理失败", e);
         }
     }
 
@@ -181,7 +182,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         } else {
             // 装了appflux时，这个方法不应该被调用，因为appflux的Mixin会覆盖它
             // 但是为了安全起见，返回空的升级槽
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("装了appflux时getUpgrades被调用，这不应该发生");
             return UpgradeInventories.empty();
         }
     }
@@ -197,7 +197,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 eap$compatLink.updateStatus();
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性无线链接更新失败", e);
+            Logger.EAP$LOGGER.error("兼容性无线链接更新失败", e);
         }
     }
 
@@ -243,10 +243,9 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     if (this instanceof IUpgradeableObject) {
                         IUpgradeableObject upgradeableThis = (IUpgradeableObject) this;
                         upgrades = upgradeableThis.getUpgrades();
-                        com.extendedae_plus.util.ExtendedAELogger.LOGGER.debug("从appflux获取到升级槽: {}", upgrades != null);
                     }
                 } catch (Exception e) {
-                    com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("获取appflux升级槽失败", e);
+                    Logger.EAP$LOGGER.error("获取appflux升级槽失败", e);
                 }
             }
             
@@ -254,6 +253,11 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 for (ItemStack stack : upgrades) {
                     if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                         channel = ChannelCardItem.getChannel(stack);
+                        java.util.UUID ownerUUID = ChannelCardItem.getOwnerUUID(stack);
+                        if (ownerUUID != null) {
+                            // 保存ownerUUID到局部变量，后面设置到link
+                            channel |= ((long) ownerUUID.hashCode() << 32);  // 临时存储
+                        }
                         found = true;
                         break;
                     }
@@ -275,6 +279,18 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 eap$compatLink = new WirelessSlaveLink(endpoint);
             }
 
+            // 从频道卡重新读取ownerUUID并设置
+            java.util.UUID cardOwner = null;
+            if (upgrades != null) {
+                for (ItemStack stack : upgrades) {
+                    if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                        cardOwner = ChannelCardItem.getOwnerUUID(stack);
+                        channel = ChannelCardItem.getChannel(stack);  // 重新读取正确的频率
+                        break;
+                    }
+                }
+            }
+            eap$compatLink.setPlacerId(cardOwner);
             eap$compatLink.setFrequency(channel);
             eap$compatLink.updateStatus();
 
@@ -290,7 +306,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 } catch (Throwable ignored) {}
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性频道链接初始化失败", e);
+            Logger.EAP$LOGGER.error("兼容性频道链接初始化失败", e);
         }
     }
 
@@ -314,7 +330,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 return eap$compatLink != null && eap$compatLink.isConnected();
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("检查兼容性无线连接状态失败", e);
+            Logger.EAP$LOGGER.error("检查兼容性无线连接状态失败", e);
             return false;
         }
     }
@@ -363,7 +379,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 }
             }
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性延迟初始化失败", e);
+            Logger.EAP$LOGGER.error("兼容性延迟初始化失败", e);
         }
     }
 
@@ -383,7 +399,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 });
             } catch (Throwable ignored) {}
         } catch (Exception e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("兼容性主节点状态变更处理失败", e);
+            Logger.EAP$LOGGER.error("兼容性主节点状态变更处理失败", e);
         }
     }
 }

@@ -66,6 +66,39 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 tooltip.add(Component.literal((usable ? "设备在线" : "设备离线")));
             }
         }
+    },
+    CHANNELS("wt_channels") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("usedChannels") && data.contains("maxChannels")) {
+                int usedChannels = data.getInt("usedChannels");
+                int maxChannels = data.getInt("maxChannels");
+                // 参考AE2的显示方式
+                if (maxChannels <= 0) {
+                    // 无限频道或未设置
+                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels", usedChannels));
+                } else {
+                    // 显示 "已使用/最大"
+                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels_of", usedChannels, maxChannels));
+                }
+            }
+        }
+    },
+    OWNER("wt_owner") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("ownerName")) {
+                String ownerName = data.getString("ownerName");
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", ownerName));
+            } else if (data.contains("placerId")) {
+                // 有placerId但没有名称，显示UUID
+                java.util.UUID placerId = data.getUUID("placerId");
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", placerId.toString().substring(0, 8) + "..."));
+            } else {
+                // 没有所有者信息（公共收发器）
+                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner.public"));
+            }
+        }
     };
 
     private final ResourceLocation uid;

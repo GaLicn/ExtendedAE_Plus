@@ -6,6 +6,7 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.ToolboxMenu;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +44,7 @@ public abstract class PatternProviderCompatMixin extends AEBaseMenu implements U
             }
         } catch (Exception e) {
             // 静默处理异常，确保不会因为升级功能导致崩溃
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.error("PatternProviderMenu兼容性升级初始化失败", e);
+            Logger.EAP$LOGGER.error("PatternProviderMenu兼容性升级初始化失败", e);
         }
     }
     

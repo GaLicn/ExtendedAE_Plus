@@ -8,8 +8,8 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
-import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
+import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
@@ -17,8 +17,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
@@ -33,10 +33,7 @@ public final class InputEvents {
         if (!ModList.get().isLoaded("jei")) {
             return;
         }
-        // 若 JEI 运行时尚未就绪，跳过
-        if (JeiRuntimeProxy.get() == null) {
-            return;
-        }
+        // 注意：不要在 try/catch 之外直接访问 JEI 运行时，避免类加载崩溃
         // 优先处理：Shift + 左键（拉取或下单）
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
             try {
@@ -103,9 +100,7 @@ public final class InputEvents {
         if (!ModList.get().isLoaded("jei")) {
             return;
         }
-        if (JeiRuntimeProxy.get() == null) {
-            return;
-        }
+        // 注意：不要在 try/catch 之外直接访问 JEI 运行时，避免类加载崩溃
         if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
 
         // 仅当鼠标确实悬停在 JEI 配料上时触发

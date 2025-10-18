@@ -1,6 +1,6 @@
 package com.extendedae_plus.compat;
 
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.Logger;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -27,7 +27,7 @@ public class CompatibilityTest {
         if (appfluxExists) {
         } else {
         }
-        
+
     }
     
     /**

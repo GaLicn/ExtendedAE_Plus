@@ -2,7 +2,6 @@ package com.extendedae_plus.compat;
 
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
-import appeng.api.upgrades.UpgradeInventories;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
@@ -11,7 +10,7 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.ToolboxMenu;
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.Logger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.fml.ModList;
@@ -41,12 +40,7 @@ public class UpgradeSlotCompat {
      */
     public static boolean shouldEnableUpgradeSlots() {
         boolean appfluxExists = isAppfluxPresent();
-        
-        if (appfluxExists) {
-            return false;
-        } else {
-            return true;
-        }
+        return !appfluxExists;
     }
     
     /**
@@ -89,7 +83,7 @@ public class UpgradeSlotCompat {
                     setupUpgradesMethod.setAccessible(true);
                     setupUpgradesMethod.invoke(menu, upgradeableHost.getUpgrades());
                 } catch (Exception e) {
-                    ExtendedAELogger.LOGGER.error("反射调用setupUpgrades失败", e);
+                    Logger.EAP$LOGGER.error("反射调用setupUpgrades失败", e);
                     return false;
                 }
                 
@@ -97,12 +91,10 @@ public class UpgradeSlotCompat {
                 if (menu instanceof IUpgradeableMenuCompat compatMenu) {
                     compatMenu.setCompatToolbox(toolbox);
                 }
-                
-                ExtendedAELogger.LOGGER.debug("成功为PatternProviderMenu初始化升级功能");
                 return true;
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("初始化PatternProviderMenu升级功能时出错", e);
+            Logger.EAP$LOGGER.error("初始化PatternProviderMenu升级功能时出错", e);
         }
         
         return false;
@@ -144,8 +136,6 @@ public class UpgradeSlotCompat {
                         ToolboxPanel toolboxPanel = new ToolboxPanel(style, toolbox.getName());
                         addMethod.invoke(widgets, "toolbox", toolboxPanel);
                     }
-                    
-                    ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板");
                     return true;
                 } catch (NoSuchMethodException e) {
                     // 尝试其他可能的方法签名
@@ -170,17 +160,15 @@ public class UpgradeSlotCompat {
                             ToolboxPanel toolboxPanel = new ToolboxPanel(style, toolbox.getName());
                             putMethod.invoke(widgets, "toolbox", toolboxPanel);
                         }
-                        
-                        ExtendedAELogger.LOGGER.debug("成功为PatternProviderScreen添加升级面板（使用put方法）");
                         return true;
                     } catch (Exception e2) {
-                        ExtendedAELogger.LOGGER.error("反射调用widgets方法失败", e2);
+                        Logger.EAP$LOGGER.error("反射调用widgets方法失败", e2);
                         return false;
                     }
                 }
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("为PatternProviderScreen添加升级面板时出错", e);
+            Logger.EAP$LOGGER.error("为PatternProviderScreen添加升级面板时出错", e);
         }
         
         return false;
@@ -199,7 +187,7 @@ public class UpgradeSlotCompat {
                 list.addAll(appeng.api.upgrades.Upgrades.getTooltipLinesForMachine(upgrades.getUpgradableItem()));
             }
         } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("获取兼容升级列表时出错", e);
+            Logger.EAP$LOGGER.error("获取兼容升级列表时出错", e);
         }
         
         return list;

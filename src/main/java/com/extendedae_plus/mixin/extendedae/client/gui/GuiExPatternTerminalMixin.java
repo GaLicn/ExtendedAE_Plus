@@ -11,7 +11,7 @@ import appeng.menu.AEBaseMenu;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
-import com.extendedae_plus.network.OpenProviderUiC2SPacket;
+import com.extendedae_plus.network.provider.OpenProviderUiC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
