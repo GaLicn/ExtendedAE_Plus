@@ -2,8 +2,8 @@ package com.extendedae_plus.mixin.ae2.autopattern.gtceu;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.api.SmartDoublingAwarePattern;
-import com.extendedae_plus.content.ScaledProcessingPattern;
+import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.google.common.collect.BiMap;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine;
 import org.spongepowered.asm.mixin.Final;
@@ -33,7 +33,7 @@ public class GTLCoreMEPatternBufferPartMachineMixin {
         if (patternSlotMap == null) return;
         for (Map.Entry<IPatternDetails, Integer> entry : patternSlotMap.entrySet()) {
             IPatternDetails key = entry.getKey();
-            if (key instanceof AEProcessingPattern proc && proc instanceof SmartDoublingAwarePattern aware) {
+            if (key instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
                 aware.eap$setAllowScaling(true);
             }
         }

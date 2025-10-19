@@ -13,6 +13,7 @@ import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.network.provider.SetProviderPageS2CPacket;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.glodblock.github.extendedae.util.FCClientUtil;
 import com.glodblock.github.glodium.util.GlodUtil;
