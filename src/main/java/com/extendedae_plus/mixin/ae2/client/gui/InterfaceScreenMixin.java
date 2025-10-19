@@ -9,7 +9,6 @@ import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
@@ -220,8 +219,8 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
             int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
             int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-            int bx = leftPos + imageWidth + 1;
-            int by = topPos + 70;
+            int bx = leftPos - eap$divideBy2Button.getWidth() -1;
+            int by = topPos + 30;
             int spacing = 22;
             if (eap$divideBy2Button != null) { eap$divideBy2Button.setX(bx); eap$divideBy2Button.setY(by); }
             if (eap$x2Button != null) { eap$x2Button.setX(bx); eap$x2Button.setY(by + spacing); }
