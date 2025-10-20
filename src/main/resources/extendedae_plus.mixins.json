@@ -79,7 +79,9 @@
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
-    "extendedae.container.ContainerWirelessExPatternTerminalMixin"
+    "extendedae.container.ContainerWirelessExPatternTerminalMixin",
+    "guideme.ItemLinkCompilerMixin",
+    "guideme.MdxAttrsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
