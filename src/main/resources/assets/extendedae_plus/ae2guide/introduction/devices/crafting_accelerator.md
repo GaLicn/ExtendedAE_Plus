@@ -2,6 +2,7 @@
 navigation:
   parent: introduction/index.md
   title: 并行处理单元
+  position: 4
   icon: extendedae_plus:1024x_crafting_accelerator
 categories:
   - extendedae_plus devices

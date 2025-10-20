@@ -2,6 +2,7 @@
 navigation:
   parent: introduction/index.md
   title: 样板供应器状态控制器
+  position: 3
   icon: extendedae_plus:network_pattern_controller
 categories:
   - extendedae_plus devices
