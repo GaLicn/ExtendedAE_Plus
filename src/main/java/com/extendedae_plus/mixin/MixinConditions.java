@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin;
 
+import com.extendedae_plus.util.ModCheckUtils;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
@@ -24,70 +25,33 @@ public class MixinConditions implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        // 对于升级相关的Mixin，检查appflux是否存在
-        if (mixinClassName.contains("PatternProviderMenuUpgradesMixin") ||
-            mixinClassName.contains("PatternProviderLogicUpgradesMixin") ||
-            mixinClassName.contains("PatternProviderLogicHostUpgradesMixin")) {
-            
-            try {
-                // 检查ModList是否已初始化
-                if (net.minecraftforge.fml.ModList.get() == null) {
-                    System.out.println("[ExtendedAE_Plus] ModList未初始化，默认应用升级Mixin: " + mixinClassName);
-                    return true; // 修改策略：未初始化时默认应用，运行时再检查
-                }
-                
-                boolean appfluxExists = net.minecraftforge.fml.ModList.get().isLoaded("appflux");
-                boolean shouldApply = !appfluxExists;
-                
-                System.out.println("[ExtendedAE_Plus] 升级Mixin检查: " + mixinClassName + 
-                                 ", appflux存在: " + appfluxExists + 
-                                 ", 应用Mixin: " + shouldApply);
-                
+        try {
+            // === MAE2 兼容 ===
+            if (mixinClassName.contains("CraftingCPUClusterMixin")) {
+                boolean shouldApply = !ModCheckUtils.isLoaded(ModCheckUtils.MODID_MAE2);
+                log(mixinClassName, "MAE2", shouldApply);
                 return shouldApply;
-            } catch (Exception e) {
-                System.out.println("[ExtendedAE_Plus] ModList检查失败，默认应用升级Mixin: " + mixinClassName);
-                return true; // 修改策略：出错时默认应用，运行时再检查
             }
-        }
-        
-        // 对于appflux相关的Mixin，总是加载但在运行时检查条件
-        if (mixinClassName.contains("AppfluxPatternProviderLogicMixin")) {
-            System.out.println("[ExtendedAE_Plus] 总是加载appflux Mixin，运行时检查条件: " + mixinClassName);
-            return true; // 总是加载，在Mixin内部进行运行时检查
-        }
-        
-        // 对于InterfaceLogicUpgradesMixin，总是加载但在运行时检查条件
-        if (mixinClassName.contains("InterfaceLogicUpgradesMixin")) {
-            System.out.println("[ExtendedAE_Plus] 总是加载Interface升级Mixin，运行时检查条件: " + mixinClassName);
-            return true; // 总是加载，在Mixin内部进行运行时检查
-        }
-        
-        // 对于CraftingCPUClusterMixin，检查MAE2是否存在
-        if (mixinClassName.contains("CraftingCPUClusterMixin")) {
-            try {
-                // 检查ModList是否已初始化
-                if (net.minecraftforge.fml.ModList.get() == null) {
-                    System.out.println("[ExtendedAE_Plus] ModList未初始化，默认应用CraftingCPU Mixin: " + mixinClassName);
-                    return true; // 未初始化时默认应用
-                }
-                
-                boolean mae2Exists = net.minecraftforge.fml.ModList.get().isLoaded("mae2");
-                boolean shouldApply = !mae2Exists;
-                
-                System.out.println("[ExtendedAE_Plus] CraftingCPU Mixin检查: " + mixinClassName + 
-                                 ", MAE2存在: " + mae2Exists + 
-                                 ", 应用Mixin: " + shouldApply);
-                
+
+            // === AAE 兼容 ===
+            if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae")) {
+                boolean shouldApply = ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
+                log(mixinClassName, "aae", shouldApply);
                 return shouldApply;
-            } catch (Exception e) {
-                System.out.println("[ExtendedAE_Plus] ModList检查失败，默认跳过CraftingCPU Mixin: " + mixinClassName);
-                return false; // 出错时默认跳过，避免冲突
             }
+
+            // === GuideME 版本兼容 ===
+            if (mixinClassName.startsWith("com.extendedae_plus.mixin.guideme.")) {
+                boolean shouldApply = ModCheckUtils.isLoadedAndLowerThan(ModCheckUtils.MODID_GUIDEME, "20.1.14");
+                logVersion(mixinClassName, "GuideME", ModCheckUtils.getVersion(ModCheckUtils.MODID_GUIDEME), "20.1.14", shouldApply);
+                return shouldApply;
+            }
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("[ExtendedAE_Plus] 检查 Mixin 条件时出错: " + e.getMessage());
+            return true; // 出错默认加载，避免意外禁用
         }
-        
-        // 其他Mixin正常应用
-        System.out.println("[ExtendedAE_Plus] 加载Mixin: " + mixinClassName);
-        return true;
     }
 
     @Override
@@ -108,5 +72,16 @@ public class MixinConditions implements IMixinConfigPlugin {
     @Override
     public void postApply(String targetClassName, org.objectweb.asm.tree.ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         // 应用后调用
+    }
+
+    // === 日志方法 ===
+    private void log(String mixin, String mod, boolean apply) {
+        System.out.printf("[ExtendedAE_Plus] 模组 %s 存在: %s, 应用 Mixin: %s, Mixin类：%s%n",
+                mod, ModCheckUtils.isLoaded(mod), apply, mixin);
+    }
+
+    private void logVersion(String mixin, String mod, String detected, String target, boolean apply) {
+        System.out.printf("[ExtendedAE_Plus] 模组 %s 版本检测: 当前 %s, 目标 < %s, 应用 Mixin: %s%n",
+                mod, detected, target, apply);
     }
 }
