@@ -67,10 +67,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Unique
     private boolean eap$debugLoggedOnce = false;
-    @Shadow(remap = false) private AETextField searchOutField;
-    @Shadow(remap = false) private AETextField searchInField;
-    @Shadow(remap = false) private Set<ItemStack> matchedStack;
-    @Shadow(remap = false) private Set<PatternContainerRecord> matchedProvider;
+    @Shadow(remap = false)
+    private AETextField searchOutField;
+    @Shadow(remap = false)
+    private AETextField searchInField;
+    @Shadow(remap = false)
+    private Set<ItemStack> matchedStack;
+    @Shadow(remap = false)
+    private Set<PatternContainerRecord> matchedProvider;
 
     public GuiExPatternTerminalMixin(AEBaseMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -137,13 +141,15 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     private void eap$quickUploadPattern(int playerSlotIndex) {
         if (this.minecraft.player != null) {
             // 获取要上传的物品
-            ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
+            ItemStack itemToUpload = this.minecraft.player.getInventory()
+                    .getItem(playerSlotIndex);
 
             if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
                 // 通过反射调用 ExtendedAE 的网络发送（软依赖）
                 try {
                     Class<?> EPPNetworkHandlerClass = Class.forName("com.glodblock.github.extendedae.network.EPPNetworkHandler");
-                    Object handlerInstance = EPPNetworkHandlerClass.getField("INSTANCE").get(null);
+                    Object handlerInstance = EPPNetworkHandlerClass.getField("INSTANCE")
+                            .get(null);
 
                     Class<?> packetClass = Class.forName("com.glodblock.github.glodium.network.packet.CGenericPacket");
                     Constructor<?> constructor = packetClass.getConstructor(String.class, Object[].class);
@@ -193,17 +199,23 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             Object byGroup = byGroupField.get(this); // HashMultimap<PatternContainerGroup, PatternContainerRecord>
 
             Object headerRow = rows.get(rowIndex);
-            var groupField = headerRow.getClass().getDeclaredField("group");
+            var groupField = headerRow.getClass()
+                    .getDeclaredField("group");
             groupField.setAccessible(true);
             Object group = groupField.get(headerRow);
 
             // 调用 byGroup.get(group)，再取第一个元素
-            Collection<?> containers = (Collection<?>) byGroup.getClass().getMethod("get", Object.class).invoke(byGroup, group);
+            Collection<?> containers = (Collection<?>) byGroup.getClass()
+                    .getMethod("get", Object.class)
+                    .invoke(byGroup, group);
             if (containers == null || containers.isEmpty()) {
                 return;
             }
-            Object firstRecord = containers.iterator().next(); // PatternContainerRecord
-            long serverId = (long) firstRecord.getClass().getMethod("getServerId").invoke(firstRecord);
+            Object firstRecord = containers.iterator()
+                    .next(); // PatternContainerRecord
+            long serverId = (long) firstRecord.getClass()
+                    .getMethod("getServerId")
+                    .invoke(firstRecord);
 
             // 通过 infoMap 获取位置信息
             var infoMapField = cls.getDeclaredField("infoMap");
@@ -220,13 +232,28 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             }
 
             // PatternProviderInfo record: pos(), face(), playerWorld()
-            Object pos = info.getClass().getMethod("pos").invoke(info);
-            Object face = info.getClass().getMethod("face").invoke(info); // 可能为 null（方块型供应器）
-            Object playerWorld = info.getClass().getMethod("playerWorld").invoke(info);
+            Object pos = info.getClass()
+                    .getMethod("pos")
+                    .invoke(info);
+            Object face = info.getClass()
+                    .getMethod("face")
+                    .invoke(info); // 可能为 null（方块型供应器）
+            Object playerWorld;
+            try {
+                playerWorld = info.getClass()
+                        .getMethod("playerWorld")
+                        .invoke(info);
+            } catch (Throwable t) {
+                playerWorld = info.getClass()
+                        .getMethod("world")
+                        .invoke(info);
+            }
+
 
             // 避免对 MC 类进行反射，使用强制类型转换后直接调用方法（由 Forge 运行时重映射保证）
             long posLong = ((BlockPos) pos).asLong();
-            String dimStr = ((ResourceKey<Level>) playerWorld).location().toString();
+            String dimStr = ((ResourceKey<Level>) playerWorld).location()
+                    .toString();
             int faceOrd = -1;
             if (face != null) {
                 faceOrd = ((Direction) face).ordinal();
@@ -271,11 +298,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 Method refreshMethod = null;
                 try {
                     // 先尝试在当前类中查找
-                    refreshMethod = this.getClass().getDeclaredMethod("refreshList");
+                    refreshMethod = this.getClass()
+                            .getDeclaredMethod("refreshList");
                 } catch (NoSuchMethodException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
-                        refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
+                        refreshMethod = this.getClass()
+                                .getSuperclass()
+                                .getDeclaredMethod("refreshList");
                     } catch (NoSuchMethodException e2) {
                         throw e2;
                     }
@@ -309,17 +339,21 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     private void eap$onResize(Minecraft mc, int width, int height, CallbackInfo ci) {
         try {
             // 移除并清理按钮，避免旧位置残留
-            this.eap$openUIButtons.values().forEach(this::removeWidget);
+            this.eap$openUIButtons.values()
+                    .forEach(this::removeWidget);
             this.eap$openUIButtons.clear();
 
             // 重置一次滚动条，避免可见行/偏移在缩放后与 UI 尺寸不一致
             try {
                 Method resetScrollbarMethod = null;
                 try {
-                    resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
+                    resetScrollbarMethod = this.getClass()
+                            .getDeclaredMethod("resetScrollbar");
                 } catch (NoSuchMethodException e1) {
                     try {
-                        resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
+                        resetScrollbarMethod = this.getClass()
+                                .getSuperclass()
+                                .getDeclaredMethod("resetScrollbar");
                     } catch (NoSuchMethodException e2) {
                         resetScrollbarMethod = null;
                     }
@@ -335,10 +369,13 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             try {
                 Method refreshMethod = null;
                 try {
-                    refreshMethod = this.getClass().getDeclaredMethod("refreshList");
+                    refreshMethod = this.getClass()
+                            .getDeclaredMethod("refreshList");
                 } catch (NoSuchMethodException e1) {
                     try {
-                        refreshMethod = this.getClass().getSuperclass().getDeclaredMethod("refreshList");
+                        refreshMethod = this.getClass()
+                                .getSuperclass()
+                                .getDeclaredMethod("refreshList");
                     } catch (NoSuchMethodException e2) {
                         refreshMethod = null;
                     }
@@ -359,7 +396,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     @Inject(method = "init", at = @At("TAIL"), remap = false, require = 0)
     private void eap$onInit(CallbackInfo ci) {
         // 清理旧的打开UI按钮
-        this.eap$openUIButtons.values().forEach(this::removeWidget);
+        this.eap$openUIButtons.values()
+                .forEach(this::removeWidget);
         this.eap$openUIButtons.clear();
     }
 
@@ -372,7 +410,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             )));
         }
         // 清理旧的打开UI按钮
-        this.eap$openUIButtons.values().forEach(this::removeWidget);
+        this.eap$openUIButtons.values()
+                .forEach(this::removeWidget);
         this.eap$openUIButtons.clear();
     }
 
@@ -386,11 +425,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 java.lang.reflect.Field rowsField = null;
                 try {
                     // 先尝试在当前类中查找
-                    rowsField = this.getClass().getDeclaredField("rows");
+                    rowsField = this.getClass()
+                            .getDeclaredField("rows");
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
-                        rowsField = this.getClass().getSuperclass().getDeclaredField("rows");
+                        rowsField = this.getClass()
+                                .getSuperclass()
+                                .getDeclaredField("rows");
                     } catch (NoSuchFieldException e2) {
                         throw e2;
                     }
@@ -402,11 +444,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 java.lang.reflect.Field highlightBtnsField = null;
                 try {
                     // 先尝试在当前类中查找
-                    highlightBtnsField = this.getClass().getDeclaredField("highlightBtns");
+                    highlightBtnsField = this.getClass()
+                            .getDeclaredField("highlightBtns");
                 } catch (NoSuchFieldException e1) {
                     // 如果当前类没有，尝试在父类中查找
                     try {
-                        highlightBtnsField = this.getClass().getSuperclass().getDeclaredField("highlightBtns");
+                        highlightBtnsField = this.getClass()
+                                .getSuperclass()
+                                .getDeclaredField("highlightBtns");
                     } catch (NoSuchFieldException e2) {
                         throw e2;
                     }
@@ -422,7 +467,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 // 移除所有SlotsRow，只保留GroupHeaderRow，同时重新映射高亮按钮索引
                 for (int i = 0; i < rows.size(); i++) {
                     Object row = rows.get(i);
-                    String className = row.getClass().getSimpleName();
+                    String className = row.getClass()
+                            .getSimpleName();
 
                     if (className.equals("GroupHeaderRow")) {
                         // 保留GroupHeaderRow，并重新映射对应的高亮按钮
@@ -459,11 +505,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     Method resetScrollbarMethod = null;
                     try {
                         // 先尝试在当前类中查找
-                        resetScrollbarMethod = this.getClass().getDeclaredMethod("resetScrollbar");
+                        resetScrollbarMethod = this.getClass()
+                                .getDeclaredMethod("resetScrollbar");
                     } catch (NoSuchMethodException e1) {
                         // 如果当前类没有，尝试在父类中查找
                         try {
-                            resetScrollbarMethod = this.getClass().getSuperclass().getDeclaredMethod("resetScrollbar");
+                            resetScrollbarMethod = this.getClass()
+                                    .getSuperclass()
+                                    .getDeclaredMethod("resetScrollbar");
                         } catch (NoSuchMethodException e2) {
                             throw e2;
                         }
@@ -485,7 +534,8 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             // 使用 Accessor 获取必要的字段，避免反射失败
             GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) this;
             java.util.ArrayList<?> rows = acc.getRows();
-            int currentScroll = acc.getScrollbar().getCurrentScroll();
+            int currentScroll = acc.getScrollbar()
+                    .getCurrentScroll();
 
             // 直接引用目标类以获取其静态常量
             Class<?> cls = GuiExPatternTerminal.class;
@@ -511,7 +561,9 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     continue;
                 }
                 Object row = rows.get(rowIndex);
-                if (!row.getClass().getSimpleName().equals("GroupHeaderRow")) {
+                if (!row.getClass()
+                        .getSimpleName()
+                        .equals("GroupHeaderRow")) {
                     continue;
                 }
 
@@ -522,8 +574,10 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 Button btn = eap$openUIButtons.get(rowIndex);
                 if (btn == null) {
                     btn = Button.builder(Component.literal("UI"), (b) -> {
-                        eap$tryOpenProviderUI(rowIndex);
-                    }).size(14, 12).build();
+                                eap$tryOpenProviderUI(rowIndex);
+                            })
+                            .size(14, 12)
+                            .build();
                     btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
                     eap$openUIButtons.put(rowIndex, btn);
                     this.addRenderableWidget(btn);
@@ -538,8 +592,10 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
         // 原有的搜索高亮逻辑
         // 仅当任一搜索框非空时绘制叠加层（与原版行为保持一致）
-        boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue().isEmpty())
-                || (this.searchInField != null && !this.searchInField.getValue().isEmpty());
+        boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue()
+                .isEmpty())
+                || (this.searchInField != null && !this.searchInField.getValue()
+                .isEmpty());
         if (!searchActive) {
             return;
         }
