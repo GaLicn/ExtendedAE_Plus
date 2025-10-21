@@ -6,12 +6,43 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
-import com.extendedae_plus.ae.api.crafting.ScaledProcessingPatternAdv;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
-import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.LoadingModList;
+
+import java.lang.reflect.Constructor;
 
 public final class PatternScaler {
+    // ---------- 静态缓存反射 ----------
+    private static final boolean advAvailable;
+    private static final Constructor<?> advCtor;
+    private static final Class<?> advIfaceClass;
+
+    static {
+        boolean available = false;
+        Constructor<?> ctor = null;
+        Class<?> iface = null;
+
+        try {
+            // 尝试加载扩展类
+            Class<?> clazz = Class.forName("com.extendedae_plus.ae.api.crafting.ScaledProcessingPatternAdv");
+            ctor = clazz.getConstructor(AEProcessingPattern.class, AEItemKey.class, long.class);
+
+            // 加载接口
+            iface = Class.forName("net.pedroksl.advanced_ae.common.patterns.AdvPatternDetails");
+
+            // 检查是否安装 Advanced AE
+            if (LoadingModList.get() != null && LoadingModList.get().getModFileById("advanced_ae") != null) {
+                available = true;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        advAvailable = available;
+        advCtor = ctor;
+        advIfaceClass = iface;
+    }
+
     private PatternScaler() {
     }
 
@@ -83,19 +114,17 @@ public final class PatternScaler {
             }
         } catch (Throwable ignore) {}
 
-        if (ModList.get().isLoaded("advanced_ae")) {
-            // 如果加载了 Advanced AE 且 base 实现了 AdvPatternDetails，返回兼容版
+        // ---------- Advanced AE 扩展 ----------
+        if (advAvailable && advIfaceClass != null && advCtor != null) {
             try {
-                // 软依赖，不直接 import advIface
-                Class<?> advIface = Class.forName("net.pedroksl.advanced_ae.common.patterns.AdvPatternDetails");
-                if (advIface.isInstance(base)) {
-                    // 直接 new ScaledProcessingPatternAdv，父类字段会正常初始化
-                    return new ScaledProcessingPatternAdv(base, base.getDefinition(), multiplier);
+                if (advIfaceClass.isInstance(base)) {
+                    return (ScaledProcessingPattern) advCtor.newInstance(base, base.getDefinition(), multiplier);
                 }
             } catch (Throwable ignore) {
-                // 如果 Advanced AE 不存在或反射失败，就忽略，继续走普通逻辑
+                // 出错就退回普通逻辑
             }
         }
+
         // 仅使用 multiplier 构建轻量化 ScaledProcessingPattern（具体视图按需计算）
         return new ScaledProcessingPattern(base, base.getDefinition(), multiplier);
     }
