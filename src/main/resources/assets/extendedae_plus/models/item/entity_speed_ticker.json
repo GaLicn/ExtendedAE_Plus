@@ -182,8 +182,9 @@
 		}
 	],
 	"display": {
-		"thirdperson_righthand": {
-			"scale": [2, 2, 2]
+		"gui": {
+			"rotation": [20, -130, 0],
+			"scale": [0.95, 0.95, 0.95]
 		}
 	}
 }
