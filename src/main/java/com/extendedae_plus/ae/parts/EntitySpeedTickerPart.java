@@ -26,9 +26,9 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.util.Logger;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
-import com.extendedae_plus.util.Logger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -194,8 +194,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     @Override
     public void getBoxes(IPartCollisionHelper bch) {
-        bch.addBox(2, 2, 14, 14, 14, 16);
-        bch.addBox(5, 5, 12, 11, 11, 14);
+        bch.addBox(3, 3, 14, 13, 13, 16);
+        bch.addBox(5, 5, 11, 11, 11, 14);
     }
 
     /**
