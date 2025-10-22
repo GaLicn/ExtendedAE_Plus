@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
@@ -69,21 +68,10 @@ public abstract class CraftingTreeProcessMixin {
                 perProvider = requested;
                 if (perProvider <= 0) perProvider = 1L;
             } else {
-                CraftingService craftingService = (CraftingService) cc;
-                Iterable<ICraftingProvider> providers = craftingService.getProviders(original);
-
-                // 计算 provider 数量；尝试用反射读取内部 providers 列表以避免消费迭代器
-                int size;
-                try {
-                    var cls = providers.getClass();
-                    var f = cls.getDeclaredField("providers"); // private ArrayList<ICraftingProvider>
-                    f.setAccessible(true);
-                    List<?> list = (List<?>) f.get(providers);
-                    size = list == null ? 0 : list.size();
-                } catch (Exception ex) {
-                    // 反射失败回退为遍历计数（会消费迭代器）
-                    size = (int) StreamSupport.stream(providers.spliterator(), false).count();
-                }
+                // 计算 provider 数量
+                Iterable<ICraftingProvider> providerIterable = ((CraftingService) cc).getProviders(original);
+                List<ICraftingProvider> providerList = ((CraftingProviderListAccessor) providerIterable).getProviders();
+                int size = providerList == null ? 0 : providerList.size();
 
                 // 将 requested 在 providers 间均分，向上取整保证每个 provider 分配整数且总量不少于 requested
                 if (size > 0) {
@@ -97,7 +85,6 @@ public abstract class CraftingTreeProcessMixin {
             return scaled != null ? scaled : original;
         } catch (Exception e) {
             EAP$LOGGER.warn("构建倍增样板出错", e);
-            e.printStackTrace();
             return original;
         }
     }

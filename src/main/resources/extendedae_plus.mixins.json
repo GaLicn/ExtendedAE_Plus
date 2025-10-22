@@ -48,6 +48,7 @@
     "ae2.accessor.PatternEncodingTermMenuAccessor",
     "ae2.accessor.PatternProviderLogicAccessor",
     "ae2.accessor.PatternProviderMenuAccessor",
+    "ae2.autopattern.CraftingProviderListAccessor",
     "ae2.autopattern.CraftingServiceGetProvidersMixin",
     "ae2.autopattern.CraftingTreeNodeAccessor",
     "ae2.autopattern.CraftingTreeNodeMixin",

@@ -12,7 +12,7 @@ import static com.glodblock.github.extendedae.common.EPPItemAndBlock.*;
 /**
  * 
  */
-public class UpgradeCards {
+public final class UpgradeCards {
     public UpgradeCards(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             // 现有：把 Entity Ticker 的部件注册为处理 SPEED/ENERGY 卡的宿主
