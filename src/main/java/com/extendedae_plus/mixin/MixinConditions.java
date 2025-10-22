@@ -29,21 +29,21 @@ public class MixinConditions implements IMixinConfigPlugin {
             // === MAE2 兼容 ===
             if (mixinClassName.contains("CraftingCPUClusterMixin")) {
                 boolean shouldApply = !ModCheckUtils.isLoaded(ModCheckUtils.MODID_MAE2);
-                log(mixinClassName, "MAE2", shouldApply);
+                log(mixinClassName, ModCheckUtils.MODID_MAE2, shouldApply);
                 return shouldApply;
             }
 
             // === AAE 兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae")) {
                 boolean shouldApply = ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
-                log(mixinClassName, "aae", shouldApply);
+                log(mixinClassName, ModCheckUtils.MODID_AAE, shouldApply);
                 return shouldApply;
             }
 
             // === GuideME 版本兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.guideme.")) {
                 boolean shouldApply = ModCheckUtils.isLoadedAndLowerThan(ModCheckUtils.MODID_GUIDEME, "20.1.14");
-                logVersion(mixinClassName, "GuideME", ModCheckUtils.getVersion(ModCheckUtils.MODID_GUIDEME), "20.1.14", shouldApply);
+                logVersion(mixinClassName, ModCheckUtils.MODID_GUIDEME, ModCheckUtils.getVersion(ModCheckUtils.MODID_GUIDEME), "20.1.14", shouldApply);
                 return shouldApply;
             }
 

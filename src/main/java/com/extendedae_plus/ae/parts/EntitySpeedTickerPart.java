@@ -27,6 +27,7 @@ import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.Logger;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import net.minecraft.core.BlockPos;
@@ -41,11 +42,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 
 /**
@@ -53,8 +55,7 @@ import java.lang.reflect.Method;
  * 灵感来源于 <a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>。
  */
 public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject {
-    public static final ResourceLocation MODEL_BASE = new ResourceLocation(
-            ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
+    public static final ResourceLocation MODEL_BASE = new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
 
     @PartModels
     public static final PartModel MODELS_OFF = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_off"));
@@ -63,27 +64,20 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @PartModels
     public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
 
-    private static volatile boolean[] cachedAttempts;
-
-    private static volatile Method cachedFEExtractMethod;
+    private static volatile MethodHandle cachedFEExtractHandle;
     private static volatile boolean FE_UNAVAILABLE;
 
     // 静态块：初始化缓存
     static {
-        cachedAttempts = ModConfig.INSTANCE.prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, true};
-        if (ModList.get().isLoaded("appflux")) {
+         if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX)) {
             try {
                 Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
-                cachedFEExtractMethod = helperClass.getMethod(
-                        "extractFE",
-                        IEnergyService.class,
-                        MEStorage.class,
-                        long.class,
-                        IActionSource.class
-                );
+                Method method = helperClass.getMethod("extractFE", IEnergyService.class, MEStorage.class, long.class, IActionSource.class);
+                cachedFEExtractHandle = MethodHandles.lookup().unreflect(method);
                 FE_UNAVAILABLE = false;
             } catch (Exception e) {
                 FE_UNAVAILABLE = true;
+                cachedFEExtractHandle = null;
             }
         }
     }
@@ -114,15 +108,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         );
     }
 
-    /**
-     * 更新缓存的 attempts 数组，由 ModConfig 调用。
-     */
-    public static void updateCachedAttempts(boolean prioritizeDiskEnergy) {
-        synchronized (EntitySpeedTickerPart.class) {
-            cachedAttempts = prioritizeDiskEnergy ? new boolean[]{true, false, true} : new boolean[]{false, true, true};
-        }
-    }
-
     public boolean getAccelerateEnabled() {
         return this.getConfigManager().getSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE) == YesNo.YES;
     }
@@ -139,7 +124,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         }
     }
 
-    public boolean isNetworkEnergySufficient() {
+    public boolean getNetworkEnergySufficient() {
         return this.networkEnergySufficient;
     }
 
@@ -148,7 +133,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      *
      * @param sufficient 是否能量充足
      */
-    private void updateNetworkEnergySufficient(boolean sufficient) {
+    private void setNetworkEnergySufficient(boolean sufficient) {
         this.networkEnergySufficient = sufficient;
         if (menu != null) {
             menu.setNetworkEnergySufficient(sufficient);
@@ -248,8 +233,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @param blockEntity 目标方块实体
      * @param <T>         方块实体类型
      */
-    private <T extends BlockEntity> void ticker(@NotNull T blockEntity) {
-        if (!isValidForTicking()) {
+    private <T extends BlockEntity> void ticker(@Nullable T blockEntity) {
+        if (blockEntity == null || !isValidForTicking()) {
             return;
         }
 
@@ -326,12 +311,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
-     *
-     * @param requiredPower 所需能量（AE 单位）
-     * @return 是否成功提取足够能量
-     */
-    /**
-     * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
      * @param requiredPower 所需能量（AE 单位）
      * @return 是否成功提取足够能量
      */
@@ -352,10 +331,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (simulated >= requiredPower) {
             double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
             boolean sufficient = extracted >= requiredPower;
-            updateNetworkEnergySufficient(sufficient);
+            setNetworkEnergySufficient(sufficient);
             return sufficient;
         }
-        updateNetworkEnergySufficient(false);
+        setNetworkEnergySufficient(false);
 
         // 如果没成功，且不是优先磁盘能量，再尝试 FE
         if (!preferDiskEnergy) {
@@ -366,22 +345,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
-        if (FE_UNAVAILABLE || cachedFEExtractMethod == null) {
-            updateNetworkEnergySufficient(false);
+        if (FE_UNAVAILABLE || cachedFEExtractHandle == null) {
+            setNetworkEnergySufficient(false);
             return false;
         }
         try {
             long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
-            long feExtracted = (long) cachedFEExtractMethod.invoke(null, energyService, storage, feRequired, source);
+            long feExtracted = (long) cachedFEExtractHandle.invokeExact(null, energyService, storage, feRequired, source);
             if (feExtracted >= feRequired) {
-                updateNetworkEnergySufficient(true);
+                setNetworkEnergySufficient(true);
                 return true;
             }
-        } catch (Exception e) {
+        }catch (Throwable e) {
             // 如果反射调用失败，标记为不可用，避免下次继续尝试
             FE_UNAVAILABLE = true;
         }
-        updateNetworkEnergySufficient(false);
+        setNetworkEnergySufficient(false);
         return false;
     }
 

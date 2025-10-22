@@ -148,7 +148,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      */
     private void updateNetworkEnergyStatus() {
         if (!isClientSide() && getHost() != null) {
-            this.networkEnergySufficient = getHost().isNetworkEnergySufficient();
+            this.networkEnergySufficient = getHost().getNetworkEnergySufficient();
         }
     }
 
