@@ -39,19 +39,21 @@ public class ProviderSelectScreen extends Screen {
     // 中文名输入框（用于添加映射）
     private EditBox cnInput;
     private String query = "";
+    // 翻页按钮
+    private Button prevButton;
+    private Button nextButton;
 
+    // 页面
     private int page = 0;
     private static final int PAGE_SIZE = 6;
 
     // 按钮池
     private final List<Button> entryButtons = new ArrayList<>();
     private final int[] buttonIndexMap = new int[PAGE_SIZE]; // 映射到 fIds 的索引
+
     // 缓存 Component JSON 解析
     private static final Map<String, String> componentCache = new HashMap<>();
-
-    private Button prevButton;
-    private Button nextButton;
-
+    private String lastLanguage = ""; // 当前语言版本
 
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<String> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
@@ -130,38 +132,48 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(nextButton);
 
         // 映射按钮和输入框
+        // 统一按钮宽度
+        int btnWidth2 = 80;
+        int inputWidth = 120;
+        int btnGap = 5;
+
+        // 总宽度 = 重载按钮 + 输入框 + 添加 + 删除 + 关闭按钮 + 间距
+        int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
+        int startX = centerX - totalWidth / 2;
+
+        // 重载映射按钮
         Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> reloadMapping())
-                .bounds(centerX - 130, navY + 30, 80, 20)
+                .bounds(startX, navY + 30, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(reload);
 
         // 中文名输入框（用于新增映射的值）
         if (cnInput == null) {
-            cnInput = new EditBox(this.font, centerX + 50, navY + 30, 120, 20, Component.translatable("extendedae_plus.screen.cn_name"));
+            cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 30, inputWidth, 20, Component.translatable("extendedae_plus.screen.upload.name"));
         } else {
-            cnInput.setX(centerX + 50);
+            cnInput.setX(startX + btnWidth2 + btnGap);
             cnInput.setY(navY + 30);
-            cnInput.setWidth(120);
+            cnInput.setWidth(inputWidth);
         }
         this.addRenderableWidget(cnInput);
 
-        // 增加映射按钮（使用当前搜索关键字 -> 中文）
+        // 关闭按钮
+        Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 30, btnWidth2, 20)
+                .build();
+        this.addRenderableWidget(close);
+
+        // 添加映射按钮（使用当前搜索关键字 -> 中文）
         Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> addMappingFromUI())
-                .bounds(centerX + 175, navY + 30, 80, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 30, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(addMap);
 
-        // 删除映射（按中文值精确匹配删除）按钮
+        // 删除映射按钮（按中文值精确匹配删除）按钮
         Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.delete_mapping"), b -> deleteMappingByCnFromUI())
-                .bounds(centerX + 240, navY + 30, 80, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 30, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(delByCn);
-
-        // 关闭按钮
-        Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
-                .bounds(centerX - 40, navY + 30, 80, 20)
-                .build();
-        this.addRenderableWidget(close);
 
         refreshButtons(); // 初始化完成后刷新按钮状态
     }
@@ -234,7 +246,7 @@ public class ProviderSelectScreen extends Screen {
         String name = fNames.get(idx);
         int totalSlots = fTotalSlots.get(idx);
         int count = fCount.get(idx);
-        
+
         // 不显示具体 id，显示合并统计：名称（总空位）x数量
         return name + "  (" + totalSlots + ")  x" + count;
     }
@@ -263,7 +275,7 @@ public class ProviderSelectScreen extends Screen {
             String name = names.get(i);
             long id = ids.get(i);
             int slots = emptySlots.get(i);
-            
+
             // 将 Component JSON 转换为本地化文本用于分组键
             String groupKey = deserializeComponentName(name);
             map.compute(groupKey, (k, g) -> {
@@ -281,31 +293,6 @@ public class ProviderSelectScreen extends Screen {
             gIds.add(g.bestId);
             gTotalSlots.add(g.totalSlots);
             gCount.add(g.count);
-        }
-    }
-
-
-    private static class Group {
-        long bestId;
-        int bestSlots;
-        int totalSlots;
-        int count;
-
-        Group(long id, int slots) {
-            this.bestId = id;
-            this.bestSlots = slots;
-            this.totalSlots = Math.max(0, slots);
-            this.count = 1;
-        }
-
-        void merge(long id, int slots) {
-            count++;
-            totalSlots += Math.max(0, slots);
-            // 挑选空位最多的作为代表 id；若并列，保留先到者
-            if (slots > bestSlots) {
-                bestSlots = slots;
-                bestId = id;
-            }
         }
     }
 
@@ -417,6 +404,13 @@ public class ProviderSelectScreen extends Screen {
         if (cnInput != null) {
             cnInput.tick();
         }
+
+        String currentLang = Minecraft.getInstance().options.languageCode;
+        if (!currentLang.equals(lastLanguage)) {
+            lastLanguage = currentLang;
+            componentCache.clear();
+            refreshButtons();
+        }
     }
 
     private void addMappingFromUI() {
@@ -424,28 +418,32 @@ public class ProviderSelectScreen extends Screen {
         String val = cnInput == null ? "" : cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (key.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入搜索关键字后再添加映射"));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_search_key"));
             return;
         }
         if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称"));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name"));
             return;
         }
         boolean ok = ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
         if (ok) {
-            if (player != null) player.sendSystemMessage(Component.literal("已添加/更新映射: " + key + " -> " + val));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added",
+                        key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
             this.query = val;
             if (this.searchBox != null) {
                 this.searchBox.setValue(val);
             }
-            // 更新本地过滤显示（若名称包含中文可被搜索）
+            // 更新本地过滤显示
             applyFilter();
-            // 回到第一页以展示最新筛选结果
             page = 0;
             refreshButtons();
         } else {
-            if (player != null) player.sendSystemMessage(Component.literal("写入映射失败"));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_failed"));
         }
     }
 
@@ -454,17 +452,44 @@ public class ProviderSelectScreen extends Screen {
         String val = cnInput == null ? "" : cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称后再删除映射"));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name_delete"));
             return;
         }
         int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
         if (removed > 0) {
-            if (player != null) player.sendSystemMessage(Component.literal("已删除 " + removed + " 条映射，中文= " + val));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_deleted", removed, val));
             applyFilter();
             page = 0;
             refreshButtons();
         } else {
-            if (player != null) player.sendSystemMessage(Component.literal("未找到中文为 '" + val + "' 的映射"));
+            if (player != null)
+                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_not_found", val));
+        }
+    }
+    
+    private static class Group {
+        long bestId;
+        int bestSlots;
+        int totalSlots;
+        int count;
+
+        Group(long id, int slots) {
+            this.bestId = id;
+            this.bestSlots = slots;
+            this.totalSlots = Math.max(0, slots);
+            this.count = 1;
+        }
+
+        void merge(long id, int slots) {
+            count++;
+            totalSlots += Math.max(0, slots);
+            // 挑选空位最多的作为代表 id；若并列，保留先到者
+            if (slots > bestSlots) {
+                bestSlots = slots;
+                bestId = id;
+            }
         }
     }
 }
