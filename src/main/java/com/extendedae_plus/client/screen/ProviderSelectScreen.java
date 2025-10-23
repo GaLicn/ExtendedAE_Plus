@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 简单的供应器选择弹窗。
@@ -322,6 +324,32 @@ public class ProviderSelectScreen extends Screen {
                 fCount.add(gCount.get(i));
             }
         }
+
+        // 对 fNames 进行自然排序，同时同步其它列表
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < fNames.size(); i++) indices.add(i);
+        indices.sort((i1, i2) -> compareNatural(fNames.get(i1), fNames.get(i2)));
+
+        List<Long> sortedIds = new ArrayList<>();
+        List<String> sortedNames = new ArrayList<>();
+        List<Integer> sortedSlots = new ArrayList<>();
+        List<Integer> sortedCount = new ArrayList<>();
+
+        for (int idx : indices) {
+            sortedIds.add(fIds.get(idx));
+            sortedNames.add(fNames.get(idx));
+            sortedSlots.add(fTotalSlots.get(idx));
+            sortedCount.add(fCount.get(idx));
+        }
+
+        fIds.clear();
+        fIds.addAll(sortedIds);
+        fNames.clear();
+        fNames.addAll(sortedNames);
+        fTotalSlots.clear();
+        fTotalSlots.addAll(sortedSlots);
+        fCount.clear();
+        fCount.addAll(sortedCount);
     }
 
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
@@ -355,6 +383,29 @@ public class ProviderSelectScreen extends Screen {
         }
         // 默认大小写不敏感子串
         return name.toLowerCase(Locale.ROOT).contains(keyLower);
+    }
+
+    // 自然排序比较方法
+    private static final Pattern NATURAL_PATTERN = Pattern.compile("(\\D*)(\\d*)");
+    private static int compareNatural(String s1, String s2) {
+        Matcher m1 = NATURAL_PATTERN.matcher(s1);
+        Matcher m2 = NATURAL_PATTERN.matcher(s2);
+
+        while (m1.find() && m2.find()) {
+            // 比较非数字部分
+            int cmp = m1.group(1).compareTo(m2.group(1));
+            if (cmp != 0) return cmp;
+
+            // 比较数字部分
+            String num1 = m1.group(2);
+            String num2 = m2.group(2);
+            if (!num1.isEmpty() || !num2.isEmpty()) {
+                int n1 = num1.isEmpty() ? 0 : Integer.parseInt(num1);
+                int n2 = num2.isEmpty() ? 0 : Integer.parseInt(num2);
+                if (n1 != n2) return Integer.compare(n1, n2);
+            }
+        }
+        return s1.length() - s2.length();
     }
 
     @Override
