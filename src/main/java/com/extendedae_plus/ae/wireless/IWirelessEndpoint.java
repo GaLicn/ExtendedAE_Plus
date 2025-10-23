@@ -6,8 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 
 /**
  * 无线端点最小接口。
- * 你的无线收发器方块实体需实现该接口，
- * 以便无线逻辑能够获取世界、位置与 AE2 节点。
+ * 无线收发器方块实体需实现该接口，以便无线逻辑能够获取世界、位置与 AE2 节点。
  */
 public interface IWirelessEndpoint {
     /** 返回方块所在的服务端世界（避免与 BlockEntity#getLevel 冲突） */

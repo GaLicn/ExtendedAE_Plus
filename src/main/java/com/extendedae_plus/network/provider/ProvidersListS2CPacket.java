@@ -1,6 +1,6 @@
 package com.extendedae_plus.network.provider;
 
-import com.extendedae_plus.client.ui.ProviderSelectScreen;
+import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.api.distmarker.Dist;

@@ -1,8 +1,8 @@
-package com.extendedae_plus.client.ui;
+package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.SetWirelessFrequencyC2SPacket;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -83,7 +83,7 @@ public class FrequencyInputScreen extends Screen {
     }
 
     @Override
-    public void render(net.minecraft.client.gui.GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
         
