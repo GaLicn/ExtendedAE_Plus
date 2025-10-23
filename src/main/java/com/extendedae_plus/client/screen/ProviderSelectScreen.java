@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
+
 /**
  * 简单的供应器选择弹窗。
  * 展示若干个可点击的供应器条目，点击后发送带 providerId 的上传请求。
@@ -211,16 +213,10 @@ public class ProviderSelectScreen extends Screen {
     private void reloadMapping() {
         try {
             ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
-            var player = Minecraft.getInstance().player;
-            if (player != null) {
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.reload_mapping_success"));
-            }
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_success"));
             // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
         } catch (Throwable t) {
-            var player = Minecraft.getInstance().player;
-            if (player != null) {
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.reload_mapping_fail", t.getClass().getSimpleName()));
-            }
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_fail", t.getClass().getSimpleName()));
         }
     }
 
@@ -467,22 +463,19 @@ public class ProviderSelectScreen extends Screen {
     private void addMappingFromUI() {
         String key = query == null ? "" : query.trim();
         String val = cnInput == null ? "" : cnInput.getValue().trim();
-        var player = Minecraft.getInstance().player;
+
         if (key.isEmpty()) {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_search_key"));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_search_key"));
             return;
         }
         if (val.isEmpty()) {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name"));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name"));
             return;
         }
+
         boolean ok = ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
         if (ok) {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added",
-                        key, val));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added", key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
             this.query = val;
             if (this.searchBox != null) {
@@ -493,30 +486,25 @@ public class ProviderSelectScreen extends Screen {
             page = 0;
             refreshButtons();
         } else {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_failed"));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_failed"));
         }
     }
 
     // 使用中文值精确匹配删除映射
     private void deleteMappingByCnFromUI() {
         String val = cnInput == null ? "" : cnInput.getValue().trim();
-        var player = Minecraft.getInstance().player;
         if (val.isEmpty()) {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name_delete"));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name_delete"));
             return;
         }
         int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
         if (removed > 0) {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_deleted", removed, val));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_deleted", removed, val));
             applyFilter();
             page = 0;
             refreshButtons();
         } else {
-            if (player != null)
-                player.sendSystemMessage(Component.translatable("extendedae_plus.screen.upload.mapping_not_found", val));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_not_found", val));
         }
     }
     

@@ -16,10 +16,7 @@ import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -37,6 +34,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
 
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
@@ -170,9 +169,12 @@ public class ExtendedAEPatternUploadUtil {
                 CUSTOM_ALIASES.put(key.toLowerCase(), cnValue);
             }
             return true;
+        } catch (JsonSyntaxException e) {
+            sendPlayerMessage(Component.literal("ExtendedAE_Plus: 配置文件解析失败, " + e.getMessage()));
         } catch (IOException e) {
             return false;
         }
+        return false;
     }
 
     /**
@@ -233,37 +235,12 @@ public class ExtendedAEPatternUploadUtil {
                 }
             }
             return toRemove.size();
+        } catch (JsonSyntaxException e) {
+            sendPlayerMessage(Component.literal("ExtendedAE_Plus: 配置文件解析失败, " + e.getMessage()));
         } catch (IOException e) {
             return 0;
         }
-    }
-
-    public static String mapRecipeTypeToCn(Recipe<?> recipe) {
-        if (recipe == null) return null;
-        RecipeType<?> type = recipe.getType();
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
-        if (key == null) return null;
-        // 1) 自定义配置优先
-        String custom = CUSTOM_NAMES.get(key);
-        if (custom != null && !custom.isBlank()) {
-            return custom;
-        }
-        String id = key.toString();
-        String path = key.getPath();
-        // 常见原版类型映射
-        switch (path) {
-            case "smelting":
-                return "熔炉"; // 熔炉
-            case "blasting":
-                return "高炉";
-            case "smoking":
-                return "烟熏";
-            case "campfire_cooking":
-                return "营火";
-            default:
-                // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
-                return id;
-        }
+        return 0;
     }
 
     /**
@@ -288,35 +265,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * GTCEu 的 GTRecipe -> 搜索关键字
-     * 优先自定义中文映射；其次使用注册ID的 path；最后回退到完整ID字符串。
-     */
-    public static String mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe gtRecipe) {
-        if (gtRecipe == null) return null;
-        try {
-            // GTRecipeType.toString() 返回 registryName.toString() 即 namespace:path
-            String idStr = String.valueOf(gtRecipe.getType());
-            if (idStr == null || idStr.isBlank()) return null;
-            ResourceLocation rl = new ResourceLocation(idStr);
-            // 1) 先查别名（使用 path 作为最终搜索关键字）
-            String path = rl.getPath();
-            if (path != null) {
-                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
-                if (alias != null && !alias.isBlank()) return alias;
-            }
-            // 2) 再查完整ID映射
-            String custom = CUSTOM_NAMES.get(rl);
-            if (custom != null && !custom.isBlank()) return custom;
-            // 3) 默认返回 path 作为搜索关键字
-            return (path != null && !path.isBlank()) ? path : idStr;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    /**
      * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
-     * 逻辑与 {@link #mapGTCEuRecipeToSearchKey(com.gregtechceu.gtceu.api.recipe.GTRecipe)} 等价。
      */
     public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
         if (gtRecipeObj == null) return null;
@@ -739,60 +688,6 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * 批量上传样板到指定供应器（支持ExtendedAE和原版AE2）
-     * 
-     * @param player 玩家
-     * @param playerSlotIndices 玩家背包槽位索引数组
-     * @param providerId 目标样板供应器ID
-     * @return 成功上传的样板数量
-     */
-    public static int uploadMultiplePatterns(ServerPlayer player, int[] playerSlotIndices, long providerId) {
-        int successCount = 0;
-        
-        for (int slotIndex : playerSlotIndices) {
-            if (uploadPatternToProvider(player, slotIndex, providerId)) {
-                successCount++;
-            }
-        }
-        
-        String terminalType = isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
-        sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "批量上传完成，成功上传 " + successCount + " 个样板");
-        return successCount;
-    }
-
-    /**
-     * 检查样板供应器是否有足够的空槽位
-     * 
-     * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单（支持ExtendedAE）
-     * @param requiredSlots 需要的槽位数
-     * @return 是否有足够的空槽位
-     */
-    public static boolean hasEnoughSlots(long providerId, PatternAccessTermMenu menu, int requiredSlots) {
-        PatternContainer container = getPatternContainerById(menu, providerId);
-        if (container == null) {
-            return false;
-        }
-
-        InternalInventory inventory = container.getTerminalPatternInventory();
-        if (inventory == null) {
-            return false;
-        }
-
-        int availableSlots = 0;
-        for (int i = 0; i < inventory.size(); i++) {
-            if (inventory.getStackInSlot(i).isEmpty()) {
-                availableSlots++;
-                if (availableSlots >= requiredSlots) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * 获取样板供应器中的空槽位数量
      * 
      * @param providerId 供应器ID
@@ -972,101 +867,6 @@ public class ExtendedAEPatternUploadUtil {
 
         // 检查是否连接到网络
         return container.getGrid() != null;
-    }
-
-    /**
-     * 获取当前终端类型的描述
-     * 
-     * @param player 玩家
-     * @return 终端类型描述
-     */
-    public static String getTerminalTypeDescription(ServerPlayer player) {
-        if (isExtendedAETerminal(player)) {
-            return "ExtendedAE扩展样板管理终端";
-        } else if (getPatternAccessMenu(player) != null) {
-            return "AE2样板访问终端";
-        } else {
-            return "未知终端类型";
-        }
-    }
-
-    /**
-     * 从 AE2 的图样编码终端菜单上传当前“已编码图样”至当前网络中任意可用的样板供应器。
-     * 策略：
-     * 1) 仅当 encoded 槽位存在有效编码样板时执行；
-     * 2) 通过 menu.getNetworkNode() 获取 IGrid，遍历在线的 PatternContainer；
-     * 3) 仅选择在终端中可见（isVisibleInTerminal）且库存存在空位的供应器；
-     * 4) 使用 AE2 的标准 FilteredInternalInventory + Pattern 过滤器尝试插入；
-     * 5) 成功后清空 encoded 槽位，返回 true；否则返回 false。
-     */
-    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, PatternEncodingTermMenu menu) {
-        if (player == null || menu == null) {
-            return false;
-        }
-        // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
-        ItemStack stack = encodedSlot.getItem();
-        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            return false;
-        }
-
-        // 获取 AE 网络
-        IGridNode node = menu.getNetworkNode();
-        if (node == null) {
-            return false;
-        }
-        IGrid grid = node.getGrid();
-        if (grid == null) {
-            return false;
-        }
-
-        // 遍历在线的 PatternContainer，寻找第一个可见且有空位的供应器
-        try {
-            for (var machineClass : grid.getMachineClasses()) {
-                if (PatternContainer.class.isAssignableFrom(machineClass)) {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                    for (var container : grid.getActiveMachines(containerClass)) {
-                        if (container == null || !container.isVisibleInTerminal()) {
-                            continue;
-                        }
-                        InternalInventory inv = container.getTerminalPatternInventory();
-                        if (inv == null || inv.size() <= 0) {
-                            continue;
-                        }
-                        boolean hasEmpty = false;
-                        for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) {
-                                hasEmpty = true;
-                                break;
-                            }
-                        }
-                        if (!hasEmpty) {
-                            continue;
-                        }
-
-                        // 按 AE2 样板过滤规则尝试插入
-                        var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
-                        ItemStack toInsert = stack.copy();
-                        ItemStack remain = filtered.addItems(toInsert);
-                        if (remain.getCount() < toInsert.getCount()) {
-                            int inserted = toInsert.getCount() - remain.getCount();
-                            stack.shrink(inserted);
-                            if (stack.isEmpty()) {
-                                encodedSlot.set(ItemStack.EMPTY);
-                            } else {
-                                encodedSlot.set(stack);
-                            }
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (Throwable t) {
-            // 忽略异常以避免噪声
-        }
-        return false;
     }
 
     /**
