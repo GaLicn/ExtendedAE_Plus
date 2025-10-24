@@ -2,7 +2,7 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -67,11 +67,11 @@ public class ProviderSelectScreen extends Screen {
         this.emptySlots = emptySlots;
         // 如果有来自 JEI 的最近处理名称，则作为初始查询
         try {
-            String recent = ExtendedAEPatternUploadUtil.lastProcessingName;
+            String recent = RecipeTypeNameConfig.lastProcessingName;
             if (recent != null && !recent.isBlank()) {
                 this.query = recent;
                 // 用后即清空，避免污染下次
-                ExtendedAEPatternUploadUtil.lastProcessingName = null;
+                RecipeTypeNameConfig.lastProcessingName = null;
             }
         } catch (Throwable ignored) {}
         buildGroups();
@@ -212,7 +212,7 @@ public class ProviderSelectScreen extends Screen {
 
     private void reloadMapping() {
         try {
-            ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
+            RecipeTypeNameConfig.loadRecipeTypeNames();
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_success"));
             // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
         } catch (Throwable t) {
@@ -473,7 +473,7 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
 
-        boolean ok = ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
+        boolean ok = RecipeTypeNameConfig.addOrUpdateAliasMapping(key, val);
         if (ok) {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added", key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
@@ -497,7 +497,7 @@ public class ProviderSelectScreen extends Screen {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name_delete"));
             return;
         }
-        int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
+        int removed = RecipeTypeNameConfig.removeMappingsByCnValue(val);
         if (removed > 0) {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_deleted", removed, val));
             applyFilter();
