@@ -49,6 +49,9 @@
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
   "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入",
+  "extendedae_plus.upload_to_matrix.repetition": "装配矩阵已存在相同样板，已跳过上传并返还空白样板",
+
+
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
   "extendedae_plus.screen.reload_mapping_fail": "重载映射失败: %s",
