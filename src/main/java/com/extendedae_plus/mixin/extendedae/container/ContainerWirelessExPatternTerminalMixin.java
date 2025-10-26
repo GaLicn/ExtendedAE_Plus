@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.container;
 
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import com.glodblock.github.extendedae.common.me.itemhost.HostWirelessExPAT;
 import com.glodblock.github.extendedae.container.ContainerWirelessExPAT;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
@@ -43,7 +43,7 @@ public abstract class ContainerWirelessExPatternTerminalMixin implements IAction
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
-                ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
+                ProviderUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable ignored) {
             }
         });

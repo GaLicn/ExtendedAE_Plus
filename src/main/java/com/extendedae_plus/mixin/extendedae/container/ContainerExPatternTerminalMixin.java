@@ -2,7 +2,7 @@ package com.extendedae_plus.mixin.extendedae.container;
 
 import appeng.api.util.IConfigurableObject;
 import appeng.menu.guisync.GuiSync;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
@@ -79,7 +79,7 @@ public abstract class ContainerExPatternTerminalMixin implements IActionHolder {
                 int playerSlotIndex = (o0 instanceof Number) ? ((Number) o0).intValue() : Integer.parseInt(String.valueOf(o0));
                 long providerId = (o1 instanceof Number) ? ((Number) o1).longValue() : Long.parseLong(String.valueOf(o1));
                 var sp = (ServerPlayer) this.epp$player;
-                ExtendedAEPatternUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
+                ProviderUploadUtil.uploadPatternToProvider(sp, playerSlotIndex, providerId);
             } catch (Throwable ignored) {
             }
         });

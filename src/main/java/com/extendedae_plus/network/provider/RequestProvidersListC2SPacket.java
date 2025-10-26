@@ -4,7 +4,8 @@ import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.init.ModNetwork;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.PatternProviderDataUtil;
+import com.extendedae_plus.util.uploadPattern.PatternTerminalUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
@@ -31,20 +32,20 @@ public class RequestProvidersListC2SPacket {
             if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
-            PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);
+            PatternAccessTermMenu accessMenu = PatternTerminalUtil.getPatternAccessMenu(player);
             if (accessMenu != null) {
-                List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
+                List<Long> ids = PatternTerminalUtil.getAllProviderIds(accessMenu);
                 List<Long> filteredIds = new ArrayList<>();
                 List<String> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
 
                 for (Long id : ids) {
                     if (id == null) continue;
-                    if (!ExtendedAEPatternUploadUtil.isProviderAvailable(id, accessMenu)) continue;
-                    int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(id, accessMenu);
+                    if (!PatternProviderDataUtil.isProviderAvailable(id, accessMenu)) continue;
+                    int empty = PatternProviderDataUtil.getAvailableSlots(id, accessMenu);
                     if (empty <= 0) continue; // 只列出有空位的
                     filteredIds.add(id);
-                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(id, accessMenu));
+                    names.add(PatternProviderDataUtil.getProviderDisplayName(id, accessMenu));
                     slots.add(empty);
                 }
 
@@ -53,18 +54,18 @@ public class RequestProvidersListC2SPacket {
             }
 
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
-            List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
+            List<PatternContainer> containers = PatternTerminalUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
             List<String> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);
                 if (c == null) continue;
-                int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(c);
+                int empty = PatternProviderDataUtil.getAvailableSlots(c);
                 if (empty <= 0) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
-                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(c));
+                names.add(PatternProviderDataUtil.getProviderDisplayName(c));
                 slots.add(empty);
             }
             ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);

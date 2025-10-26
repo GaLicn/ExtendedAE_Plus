@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
@@ -36,10 +36,10 @@ public class UploadEncodedPatternToProviderC2SPacket {
             // 1) providerId >= 0: 访问终端 byId 模式
             // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId
             if (msg.providerId >= 0) {
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
+                ProviderUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
             } else {
                 int index = (int) (-1L - msg.providerId);
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
+                ProviderUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
             }
         });
         ctx.setPacketHandled(true);

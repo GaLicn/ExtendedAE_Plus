@@ -4,8 +4,12 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
+import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogic;
+import appeng.menu.implementations.PatternAccessTermMenu;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
+import com.extendedae_plus.util.uploadPattern.PatternTerminalUtil;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -113,4 +117,112 @@ public class PatternProviderDataUtil {
         }
         return null;
     }
+
+
+    /**
+     * 获取样板供应器中的空槽位数量
+     *
+     * @param providerId 供应器ID
+     * @param menu 样板访问终端菜单（支持ExtendedAE）
+     * @return 空槽位数量，如果无法访问则返回-1
+     */
+    public static int getAvailableSlots(long providerId, PatternAccessTermMenu menu) {
+        PatternContainer container = PatternTerminalUtil.getPatternContainerById(menu, providerId);
+        if (container == null) {
+            return -1;
+        }
+
+        InternalInventory inventory = container.getTerminalPatternInventory();
+        if (inventory == null) {
+            return -1;
+        }
+
+        int availableSlots = 0;
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.getStackInSlot(i).isEmpty()) {
+                availableSlots++;
+            }
+        }
+
+        return availableSlots;
+    }
+
+    /**
+     * 获取样板供应器的显示名称
+     *
+     * @param providerId 供应器ID
+     * @param menu 样板访问终端菜单
+     * @return 显示名称，如果无法获取则返回"未知供应器"
+     */
+    public static String getProviderDisplayName(long providerId, PatternAccessTermMenu menu) {
+        PatternContainer container = PatternTerminalUtil.getPatternContainerById(menu, providerId);
+        if (container == null) {
+            return "未知供应器";
+        }
+
+        try {
+            // 尝试获取供应器的组信息来构建显示名称
+            var group = container.getTerminalGroup();
+            if (group != null) {
+                // 使用 Component 序列化来保持翻译键，而不是直接 getString()
+                // 这样客户端可以根据自己的语言设置进行翻译
+                return Component.Serializer.toJson(group.name());
+            }
+        } catch (Exception e) {
+            // 忽略异常，使用默认名称
+        }
+
+        return "样板供应器 #" + providerId;
+    }
+
+    /**
+     * 验证样板供应器是否可用
+     *
+     * @param providerId 供应器ID
+     * @param menu 样板访问终端菜单
+     * @return 是否可用
+     */
+    public static boolean isProviderAvailable(long providerId, PatternAccessTermMenu menu) {
+        PatternContainer container = PatternTerminalUtil.getPatternContainerById(menu, providerId);
+        if (container == null) {
+            return false;
+        }
+
+        // 检查是否在终端中可见
+        if (!container.isVisibleInTerminal()) {
+            return false;
+        }
+
+        // 检查是否连接到网络
+        return container.getGrid() != null;
+    }
+
+    /** 获取供应器显示名（优先组名） */
+    public static String getProviderDisplayName(PatternContainer container) {
+        if (container == null) return "未知供应器";
+        try {
+            var group = container.getTerminalGroup();
+            if (group != null) {
+                // 使用 Component 序列化来保持翻译键，而不是直接 getString()
+                // 这样客户端可以根据自己的语言设置进行翻译
+                return Component.Serializer.toJson(group.name());
+            }
+        } catch (Throwable ignored) {
+        }
+        return "样板供应器";
+    }
+
+    /** 计算供应器空槽位数量 */
+    public static int getAvailableSlots(PatternContainer container) {
+        if (container == null) return -1;
+        InternalInventory inv = container.getTerminalPatternInventory();
+        if (inv == null) return -1;
+        int available = 0;
+        for (int i = 0; i < inv.size(); i++) {
+            if (inv.getStackInSlot(i).isEmpty()) available++;
+        }
+        return available;
+    }
+
+
 }
