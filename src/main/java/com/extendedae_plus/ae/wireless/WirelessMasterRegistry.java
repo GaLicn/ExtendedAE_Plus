@@ -1,7 +1,7 @@
 package com.extendedae_plus.ae.wireless;
 
 import com.extendedae_plus.config.ModConfig;
-import com.extendedae_plus.util.WirelessTeamUtil;
+import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.util.uploadPattern;
+package com.extendedae_plus.util;
 
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;

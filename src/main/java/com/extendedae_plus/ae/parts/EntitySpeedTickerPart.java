@@ -71,7 +71,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     static {
          if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX)) {
             try {
-                Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+                Class<?> helperClass = Class.forName("com.extendedae_plus.util.entitySpeed.FluxEnergyHelper");
                 Method method = helperClass.getMethod("extractFE", IEnergyService.class, MEStorage.class, long.class, IActionSource.class);
                 cachedFEExtractHandle = MethodHandles.lookup().unreflect(method);
                 FE_UNAVAILABLE = false;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.wireless;
 
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;

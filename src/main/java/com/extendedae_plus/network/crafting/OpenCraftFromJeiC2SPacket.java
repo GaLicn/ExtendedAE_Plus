@@ -7,7 +7,7 @@ import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;

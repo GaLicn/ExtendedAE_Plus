@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.wireless;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;

@@ -5,7 +5,7 @@ import appeng.api.networking.IGridNode;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
-import com.extendedae_plus.util.WirelessTeamUtil;
+import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;

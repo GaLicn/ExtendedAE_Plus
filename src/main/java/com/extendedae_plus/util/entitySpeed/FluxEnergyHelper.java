@@ -1,4 +1,4 @@
-package com.extendedae_plus.util;
+package com.extendedae_plus.util.entitySpeed;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergyService;
