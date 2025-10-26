@@ -120,12 +120,6 @@ public final class ModNetwork {
                 .consumerNetworkThread(InterfaceAdjustConfigAmountC2SPacket::handle)
                 .add();
 
-        CHANNEL.messageBuilder(AdvancedBlockingSyncS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
-                .encoder(AdvancedBlockingSyncS2CPacket::encode)
-                .decoder(AdvancedBlockingSyncS2CPacket::decode)
-                .consumerNetworkThread(AdvancedBlockingSyncS2CPacket::handle)
-                .add();
-
         CHANNEL.messageBuilder(CraftingMonitorJumpC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(CraftingMonitorJumpC2SPacket::encode)
                 .decoder(CraftingMonitorJumpC2SPacket::decode)
