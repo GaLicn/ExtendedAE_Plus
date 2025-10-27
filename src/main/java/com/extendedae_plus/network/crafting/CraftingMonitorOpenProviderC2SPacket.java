@@ -6,6 +6,7 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.me.service.CraftingService;
+import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
@@ -85,7 +86,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
     /**
      * GridHelper: 从菜单中获取网格实例
      */
-    public static final class GridHelper {
+    private static final class GridHelper {
         private GridHelper() {}
 
         /**
@@ -93,7 +94,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
          * @param menu 当前 AEBaseMenu
          * @return Grid 或 null
          */
-        public static IGrid getGridFromMenu(appeng.menu.AEBaseMenu menu) {
+        private static IGrid getGridFromMenu(AEBaseMenu menu) {
             Object target = menu.getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
                 return host.getActionableNode().getGrid();
@@ -105,7 +106,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
     /**
      * PatternLocator: 根据样板定位可用的 Provider
      */
-    public static final class PatternLocator {
+    private static final class PatternLocator {
         private PatternLocator() {}
 
         /**
@@ -115,7 +116,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
          * @param grid 当前 Grid
          * @return 第一个可用的 PatternProviderLogic 或 null
          */
-        public static PatternProviderLogic findValidProvider(CraftingService cs, IPatternDetails pattern, IGrid grid) {
+        private static PatternProviderLogic findValidProvider(CraftingService cs, IPatternDetails pattern, IGrid grid) {
             var providers = cs.getProviders(pattern);
             for (var provider : providers) {
                 if (provider instanceof PatternProviderLogic ppl) {
@@ -132,7 +133,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
     /**
      * ProviderUIHelper: 打开 Provider UI 并发送客户端反馈
      */
-    public static final class ProviderUIHelper {
+    private static final class ProviderUIHelper {
         private ProviderUIHelper() {}
 
         /**
@@ -146,7 +147,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
          * @param pattern 样板
          * @param player 玩家
          */
-        public static void openProviderUI(PatternProviderLogic provider, IPatternDetails pattern, ServerPlayer player) {
+        private static void openProviderUI(PatternProviderLogic provider, IPatternDetails pattern, ServerPlayer player) {
             var host = ((PatternProviderLogicAccessor) provider).eap$host();
             var pbe = host.getBlockEntity();
             if (pbe == null) return;
