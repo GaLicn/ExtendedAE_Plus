@@ -132,6 +132,14 @@ public final class ModConfig {
     @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
     public String[] entityTickerMultipliers = {};
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "限制合成样板自动上传仅进入分子操纵者",
+            "开启后，合成样板将只自动上传到分子操纵者，不再上传至装配矩阵"
+    })
+    @Configurable.Synchronized
+    public boolean restrictCraftingPatternToMolecular = false;
+
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static ScheduledFuture<?> pendingPowerTask;
     private static final Object POWER_LOCK = new Object();

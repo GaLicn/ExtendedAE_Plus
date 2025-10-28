@@ -47,9 +47,15 @@
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern uploaded to the assembly matrix",
+  "extendedae_plus.upload_to_GTMatrix.success": "The template has been uploaded to the molecular manipulator",
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "Only crafting patterns are supported; processing patterns will be ignored",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "No formed assembly matrix found in the current network",
+  "extendedae_plus.upload_to_matrix.fail_no_GTMatrix": "No formed molecular manipulators were found in the current network",
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
+  "extendedae_plus.upload_to_GTMatrix.fail_full": "The sample compartment of the molecular manipulator is full or cannot be inserted",
+  "extendedae_plus.upload_to_matrix.repetition": "The assembly matrix already exists on the same board, and the upload is skipped and a blank template is returned",
+  "extendedae_plus.upload_to_GTMatrix.repetition": "The same board already exists for the molecular manipulator, skipping the upload and returning the blank template",
+
   "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
 
   "chat.extendedae_plus.terminal.pos": "The crafting plan's corresponding provider is now highlighted at: %s, Dimension: %s (%s blocks away)",
@@ -120,6 +126,7 @@
   "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold",
   "config.extendedae_plus.option.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
+  "config.extendedae_plus.option.restrictCraftingPatternToMolecular": "Restrict automatic upload of synthetic templates to only molecular manipulators",
 
   "item.extendedae_plus.channel_card": "Channel Card",
   "item.extendedae_plus.channel_card.channel": "Frequency: %s",

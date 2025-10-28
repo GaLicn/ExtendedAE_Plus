@@ -70,8 +70,18 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
             // 遍历所有样板，找到第一个可用 Provider 并打开 UI
             for (var pattern : patterns) {
-                var provider = PatternLocator.findValidProvider(craftingService, pattern, grid);
-                if (provider == null) continue;
+                var provider = CraftingMonitorOpenProviderC2SPacket.PatternLocator.findValidProvider(craftingService, pattern, grid);
+                if (provider == null) {
+                    for (var pd : craftingService.getProviders(pattern)) {
+                        if (pd instanceof com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine machine) {
+                            gtmOpenUI(machine, player, pattern);
+                            return;
+                        } else if (pd instanceof org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine machine) {
+                            gtmOpenUI(machine, player, pattern);
+                            return;
+                        }
+                    }
+                }
 
                 try {
                     ProviderUIHelper.openProviderUI(provider, pattern, player);
@@ -82,6 +92,56 @@ public class CraftingMonitorOpenProviderC2SPacket {
     }
 
     // ===================== 内部工具类 =====================
+
+    /**
+     * 兼容gtm
+     *
+     * @param machine 样板总成
+     * @param player  玩家
+     * @param pattern 样板
+     */
+    private static void gtmOpenUI(MetaMachine machine, ServerPlayer player, IPatternDetails pattern) {
+        try {
+            BlockPos pos = machine.getPos();
+            Level level = machine.getLevel();
+            if (pos == null || level == null) return;
+            if (!level.isClientSide) { // 确保在服务器端执行
+                MachineUIFactory.INSTANCE.openUI(MetaMachine.getMachine(level, pos), player);
+            }
+
+            // 聊天提示
+            if (CompareModVersionUtil.compareTo("expatternprovider", "1.4.7")) {
+                player.displayClientMessage(
+                        MessageUtil.createEnhancedHighlightMessage(
+                                player,
+                                pos,
+                                level.dimension(),
+                                "chat.ex_pattern_access_terminal.pos"),
+                        false
+                );
+            } else {
+                player.displayClientMessage(
+                        Component.translatable(
+                                "chat.ex_pattern_access_terminal.pos",
+                                pos.toShortString(),
+                                level.dimension()
+                                        .location()
+                                        .getPath()
+                        ),
+                        false
+                );
+            }
+
+            // 最后发送高亮包，保证界面已打开
+            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                AEKey key = pattern.getOutputs()[0].what();
+                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+            }
+
+            EAEHighlightHandler.highlight(pos, level.dimension(), System.currentTimeMillis() + 15000);
+        } catch (Exception ignored) {
+        }
+    }
 
     /**
      * GridHelper: 从菜单中获取网格实例
