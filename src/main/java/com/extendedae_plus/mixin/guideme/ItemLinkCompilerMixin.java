@@ -37,7 +37,6 @@ import static guideme.compiler.tags.MdxAttrs.getRequiredItemAndId;
 public abstract class ItemLinkCompilerMixin {
     @Inject(method = "compile", at = @At("HEAD"), cancellable = true)
     private void onCompile(PageCompiler compiler, LytFlowParent parent, MdxJsxElementFields el, CallbackInfo ci) {
-        System.out.println("加载guideme.compiler.tags.ItemLinkCompilerMixin.onCompile");
         var itemAndId = this.getRequiredItemStackAndId(compiler, parent, el);
         if (itemAndId == null) {
             ci.cancel();

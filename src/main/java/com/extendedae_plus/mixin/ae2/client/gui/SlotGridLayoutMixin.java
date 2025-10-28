@@ -2,52 +2,31 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.Point;
 import appeng.client.gui.layout.SlotGridLayout;
-import com.extendedae_plus.api.IExPatternPageAccessor;
+import com.extendedae_plus.api.IExPatternPage;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.lang.reflect.Field;
-
 @Mixin(SlotGridLayout.class)
 public abstract class SlotGridLayoutMixin {
-
-    @Unique
-    private static final int SLOTS_PER_PAGE = 36;
-
     @Inject(method = "getRowBreakPosition", at = @At("HEAD"), cancellable = true, remap = false)
     private static void onGetRowBreakPosition(int x, int y, int semanticIdx, int cols, CallbackInfoReturnable<Point> cir) {
-        // 仅在 9 列布局 且 当前屏幕为 扩展样板供应器 时处理
-        if (cols != 9) {
-            return;
-        }
+        // 仅在 9 列布局 且 当前屏幕为 扩展样板供应器时处理
+        if (cols != 9) return;
 
         var screen = Minecraft.getInstance().screen;
-        if (!(screen instanceof com.glodblock.github.extendedae.client.gui.GuiExPatternProvider)) {
-            return;
-        }
+        if (!(screen instanceof GuiExPatternProvider gui)) return;
 
-        // 读取实际当前页码：优先从 GUI accessor，其次反射容器，失败则为 0
-        int currentPage = 0;
-        try {
-            if (screen instanceof IExPatternPageAccessor accessor) {
-                currentPage = accessor.eap$getCurrentPage();
-            } else {
-                var menu = ((com.glodblock.github.extendedae.client.gui.GuiExPatternProvider) screen).getMenu();
-                Field fieldPage = eap$findFieldRecursive(menu.getClass(), "page");
-                if (fieldPage != null) {
-                    fieldPage.setAccessible(true);
-                    currentPage = (Integer) fieldPage.get(menu);
-                }
-            }
-        } catch (Throwable ignored) {
-        }
+        // 当前页
+        int currentPage = (gui instanceof IExPatternPage accessor) ?
+                accessor.eap$getCurrentPage() :
+                0;
 
         // 该槽位属于第几页
-        int slotPage = semanticIdx / SLOTS_PER_PAGE;
+        int slotPage = semanticIdx / 36;
         if (slotPage != currentPage) {
             // 非当前页：将其移出视野，避免渲染与鼠标命中
             cir.setReturnValue(new Point(-10000, -10000));
@@ -56,7 +35,7 @@ public abstract class SlotGridLayoutMixin {
         }
 
         // 当前页中的位置（0..35）
-        int slotInPage = semanticIdx % SLOTS_PER_PAGE;
+        int slotInPage = semanticIdx % 36;
         int row = slotInPage / 9;  // 0-3
         int col = slotInPage % 9;  // 0-8
 
@@ -66,18 +45,6 @@ public abstract class SlotGridLayoutMixin {
 
         cir.setReturnValue(new Point(targetX, targetY));
         cir.cancel();
-    }
-
-    @Unique
-    private static Field eap$findFieldRecursive(Class<?> cls, String name) {
-        Class<?> c = cls;
-        while (c != null && c != Object.class) {
-            try {
-                return c.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {}
-            c = c.getSuperclass();
-        }
-        return null;
     }
 }
  

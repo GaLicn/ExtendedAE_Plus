@@ -5,8 +5,8 @@ import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
 import com.extendedae_plus.ae.client.gui.NewIcon;
-import com.extendedae_plus.api.IExPatternButtonsAccessor;
-import com.extendedae_plus.api.IExPatternPageAccessor;
+import com.extendedae_plus.api.IExPatternButton;
+import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.config.ModConfig;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -24,10 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import static com.extendedae_plus.util.Logger.EAP$LOGGER;
-
 @Mixin(GuiExPatternProvider.class)
-public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButtonsAccessor, IExPatternPageAccessor {
+public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButton, IExPatternPage {
 
     @Unique
     ScreenStyle eap$screenStyle;
@@ -237,6 +235,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Override
     public int eap$getCurrentPage() {
         return getCurrentPage();
+    }
+
+    @Override
+    public int eap$getMaxPageLocal() {
+        return this.eap$maxPageLocal;
     }
 
     // 页码文本绘制移交给 AEBaseScreenMixin.renderLabels 尾部执行

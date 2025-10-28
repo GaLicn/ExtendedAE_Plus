@@ -6,7 +6,7 @@ import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.IExPatternButtonsAccessor;
+import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.init.ModNetwork;
@@ -204,7 +204,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     private void eap$updateExGuiLayout() {
         if ((Object) this instanceof GuiExPatternProvider) {
             try {
-                ((IExPatternButtonsAccessor) this).eap$updateButtonsLayout();
+                ((IExPatternButton) this).eap$updateButtonsLayout();
             } catch (Throwable t) {
                 EAP$LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
             }

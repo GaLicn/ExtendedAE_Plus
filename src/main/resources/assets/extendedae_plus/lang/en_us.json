@@ -8,6 +8,7 @@
   "gui.extendedae_plus.global.toggle_smart_doubling": "Toggle Smart Doubling",
   "gui.extendedae_plus.global.all_on": "All On",
   "gui.extendedae_plus.global.all_off": "All Off",
+  "gui.extendedae.pattern_page": "Page %s/%s",
 
   "itemGroup.extendedae_plus.main": "ExtendedAE Plus",
   "item.extendedae_plus.wireless_transceiver": "Wireless Transceiver",
