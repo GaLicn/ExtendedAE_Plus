@@ -57,6 +57,7 @@
   "extendedae_plus.upload_to_GTMatrix.repetition": "分子操纵者已存在相同样板，已跳过上传并返还空白样板",
 
   "chat.extendedae_plus.terminal.pos": "合成计划对应供应器现在突出显示在：%s，维度：%s (%s个方块外)",
+  "extendedae_plus.upload_to_GTMatrix.repetition": "分子操纵者已存在相同样板，已跳过上传并返还空白样板",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
@@ -139,7 +140,7 @@
   "extendedae_plus.tooltip.owner": "所有者: %s",
   "extendedae_plus.tooltip.owner.unset": "所有者: 未设置",
   "extendedae_plus.tooltip.owner.public": "所有者: 公共",
-  
+
   "extendedae_plus.screen.frequency_input.title": "设置频率",
   "extendedae_plus.screen.frequency_input.current": "当前频率：%s",
   "extendedae_plus.screen.frequency_input.field": "频率",
