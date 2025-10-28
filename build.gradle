@@ -60,6 +60,15 @@ repositories {
     }
     maven { url "https://repo.spongepowered.org/maven" }
     maven { url "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
+    maven { // Registrate
+        url = "https://maven.tterrag.com/"
+        content {
+            // need to be specific here due to version overlaps
+            includeGroup("com.jozufozu.flywheel")
+            includeGroup("com.tterrag.registrate")
+            includeGroup("com.simibubi.create")
+        }
+    }
 }
 
 dependencies {
@@ -70,7 +79,7 @@ dependencies {
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
-    modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
+    modImplementation files('libs/ExtendedAE-1.20-1.4.7-forge.jar')
     modRuntimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 
     //ae2
@@ -87,8 +96,19 @@ dependencies {
     modCompileOnly "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
-    modCompileOnly "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
-    modCompileOnly "curse.maven:ldlib-626676:${ldlib_version}"
+    modImplementation "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
+    modImplementation "curse.maven:ldlib-626676:5775541"
+    modImplementation files('libs/gtlcore-1.2.2.4-fix8.jar')
+    modImplementation("dev:gtmthings-1.3.5.b")
+    modImplementation("dev:resourcefullib-forge-1.20.1-2.1.29")
+    modImplementation("dev:resourcefulconfig-forge-1.20.1-2.1.3")
+    modImplementation("dev:botarium-forge-1.20.1-2.3.4")
+    modImplementation("dev:ad_astra-forge-1.20.1-1.15.20")
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.2.0"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.2.0"))
+    modImplementation("com.tterrag.registrate:Registrate:MC1.20-1.3.11")
+    modImplementation("curse.maven:kubejs-238086:5454840")
+    modImplementation("curse.maven:rhino-416294:6186971")
 
     //curios
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
@@ -96,7 +116,7 @@ dependencies {
 
     // Runtime test
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
-    modRuntimeOnly "curse.maven:jade-324717:${jade_version}"
+    modImplementation "curse.maven:jade-324717:5339264"
     modRuntimeOnly "curse.maven:architectury-api-419699:${architectury_version}"
     modRuntimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
@@ -105,9 +125,14 @@ dependencies {
     //jec
     modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
 
+    //拼音搜索
+    modRuntimeOnly("dev:jecharacters-1.20.1-forge-4.5.11-dev-shadow")
+    //输入法冲突
+    modRuntimeOnly("curse.maven:cloth-config-348521:5729105")
+    modRuntimeOnly("curse.maven:IMBlocker-483760:6922546")
 
     //mae2
-  //  modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6827727"
+    //  modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6827727"
     modCompileOnly "curse.maven:modern-ae2-additions-1028068:6827727"
 
     //aea
@@ -125,8 +150,10 @@ dependencies {
     //ftbteams
     modCompileOnly "curse.maven:ftb-teams-forge-404468:6130786"
     modCompileOnly "curse.maven:ftb-library-forge-404465:6807424"
+    modCompileOnly "curse.maven:ftb-chunk-forge-314906:6431735"
     modRuntimeOnly "curse.maven:ftb-teams-forge-404468:6130786"
     modRuntimeOnly "curse.maven:ftb-library-forge-404465:6807424"
+    modRuntimeOnly "curse.maven:ftb-chunk-forge-314906:6431735"
 }
 
 compileJava {

@@ -133,11 +133,18 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "限制合成样板自动上传仅进入分子操纵者",
+            "开启后，合成样板将只自动上传到分子操纵者，不再上传至装配矩阵"
+    })
+    @Configurable.Synchronized
+    public boolean restrictCraftingPatternToMolecular = false;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
             "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
     })
     @Configurable.Synchronized
-    @Configurable.ValueUpdateCallback(method = "onPrioritizeDiskEnergyUpdate")
     public boolean prioritizeDiskEnergy = true;
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();

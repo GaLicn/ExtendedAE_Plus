@@ -15,11 +15,18 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.network.SetBlockHighlightS2CPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
 import com.extendedae_plus.network.provider.SetProviderPageS2CPacket;
+import com.extendedae_plus.util.CompareModVersionUtil;
 import com.extendedae_plus.util.PatternProviderDataUtil;
+import com.glodblock.github.extendedae.client.render.EAEHighlightHandler;
+import com.glodblock.github.extendedae.util.MessageUtil;
 import com.glodblock.github.glodium.util.GlodUtil;
+import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -70,12 +77,23 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
             // 遍历所有样板，找到第一个可用 Provider 并打开 UI
             for (var pattern : patterns) {
-                var provider = PatternLocator.findValidProvider(craftingService, pattern, grid);
-                if (provider == null) continue;
+                var provider = CraftingMonitorOpenProviderC2SPacket.PatternLocator.findValidProvider(craftingService, pattern, grid);
+                if (provider == null) {
+                    for (var pd : craftingService.getProviders(pattern)) {
+                        if (pd instanceof com.gregtechceu.gtceu.integration.ae2.machine.MEPatternBufferPartMachine machine) {
+                            gtmOpenUI(machine, player, pattern);
+                            return;
+                        } else if (pd instanceof org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine machine) {
+                            gtmOpenUI(machine, player, pattern);
+                            return;
+                        }
+                    }
+                }
 
                 try {
                     ProviderUIHelper.openProviderUI(provider, pattern, player);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         });
         context.setPacketHandled(true);
@@ -84,20 +102,73 @@ public class CraftingMonitorOpenProviderC2SPacket {
     // ===================== 内部工具类 =====================
 
     /**
+     * 兼容gtm
+     *
+     * @param machine 样板总成
+     * @param player  玩家
+     * @param pattern 样板
+     */
+    private static void gtmOpenUI(MetaMachine machine, ServerPlayer player, IPatternDetails pattern) {
+        try {
+            BlockPos pos = machine.getPos();
+            Level level = machine.getLevel();
+            if (pos == null || level == null) return;
+            if (!level.isClientSide) { // 确保在服务器端执行
+                MachineUIFactory.INSTANCE.openUI(MetaMachine.getMachine(level, pos), player);
+            }
+
+            // 聊天提示
+            if (CompareModVersionUtil.compareTo("expatternprovider", "1.4.7")) {
+                player.displayClientMessage(
+                        MessageUtil.createEnhancedHighlightMessage(
+                                player,
+                                pos,
+                                level.dimension(),
+                                "chat.ex_pattern_access_terminal.pos"),
+                        false
+                );
+            } else {
+                player.displayClientMessage(
+                        Component.translatable(
+                                "chat.ex_pattern_access_terminal.pos",
+                                pos.toShortString(),
+                                level.dimension()
+                                        .location()
+                                        .getPath()
+                        ),
+                        false
+                );
+            }
+
+            // 最后发送高亮包，保证界面已打开
+            if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
+                AEKey key = pattern.getOutputs()[0].what();
+                ModNetwork.CHANNEL.sendTo(new SetPatternHighlightS2CPacket(key, true), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+            }
+
+            EAEHighlightHandler.highlight(pos, level.dimension(), System.currentTimeMillis() + 15000);
+        } catch (Exception ignored) {
+        }
+    }
+
+    /**
      * GridHelper: 从菜单中获取网格实例
      */
     private static final class GridHelper {
-        private GridHelper() {}
+        private GridHelper() {
+        }
 
         /**
          * 获取菜单对应的 Grid
+         *
          * @param menu 当前 AEBaseMenu
          * @return Grid 或 null
          */
         private static IGrid getGridFromMenu(AEBaseMenu menu) {
             Object target = menu.getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                return host.getActionableNode().getGrid();
+                return host.getActionableNode()
+                        .getGrid();
             }
             return null;
         }
@@ -107,13 +178,15 @@ public class CraftingMonitorOpenProviderC2SPacket {
      * PatternLocator: 根据样板定位可用的 Provider
      */
     private static final class PatternLocator {
-        private PatternLocator() {}
+        private PatternLocator() {
+        }
 
         /**
          * 查找提供指定样板的可用 Provider
-         * @param cs CraftingService
+         *
+         * @param cs      CraftingService
          * @param pattern 样板
-         * @param grid 当前 Grid
+         * @param grid    当前 Grid
          * @return 第一个可用的 PatternProviderLogic 或 null
          */
         private static PatternProviderLogic findValidProvider(CraftingService cs, IPatternDetails pattern, IGrid grid) {
@@ -134,7 +207,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
      * ProviderUIHelper: 打开 Provider UI 并发送客户端反馈
      */
     private static final class ProviderUIHelper {
-        private ProviderUIHelper() {}
+        private ProviderUIHelper() {
+        }
 
         /**
          * 打开 Provider UI
@@ -144,8 +218,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
          * 4. 发送 Pattern 输出高亮包
          *
          * @param provider PatternProviderLogic 实例
-         * @param pattern 样板
-         * @param player 玩家
+         * @param pattern  样板
+         * @param player   玩家
          */
         private static void openProviderUI(PatternProviderLogic provider, IPatternDetails pattern, ServerPlayer player) {
             var host = ((PatternProviderLogicAccessor) provider).eap$host();
@@ -161,7 +235,9 @@ public class CraftingMonitorOpenProviderC2SPacket {
                     new SetBlockHighlightS2CPacket(
                             pbe.getBlockPos(),
                             isPart ? ((AEBasePart) host).getSide() : null,
-                            pbe.getLevel().dimension().location(),
+                            pbe.getLevel()
+                                    .dimension()
+                                    .location(),
                             (long) (6000 * GlodUtil.clamp(1.0, 1, 30))
                     ),
                     player.connection.connection,
@@ -169,14 +245,30 @@ public class CraftingMonitorOpenProviderC2SPacket {
             );
 
             // 聊天提示
-            player.displayClientMessage(
-                    Component.translatable(
-                            "chat.ex_pattern_access_terminal.pos",
-                            pbe.getBlockPos().toShortString(),
-                            pbe.getLevel().dimension().location().getPath()
-                    ),
-                    false
-            );
+            if (CompareModVersionUtil.compareTo("expatternprovider", "1.4.7")) {
+                player.displayClientMessage(
+                        MessageUtil.createEnhancedHighlightMessage(
+                                player,
+                                pbe.getBlockPos(),
+                                pbe.getLevel()
+                                        .dimension(),
+                                "chat.ex_pattern_access_terminal.pos"),
+                        false
+                );
+            } else {
+                player.displayClientMessage(
+                        Component.translatable(
+                                "chat.ex_pattern_access_terminal.pos",
+                                pbe.getBlockPos()
+                                        .toShortString(),
+                                pbe.getLevel()
+                                        .dimension()
+                                        .location()
+                                        .getPath()
+                        ),
+                        false
+                );
+            }
 
             // 页码同步
             int slot = PatternProviderDataUtil.findSlotForPattern(provider, pattern.getDefinition());
