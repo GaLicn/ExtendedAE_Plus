@@ -21,9 +21,11 @@ import javax.annotation.Nullable;
  * 样板供应器数据工具类
  * 用于获取样板供应器中的所有样板数据，包括输入输出物品的数量信息
  */
-public class PatternProviderDataUtil {
+public final class PatternProviderDataUtil {
     private static final int INVALID_SLOT = -1;
     private static final String UNKNOWN_PROVIDER = "未知供应器";
+
+    private PatternProviderDataUtil() {}
 
     /**
      * 判断 provider 是否可用并属于指定网格（在线且有频道/处于活跃状态）
@@ -37,8 +39,7 @@ public class PatternProviderDataUtil {
                 IManagedGridNode mainNode = accessor.eap$mainNode();
                 return mainNode != null && mainNode.isActive();
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return false;
     }
 
@@ -80,8 +81,7 @@ public class PatternProviderDataUtil {
                 if (details != null && targetDefinition.equals(details.getDefinition())) {
                     return i;
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
         }
         return INVALID_SLOT;
     }
@@ -156,8 +156,7 @@ public class PatternProviderDataUtil {
                 // 这样客户端可以根据自己的语言设置进行翻译
                 return Component.Serializer.toJson(group.name());
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return providerId > 0 ? "样板供应器 #" + providerId : "样板供应器";
     }
 }

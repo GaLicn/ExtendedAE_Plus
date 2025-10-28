@@ -136,15 +136,15 @@ public final class PatternTerminalUtil {
     /**
      * 列出当前菜单中所有供应器的服务器ID（原样返回 byId 的 key 集合）。
      */
-    public static java.util.List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
-        java.util.List<Long> result = new java.util.ArrayList<>();
+    public static List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
+        List<Long> result = new ArrayList<>();
         if (menu == null) return result;
         try {
             Field byIdField = PatternTerminalUtil.findByIdField(menu.getClass());
             if (byIdField == null) return result;
             byIdField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            java.util.Map<Long, Object> byId = (java.util.Map<Long, Object>) byIdField.get(menu);
+            Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
             if (byId != null) {
                 result.addAll(byId.keySet());
             }

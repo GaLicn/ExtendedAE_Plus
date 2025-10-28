@@ -16,6 +16,8 @@ import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPageAccessor;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
+import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
+import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
@@ -31,7 +33,6 @@ import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -98,43 +99,11 @@ public abstract class AEBaseScreenMixin {
         } catch (Throwable ignored) {}
     }
 
-    @Unique
-    private static int eap$getIntField(Object self, String name, int def) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField(name);
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Integer i) return i;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return def;
-    }
-
-    @Unique
-    private static Font eap$getFont(Object self) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField("font");
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Font font) return font;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return net.minecraft.client.Minecraft.getInstance().font;
-    }
-
     /**
      * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
      */
     @Inject(method = "renderSlot", at = @At("TAIL"))
     private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
-        Object self = this;
-
         // 只处理AppEngSlot类型的槽位
         if (!(s instanceof AppEngSlot appEngSlot)) {
             return;
@@ -158,7 +127,7 @@ public abstract class AEBaseScreenMixin {
         }
 
         // 在槽位右下角绘制数量文本
-        Font font = eap$getFont(self);
+        Font font = ((ScreenAccessor) this).eap$getFont();
         GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
 
         try {
@@ -195,14 +164,15 @@ public abstract class AEBaseScreenMixin {
             }
 
             // 计算“样板”文本起点与宽度，按对齐方式与缩放修正 x/y
-            int imageWidth = eap$getIntField(self, "imageWidth", 0);
-            int imageHeight = eap$getIntField(self, "imageHeight", 0);
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) this).eap$getImageWidth();
+            int imageHeight = ((AbstractContainerScreenAccessor<?>) this).eap$getImageHeight();
+
             Rect2i bounds = new Rect2i(0, 0, imageWidth, imageHeight);
             Point pos = text.getPosition().resolve(bounds);
 
             float scale = text.getScale();
 
-            Font font = eap$getFont(self);
+            Font font =  ((ScreenAccessor) this).eap$getFont();
             // 只关心第一行（标题类文本无换行或 maxWidth<=0）
             var contentLine = (text.getMaxWidth() <= 0)
                     ? content.getVisualOrderText()
