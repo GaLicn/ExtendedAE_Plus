@@ -2,8 +2,8 @@ package com.extendedae_plus.mixin.advancedae.menu;
 
 import appeng.menu.AEBaseMenu;
 import appeng.menu.guisync.GuiSync;
-import com.extendedae_plus.api.IAdvancedBlocking;
-import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
+import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;

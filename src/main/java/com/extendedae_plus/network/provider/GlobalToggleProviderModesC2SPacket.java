@@ -7,7 +7,7 @@ import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
-import com.extendedae_plus.api.IAdvancedBlocking;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.core.BlockPos;

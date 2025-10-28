@@ -6,7 +6,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
-import com.extendedae_plus.api.IAdvancedBlocking;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;

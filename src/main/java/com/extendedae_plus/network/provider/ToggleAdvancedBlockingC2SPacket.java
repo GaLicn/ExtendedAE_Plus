@@ -3,7 +3,7 @@ package com.extendedae_plus.network.provider;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.IAdvancedBlocking;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import net.minecraft.network.FriendlyByteBuf;

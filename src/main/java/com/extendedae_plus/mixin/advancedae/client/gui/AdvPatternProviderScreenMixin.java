@@ -4,7 +4,7 @@ import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import com.extendedae_plus.api.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
