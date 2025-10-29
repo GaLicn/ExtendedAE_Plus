@@ -6,15 +6,12 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.SlotSemantics;
-import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
-import appeng.menu.slot.AppEngSlot;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,23 +19,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
 @Mixin(value = ContainerExPatternProvider.class, priority = 3000)
 public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu implements IActionHolder {
-
-    // 使用高位唯一ID，避免与其他模组在同一类上的 @GuiSync 冲突
-    @GuiSync(31415)
-    @Unique
-    public int eap$page = 0;
-
-    @Unique
-    public int eap$maxPage = 0;
-
-    @Unique
-    private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
     @Unique
     private final Map<String, Consumer<Paras>> eap$actions = createHolder();
@@ -47,53 +32,15 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         super(menuType, id, playerInventory, host);
     }
 
-    @Unique
-    public void eap$showPage() {
-        List<Slot> slots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
-        int totalSlots = slots.size();
-        
-        // 如果总槽位数不超过36个，不需要翻页
-        if (totalSlots <= SLOTS_PER_PAGE) {
-            for (Slot s : slots) {
-                ((AppEngSlot) s).setActive(true);
-            }
-            return;
-        }
-
-        int slot_id = 0;
-
-        for (Slot s : slots) {
-            int page_id = slot_id / SLOTS_PER_PAGE;
-
-            // 当前页的槽位激活
-            // 其他页的槽位隐藏
-            ((AppEngSlot) s).setActive(page_id == this.eap$page);
-            ++slot_id;
-        }
-    }
-
     @Inject(method = "<init>", at = @At("TAIL"))
     public void init(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
-        int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        this.eap$maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
-
         // 注册通用动作（供 CGenericPacket 分发）
-        this.eap$actions.put("multiply2", p -> { eap$modifyPatterns(2, false); });
-        this.eap$actions.put("divide2", p -> { eap$modifyPatterns(2, true);  });
-        this.eap$actions.put("multiply5", p -> { eap$modifyPatterns(5, false); });
-        this.eap$actions.put("divide5", p -> { eap$modifyPatterns(5, true);  });
-        this.eap$actions.put("multiply10", p -> { eap$modifyPatterns(10, false);});
-        this.eap$actions.put("divide10", p -> { eap$modifyPatterns(10, true); });
-    }
-
-    @Unique
-    public int getPage() {
-        return this.eap$page;
-    }
-
-    @Unique
-    public void setPage(int page) {
-        this.eap$page = page;
+        this.eap$actions.put("multiply2", p -> eap$modifyPatterns(2, false));
+        this.eap$actions.put("divide2", p -> eap$modifyPatterns(2, true));
+        this.eap$actions.put("multiply5", p -> eap$modifyPatterns(5, false));
+        this.eap$actions.put("divide5", p -> eap$modifyPatterns(5, true));
+        this.eap$actions.put("multiply10", p -> eap$modifyPatterns(10, false));
+        this.eap$actions.put("divide10", p -> eap$modifyPatterns(10, true));
     }
 
     @Unique

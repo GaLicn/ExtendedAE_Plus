@@ -21,23 +21,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
 @Mixin(GuiExPatternProvider.class)
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButton, IExPatternPage {
-
-    @Unique
-    ScreenStyle eap$screenStyle;
-
     // 跟踪上次屏幕尺寸，处理 GUI 缩放/窗口大小变化后按钮丢失问题
     @Unique private int eap$lastScreenWidth = -1;
     @Unique private int eap$lastScreenHeight = -1;
-
-    // 不再使用右侧 VerticalButtonBar，直接把按钮注册为独立 AE2 小部件
-
-    @Unique
-    private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
     @Unique
     private int eap$currentPage = 0;
@@ -49,59 +37,16 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         super(menu, playerInventory, title, style);
     }
 
-
-
-    // 移除手动挪动 Slot 坐标，交由 SlotGridLayout + 原生布局控制
-
-    @Unique
-    private int getCurrentPage() {
+    @Override
+    public int eap$getCurrentPage() {
         // 优先使用本地 GUI 维护的页码
         return Math.max(0, eap$currentPage % Math.max(1, eap$maxPageLocal));
     }
 
-    @Unique
-    private int getMaxPage() {
+    @Override
+    public int eap$getMaxPageLocal() {
         // 优先使用配置倍数
-        try {
-            int cfg = ModConfig.INSTANCE.pageMultiplier;
-            if (cfg > 1) return cfg;
-        } catch (Throwable ignored) {}
-        try {
-            ContainerExPatternProvider menu1 = this.getMenu();
-            Field fieldMaxPage = eap$findFieldRecursive(menu1.getClass(), "maxPage");
-            if (fieldMaxPage != null) {
-                fieldMaxPage.setAccessible(true);
-                Object v = fieldMaxPage.get(menu1);
-                if (v instanceof Integer i) return i;
-            }
-        } catch (Throwable ignored) {}
-        // 回退：用槽位总数计算
-        try {
-            int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-            return Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
-        } catch (Throwable ignored) {}
-        return 1;
-    }
-
-    @Unique
-    private static Field eap$findFieldRecursive(Class<?> cls, String name) {
-        Class<?> c = cls;
-        while (c != null && c != Object.class) {
-            try {
-                return c.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {}
-            c = c.getSuperclass();
-        }
-        return null;
-    }
-
-    @Unique
-    private static void eap$setIntFieldRecursive(Object obj, String name, int value) {
-        if (obj == null) return;
-        Field f = eap$findFieldRecursive(obj.getClass(), name);
-        if (f != null) {
-            try { f.setAccessible(true); f.set(obj, value); } catch (Throwable ignored) {}
-        }
+        return this.eap$maxPageLocal;
     }
 
     public ActionEPPButton nextPage;
@@ -116,45 +61,17 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     // 在构造器返回后初始化按钮与翻页控制
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
-        this.eap$screenStyle = style;
-        // 保留：不再打印菜单类型
-
-        // 计算并下发 maxPage（配置优先，其次按槽位总数计算）
-        int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        int cfgPages = 1;
-        try { cfgPages = Math.max(1, ModConfig.INSTANCE.pageMultiplier); } catch (Throwable ignored) {}
-        int calcPages = Math.max(1, (int) Math.ceil(totalSlots / (double) SLOTS_PER_PAGE));
-        int desiredMaxPage = Math.max(cfgPages, calcPages);
-        // 更新本地最大页
-        this.eap$maxPageLocal = Math.max(1, desiredMaxPage);
-        this.eap$currentPage = 0;
-        try {
-            Field fMax = eap$findFieldRecursive(menu.getClass(), "maxPage");
-            if (fMax != null) { fMax.setAccessible(true); fMax.set(menu, desiredMaxPage); }
-        } catch (Throwable ignored) {}
+        this.eap$maxPageLocal = ModConfig.INSTANCE.pageMultiplier;
 
         // 翻页按钮（当存在多页时显示；支持仅由配置决定的“空白页”）
-        if (desiredMaxPage > 1) {
+        if (eap$maxPageLocal > 1) {
             this.prevPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
-                int newPage = (currentPage - 1 + maxPage) % maxPage;
-                try {
-                    ContainerExPatternProvider menu1 = this.getMenu();
-                    // 尝试调用 setPage
-                    try {
-                        Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                        setPageMethod.invoke(menu1, newPage);
-                    } catch (Throwable ignored2) {}
-                    // 直接写入 page 字段，确保生效
-                    Field f = eap$findFieldRecursive(menu1.getClass(), "page");
-                    if (f != null) {
-                        f.setAccessible(true);
-                        f.set(menu1, newPage);
-                    }
-                } catch (Exception ignored) {}
+                int currentPage = eap$getCurrentPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, eap$getMaxPageLocal());
+
                 // 同步到本地 GUI 页码
-                this.eap$currentPage = newPage;
+                this.eap$currentPage = (currentPage - 1 + maxPage) % maxPage;
+
                 // 强制重排（放在更新本地页码之后，确保布局读取到新页）
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
@@ -162,25 +79,12 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             }, Icon.ARROW_LEFT);
 
             this.nextPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
-                int newPage = (currentPage + 1) % maxPage;
-                try {
-                    ContainerExPatternProvider menu1 = this.getMenu();
-                    // 尝试调用 setPage
-                    try {
-                        java.lang.reflect.Method setPageMethod = menu1.getClass().getMethod("setPage", int.class);
-                        setPageMethod.invoke(menu1, newPage);
-                    } catch (Throwable ignored2) {}
-                    // 直接写入 page 字段，确保生效
-                    Field f = eap$findFieldRecursive(menu1.getClass(), "page");
-                    if (f != null) {
-                        f.setAccessible(true);
-                        f.set(menu1, newPage);
-                    }
-                } catch (Exception ignored) {}
+                int currentPage = eap$getCurrentPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, eap$getMaxPageLocal());
+
                 // 同步到本地 GUI 页码
-                this.eap$currentPage = newPage;
+                this.eap$currentPage = (currentPage + 1) % maxPage;
+
                 // 强制重排（放在更新本地页码之后，确保布局读取到新页）
                 this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
                 this.repositionSlots(SlotSemantics.STORAGE);
@@ -232,20 +136,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addRenderableWidget(this.x10Button);
     }
 
-    @Override
-    public int eap$getCurrentPage() {
-        return getCurrentPage();
-    }
-
-    @Override
-    public int eap$getMaxPageLocal() {
-        return this.eap$maxPageLocal;
-    }
-
-    // 页码文本绘制移交给 AEBaseScreenMixin.renderLabels 尾部执行
-
-    // 注意：不再注入 Screen#init，避免混入在某些映射情况下失败导致 TransformerError
-    
     @Override
     public void eap$updateButtonsLayout() {
         // 只处理按钮可见性与定位，不再强制 showPage 或挪动 Slot 坐标，避免与原布局/tooltip 冲突
@@ -357,120 +247,4 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.x10Button.setY(by + spacing * 5);
         }
     }
-
-    /**
-     * 在服务器端执行样板缩放操作（单机模式）
-     */
-    @Unique
-    private void executePatternScalingOnServer(net.minecraft.server.level.ServerPlayer serverPlayer, String scalingType, double scaleFactor) {
-        try {
-            // 将实际逻辑切换到服务端主线程执行，避免跨线程访问导致读取到空库存
-            serverPlayer.getServer().execute(() -> {
-                try {
-                    // 直接基于容器槽位操作，完全绕开 PatternProviderLogic 及其内部字段
-                    if (!(serverPlayer.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExPatternProvider exMenu)) {
-                        return;
-                    }
-
-                    int scaled = 0;
-                    int failed = 0;
-                    int total = 0;
-                    final int scale = (int) Math.round(scaleFactor);
-                    final boolean div = !"MULTIPLY".equals(scalingType);
-
-                    java.util.List<net.minecraft.world.inventory.Slot> slots = exMenu.getSlots(appeng.menu.SlotSemantics.ENCODED_PATTERN);
-                    for (var slot : slots) {
-                        var stack = slot.getItem();
-                        if (stack.getItem() instanceof appeng.crafting.pattern.EncodedPatternItem patternItem) {
-                            total++;
-                            var detail = patternItem.decode(stack, serverPlayer.level(), false);
-                            if (detail instanceof appeng.crafting.pattern.AEProcessingPattern process) {
-                                var input = process.getSparseInputs();
-                                var output = process.getOutputs();
-
-                                // 检查是否可修改（来源：ExtendedAE ContainerPatternModifier.checkModify）
-                                if (checkModifyLikeExtendedAE(input, scale, div) && checkModifyLikeExtendedAE(output, scale, div)) {
-                                    var mulInput = new appeng.api.stacks.GenericStack[input.length];
-                                    var mulOutput = new appeng.api.stacks.GenericStack[output.length];
-                                    modifyStacksLikeExtendedAE(input, mulInput, scale, div);
-                                    modifyStacksLikeExtendedAE(output, mulOutput, scale, div);
-                                    var newPattern = appeng.api.crafting.PatternDetailsHelper.encodeProcessingPattern(mulInput, mulOutput);
-                                    if (slot instanceof appeng.menu.slot.AppEngSlot as) {
-                                        as.set(newPattern);
-                                    } else {
-                                        slot.set(newPattern);
-                                    }
-                                    scaled++;
-                                } else {
-                                    failed++;
-                                }
-                            } else {
-                                // 非处理样板：跳过
-                                failed++;
-                            }
-                        }
-                    }
-
-                    // 构造结果并回显
-                    String message;
-                    if (scaled == 0) {
-                        message = String.format(
-                            "ℹ️ ExtendedAE Plus: 样板%s完成，但未处理任何样板。共发现 %d 个样板，失败 %d 个（可能全为合成样板或数量不满足条件）",
-                            div ? "除法" : "倍增", total, failed);
-                    } else if (failed > 0) {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s完成！处理了 %d 个，跳过 %d 个", div ? "除法" : "倍增", scaled, failed);
-                    } else {
-                        message = String.format("✅ ExtendedAE Plus: 样板%s成功！处理了 %d 个", div ? "除法" : "倍增", scaled);
-                    }
-
-                    var minecraft = net.minecraft.client.Minecraft.getInstance();
-                    if (minecraft.player != null) {
-                        minecraft.player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), true);
-                    }
-
-                } catch (Exception ignored) {
-                }
-            });
-
-        } catch (Exception ignored) {
-        }
-    }
-
-    @Unique
-    private boolean checkModifyLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks, int scale, boolean div) {
-        if (div) {
-            for (var stack : stacks) {
-                if (stack != null) {
-                    if (stack.amount() % scale != 0) {
-                        return false;
-                    }
-                }
-            }
-        } else {
-            for (var stack : stacks) {
-                if (stack != null) {
-                    long upper = 999999L * stack.what().getAmountPerUnit();
-                    if (stack.amount() * scale > upper) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    @Unique
-    private void modifyStacksLikeExtendedAE(appeng.api.stacks.GenericStack[] stacks,
-                                            appeng.api.stacks.GenericStack[] des,
-                                            int scale,
-                                            boolean div) {
-        for (int i = 0; i < stacks.length; i++) {
-            if (stacks[i] != null) {
-                long amt = div ? stacks[i].amount() / scale : stacks[i].amount() * scale;
-                des[i] = new appeng.api.stacks.GenericStack(stacks[i].what(), amt);
-            }
-        }
-    }
-    
-
 }
