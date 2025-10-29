@@ -193,8 +193,7 @@ public abstract class AEBaseScreenMixin {
     @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
     private void onUpdateBeforeRender(CallbackInfo ci) {
         try {
-            AEBaseScreen<?> self = (AEBaseScreen<?>) (Object) this;
-            if (self instanceof PatternProviderScreen screen) {
+            if (((Object) this) instanceof PatternProviderScreen<?> screen) {
                 Component t = screen.getTitle();
                 if (t != null && !t.getString().isEmpty()) {
                     this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
