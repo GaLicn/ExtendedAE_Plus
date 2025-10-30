@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.ae2.client.gui;
+package com.extendedae_plus.mixin.ae2.client.gui.patternProvider;
 
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
@@ -32,12 +32,12 @@ import static com.extendedae_plus.util.GuiUtil.createToggle;
 import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
- * 为 AE2 原版样板供应器界面添加“高级阻挡模式”按钮。
+ * 为 AE2 原版样板供应器界面添加“智能系列”按钮。
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
 @Mixin(PatternProviderScreen.class)
-public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
+public abstract class PatternProviderSmartFeaturesMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
 
     // 高级阻挡模式切换按钮
     @Unique private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
@@ -53,7 +53,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     // 当前智能翻倍上限
     @Unique private int eap$PerProviderScalingLimit = 0;
 
-    public PatternProviderScreenMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
+    public PatternProviderSmartFeaturesMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
 
@@ -208,6 +208,17 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             } catch (Throwable t) {
                 EAP$LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
             }
+        }
+    }
+
+    /**
+     * 显示样板供应器的customName
+     */
+    @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
+    private void onUpdateBeforeRender(CallbackInfo ci) {
+        Component t = this.getTitle();
+        if (!t.getString().isEmpty()) {
+            this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
         }
     }
 }

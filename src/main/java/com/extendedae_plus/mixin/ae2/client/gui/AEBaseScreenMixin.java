@@ -6,7 +6,6 @@ import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.StackWithBounds;
 import appeng.client.gui.TextOverride;
-import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
@@ -29,10 +28,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.world.inventory.Slot;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -82,15 +79,10 @@ public abstract class AEBaseScreenMixin {
     }
 
     /**
-     * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
+     * 为所有可见的样板槽位添加数量显示
      */
-    @Inject(method = "renderSlot", at = @At("TAIL"))
-    private void eap$renderSlotAmounts(GuiGraphics guiGraphics, Slot s, CallbackInfo ci) {
-        // 只处理AppEngSlot类型的槽位
-        if (!(s instanceof AppEngSlot appEngSlot)) {
-            return;
-        }
-
+    @Inject(method = "renderAppEngSlot", at = @At("TAIL"), remap = false)
+    private void eap$renderSlotAmounts(GuiGraphics guiGraphics, AppEngSlot appEngSlot, CallbackInfo ci) {
         // 检查槽位是否可见且有效
         if (!appEngSlot.isActive() || !appEngSlot.isSlotEnabled()) {
             return;
@@ -114,20 +106,13 @@ public abstract class AEBaseScreenMixin {
 
         try {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
-            try {
-                if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
-                    AEKey key = details.getOutputs()[0].what();
-                    if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
-                        try {
-                            GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
-                        } catch (Throwable ignored) {
-                        }
-                    }
+            if (details != null && details.getOutputs() != null && details.getOutputs().length > 0) {
+                AEKey key = details.getOutputs()[0].what();
+                if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
+                    GuiUtil.drawSlotRainbowHighlight(guiGraphics, appEngSlot.x, appEngSlot.y);
                 }
-            } catch (Throwable ignore) {
             }
-        } catch (Throwable ignore) {
-        }
+        } catch (Throwable ignore) {}
     }
 
     // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
@@ -184,21 +169,6 @@ public abstract class AEBaseScreenMixin {
             if (scale != 1.0f) guiGraphics.pose().scale(scale, scale, 1);
             guiGraphics.drawString(font, pageText, 0, 0, color, false);
             guiGraphics.pose().popPose();
-        } catch (Throwable ignored) {}
-    }
-
-    @Shadow(remap = false)
-    protected void setTextContent(String id, Component content) {}
-
-    @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
-    private void onUpdateBeforeRender(CallbackInfo ci) {
-        try {
-            if (((Object) this) instanceof PatternProviderScreen<?> screen) {
-                Component t = screen.getTitle();
-                if (t != null && !t.getString().isEmpty()) {
-                    this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
-                }
-            }
         } catch (Throwable ignored) {}
     }
 }
