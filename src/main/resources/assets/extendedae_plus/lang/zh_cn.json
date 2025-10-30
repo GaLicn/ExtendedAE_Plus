@@ -46,11 +46,14 @@
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
+  "extendedae_plus.upload_to_GTMatrix.success": "样板已上传到分子操纵者",
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
+  "extendedae_plus.upload_to_matrix.fail_no_GTMatrix": "未在当前网络中找到已成型的分子操纵者",
   "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入",
+  "extendedae_plus.upload_to_GTMatrix.fail_full": "分子操纵者的样板仓已满或无法插入",
   "extendedae_plus.upload_to_matrix.repetition": "装配矩阵已存在相同样板，已跳过上传并返还空白样板",
-
+  "extendedae_plus.upload_to_GTMatrix.repetition": "分子操纵者已存在相同样板，已跳过上传并返还空白样板",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
@@ -113,6 +116,7 @@
   "config.extendedae_plus.option.entityTickerMultipliers": "实体加速器额外消耗倍率",
   "config.extendedae_plus.option.prioritizeDiskEnergy": "优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE合成计算暂停检查阈值",
+  "config.extendedae_plus.option.restrictCraftingPatternToMolecular": "限制合成样板自动上传仅进入分子操纵者",
 
   "item.extendedae_plus.channel_card": "频道卡",
   "item.extendedae_plus.channel_card.channel": "频率：%s",
@@ -123,16 +127,16 @@
   "item.extendedae_plus.channel_card.owner.player": "所有者：玩家 %s",
   "item.extendedae_plus.channel_card.owner.bound": "已绑定至：%s",
   "item.extendedae_plus.channel_card.owner.cleared": "已清除所有者绑定",
-  
+
   "extendedae_plus.tooltip.owner": "所有者: %s",
   "extendedae_plus.tooltip.owner.unset": "所有者: 未设置",
   "extendedae_plus.tooltip.owner.public": "所有者: 公共",
-  
+
   "extendedae_plus.screen.frequency_input.title": "设置频率",
   "extendedae_plus.screen.frequency_input.current": "当前频率：%s",
   "extendedae_plus.screen.frequency_input.field": "频率",
   "extendedae_plus.screen.frequency_input.confirm": "确认",
-  
+
   "group.pattern_provider.name": "样板供应器",
   "group.entity_ticker.name": "实体加速器",
   "group.storage.name": "存储总线"
