@@ -4,7 +4,6 @@ import appeng.api.upgrades.Upgrades;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.core.localization.GuiText;
 import appeng.menu.SlotSemantics;
@@ -28,6 +27,9 @@ import java.util.List;
  */
 @Mixin(value = PatternProviderScreen.class, priority = 500, remap = false)
 public abstract class PatternProviderScreenCompatMixin<C extends PatternProviderMenu> extends AEBaseScreen<C> {
+    public PatternProviderScreenCompatMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super(menu, playerInventory, title, style);
+    }
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void eap$initCompatUpgrades(PatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
@@ -42,7 +44,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
             Logger.EAP$LOGGER.error("PatternProviderScreen兼容性升级面板初始化失败", e);
         }
     }
-    
+
     @Unique
     private void eap$addUpgradePanelDirect(PatternProviderMenu menu, ScreenStyle style) {
         try {
@@ -50,14 +52,6 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
             this.widgets.add("upgrades", new UpgradesPanel(
                     menu.getSlots(SlotSemantics.UPGRADE),
                     this::eap$getCompatibleUpgrades));
-            
-            // 添加工具箱面板（如果菜单实现了兼容接口）
-            if (menu instanceof UpgradeSlotCompat.IUpgradeableMenuCompat compatMenu) {
-                var toolbox = compatMenu.getCompatToolbox();
-                if (toolbox != null && toolbox.isPresent()) {
-                    this.widgets.add("toolbox", new ToolboxPanel(style, toolbox.getName()));
-                }
-            }
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("直接添加升级面板失败", e);
         }
@@ -67,7 +61,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
     private List<Component> eap$getCompatibleUpgrades() {
         var list = new ArrayList<Component>();
         list.add(GuiText.CompatibleUpgrades.text());
-        
+
         try {
             if (menu instanceof UpgradeSlotCompat.IUpgradeableMenuCompat compatMenu) {
                 var upgrades = compatMenu.getCompatUpgrades();
@@ -78,12 +72,7 @@ public abstract class PatternProviderScreenCompatMixin<C extends PatternProvider
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("获取兼容升级列表失败", e);
         }
-        
-        return list;
-    }
 
-    // 构造函数，Mixin要求
-    public PatternProviderScreenCompatMixin(C menu, Inventory playerInventory, Component title, ScreenStyle style) {
-        super(menu, playerInventory, title, style);
+        return list;
     }
 }

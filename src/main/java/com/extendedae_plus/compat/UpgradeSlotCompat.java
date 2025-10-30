@@ -1,7 +1,6 @@
 package com.extendedae_plus.compat;
 
 import appeng.api.upgrades.IUpgradeInventory;
-import appeng.menu.ToolboxMenu;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -50,8 +49,6 @@ public class UpgradeSlotCompat {
      * 兼容性升级菜单接口
      */
     public interface IUpgradeableMenuCompat {
-        ToolboxMenu getCompatToolbox();
-        void setCompatToolbox(ToolboxMenu toolbox);
         IUpgradeInventory getCompatUpgrades();
     }
 }

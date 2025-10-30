@@ -28,7 +28,7 @@ public class InterfaceLogicUpgradesMixin {
     private IUpgradeInventory upgrades;
 
     @Shadow
-    protected void onUpgradesChanged() {}
+    private void onUpgradesChanged() {}
 
     /**
      * 在InterfaceLogic构造函数末尾注入，增加升级槽数量
