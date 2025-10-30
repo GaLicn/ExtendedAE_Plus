@@ -78,4 +78,8 @@ public class ModCheckUtils {
             return 0;
         }
     }
+
+    public static boolean isAppfluxLoading() {
+        return ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX);
+    }
 }

@@ -41,10 +41,6 @@ public abstract class InterfaceLogicChannelCardMixin implements IInterfaceWirele
     
     @Unique
     private int eap$delayedInitTicks = 0;
-    
-    static {
-        // InterfaceLogicChannelCardMixin 已加载
-    }
 
     @Inject(method = "onUpgradesChanged", at = @At("TAIL"), remap = false)
     private void eap$onUpgradesChangedTail(CallbackInfo ci) {

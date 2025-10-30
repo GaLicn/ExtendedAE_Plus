@@ -5,7 +5,7 @@ import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
-import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.Item;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,34 +40,14 @@ public class InterfaceLogicUpgradesMixin {
             require = 0  // 设置为可选注入，避免在某些情况下导致崩溃
     )
     private void expandInterfaceUpgrades(IManagedGridNode gridNode, InterfaceLogicHost host, Item is, int slots, CallbackInfo ci) {
-        try {
-            // 安全检查
-            if (this.upgrades == null || gridNode == null || host == null || is == null) {
-                return;
-            }
-            
-            int currentSlots = this.upgrades.size();
-            
-            // 检查Applied Flux是否已经修改了升级槽
-            if (UpgradeSlotCompat.isAppfluxPresent()) {
-                if (currentSlots >= 3) {
-                    // Applied Flux已经增加了足够的升级槽，跳过修改
-                    return;
-                } else if (currentSlots == 2) {
-                    // Applied Flux增加到2个，我们再增加1个到3个
-                    this.upgrades = UpgradeInventories.forMachine(is, 3, this::onUpgradesChanged);
-                } else if (currentSlots == 1) {
-                    // Applied Flux存在但未生效，直接增加到3个
-                    this.upgrades = UpgradeInventories.forMachine(is, 3, this::onUpgradesChanged);
-                }
-            } else {
-                if (currentSlots == 1) {
-                    // Applied Flux不存在，将升级槽从1个增加到2个
-                    this.upgrades = UpgradeInventories.forMachine(is, 2, this::onUpgradesChanged);
-                }
-            }
-        } catch (Exception e) {
-            // 发生异常时不修改升级槽，确保不会崩溃
+        int currentSlots = this.upgrades.size();
+
+        // 默认 1 个，有 Applied Flux 时希望至少 3 个，否则至少 2 个
+        int desiredSlots = ModCheckUtils.isAppfluxLoading() ? 3 : 2;
+
+        // 仅当当前槽位小于期望值时才扩容；如果已 >= desiredSlots 则不改动（避免降级或叠加）
+        if (currentSlots < desiredSlots) {
+            this.upgrades = UpgradeInventories.forMachine(is, desiredSlots, this::onUpgradesChanged);
         }
     }
 }

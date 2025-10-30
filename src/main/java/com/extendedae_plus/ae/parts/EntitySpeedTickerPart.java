@@ -69,7 +69,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     // 静态块：初始化缓存
     static {
-         if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX)) {
+         if (ModCheckUtils.isAppfluxLoading()) {
             try {
                 Class<?> helperClass = Class.forName("com.extendedae_plus.util.entitySpeed.FluxEnergyHelper");
                 Method method = helperClass.getMethod("extractFE", IEnergyService.class, MEStorage.class, long.class, IActionSource.class);
