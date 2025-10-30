@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin;
+package com.extendedae_plus.mixin.minecraft;
 
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.PickFromWirelessC2SPacket;

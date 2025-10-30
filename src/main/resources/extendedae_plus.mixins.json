@@ -4,9 +4,6 @@
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
-    "PickFromWirelessMixin",
-    "accessor.AbstractContainerScreenAccessor",
-    "accessor.ScreenAccessor",
     "advancedae.client.gui.AdvPatternProviderScreenMixin",
     "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",
     "ae2.accessor.AEBaseScreenAccessor",
@@ -28,10 +25,13 @@
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
-    "hooks.ModelBakeryMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
-    "jei.accessor.BookmarkOverlayAccessor"
+    "jei.accessor.BookmarkOverlayAccessor",
+    "minecraft.ModelBakeryMixin",
+    "minecraft.PickFromWirelessMixin",
+    "minecraft.accessor.AbstractContainerScreenAccessor",
+    "minecraft.accessor.ScreenAccessor"
   ],
   "mixins": [
     "advancedae.AdvPatternProviderLogicContainsRedirectMixin",

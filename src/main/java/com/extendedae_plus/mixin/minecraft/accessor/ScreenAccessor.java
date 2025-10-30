@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.accessor;
+package com.extendedae_plus.mixin.minecraft.accessor;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Renderable;
