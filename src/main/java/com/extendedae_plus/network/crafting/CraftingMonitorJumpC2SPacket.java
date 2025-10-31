@@ -7,8 +7,8 @@ import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.service.CraftingService;
+import appeng.menu.me.crafting.CraftingCPUMenu;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -52,15 +52,14 @@ public class CraftingMonitorJumpC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null) return;
 
-
             // 必须在 CraftingCPU 界面内
-            if (!(player.containerMenu instanceof appeng.menu.me.crafting.CraftingCPUMenu menu)) {
+            if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
                 return;
             }
 
             // 通过菜单 target（可能是 BlockEntity/Part/ItemHost）按 IActionHost 获取 Grid
             IGrid grid = null;
-            Object target = ((appeng.menu.AEBaseMenu) menu).getTarget();
+            Object target = menu.getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
                 grid = host.getActionableNode().getGrid();
             }
@@ -82,9 +81,7 @@ public class CraftingMonitorJumpC2SPacket {
             // 2) 遍历提供该样板的 Provider，优先 PatternProviderLogic
             for (var pattern : patterns) {
                 var providers = craftingService.getProviders(pattern);
-                int providerCount = 0;
                 for (var provider : providers) {
-                    providerCount++;
                     if (provider instanceof PatternProviderLogic ppl) {
                         // 使用 accessor 获取 host（受保护字段通过 accessor 访问）
                         PatternProviderLogicHost host = ((PatternProviderLogicAccessor) ppl).eap$host();

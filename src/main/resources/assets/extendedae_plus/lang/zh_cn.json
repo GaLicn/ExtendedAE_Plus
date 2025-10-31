@@ -66,6 +66,11 @@
   "extendedae_plus.screen.upload.mapping_deleted": "已删除 %d 条映射，名称 = %s",
   "extendedae_plus.screen.upload.mapping_not_found": "未找到名称为 '%s' 的映射",
   "extendedae_plus.screen.upload.name": "映射名",
+  "extendedae_plus.screen.upload.select_provider_first": "请先点击左侧按钮选择一个样板供应器",
+  "extendedae_plus.screen.upload.invalid_pattern": "无效样板",
+  "extendedae_plus.screen.upload.no_network_support": "未找到 ExtendedAE 网络支持（可能未安装或版本不兼容）",
+
+  "extendedae_plus.screen.open_provider_ui": "打开该供应器目标容器的界面",
   "extendedae_plus.button.choose_provider":"上传样板",
   "extendedae_plus.pattern.hovertext.player": "由 %s 编码",
 

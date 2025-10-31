@@ -50,6 +50,8 @@
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "Only crafting patterns are supported; processing patterns will be ignored",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "No formed assembly matrix found in the current network",
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
+  "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
+
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",
   "extendedae_plus.screen.reload_mapping_fail": "Overloading mapping failed: %s",
@@ -63,6 +65,11 @@
   "extendedae_plus.screen.upload.mapping_deleted": "Deleted %d mapping(s), name = %s",
   "extendedae_plus.screen.upload.mapping_not_found": "No mapping found for name '%s'",
   "extendedae_plus.screen.upload.name": "Mapping Name",
+  "extendedae_plus.screen.upload.select_provider_first":"Please click the button on the left to select a pattern provider first",
+  "extendedae_plus.screen.upload.invalid_pattern": "Invalid Pattern",
+  "extendedae_plus.screen.upload.no_network_support": "ExtendedAE network support not found (may be missing or incompatible version)",
+
+  "extendedae_plus.screen.open_provider_ui": "Open the target container UI of this provider",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
   "extendedae_plus.pattern.hovertext.player": "Encoded by %s",
 

@@ -20,7 +20,6 @@ import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import com.google.common.collect.HashMultimap;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -28,7 +27,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -44,7 +42,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
+
 @Pseudo
+@SuppressWarnings({"AddedMixinMembersNamePattern"})
 @Mixin(value = GuiExPatternTerminal.class)
 public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> {
     @Shadow(remap = false) @Final private static int GUI_PADDING_X;
@@ -52,14 +53,12 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     @Shadow(remap = false) @Final private static int GUI_HEADER_HEIGHT;
     @Shadow(remap = false) @Final private static int ROW_HEIGHT;
     @Shadow(remap = false) @Final private static int TEXT_MAX_WIDTH;
-    @Unique private final Map<Integer, Button> eap$openUIButtons = new HashMap<>();
-    @Unique private IconButton eap$toggleSlotsButton;
-    @Unique private boolean eap$showSlots = false; // 默认由配置初始化
-    @Unique private long eap$currentlyChoicePatterProvider = -1; // 当前选择的样板供应器ID
+
     @Shadow(remap = false) @Final private AETextField searchOutField;
     @Shadow(remap = false) @Final private AETextField searchInField;
     @Shadow(remap = false) @Final private Set<ItemStack> matchedStack;
     @Shadow(remap = false) @Final private Set<PatternContainerRecord> matchedProvider;
+
     @Shadow(remap = false) @Final private HashMultimap<PatternContainerGroup, PatternContainerRecord> byGroup;
     @Shadow(remap = false) @Final private HashMap<Long, GuiExPatternTerminal.PatternProviderInfo> infoMap;
     @Shadow(remap = false) @Final private Scrollbar scrollbar;
@@ -67,16 +66,20 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     @Shadow(remap = false) private int visibleRows;
     @Shadow(remap = false) @Final private HashMap<Integer, HighlightButton> highlightBtns;
 
+    /* ----- eap 自有字段 ----- */
+    @Unique private final Map<Integer, Button> openUIButtons = new HashMap<>();
+    @Unique private IconButton eap$toggleSlotsButton;
+    @Unique private boolean eap$showSlots = false; // 默认由配置初始化
+    @Unique private long currentlyChoicePatterProvider = -1; // 当前选择的样板供应器ID
+
+    // 按钮更新/缓存状态，避免每帧重建
+    @Unique private boolean buttonsDirty = true; // 当列表或布局变化时置 true
+    @Unique private int lastScroll = Integer.MIN_VALUE;
+    @Unique private int lastRowsSize = Integer.MIN_VALUE;
+    @Unique private int lastVisibleRows = Integer.MIN_VALUE;
+
     public GuiExPatternTerminalMixin(AEBaseMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
-    }
-
-    /**
-     * 获取当前选择的样板供应器ID
-     */
-    @Unique
-    public long getCurrentlyChoicePatternProvider() {
-        return eap$currentlyChoicePatterProvider;
     }
 
     /**
@@ -84,7 +87,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
      */
     @Unique
     public void setCurrentlyChoicePatternProvider(long id) {
-        this.eap$currentlyChoicePatterProvider = id;
+        this.currentlyChoicePatterProvider = id;
     }
 
     /**
@@ -104,20 +107,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 // 检查是否是有效的编码样板
                 if (!clickedItem.isEmpty() && PatternDetailsHelper.isEncodedPattern(clickedItem)) {
                     // 检查是否选择了样板供应器
-                    if (eap$currentlyChoicePatterProvider != -1) {
+                    if (currentlyChoicePatterProvider != -1) {
                         // 执行快速上传
                         this.eap$quickUploadPattern(hoveredSlot.getSlotIndex());
-
                         // 取消默认的点击行为
                         cir.setReturnValue(true);
                     } else {
                         // 显示提示消息：请先选择一个样板供应器
-                        if (this.minecraft.player != null) {
-                            this.minecraft.player.displayClientMessage(
-                                    Component.literal("ExtendedAE Plus: 请先选择一个样板供应器（点击GroupHeader旁的按钮）"),
-                                    true
-                            );
-                        }
+                        sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.select_provider_first"));
                     }
                 }
             }
@@ -129,26 +126,30 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
      */
     @Unique
     private void eap$quickUploadPattern(int playerSlotIndex) {
-        if (this.minecraft.player != null) {
-            // 获取要上传的物品
-            ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
-            if (!itemToUpload.isEmpty() && PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
-                EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("upload", playerSlotIndex, eap$currentlyChoicePatterProvider));
-            } else {
-                this.minecraft.player.displayClientMessage(
-                        Component.literal("❌ ExtendedAE Plus: 无效的样板物品"),
-                        true
-                );
-            }
+        if (this.minecraft.player == null) return;
+
+        ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
+        if (itemToUpload.isEmpty() || !PatternDetailsHelper.isEncodedPattern(itemToUpload)) {
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.invalid_pattern"));
+            return;
+        }
+
+        // 直接使用软依赖类发送包（EPPNetworkHandler + CGenericPacket 已在 classpath）
+        try {
+            EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket("upload", playerSlotIndex, currentlyChoicePatterProvider));
+        } catch (Throwable t) {
+            // 提示玩家网络支持缺失或版本不兼容
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.no_network_support"));
         }
     }
 
     /**
-     * 尝试打开指定行对应的样板供应器的 UI。
-     * 该方法基于 GroupHeaderRow 获取分组信息，再获取该分组下的第一个 PatternContainerRecord，
-     * 并通过 serverId 获取 PatternProviderInfo 来发送 C2S 包打开目标供应器界面。
-     *
-     * @param rowIndex 要操作的行索引
+     * 尝试打开指定行对应的样板供应器的 UI
+     * <p>
+     * 说明：
+     * - 通过 rows 获取 GroupHeaderRow（使用 Accessor 获取 group）
+     * - 通过 byGroup 获取对应 PatternContainerRecord 集合，拿第一个 record 的 serverId
+     * - 通过 infoMap 获取 PatternProviderInfo，发送 C2S 包打开目标容器界面
      */
     @Unique
     private void eap$tryOpenProviderUI(int rowIndex) {
@@ -158,65 +159,44 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             PatternContainerGroup group = ((GuiExPatternTerminalGroupHeaderRowAccessor) headerRow).Group();
             // 获取该组下的所有 PatternContainerRecord
             Set<PatternContainerRecord> containers = byGroup.get(group);
-            if (containers == null || containers.isEmpty()) {
-                return; // 分组为空，无供应器
-            }
+            if (containers == null || containers.isEmpty()) return;
 
-            // 取该组下第一个 PatternContainerRecord
             PatternContainerRecord firstRecord = containers.iterator().next();
-            long serverId = firstRecord.getServerId(); // 获取供应器服务器 ID
+            long serverId = firstRecord.getServerId();
 
-            // 通过 infoMap 获取供应器位置信息
-            GuiExPatternTerminal.PatternProviderInfo patternProviderInfo = infoMap.get(serverId);
-            if (patternProviderInfo == null) {
-                // 如果没有位置信息，提示玩家
-                if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.displayClientMessage(
-                            Component.literal("未找到该供应器的位置信息，无法打开UI"),
-                            true
-                    );
-                }
-                return;
-            }
+            GuiExPatternTerminal.PatternProviderInfo info = infoMap.get(serverId);
+            if (info == null) return;
 
-            // 获取位置信息和朝向
-            BlockPos pos = patternProviderInfo.pos();
-            Direction face = patternProviderInfo.face();
-            ResourceKey<Level> playerWorld = patternProviderInfo.playerWorld();
+            BlockPos pos = info.pos();
+            Direction face = info.face();
+            ResourceKey<Level> worldKey = info.playerWorld();
+            if (pos == null || worldKey == null) return;
 
-            // 转换为 C2S 包所需类型
-            long posLong = pos.asLong();
-            ResourceLocation dimStr = playerWorld.location();
-            int faceOrd = (face != null) ?
-                    face.ordinal() :
-                    -1;
-
-            // 发送打开 UI 的 C2S 包
             ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
-                    posLong,
-                    dimStr,
-                    faceOrd
+                    pos.asLong(),
+                    worldKey.location(),
+                    face != null ? face.ordinal() : -1
             ));
-        } catch (Throwable ignored) {
-            // 静默失败，不影响界面操作
-        }
+        } catch (Exception ignored) {}
     }
 
-    @Shadow
-    private void refreshList() {}
+    /* ----- Shadow 方法 ----- */
+    @Shadow(remap = false) private void refreshList() {}
+    @Shadow(remap = false) private void resetScrollbar() {}
 
-    @Shadow
-    private void resetScrollbar() {}
-
+    /* ----- 构造注入：创建切换按钮（只设置状态并触发一次 refresh） ----- */
     @Inject(method = "<init>", at = @At("TAIL"), remap = false)
     private void injectConstructor(CallbackInfo ci) {
-        // 根据配置初始化默认显示/隐藏状态
+        // 初始化默认显示状态
         this.eap$showSlots = ModConfig.INSTANCE.patternTerminalShowSlotsDefault;
-        // 创建切换槽位显示的按钮
-        this.eap$toggleSlotsButton = new IconButton((b) -> {
-            this.eap$showSlots = !this.eap$showSlots; // 开关状态
 
-            refreshList();
+        // 创建切换槽位显示的按钮（只切换状态并触发一次 refresh）
+        this.eap$toggleSlotsButton = new IconButton((b) -> {
+            this.eap$showSlots = !this.eap$showSlots;
+            // 标记需要更新按钮与高亮映射
+            this.buttonsDirty = true;
+            this.refreshList();
+            this.resetScrollbar();
         }) {
             @Override
             protected Icon getIcon() {
@@ -231,148 +211,166 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         this.addToLeftToolbar(this.eap$toggleSlotsButton);
     }
 
-    /**
-     * 处理屏幕缩放（resize）后按钮位置未更新的问题：
-     * - 清理并移除现有的“打开UI”按钮
-     * - 尝试重置滚动条并刷新列表
-     * 缩放后的下一帧，drawFG 会基于新的 leftPos/topPos 重建与定位按钮
-     */
-    @Inject(method = "resize", at = @At("TAIL"), remap = false, require = 0)
-    private void eap$onResize(Minecraft mc, int width, int height, CallbackInfo ci) {
-        try {
-            // 移除并清理按钮，避免旧位置残留
-            this.eap$openUIButtons.values().forEach(this::removeWidget);
-            this.eap$openUIButtons.clear();
-            refreshList();
-            resetScrollbar();
-        } catch (Throwable ignored) {
-        }
-    }
-
     @Inject(method = "init", at = @At("TAIL"), remap = false, require = 0)
     private void eap$onInit(CallbackInfo ci) {
-        // 清理旧的打开UI按钮
-        this.eap$openUIButtons.values().forEach(this::removeWidget);
-        this.eap$openUIButtons.clear();
+        // 清理旧的打开UI按钮并标记需要重建
+        this.openUIButtons.values().forEach(this::removeWidget);
+        this.openUIButtons.clear();
+        this.buttonsDirty = true;
     }
 
     @Inject(method = "refreshList", at = @At("HEAD"), remap = false)
     private void onRefreshListStart(CallbackInfo ci) {
-        // 更新按钮图标
+        // 更新 toggle 按钮 tooltip 文本
         if (this.eap$toggleSlotsButton != null) {
             this.eap$toggleSlotsButton.setTooltip(Tooltip.create(Component.translatable(
-                    this.eap$showSlots ?
-                            "gui.expatternprovider.hide_slots" :
-                            "gui.expatternprovider.show_slots"
+                    this.eap$showSlots ? "gui.expatternprovider.hide_slots" : "gui.expatternprovider.show_slots"
             )));
         }
-        // 清理旧的打开UI按钮
-        this.eap$openUIButtons.values().forEach(this::removeWidget);
-        this.eap$openUIButtons.clear();
+        // 清理并标记需要重建 UI 按钮（但不在此处做重建）
+        this.openUIButtons.values().forEach(this::removeWidget);
+        this.openUIButtons.clear();
+        this.buttonsDirty = true;
     }
 
+    /**
+     * refreshList 完成后，如果不显示 slots，则在 rows 上做“压缩”并尽量复用 highlightBtns 映射。
+     * 这个实现会尽量复用已有 highlightBtns 的实例，避免无谓的对象重建。
+     */
     @Inject(method = "refreshList", at = @At("TAIL"), remap = false)
     private void onRefreshListEnd(CallbackInfo ci) {
-
-        // 在refreshList结束后，根据showSlots状态过滤SlotsRow
         if (!this.eap$showSlots) {
             try {
-                // 创建新的索引映射
                 HashMap<Integer, HighlightButton> newHighlightBtns = new HashMap<>();
                 int newIndex = 0;
 
-                // 移除所有SlotsRow，只保留GroupHeaderRow，同时重新映射高亮按钮索引
+                // 遍历 rows，保留 GroupHeaderRow 并尝试复用 highlightBtns（原 index -> 按钮）
                 for (int i = 0; i < rows.size(); i++) {
                     Object row = rows.get(i);
                     String className = row.getClass().getSimpleName();
 
                     if (className.equals("GroupHeaderRow")) {
-                        // 保留GroupHeaderRow，并重新映射对应的高亮按钮
                         @SuppressWarnings("unchecked")
                         ArrayList<Object> typedRows = (ArrayList<Object>) rows;
                         typedRows.set(newIndex, row);
 
-                        // 查找原来在这个位置的高亮按钮
-                        // 原始代码中，高亮按钮的索引是在添加GroupHeaderRow之后、添加第一个SlotsRow之前设置的
-                        // 所以按钮的索引指向的是第一个SlotsRow的位置
-                        // 我们需要查找索引为 i+1 的按钮（第一个SlotsRow的位置）
+                        // 原 highlightBtns 在原实现中是放在 GroupHeaderRow 之后第一个 SlotsRow 的 index（i+1）
+                        // 尝试复用原映射中 i+1 的按钮（若存在）
                         if (highlightBtns.containsKey(i + 1)) {
                             HighlightButton button = highlightBtns.get(i + 1);
                             newHighlightBtns.put(newIndex, button);
                         }
 
                         newIndex++;
-                    } else if (className.equals("SlotsRow")) {
-                        // 不保留SlotsRow，也不增加newIndex
                     }
+                    // SlotsRow：跳过，不保留
                 }
 
-                // 移除多余的行
+                // 移除多余行
                 while (rows.size() > newIndex) {
                     rows.remove(rows.size() - 1);
                 }
 
-                // 更新highlightBtns
+                // 更新 highlightBtns：清理旧 map 并复用 new map
                 highlightBtns.clear();
                 highlightBtns.putAll(newHighlightBtns);
 
-                // 强制刷新滚动条
-                resetScrollbar();
+                // 强制刷新滚动条（一次）
+                this.resetScrollbar();
             } catch (Exception ignored) {
             }
         }
+        // 标记按钮需要重建（因为 rows 结构可能已改变）
+        this.buttonsDirty = true;
     }
 
+    /**
+     * drawFG 优化：仅在需要时创建/移除按钮；每帧只更新可见按钮的位置与可见性。
+     */
     @Inject(method = "drawFG", at = @At("TAIL"), remap = false)
     private void eap$afterDrawFG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, CallbackInfo ci) {
-        // 动态放置/创建每个组标题后的“打开UI”按钮
         try {
             int currentScroll = scrollbar.getCurrentScroll();
+            int rowsSize = rows.size();
+            int visRows = this.visibleRows;
 
-            // 先隐藏旧按钮，避免残留
-            for (Button b : this.eap$openUIButtons.values()) {
-                b.visible = false;
+            // 当列表或滚动或 visibleRows 发生变化时，重建或清理按钮（按需）
+            boolean needFullUpdate = this.buttonsDirty
+                    || currentScroll != lastScroll
+                    || rowsSize != lastRowsSize
+                    || visRows != lastVisibleRows;
+
+            if (needFullUpdate) {
+                // 清理已经超出范围或者已不存在的按钮
+                openUIButtons.entrySet().removeIf(entry -> {
+                    int idx = entry.getKey();
+                    if (idx < 0 || idx >= rowsSize) {
+                        removeWidget(entry.getValue());
+                        return true;
+                    }
+                    return false;
+                });
+
+                // 为当前可见窗口内的 GroupHeaderRow 创建按钮（如果不存在）
+                for (int i = 0; i < visRows; i++) {
+                    int rowIndex = currentScroll + i;
+                    if (rowIndex < 0 || rowIndex >= rowsSize) continue;
+                    Object row = rows.get(rowIndex);
+                    if (!row.getClass().getSimpleName().equals("GroupHeaderRow")) continue;
+
+                    // 计算按钮位置（与原实现保持一致）
+                    int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 11;
+                    int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 2;
+
+                    Button btn = openUIButtons.get(rowIndex);
+                    if (btn == null) {
+                        btn = Button.builder(
+                                Component.literal("UI"),
+                                (b) -> eap$tryOpenProviderUI(rowIndex)
+                        ).size(14, 12).build();
+                        btn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.screen.open_provider_ui")));
+                        openUIButtons.put(rowIndex, btn);
+                        this.addRenderableWidget(btn);
+                    }
+                    btn.setPosition(bx, by);
+                    btn.visible = true;
+                }
+
+                // 将不在当前可见窗口内的按钮隐藏
+                for (Map.Entry<Integer, Button> e : openUIButtons.entrySet()) {
+                    int idx = e.getKey();
+                    if (idx < currentScroll || idx >= currentScroll + visRows) {
+                        e.getValue().visible = false;
+                    }
+                }
+
+                // 更新缓存状态
+                this.lastScroll = currentScroll;
+                this.lastRowsSize = rowsSize;
+                this.lastVisibleRows = visRows;
+                this.buttonsDirty = false;
+            } else {
+                // 每帧只更新可见按钮位置（可能因为 leftPos/topPos 动态变化，比如移动窗口）
+                for (int i = 0; i < visRows; i++) {
+                    int rowIndex = currentScroll + i;
+                    Button btn = openUIButtons.get(rowIndex);
+                    if (btn == null) continue;
+                    int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 11;
+                    int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 2;
+                    btn.setPosition(bx, by);
+                    btn.visible = true;
+                }
             }
-
-            for (int i = 0; i < visibleRows; i++) {
-                int rowIndex = currentScroll + i;
-                if (rowIndex < 0 || rowIndex >= rows.size()) {
-                    continue;
-                }
-                Object row = rows.get(rowIndex);
-                if (!row.getClass().getSimpleName().equals("GroupHeaderRow")) {
-                    continue;
-                }
-
-                // 放置按钮：位于名称文本右侧，与原类 choiceButton 锚点相邻，向右偏移 20px
-                int bx = this.leftPos + GUI_PADDING_X + TEXT_MAX_WIDTH - 11;
-                int by = this.topPos + GUI_PADDING_Y + GUI_HEADER_HEIGHT + i * ROW_HEIGHT - 2;
-
-                Button btn = eap$openUIButtons.get(rowIndex);
-                if (btn == null) {
-                    btn = Button.builder(Component.literal("UI"), (b) -> {
-                        eap$tryOpenProviderUI(rowIndex);
-                    }).size(14, 12).build();
-                    btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
-                    eap$openUIButtons.put(rowIndex, btn);
-                    this.addRenderableWidget(btn);
-                }
-                btn.setPosition(bx, by);
-                btn.visible = true;
-            }
-            // 生产环境移除调试日志
         } catch (Throwable ignored) {
         }
 
-        // 原有的搜索高亮逻辑
-        // 仅当任一搜索框非空时绘制叠加层（与原版行为保持一致）
+        // 原有的搜索高亮绘制（仅在搜索激活时绘制）
         boolean searchActive = (this.searchOutField != null && !this.searchOutField.getValue().isEmpty())
                 || (this.searchInField != null && !this.searchInField.getValue().isEmpty());
         if (!searchActive) {
             return;
         }
 
-        // 使用 GuiUtil 的通用绘制方法绘制槽位高亮（包含彩虹流转效果）
         GuiUtil.drawPatternSlotHighlights(guiGraphics, this.menu.slots, this.matchedStack, this.matchedProvider);
     }
 }
