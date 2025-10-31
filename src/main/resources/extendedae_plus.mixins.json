@@ -21,7 +21,7 @@
     "ae2.items.QuartzCuttingKnifeItemMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
-    "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
+    "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
