@@ -171,9 +171,10 @@ public class CraftingMonitorOpenProviderC2SPacket {
             // 聊天提示
             player.displayClientMessage(
                     Component.translatable(
-                            "chat.ex_pattern_access_terminal.pos",
+                            "chat.extendedae_plus.terminal.pos",
                             pbe.getBlockPos().toShortString(),
-                            pbe.getLevel().dimension().location().getPath()
+                            pbe.getLevel().dimension().location().getPath(),
+                            (int) Math.sqrt(player.blockPosition().distSqr(host.getBlockEntity().getBlockPos()))
                     ),
                     false
             );
