@@ -15,10 +15,8 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.network.SetBlockHighlightS2CPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
 import com.extendedae_plus.network.provider.SetProviderPageS2CPacket;
-import com.extendedae_plus.util.CompareModVersionUtil;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.glodblock.github.extendedae.client.render.EAEHighlightHandler;
-import com.glodblock.github.extendedae.util.MessageUtil;
 import com.glodblock.github.glodium.util.GlodUtil;
 import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
 import com.gregtechceu.gtceu.api.machine.MetaMachine;
@@ -92,7 +90,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
                 try {
                     ProviderUIHelper.openProviderUI(provider, pattern, player);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         });
         context.setPacketHandled(true);
@@ -117,27 +116,15 @@ public class CraftingMonitorOpenProviderC2SPacket {
             }
 
             // 聊天提示
-            if (CompareModVersionUtil.compareTo("expatternprovider", "1.4.7")) {
-                player.displayClientMessage(
-                        MessageUtil.createEnhancedHighlightMessage(
-                                player,
-                                pos,
-                                level.dimension(),
-                                "chat.ex_pattern_access_terminal.pos"),
-                        false
-                );
-            } else {
-                player.displayClientMessage(
-                        Component.translatable(
-                                "chat.ex_pattern_access_terminal.pos",
-                                pos.toShortString(),
-                                level.dimension()
-                                        .location()
-                                        .getPath()
-                        ),
-                        false
-                );
-            }
+            player.displayClientMessage(
+                    Component.translatable(
+                            "chat.extendedae_plus.terminal.pos",
+                            pos.toShortString(),
+                            level.dimension().location().getPath(),
+                            (int) Math.sqrt(player.blockPosition().distSqr(pos))
+                    ),
+                    false
+            );
 
             // 最后发送高亮包，保证界面已打开
             if (pattern.getOutputs() != null && pattern.getOutputs().length > 0 && pattern.getOutputs()[0] != null) {
@@ -158,6 +145,7 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
         /**
          * 获取菜单对应的 Grid
+         *
          * @param menu 当前 AEBaseMenu
          * @return Grid 或 null
          */
@@ -178,9 +166,10 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
         /**
          * 查找提供指定样板的可用 Provider
-         * @param cs CraftingService
+         *
+         * @param cs      CraftingService
          * @param pattern 样板
-         * @param grid 当前 Grid
+         * @param grid    当前 Grid
          * @return 第一个可用的 PatternProviderLogic 或 null
          */
         private static PatternProviderLogic findValidProvider(CraftingService cs, IPatternDetails pattern, IGrid grid) {
@@ -211,8 +200,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
          * 4. 发送 Pattern 输出高亮包
          *
          * @param provider PatternProviderLogic 实例
-         * @param pattern 样板
-         * @param player 玩家
+         * @param pattern  样板
+         * @param player   玩家
          */
         private static void openProviderUI(PatternProviderLogic provider, IPatternDetails pattern, ServerPlayer player) {
             var host = ((PatternProviderLogicAccessor) provider).eap$host();
