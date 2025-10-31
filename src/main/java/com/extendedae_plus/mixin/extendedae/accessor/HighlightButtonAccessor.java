@@ -6,7 +6,7 @@ import net.minecraft.core.Direction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(HighlightButton.class)
+@Mixin(value = HighlightButton.class, remap = false)
 public interface HighlightButtonAccessor {
     @Accessor("pos")
     BlockPos getPos();
