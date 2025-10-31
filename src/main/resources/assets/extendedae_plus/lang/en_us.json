@@ -56,6 +56,10 @@
   "extendedae_plus.upload_to_matrix.repetition": "The assembly matrix already exists on the same board, and the upload is skipped and a blank template is returned",
   "extendedae_plus.upload_to_GTMatrix.repetition": "The same board already exists for the molecular manipulator, skipping the upload and returning the blank template",
 
+  "extendedae_plus.upload_to_GTMatrix.fail_full": "The sample compartment of the molecular manipulator is full or cannot be inserted",
+  "extendedae_plus.upload_to_matrix.repetition": "The assembly matrix already exists on the same board, and the upload is skipped and a blank template is returned",
+  "extendedae_plus.upload_to_GTMatrix.repetition": "The same board already exists for the molecular manipulator, skipping the upload and returning the blank template",
+
   "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
 
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
