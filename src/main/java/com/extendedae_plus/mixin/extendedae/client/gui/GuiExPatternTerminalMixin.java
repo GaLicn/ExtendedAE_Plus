@@ -169,7 +169,14 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
             BlockPos pos = info.pos();
             Direction face = info.face();
-            ResourceKey<Level> worldKey = info.playerWorld();
+            ResourceKey<Level> worldKey;
+            try {
+                // 先尝试新版字段名 world()
+                worldKey = (ResourceKey<Level>) info.getClass().getMethod("world").invoke(info);
+            } catch (NoSuchMethodException e) {
+                // 兼容旧版字段名 playerWorld()
+                worldKey = (ResourceKey<Level>) info.getClass().getMethod("playerWorld").invoke(info);
+            }
             if (pos == null || worldKey == null) return;
 
             ModNetwork.CHANNEL.sendToServer(new OpenProviderUiC2SPacket(
