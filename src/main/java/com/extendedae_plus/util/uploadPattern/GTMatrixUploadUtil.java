@@ -11,19 +11,15 @@ import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
-import com.extendedae_plus.config.ModConfig;
-import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
-import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
-import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEMolecularAssemblerIOPartMachine;
+import org.gtlcore.gtlcore.integration.ae2.AEUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +51,12 @@ public final class GTMatrixUploadUtil {
         if (!(details instanceof AECraftingPattern
                 || details instanceof AESmithingTablePattern
                 || details instanceof AEStonecuttingPattern)) {
+            return;
+        }
+
+        if (!AEUtils.molecularFilter(stack, player.level())){
+            player.sendSystemMessage(Component.literal("ExtendedAE Plus: 分子操纵者不支持该类型样板"));
+            refundBlankPattern(player, menu, stack.getCount());
             return;
         }
 
