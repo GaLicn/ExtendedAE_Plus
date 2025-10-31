@@ -145,6 +145,7 @@ public final class ModConfig {
             "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
     })
     @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onPrioritizeDiskEnergyUpdate")
     public boolean prioritizeDiskEnergy = true;
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();

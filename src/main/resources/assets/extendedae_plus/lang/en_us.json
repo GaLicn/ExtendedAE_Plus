@@ -52,15 +52,9 @@
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "No formed assembly matrix found in the current network",
   "extendedae_plus.upload_to_matrix.fail_no_GTMatrix": "No formed molecular manipulators were found in the current network",
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
-  "extendedae_plus.upload_to_GTMatrix.fail_full": "The sample compartment of the molecular manipulator is full or cannot be inserted",
-  "extendedae_plus.upload_to_matrix.repetition": "The assembly matrix already exists on the same board, and the upload is skipped and a blank template is returned",
-  "extendedae_plus.upload_to_GTMatrix.repetition": "The same board already exists for the molecular manipulator, skipping the upload and returning the blank template",
-
-  "extendedae_plus.upload_to_GTMatrix.fail_full": "The sample compartment of the molecular manipulator is full or cannot be inserted",
-  "extendedae_plus.upload_to_matrix.repetition": "The assembly matrix already exists on the same board, and the upload is skipped and a blank template is returned",
-  "extendedae_plus.upload_to_GTMatrix.repetition": "The same board already exists for the molecular manipulator, skipping the upload and returning the blank template",
-
-  "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
+  "extendedae_plus.upload_to_GTMatrix.fail_full": "The Molecular Manipulator's pattern inventory is full or cannot accept the pattern",
+  "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern, upload skipped and blank pattern returned",
+  "extendedae_plus.upload_to_GTMatrix.repetition": "The Molecular Manipulator already contains the same pattern, upload skipped and blank pattern returned",
 
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",

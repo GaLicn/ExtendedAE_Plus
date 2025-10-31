@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = ModularUIGuiContainer.class)
+@Mixin(value = ModularUIGuiContainer.class, remap = false)
 public class ModularUIGuiContainerCloseMixin {
 
     @Inject(method = "removed", at = @At("HEAD"))
