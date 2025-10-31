@@ -14,7 +14,7 @@ item_ids:
 
 <ItemImage id="extendedae_plus:infinity_biginteger_cell" scale="4" />
 
-“吞噬万籁的寂静”是一种终极的ME存储磁盘，它提供了无限的物品种类支持与近乎无限的存储容量。
+“吞噬万籁的寂静”是一种终极的ME存储磁盘，它提供了无限的物品种类支持与无限的存储容量。
 
 ## 功能特性
 
