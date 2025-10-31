@@ -56,6 +56,8 @@
   "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern, upload skipped and blank pattern returned",
   "extendedae_plus.upload_to_GTMatrix.repetition": "The Molecular Manipulator already contains the same pattern, upload skipped and blank pattern returned",
 
+  "chat.extendedae_plus.terminal.pos": "The crafting plan's corresponding provider is now highlighted at: %s, Dimension: %s (%s blocks away)",
+
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",
   "extendedae_plus.screen.reload_mapping_fail": "Overloading mapping failed: %s",

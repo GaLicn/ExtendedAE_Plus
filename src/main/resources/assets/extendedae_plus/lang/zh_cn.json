@@ -56,6 +56,8 @@
   "extendedae_plus.upload_to_matrix.repetition": "装配矩阵已存在相同样板，已跳过上传并返还空白样板",
   "extendedae_plus.upload_to_GTMatrix.repetition": "分子操纵者已存在相同样板，已跳过上传并返还空白样板",
 
+  "chat.extendedae_plus.terminal.pos": "合成计划对应供应器现在突出显示在：%s，维度：%s (%s个方块外)",
+
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
   "extendedae_plus.screen.reload_mapping_fail": "重载映射失败: %s",
