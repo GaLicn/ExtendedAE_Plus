@@ -18,16 +18,24 @@ public class NumberFormatUtil {
             return String.valueOf(number);
         }
 
-        String[] preFixes = new String[]{"k", "M", "G", "T", "P", "E", "Z", "Y"};
+        String[] suffixes = {"k", "M", "G", "T", "P", "E", "Z", "Y"};
         double value = number;
-        String level = "";
+        int index = 0;
 
-        for (int offset = 0; value >= 1000.0 && offset < preFixes.length; ++offset) {
+        while (value >= 1000.0 && index < suffixes.length) {
             value /= 1000.0;
-            level = preFixes[offset];
+            index++;
         }
 
-        return formatDecimal(value, level);
+        String formatted;
+        if (Math.abs(value - Math.round(value)) < 0.001) {
+            formatted = String.valueOf(Math.round(value));
+        } else {
+            DecimalFormat df = new DecimalFormat("0.00");
+            formatted = df.format(value);
+        }
+
+        return formatted + suffixes[index - 1];
     }
 
     /**

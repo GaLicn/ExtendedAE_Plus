@@ -11,6 +11,7 @@
     "ae2.accessor.PatternAccessTermScreenAccessor",
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "ae2.client.gui.AEBaseScreenMixin",
+    "ae2.client.gui.CraftConfirmScreenMixin",
     "ae2.client.gui.InterfaceScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
