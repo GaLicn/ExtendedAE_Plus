@@ -41,23 +41,6 @@ public class ScaledProcessingPattern implements IPatternDetails {
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        // 比较另一个缩放样板，比较其 original 字段
-        if (o instanceof ScaledProcessingPattern sp) {
-            return this.original.equals(sp.getOriginal());
-        }
-        // 委托给原始样板的 equals（比如遇到原始的 AEProcessingPattern）
-        return this.original.equals(o);
-    }
-
-    @Override
-    public final int hashCode() {
-        return original.hashCode();
-    }
-
-    @Override
     public AEItemKey getDefinition() {
         return definition;
     }
