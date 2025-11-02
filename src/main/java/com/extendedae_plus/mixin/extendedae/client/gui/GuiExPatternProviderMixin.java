@@ -26,6 +26,7 @@ import java.util.List;
 @SuppressWarnings({"AddedMixinMembersNamePattern"})
 @Mixin(GuiExPatternProvider.class)
 public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButton, IExPatternPage {
+    private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
     // 翻页按钮
     @Unique public ActionEPPButton nextPage;
     @Unique public ActionEPPButton prevPage;
@@ -55,12 +56,14 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Inject(method = "<init>", at = @At("RETURN"))
     private void injectInit(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.eap$maxPageLocal = ModConfig.INSTANCE.pageMultiplier;
+        int slotPageSize = (this.menu.getSlots(SlotSemantics.ENCODED_PATTERN).size() + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
+        this.eap$maxPageLocal = Math.max(Math.max(1, slotPageSize), this.eap$maxPageLocal);
 
         // 翻页按钮（左侧工具栏）
         if (eap$maxPageLocal > 1) {
             this.prevPage = new ActionEPPButton((b) -> {
                 int currentPage = eap$getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, eap$getMaxPageLocal());
+                int maxPage = this.eap$maxPageLocal;
                 this.eap$currentPage = (currentPage - 1 + maxPage) % maxPage;
 
                 // 强制重排（放在更新本地页码之后，确保布局读取到新页）
@@ -71,7 +74,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
             this.nextPage = new ActionEPPButton((b) -> {
                 int currentPage = eap$getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, eap$getMaxPageLocal());
+                int maxPage = this.eap$maxPageLocal;
                 this.eap$currentPage = (currentPage + 1) % maxPage;
 
                 // 强制重排（放在更新本地页码之后，确保布局读取到新页）

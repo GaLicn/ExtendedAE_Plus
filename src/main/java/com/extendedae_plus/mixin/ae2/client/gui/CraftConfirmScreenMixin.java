@@ -1,4 +1,3 @@
-// 文件路径: src/main/java/yourmod/mixin/CraftConfirmScreenMixin.java
 package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.gui.me.crafting.CraftConfirmScreen;
