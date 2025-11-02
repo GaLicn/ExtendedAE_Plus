@@ -1,8 +1,6 @@
 package com.extendedae_plus.ae.api.crafting;
 
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
-import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.crafting.pattern.AEProcessingPattern;
 import net.minecraft.core.Direction;
@@ -18,8 +16,8 @@ public final class ScaledProcessingPatternAdv extends ScaledProcessingPattern im
 
     private final AdvPatternDetails adv;
 
-    public ScaledProcessingPatternAdv(AEProcessingPattern original, AEItemKey definition, long multiplier) {
-        super(original, definition, multiplier);
+    public ScaledProcessingPatternAdv(AEProcessingPattern original, long multiplier) {
+        super(original, multiplier);
         this.adv = (AdvPatternDetails) original;
     }
 
@@ -40,30 +38,30 @@ public final class ScaledProcessingPatternAdv extends ScaledProcessingPattern im
 
     @Override
     public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink inputSink) {
-        // 使用 lazy 计算的 sparseInputs 与 inputs 来驱动；当两者长度一致时直接委托
-        GenericStack[] sInputs = getSparseInputs();
-        IInput[] ins = getInputs();
-        if (sInputs.length == ins.length) {
-            super.pushInputsToExternalInventory(inputHolder, inputSink);
-            return;
-        }
-
-        KeyCounter allInputs = new KeyCounter();
-        for (KeyCounter counter : inputHolder) {
-            allInputs.addAll(counter);
-        }
-        for (GenericStack sparseInput : sInputs) {
-            if (sparseInput != null) {
-                AEKey key = sparseInput.what();
-                long amount = sparseInput.amount();
-                long available = allInputs.get(key);
-                if (available < amount) {
-                    throw new RuntimeException("Expected at least %d of %s when pushing scaled pattern, but only %d available"
-                            .formatted(amount, key, available));
-                }
-                inputSink.pushInput(key, amount);
-                allInputs.remove(key, amount);
-            }
-        }
+//        // 使用 lazy 计算的 sparseInputs 与 inputs 来驱动；当两者长度一致时直接委托
+//        GenericStack[] sInputs = getSparseInputs();
+//        IInput[] ins = getInputs();
+//        if (sInputs.length == ins.length) {
+//            super.pushInputsToExternalInventory(inputHolder, inputSink);
+//            return;
+//        }
+//
+//        KeyCounter allInputs = new KeyCounter();
+//        for (KeyCounter counter : inputHolder) {
+//            allInputs.addAll(counter);
+//        }
+//        for (GenericStack sparseInput : sInputs) {
+//            if (sparseInput != null) {
+//                AEKey key = sparseInput.what();
+//                long amount = sparseInput.amount();
+//                long available = allInputs.get(key);
+//                if (available < amount) {
+//                    throw new RuntimeException("Expected at least %d of %s when pushing scaled pattern, but only %d available"
+//                            .formatted(amount, key, available));
+//                }
+//                inputSink.pushInput(key, amount);
+//                allInputs.remove(key, amount);
+//            }
+//        }
     }
 }
