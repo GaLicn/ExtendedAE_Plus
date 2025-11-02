@@ -104,9 +104,9 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
         ScaleButtonHelper.layoutButtons(
                 eap$scaleButtons,
                 leftPos - eap$scaleButtons.divide2().getWidth(), // 左侧外缘
-                topPos + 30,                                        // 上偏移
-                22,                                                 // 间距
-                ScaleButtonHelper.Side.LEFT                         // 左侧布局
+                topPos + eap$scaleButtons.divide2().getWidth() + 30,    // 上偏移
+                22,                                                     // 间距
+                ScaleButtonHelper.Side.LEFT                             // 左侧布局
         );
     }
 }
