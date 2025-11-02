@@ -40,6 +40,14 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "设置AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
+    })
+    @Configurable.Synchronized
+    @Configurable.Range(min = 100, max = Integer.MAX_VALUE)
+    public int craftingPauseThreshold = 100000;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "无线收发器最大连接距离（单位：方块）",
             "从端与主端的直线距离需小于等于该值才会建立连接"
     })
@@ -66,21 +74,12 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
-            "智能倍增的最大倍数（0 表示不限制）",
+            "全局智能倍增的最大倍数限制（0 表示不限制）",
             "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模"
     })
     @Configurable.Synchronized
     @Configurable.Range(min = 0, max = Integer.MAX_VALUE)
     public int smartScalingMaxMultiplier = 0;
-
-    @Configurable
-    @Configurable.Comment(value = {
-            "智能倍增最小收益因子（默认 4）",
-            "当目标请求量小于 perOperationTarget * 此因子 时，智能倍增将不被启用以避免无意义包装"
-    })
-    @Configurable.Synchronized
-    @Configurable.Range(min = 1, max = 1024)
-    public int smartScalingMinBenefitFactor = 4;
 
     @Configurable
     @Configurable.Comment(value = {
@@ -107,6 +106,15 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+            "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
+    })
+    @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onPrioritizeDiskEnergyUpdate")
+    public boolean prioritizeDiskEnergy = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "实体加速器黑名单：匹配的方块将不会被加速。支持通配符/正则（例如：minecraft:*）",
             "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
     })
@@ -122,23 +130,6 @@ public final class ModConfig {
     @Configurable.Synchronized
     @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
     public String[] entityTickerMultipliers = {};
-
-    @Configurable
-    @Configurable.Comment(value = {
-            "值越大将减少AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
-    })
-    @Configurable.Synchronized
-    @Configurable.Range(min = 100, max = Integer.MAX_VALUE)
-    public int craftingPauseThreshold = 100000;
-
-    @Configurable
-    @Configurable.Comment(value = {
-            "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
-            "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
-    })
-    @Configurable.Synchronized
-    @Configurable.ValueUpdateCallback(method = "onPrioritizeDiskEnergyUpdate")
-    public boolean prioritizeDiskEnergy = true;
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     private static ScheduledFuture<?> pendingPowerTask;
