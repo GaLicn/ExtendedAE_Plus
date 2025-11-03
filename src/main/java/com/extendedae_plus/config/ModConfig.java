@@ -74,8 +74,9 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
-            "全局智能倍增的最大倍数限制（0 表示不限制）",
-            "此倍数是针对单次样板产出的放大倍数上限，用于限制一次推送中按倍增缩放的规模"
+            "全局智能倍增的最大倍率限制（0 表示不限制）",
+            "此限制针对单次样板产出的倍增上限，用于控制一次推送的最大缩放规模",
+            "优先级低于样板自身的供应器限制"
     })
     @Configurable.Synchronized
     @Configurable.Range(min = 0, max = Integer.MAX_VALUE)

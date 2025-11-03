@@ -5,6 +5,7 @@ import appeng.crafting.inv.CraftingSimulationState;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.util.smartDoubling.PatternScaler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,6 +31,7 @@ public abstract class CraftingSimulationStateMixin {
         ci.cancel();
         if (craftsAmount <= 0 || details == null) return;
 
+        // 仅处理 AEProcessingPattern
         if (!(details instanceof AEProcessingPattern processingPattern)) {
             crafts.merge(details, craftsAmount, Long::sum);
             return;
@@ -40,15 +42,21 @@ public abstract class CraftingSimulationStateMixin {
 
         if (processingPattern instanceof ISmartDoublingAwarePattern aware) {
             allowScaling = aware.eap$allowScaling();
-            perCraftLimit = aware.eap$getMultiplierLimit(); // 已经是最大倍率限制
+            perCraftLimit = aware.eap$getMultiplierLimit(); // 样板供应器限制
         }
 
-        // 不允许缩放或者需求为 1
+        // 样板不允许缩放 或者 需求量为 1 → 直接合并
         if (!allowScaling || craftsAmount == 1) {
             crafts.merge(processingPattern, craftsAmount, Long::sum);
             return;
         }
 
+        // 样板无限制时应用全局配置
+        if (perCraftLimit <= 0 && ModConfig.INSTANCE.smartScalingMaxMultiplier > 0) {
+            perCraftLimit = ModConfig.INSTANCE.smartScalingMaxMultiplier;
+        }
+
+        // 根据限制处理
         if (perCraftLimit <= 0) {
             // 无限制 → 合并倍率并复用对象
             mergeUnlimited(processingPattern, craftsAmount);
