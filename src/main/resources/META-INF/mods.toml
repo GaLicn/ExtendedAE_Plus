@@ -32,5 +32,12 @@ versionRange = "[1.20-1.4.0-forge,)"
 ordering = "AFTER"
 side = "BOTH"
 
+[[dependencies.extendedae_plus]]
+modId = "mae2"
+mandatory = false
+versionRange = "[2.0.0-alpha,)"
+ordering = "NONE"
+side = "BOTH"
+
 [[mixins]]
 config = "extendedae_plus.mixins.json"
