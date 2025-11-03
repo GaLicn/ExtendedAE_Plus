@@ -90,7 +90,36 @@ public class ScaledProcessingPattern implements IPatternDetails {
 
     @Override
     public String toString() {
-        return "Scaled[" + original.getDefinition().getItem() + " × " + multiplier + "]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Scaled[Mult=").append(multiplier).append("] ");
+
+        // 输入
+        sb.append("Inputs: [");
+        IInput[] inputs = original.getInputs();
+        for (int i = 0; i < inputs.length; i++) {
+            IInput input = inputs[i];
+            GenericStack[] stacks = input.getPossibleInputs();
+            if (stacks != null && stacks.length > 0) {
+                GenericStack stack = stacks[0];
+                sb.append(stack.what()).append("×").append(input.getMultiplier());
+                if (i < inputs.length - 1) sb.append(", ");
+            }
+        }
+        sb.append("] ");
+
+        // 输出
+        sb.append("Outputs: [");
+        GenericStack[] outputs = original.getOutputs();
+        for (int i = 0; i < outputs.length; i++) {
+            GenericStack stack = outputs[i];
+            if (stack != null) {
+                sb.append(stack.what()).append("×").append(stack.amount());
+                if (i < outputs.length - 1) sb.append(", ");
+            }
+        }
+        sb.append("]");
+
+        return sb.toString();
     }
 
     private record ScaledInput(IInput delegate, long mul) implements IInput {

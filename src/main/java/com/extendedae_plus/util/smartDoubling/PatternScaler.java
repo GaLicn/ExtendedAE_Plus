@@ -5,21 +5,9 @@ import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
 
 public final class PatternScaler {
     private PatternScaler() {}
-
-    /**
-     * 创建缩放样板。
-     * <p>如果 multiplier ≤ 1，直接返回原始样板（避免无意义包装）。</p>
-     */
-    public static IPatternDetails createScaled(AEProcessingPattern original, long multiplier) {
-        if (multiplier <= 1) {
-            return original; // 关键：demand=1 或 limit=1 → 直接用原样板
-        }
-        return new ScaledProcessingPattern(original, multiplier);
-    }
 
     /**
      * 计算基于 limit 的最大允许倍率（单次输出主物品 ≤ limit）
@@ -29,7 +17,7 @@ public final class PatternScaler {
 
         long minMul = Long.MAX_VALUE;
 
-        for (var input : proc.getInputs()) {
+        for (IPatternDetails.IInput input : proc.getInputs()) {
             long amt = input.getMultiplier();
             if (amt <= 0) continue;
 

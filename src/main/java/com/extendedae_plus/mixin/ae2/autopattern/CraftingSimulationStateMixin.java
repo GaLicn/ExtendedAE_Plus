@@ -5,7 +5,7 @@ import appeng.crafting.inv.CraftingSimulationState;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
-import com.extendedae_plus.util.smartDoubling.PatternScaler;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,10 +15,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+@SuppressWarnings({"AddedMixinMembersNamePattern", "MissingUnique"})
 @Mixin(value = CraftingSimulationState.class, remap = false)
 public abstract class CraftingSimulationStateMixin {
 
-    @Shadow private Map<IPatternDetails, Long> crafts;
+    @Shadow @Final private Map<IPatternDetails, Long> crafts;
 
     /** 仅用于无限制缩放时的合并缓存 */
     private final Map<AEProcessingPattern, ScaledProcessingPattern> scaledCache = new IdentityHashMap<>();
@@ -28,45 +29,34 @@ public abstract class CraftingSimulationStateMixin {
         ci.cancel();
         if (craftsAmount <= 0 || details == null) return;
 
-        if (details instanceof AEProcessingPattern processingPattern) {
-            boolean allowScaling = true;
-            int perCraftLimit = 0;
-
-            if (processingPattern instanceof ISmartDoublingAwarePattern aware) {
-                allowScaling = aware.eap$allowScaling();
-                perCraftLimit = aware.eap$getMultiplierLimit();
-            }
-
-            if (!allowScaling) {
-                crafts.merge(processingPattern, craftsAmount, Long::sum);
-                return;
-            }
-
-            // === 需求为 1 → 直接用原样板 ===
-            if (craftsAmount == 1) {
-                crafts.merge(processingPattern, 1L, Long::sum);
-                return;
-            }
-
-            // === 计算实际限制 ===
-            if (perCraftLimit > 0) {
-                perCraftLimit = Math.min(perCraftLimit, PatternScaler.getComputedMul(processingPattern, perCraftLimit));
-            }
-
-            if (perCraftLimit <= 0) {
-                // 无限制 → 合并缩放
-                mergeUnlimited(processingPattern, craftsAmount);
-            } else {
-                // 有限制 → 拆分
-                splitLimited(processingPattern, craftsAmount, perCraftLimit);
-            }
-
-        } else {
+        if (!(details instanceof AEProcessingPattern processingPattern)) {
             crafts.merge(details, craftsAmount, Long::sum);
+            return;
+        }
+
+        boolean allowScaling = false;
+        int perCraftLimit = 0;
+
+        if (processingPattern instanceof ISmartDoublingAwarePattern aware) {
+            allowScaling = aware.eap$allowScaling();
+            perCraftLimit = aware.eap$getMultiplierLimit(); // 已经是最大倍率限制
+        }
+
+        if (!allowScaling || craftsAmount == 1) {
+            crafts.merge(processingPattern, craftsAmount, Long::sum);
+            return;
+        }
+
+        if (perCraftLimit <= 0) {
+            // 无限制 → 合并倍率并复用对象
+            mergeUnlimited(processingPattern, craftsAmount);
+        } else {
+            // 有限制 → 拆分 full + remainder
+            splitLimited(processingPattern, craftsAmount, perCraftLimit);
         }
     }
 
-    /** 无限制：合并倍率 */
+    /** 无限制：合并倍率并复用 ScaledProcessingPattern 对象 */
     private void mergeUnlimited(AEProcessingPattern original, long multiplier) {
         ScaledProcessingPattern existing = scaledCache.get(original);
         long total = multiplier;
@@ -76,13 +66,9 @@ public abstract class CraftingSimulationStateMixin {
             crafts.remove(existing);
         }
 
-        IPatternDetails scaled = PatternScaler.createScaled(original, total);
-        if (scaled instanceof ScaledProcessingPattern sp) {
-            scaledCache.put(original, sp);
-            crafts.put(sp, 1L);
-        } else {
-            crafts.put(original, total); // 退化为原样板
-        }
+        ScaledProcessingPattern scaled = new ScaledProcessingPattern(original, total);
+        scaledCache.put(original, scaled);
+        crafts.put(scaled, 1L);
     }
 
     /** 有限制：拆分 full + remainder */
@@ -91,13 +77,13 @@ public abstract class CraftingSimulationStateMixin {
         long remainder = totalAmount % limit;
 
         if (fullCrafts > 0) {
-            IPatternDetails scaled = PatternScaler.createScaled(original, limit);
-            crafts.merge(scaled, fullCrafts, Long::sum);
+            ScaledProcessingPattern scaledFull = new ScaledProcessingPattern(original, limit);
+            crafts.merge(scaledFull, fullCrafts, Long::sum);
         }
 
         if (remainder > 0) {
-            IPatternDetails scaled = PatternScaler.createScaled(original, remainder);
-            crafts.merge(scaled, 1L, Long::sum);
+            ScaledProcessingPattern scaledRemainder = new ScaledProcessingPattern(original, remainder);
+            crafts.merge(scaledRemainder, 1L, Long::sum);
         }
     }
 }
