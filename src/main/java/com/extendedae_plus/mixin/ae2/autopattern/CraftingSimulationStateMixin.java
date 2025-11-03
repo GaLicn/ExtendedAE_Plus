@@ -5,6 +5,7 @@ import appeng.crafting.inv.CraftingSimulationState;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
+import com.extendedae_plus.util.smartDoubling.PatternScaler;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,6 +43,7 @@ public abstract class CraftingSimulationStateMixin {
             perCraftLimit = aware.eap$getMultiplierLimit(); // 已经是最大倍率限制
         }
 
+        // 不允许缩放或者需求为 1
         if (!allowScaling || craftsAmount == 1) {
             crafts.merge(processingPattern, craftsAmount, Long::sum);
             return;
@@ -56,7 +58,7 @@ public abstract class CraftingSimulationStateMixin {
         }
     }
 
-    /** 无限制：合并倍率并复用 ScaledProcessingPattern 对象 */
+    /** 无限制：合并倍率并复用 ScaledProcessingPattern 或 AAE 扩展 */
     private void mergeUnlimited(AEProcessingPattern original, long multiplier) {
         ScaledProcessingPattern existing = scaledCache.get(original);
         long total = multiplier;
@@ -66,23 +68,25 @@ public abstract class CraftingSimulationStateMixin {
             crafts.remove(existing);
         }
 
-        ScaledProcessingPattern scaled = new ScaledProcessingPattern(original, total);
+        // 使用 PatternScaler 自动选择原版或 AAE 扩展
+        ScaledProcessingPattern scaled = PatternScaler.createScaled(original, total);
+
         scaledCache.put(original, scaled);
         crafts.put(scaled, 1L);
     }
 
-    /** 有限制：拆分 full + remainder */
+    /** 有限制：拆分 full + remainder，并支持原版/AAE 扩展 */
     private void splitLimited(AEProcessingPattern original, long totalAmount, int limit) {
         long fullCrafts = totalAmount / limit;
         long remainder = totalAmount % limit;
 
         if (fullCrafts > 0) {
-            ScaledProcessingPattern scaledFull = new ScaledProcessingPattern(original, limit);
+            ScaledProcessingPattern scaledFull = PatternScaler.createScaled(original, limit);
             crafts.merge(scaledFull, fullCrafts, Long::sum);
         }
 
         if (remainder > 0) {
-            ScaledProcessingPattern scaledRemainder = new ScaledProcessingPattern(original, remainder);
+            ScaledProcessingPattern scaledRemainder = PatternScaler.createScaled(original, remainder);
             crafts.merge(scaledRemainder, 1L, Long::sum);
         }
     }
