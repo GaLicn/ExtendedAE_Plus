@@ -59,6 +59,8 @@
     "ae2.autopattern.CraftingSimulationStateMixin",
     "ae2.autopattern.CraftingTreeProcessMixin",
     "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
+    "ae2.autopattern.gtceu.GTLCoreMEPatternBufferPartMachineMixin",
+    "ae2.autopattern.gtceu.MEPatternBufferPartMachineMixin",
     "ae2.compat.PatternProviderCompatMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.compat.PatternProviderLogicHostCompatMixin",

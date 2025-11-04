@@ -18,9 +18,13 @@ import com.extendedae_plus.network.provider.SetProviderPageS2CPacket;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.glodblock.github.extendedae.client.render.EAEHighlightHandler;
 import com.glodblock.github.glodium.util.GlodUtil;
+import com.gregtechceu.gtceu.api.gui.factory.MachineUIFactory;
+import com.gregtechceu.gtceu.api.machine.MetaMachine;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -86,7 +90,8 @@ public class CraftingMonitorOpenProviderC2SPacket {
 
                 try {
                     ProviderUIHelper.openProviderUI(provider, pattern, player);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         });
         context.setPacketHandled(true);
