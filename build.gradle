@@ -79,7 +79,7 @@ dependencies {
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
-    modImplementation files('libs/ExtendedAE-1.20-1.4.7-forge.jar')
+    modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
     modRuntimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 
     //ae2
