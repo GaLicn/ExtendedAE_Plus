@@ -71,18 +71,27 @@ public abstract class CraftingSimulationStateMixin implements ICraftingSimulatio
             if (providerCount <= 0) providerCount = 1;
 
             if (perCraftLimit <= 0) {
-                // 无限倍率 → 按供应器均分并处理余数
-                long base = totalAmount / providerCount;
-                long remainder = totalAmount % providerCount;
+                // 检查是否开启 provider 轮询分配功能
+                if (ModConfig.INSTANCE.providerRoundRobinEnable) {
+                    long base = totalAmount / providerCount;
+                    long remainder = totalAmount % providerCount;
 
-                if (remainder > 0) {
-                    ScaledProcessingPattern scaled_r = PatternScaler.createScaled(processingPattern, base + remainder);
-                    finalCrafts.put(scaled_r, 1L);
-                    ScaledProcessingPattern scaled_b = PatternScaler.createScaled(processingPattern, base);
-                    finalCrafts.put(scaled_b, providerCount - 1);
+                    // base+1 组（数量 remainder 个）
+                    if (remainder > 0) {
+                        ScaledProcessingPattern scaledPlus = PatternScaler.createScaled(processingPattern, base + 1);
+                        finalCrafts.merge(scaledPlus, remainder, Long::sum);
+                    }
+
+                    // base 组（数量 providerCount - remainder 个）
+                    long countBase = providerCount - remainder;
+                    if (countBase > 0) {
+                        ScaledProcessingPattern scaledBase = PatternScaler.createScaled(processingPattern, base);
+                        finalCrafts.merge(scaledBase, countBase, Long::sum);
+                    }
                 } else {
-                    ScaledProcessingPattern scaled = PatternScaler.createScaled(processingPattern, base);
-                    finalCrafts.put(scaled, providerCount);
+                    // 未开启轮询 → 直接分配一次总量
+                    ScaledProcessingPattern scaled = PatternScaler.createScaled(processingPattern, totalAmount);
+                    finalCrafts.put(scaled, 1L);
                 }
             } else {
                 // 有限制 → 拆分 full + remainder
