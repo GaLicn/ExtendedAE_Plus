@@ -122,17 +122,17 @@ public class ScaledProcessingPattern implements IPatternDetails {
         return sb.toString();
     }
 
-    private record ScaledInput(IInput delegate, long mul) implements IInput {
+    private record ScaledInput(IInput original, long multiplier) implements IInput {
         @Override
-        public GenericStack[] getPossibleInputs() {return delegate.getPossibleInputs();}
+        public GenericStack[] getPossibleInputs() {return original.getPossibleInputs();}
 
         @Override
-        public long getMultiplier() {return delegate.getMultiplier() * mul;}
+        public long getMultiplier() {return original.getMultiplier() * multiplier;}
 
         @Override
-        public boolean isValid(AEKey input, Level level) {return delegate.isValid(input, level);}
+        public boolean isValid(AEKey input, Level level) {return original.isValid(input, level);}
 
         @Override
-        public @Nullable AEKey getRemainingKey(AEKey template) {return delegate.getRemainingKey(template);}
+        public @Nullable AEKey getRemainingKey(AEKey template) {return original.getRemainingKey(template);}
     }
 }
