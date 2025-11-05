@@ -54,6 +54,19 @@
 
   "chat.extendedae_plus.terminal.pos": "The crafting plan's corresponding provider is now highlighted at: %s, Dimension: %s (%s blocks away)",
 
+  "extendedae_plus.gui.advanced_blocking.title": "Smart Blocking",
+  "extendedae_plus.gui.advanced_blocking.enabled_desc": "Will not block the same recipe type (requires vanilla blocking mode enabled)",
+  "extendedae_plus.gui.advanced_blocking.disabled_desc": "Use vanilla blocking logic",
+  "extendedae_plus.gui.smart_doubling.title": "Smart Doubling",
+  "extendedae_plus.gui.smart_doubling.enabled_desc": "Intelligently double processing patterns based on request quantity",
+  "extendedae_plus.gui.smart_doubling.disabled_desc": "Distribute according to original pattern quantity",
+  "extendedae_plus.gui.per_provider_limit.tooltip": "Per-item distribution limit: %s",
+
+  "extendedae_plus.gui.entity_acceleration.title": "Entity Acceleration",
+  "extendedae_plus.gui.entity_acceleration.blacklisted": "Target is blacklisted",
+  "extendedae_plus.gui.entity_acceleration.enabled": "Accelerate target block entity ticks",
+  "extendedae_plus.gui.entity_acceleration.disabled": "Do not accelerate target block entities",
+
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",
   "extendedae_plus.screen.reload_mapping_fail": "Overloading mapping failed: %s",

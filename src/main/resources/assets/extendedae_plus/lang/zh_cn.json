@@ -54,6 +54,19 @@
 
   "chat.extendedae_plus.terminal.pos": "合成计划对应供应器现在突出显示在：%s，维度：%s (%s个方块外)",
 
+  "extendedae_plus.gui.advanced_blocking.title": "智能阻挡",
+  "extendedae_plus.gui.advanced_blocking.enabled_desc": "对于同一种配方将不再阻挡 (需要启用原版阻挡模式)",
+  "extendedae_plus.gui.advanced_blocking.disabled_desc": "使用原版阻挡逻辑",
+  "extendedae_plus.gui.smart_doubling.title": "智能翻倍",
+  "extendedae_plus.gui.smart_doubling.enabled_desc": "根据请求量对处理样板进行智能翻倍",
+  "extendedae_plus.gui.smart_doubling.disabled_desc": "按原始样板数量进行发配",
+  "extendedae_plus.gui.per_provider_limit.tooltip": "单样物品发配数量上限: %s",
+
+  "extendedae_plus.gui.entity_acceleration.title": "实体加速",
+  "extendedae_plus.gui.entity_acceleration.blacklisted": "目标在黑名单中",
+  "extendedae_plus.gui.entity_acceleration.enabled": "加速目标方块实体的tick",
+  "extendedae_plus.gui.entity_acceleration.disabled": "不加速目标方块实体",
+
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
   "extendedae_plus.screen.reload_mapping_fail": "重载映射失败: %s",
@@ -86,8 +99,6 @@
   "item.extendedae_plus.entity_speed_ticker.tip.requirement": "需要放入实体加速卡以启用加速",
   "item.extendedae_plus.entity_speed_ticker.tip.max": "最高可达 1024x 加速",
   "item.extendedae_plus.entity_speed_ticker.tip.energy": "加速将消耗 AE 网络能量，网络能量不足时无法加速",
-
-
 
   "config.screen.extendedae_plus": "ExtendedAE Plus 配置",
   "config.extendedae_plus.option.pageMultiplier": "扩展样板供应器槽位倍率",

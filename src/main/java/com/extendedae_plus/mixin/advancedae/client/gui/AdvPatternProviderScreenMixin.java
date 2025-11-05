@@ -79,10 +79,10 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
                 eap$AdvancedBlockingEnabled,
                 () -> ModNetwork.CHANNEL.sendToServer(new ToggleAdvancedBlockingC2SPacket()),
                 () -> {
-                    var t = Component.literal("智能阻挡");
+                    var t = Component.translatable("extendedae_plus.gui.advanced_blocking.title");
                     var line = eap$AdvancedBlockingEnabled
-                            ? Component.literal("已启用：对于同一种配方将不再阻挡 (需要启用原版阻挡模式)")
-                            : Component.literal("已禁用：建议开启以获得更智能的阻挡行为");
+                            ? Component.translatable("extendedae_plus.gui.advanced_blocking.enabled_desc")
+                            : Component.translatable("extendedae_plus.gui.advanced_blocking.disabled_desc");
                     return List.of(t, line);
                 }
         );
@@ -94,10 +94,10 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
                 eap$SmartDoublingEnabled,
                 () -> ModNetwork.CHANNEL.sendToServer(new ToggleSmartDoublingC2SPacket()),
                 () -> {
-                    var t = Component.literal("智能翻倍");
+                    var t = Component.translatable("extendedae_plus.gui.smart_doubling.title");
                     var line = eap$SmartDoublingEnabled
-                            ? Component.literal("已启用：根据请求量对处理样板进行智能缩放")
-                            : Component.literal("已禁用：按原始样板数量进行发配");
+                            ? Component.translatable("extendedae_plus.gui.smart_doubling.enabled_desc")
+                            : Component.translatable("extendedae_plus.gui.smart_doubling.disabled_desc");
                     return List.of(t, line);
                 }
         );
@@ -186,7 +186,7 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
             // 设置 tooltip
             String cur = this.eap$PerProviderLimitInput.getValue();
             if (cur.isBlank()) cur = "0";
-            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.literal("单样物品发配数量上限: " + cur)));
+            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.gui.per_provider_limit.tooltip", cur)));
         } else {
             // 智能翻倍未启用时，移除输入框
             this.removeWidget(this.eap$PerProviderLimitInput);

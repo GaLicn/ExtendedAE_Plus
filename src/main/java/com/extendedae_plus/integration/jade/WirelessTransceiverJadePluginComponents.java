@@ -62,16 +62,6 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
             }
         }
     },
-    NETWORK_USABLE("wt_network_usable") {
-        @Override
-        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
-            if (data.contains("networkUsable")) {
-                boolean usable = data.getBoolean("networkUsable");
-                String statusKey = usable ? "extendedae_plus.jade.online" : "extendedae_plus.jade.offline";
-                tooltip.add(Component.translatable(statusKey));
-            }
-        }
-    },
     CHANNELS("wt_channels") {
         @Override
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
@@ -102,6 +92,16 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
             } else {
                 // 没有所有者信息（公共收发器）
                 tooltip.add(Component.translatable("extendedae_plus.jade.owner.public"));
+            }
+        }
+    },
+    NETWORK_USABLE("wt_network_usable") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("networkUsable")) {
+                boolean usable = data.getBoolean("networkUsable");
+                String statusKey = usable ? "extendedae_plus.jade.online" : "extendedae_plus.jade.offline";
+                tooltip.add(Component.translatable(statusKey));
             }
         }
     };
