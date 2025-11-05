@@ -148,6 +148,10 @@
   "extendedae_plus.chat.wireless_transceiver.mode_slave": "Slave",
   "extendedae_plus.chat.wireless_transceiver.locked_status": "Transceiver Locked",
   "extendedae_plus.chat.wireless_transceiver.unlocked_status": "Transceiver Unlocked",
+  "extendedae_plus.chat.wireless_transceiver.channel_set": "Channel set to: %s",
+  "extendedae_plus.chat.pattern_provider.global_toggle_applied": "Global toggle applied to %s pattern providers",
+  "extendedae_plus.message.config_update_failed": "Mapping file update failed: %s",
+  "extendedae_plus.message.config_delete_failed": "Mapping file delete failed: %s",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "Wireless Transceiver Info",
   "config.jade.plugin_extendedae_plus.wt_frequency": "Show Frequency",
@@ -172,5 +176,10 @@
   "extendedae_plus.jade.channels": "Channels: %s",
   "extendedae_plus.jade.channels_of": "Channels: %s/%s",
   "extendedae_plus.jade.owner": "Owner: %s",
-  "extendedae_plus.jade.owner.public": "Owner: Public"
+  "extendedae_plus.jade.owner.public": "Owner: Public",
+
+  "extendedae_plus.command.server_side_only": "This command must be run on server side",
+  "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager is not initialized",
+  "extendedae_plus.command.gave_infinity_disks": "Gave %s infinity disks",
+  "extendedae_plus.command.error": "Error: %s"
 }

@@ -181,8 +181,7 @@ public final class RecipeTypeNameConfig {
             }
             return true;
         } catch (IOException | JsonSyntaxException e) {
-            sendPlayerMessage(Component.literal("ExtendedAE_Plus: 配置文件更新失败: " + e.getMessage()));
-            return false;
+            sendPlayerMessage(Component.translatable("extendedae_plus.message.config_update_failed", e.getMessage()));            return false;
         }
     }
 
@@ -230,7 +229,7 @@ public final class RecipeTypeNameConfig {
             }
             return toRemove.size();
         } catch (IOException | JsonSyntaxException e) {
-            sendPlayerMessage(Component.literal("ExtendedAE_Plus: 配置文件删除失败: " + e.getMessage()));
+            sendPlayerMessage(Component.translatable("extendedae_plus.message.config_delete_failed", e.getMessage()));
             return 0;
         }
     }

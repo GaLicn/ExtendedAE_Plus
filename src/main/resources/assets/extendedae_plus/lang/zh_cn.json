@@ -148,6 +148,10 @@
   "extendedae_plus.chat.wireless_transceiver.mode_slave": "从端",
   "extendedae_plus.chat.wireless_transceiver.locked_status": "已锁定收发器",
   "extendedae_plus.chat.wireless_transceiver.unlocked_status": "已解锁收发器",
+  "extendedae_plus.chat.wireless_transceiver.channel_set": "频道已设置为：%s",
+  "extendedae_plus.chat.pattern_provider.global_toggle_applied": "全局切换已应用到 %s 个样板供应器",
+  "extendedae_plus.message.config_update_failed": "映射文件更新失败: %s",
+  "extendedae_plus.message.config_delete_failed": "映射文件删除失败: %s",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
   "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",
@@ -172,5 +176,10 @@
   "extendedae_plus.jade.channels": "频道: %s",
   "extendedae_plus.jade.channels_of": "频道: %s/%s",
   "extendedae_plus.jade.owner": "所有者: %s",
-  "extendedae_plus.jade.owner.public": "所有者: 公共"
+  "extendedae_plus.jade.owner.public": "所有者: 公共",
+
+  "extendedae_plus.command.server_side_only": "此命令必须在服务器端执行",
+  "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager未初始化",
+  "extendedae_plus.command.gave_infinity_disks": "已发放 %s 个无限磁盘",
+  "extendedae_plus.command.error": "错误: %s"
 }
