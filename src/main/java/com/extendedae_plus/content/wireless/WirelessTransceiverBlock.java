@@ -61,7 +61,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                 // 潜行左键（其他物品）：减频（-1 或 -10）
                 if (player.isShiftKeyDown()) {
                     if (te.isLocked()) {
-                        player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
+                        player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.locked"), true);
                         super.attack(state, level, pos, player);
                         return;
                     }
@@ -72,7 +72,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     f -= step;
                     if (f < 0) f = 0;
                     te.setFrequency(f);
-                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.channel", te.getFrequency()), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.channel", te.getFrequency()), true);
                 }
             }
         }
@@ -91,13 +91,13 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             te.setPlacerId(cardOwner, teamName);
             String displayName = teamName != null ? teamName : cardOwner.toString().substring(0, 8);
             player.displayClientMessage(
-                    Component.translatable("extendedae_plus.tooltips.wireless.bound_to", displayName),
+                    Component.translatable("extendedae_plus.chat.wireless_transceiver.bound_to", displayName),
                     true
             );
         } else {
             // 频道卡未绑定所有者，使用当前玩家
             te.setPlacerId(player.getUUID(), player.getName().getString());
-            player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.card_unbound_using_player"), true);
+            player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.card_unbound"), true);
         }
     }
 
@@ -111,7 +111,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             boolean sneaking = player.isShiftKeyDown();
             if (sneaking) {
                 if (te.isLocked()) {
-                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.locked"), true);
                     return InteractionResult.CONSUME;
                 }
                 // 频率调节：主手 +1（或 +10），副手 -1（或 -10）
@@ -128,15 +128,15 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     if (f < 0) f = 0;
                 }
                 te.setFrequency(f);
-                player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.channel", te.getFrequency()), true);
+                player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.channel", te.getFrequency()), true);
             } else {
                 if (te.isLocked()) {
-                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.locked"), true);
                     return InteractionResult.CONSUME;
                 }
                 te.setMasterMode(!te.isMasterMode());
-                String modeKey = te.isMasterMode() ? "extendedae_plus.tooltips.wireless.mode_master" : "extendedae_plus.tooltips.wireless.mode_slave";
-                player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.mode", Component.translatable(modeKey)), true);
+                String modeKey = te.isMasterMode() ? "extendedae_plus.chat.wireless_transceiver.mode_master" : "extendedae_plus.chat.wireless_transceiver.mode_slave";
+                player.displayClientMessage(Component.translatable("extendedae_plus.chat.wireless_transceiver.mode", Component.translatable(modeKey)), true);
             }
             return InteractionResult.CONSUME;
         }
