@@ -142,5 +142,15 @@
   
   "group.pattern_provider.name": "样板供应器",
   "group.entity_ticker.name": "实体加速器",
-  "group.storage.name": "存储总线"
+  "group.storage.name": "存储总线",
+
+
+
+  "extendedae_plus.tooltips.wireless.transceiver_locked": "收发器已锁定，无法修改",
+  "extendedae_plus.tooltips.wireless.channel": "频道：%s",
+  "extendedae_plus.tooltips.wireless.bound_to": "已将收发器绑定至：%s",
+  "extendedae_plus.tooltips.wireless.card_unbound_using_player": "频道卡未绑定，已使用当前玩家",
+  "extendedae_plus.tooltips.wireless.mode": "模式：%s",
+  "extendedae_plus.tooltips.wireless.mode_master": "主端",
+  "extendedae_plus.tooltips.wireless.mode_slave": "从端"
 }

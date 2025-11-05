@@ -50,18 +50,18 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof WirelessTransceiverBlockEntity te) {
                 ItemStack mainHand = player.getMainHandItem();
-                
+
                 // 潜行左键频道卡：写入频道卡信息到收发器
                 if (player.isShiftKeyDown() && mainHand.getItem() == ModItems.CHANNEL_CARD.get()) {
                     handleChannelCardBinding(te, mainHand, player);
                     super.attack(state, level, pos, player);
                     return;
                 }
-                
+
                 // 潜行左键（其他物品）：减频（-1 或 -10）
                 if (player.isShiftKeyDown()) {
                     if (te.isLocked()) {
-                        player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                        player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
                         super.attack(state, level, pos, player);
                         return;
                     }
@@ -72,31 +72,32 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     f -= step;
                     if (f < 0) f = 0;
                     te.setFrequency(f);
-                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.channel", te.getFrequency()), true);
                 }
             }
         }
         super.attack(state, level, pos, player);
     }
-    
+
     /**
      * 处理频道卡绑定到收发器
      */
     private void handleChannelCardBinding(WirelessTransceiverBlockEntity te, ItemStack channelCard, Player player) {
         UUID cardOwner = ChannelCardItem.getOwnerUUID(channelCard);
-        
+
         if (cardOwner != null) {
             // 写入频道卡的所有者到收发器
             String teamName = ChannelCardItem.getTeamName(channelCard);
             te.setPlacerId(cardOwner, teamName);
+            String displayName = teamName != null ? teamName : cardOwner.toString().substring(0, 8);
             player.displayClientMessage(
-                Component.literal("已将收发器绑定至：" + (teamName != null ? teamName : cardOwner.toString().substring(0, 8))), 
-                true
+                    Component.translatable("extendedae_plus.tooltips.wireless.bound_to", displayName),
+                    true
             );
         } else {
             // 频道卡未绑定所有者，使用当前玩家
             te.setPlacerId(player.getUUID(), player.getName().getString());
-            player.displayClientMessage(Component.literal("频道卡未绑定，已使用当前玩家"), true);
+            player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.card_unbound_using_player"), true);
         }
     }
 
@@ -110,7 +111,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             boolean sneaking = player.isShiftKeyDown();
             if (sneaking) {
                 if (te.isLocked()) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
                     return InteractionResult.CONSUME;
                 }
                 // 频率调节：主手 +1（或 +10），副手 -1（或 -10）
@@ -127,14 +128,15 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     if (f < 0) f = 0;
                 }
                 te.setFrequency(f);
-                player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.channel", te.getFrequency()), true);
             } else {
                 if (te.isLocked()) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.transceiver_locked"), true);
                     return InteractionResult.CONSUME;
                 }
                 te.setMasterMode(!te.isMasterMode());
-                player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
+                String modeKey = te.isMasterMode() ? "extendedae_plus.tooltips.wireless.mode_master" : "extendedae_plus.tooltips.wireless.mode_slave";
+                player.displayClientMessage(Component.translatable("extendedae_plus.tooltips.wireless.mode", Component.translatable(modeKey)), true);
             }
             return InteractionResult.CONSUME;
         }

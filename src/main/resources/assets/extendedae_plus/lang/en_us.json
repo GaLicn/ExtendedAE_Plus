@@ -142,5 +142,15 @@
   
   "group.pattern_provider.name": "Pattern Provider",
   "group.entity_ticker.name": "Entity Accelerator",
-  "group.storage.name": "StorageBus"
+  "group.storage.name": "StorageBus",
+
+
+
+  "extendedae_plus.tooltips.wireless.transceiver_locked": "Transceiver locked, cannot modify",
+  "extendedae_plus.tooltips.wireless.channel": "Channel: %s",
+  "extendedae_plus.tooltips.wireless.bound_to": "Transceiver bound to: %s",
+  "extendedae_plus.tooltips.wireless.card_unbound_using_player": "Channel card unbound, using current player",
+  "extendedae_plus.tooltips.wireless.mode": "Mode: %s",
+  "extendedae_plus.tooltips.wireless.mode_master": "Master",
+  "extendedae_plus.tooltips.wireless.mode_slave": "Slave"
 }
