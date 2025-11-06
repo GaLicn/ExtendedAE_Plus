@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: 频道卡
+  title: Channel Card
   position: 2
   icon: extendedae_plus:channel_card
 categories:
@@ -10,26 +10,30 @@ item_ids:
   - extendedae_plus:channel_card
 ---
 
-# 频道卡
+# Channel Card
 
 <ItemImage id="extendedae_plus:channel_card" scale="4" />
 
-频道卡是一种功能升级卡，它将<ItemLink id="extendedae_plus:wireless_transceiver" />的从端功能浓缩为一张卡片。将其安装到支持的AE设备后，该设备即可直接连接到同频率的无线收发器主端，无需使用线缆。
+The **Channel Card** is an upgrade card that encapsulates the slave-end functionality of the <ItemLink id="extendedae_plus:wireless_transceiver" /> into a compact form.  
+When installed into compatible AE devices, it allows them to connect directly to a wireless transceiver master of the same frequency — no cables required.
 
-## 功能与使用
+## Function & Usage
 
-### 基本功能
-- **无线连接**：插入频道卡的AE设备会自动寻找并连接至**相同频率**的无线收发器主端，从而接入其提供的ME网络频道。
-- **调整频率**：
-    - **手持频道卡右键**：**增加**卡片自身的频率。
-    - **手持频道卡Shift+右键**：**减少**卡片自身的频率。
+### Basic Features
+- **Wireless Connection**:  
+  AE devices equipped with a Channel Card will automatically search for and connect to a **wireless transceiver master** operating on the **same frequency**, gaining access to its ME network channels.
+- **Frequency Adjustment**:
+  - **Right-click while holding the card**: **Increase** its frequency.
+  - **Shift + Right-click**: **Decrease** its frequency.
 
-### 所有权绑定 (v1.4.4+)
-- **绑定操作**：手持频道卡**Shift+左键**（无需对准方块），即可将其绑定到你的队伍或个人UUID。
-- **绑定要求**：**必须完成绑定后**，频道卡才能成功连接到同样绑定了所有权的无线收发器。
+### Ownership Binding (v1.4.4+)
+- **Binding Operation**:  
+  Hold the Channel Card and **Shift + Left-click** (without targeting a block) to bind it to your **team** or **personal UUID**.
+- **Binding Requirement**:  
+  The card **must be bound** before it can connect to a wireless transceiver master with matching ownership.
 
-### 支持设备
-频道卡可以安装到以下AE设备(及其对应的ExtendedAE扩展版本)中，使其获得无线连接能力。安装后，设备将自动尝试连接至同频率的无线收发器主端。
+### Supported Devices
+The Channel Card can be installed into the following AE devices (and their ExtendedAE variants) to grant them wireless connectivity. Once installed, the device will automatically attempt to connect to a wireless transceiver master of the same frequency.
 
 - <ItemLink id="ae2:interface" />
 - <ItemLink id="ae2:import_bus" />
@@ -37,12 +41,13 @@ item_ids:
 - <ItemLink id="ae2:storage_bus" />
 - <ItemLink id="ae2:pattern_provider" />
 
-## 工作流程
+## Workflow
 
-1.  确保已有一个设置好频率和模式的无线收发器**主端**接入源ME网络。
-2.  手持频道卡，通过**Shift+左键**完成所有权绑定。
-3.  手持频道卡**右键**或**Shift+右键**调整至所需频率。
-4.  将频道卡安装到目标AE设备（如ME接口）中。
-5.  该设备将自动连接到同频率且所有权匹配的无线收发器主端。
+1. Ensure a wireless transceiver **master** with the desired frequency and mode is connected to the source ME network.
+2. Hold the Channel Card and **Shift + Left-click** to complete ownership binding.
+3. Adjust the card’s frequency using **Right-click** or **Shift + Right-click**.
+4. Install the Channel Card into the target AE device (e.g., ME Interface).
+5. The device will automatically connect to the wireless transceiver master with the same frequency and matching ownership.
 
-> **注意**：频道卡与无线收发器主端必须在**频率**和**所有权**（v1.4.4+）上都匹配，才能建立连接。
+> **Note**:  
+> Both the Channel Card and the wireless transceiver master must have **matching frequency** and **ownership** (v1.4.4+) to successfully establish a connection.

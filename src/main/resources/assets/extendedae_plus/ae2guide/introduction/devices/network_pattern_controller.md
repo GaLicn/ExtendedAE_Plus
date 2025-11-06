@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: 样板供应器状态控制器
+  title: Pattern Provider Status Controller
   position: 3
   icon: extendedae_plus:network_pattern_controller
 categories:
@@ -10,30 +10,30 @@ item_ids:
   - extendedae_plus:network_pattern_controller
 ---
 
-# 样板供应器状态控制器
+# Pattern Provider Status Controller
 
 <BlockImage id="extendedae_plus:network_pattern_controller" scale="5" />
 
-样板供应器状态控制器是一个中央控制单元，允许您通过一个统一的界面，批量管理网络中所有样板供应器的工作模式。
+The **Pattern Provider Status Controller** is a central control unit that allows you to manage the working modes of all pattern providers in your network through a single unified interface.
 
-## 用户界面与操作
+## User Interface & Operations
 
-![样板供应器状态控制器界面](../../picture/network_pattern_controller.png)
+![Pattern Provider Status Controller Interface](../../picture/network_pattern_controller.png)
 
-控制器UI提供以下控制选项：
+The controller UI provides the following control options:
 
-### 模式切换
-- **切换阻挡模式**：全局启用或禁用所有样板供应器的“阻挡模式”
-- **切换高级阻挡**：全局切换“高级阻挡模式”
-- **切换智能翻倍**：全局启用或禁用“智能翻倍”功能
+### Mode Switching
+- **Toggle Blocking Mode:** Globally enable or disable "Blocking Mode" for all pattern providers.
+- **Toggle Advanced Blocking:** Globally switch "Advanced Blocking Mode."
+- **Toggle Smart Multiplication:** Globally enable or disable the "Smart Multiplication" feature.
 
-### 批量操作
-- **全部开启**：一键开启网络中所有样板供应器的上述三个功能
-- **全部关闭**：一键关闭网络中所有样板供应器的上述三个功能
+### Batch Operations
+- **Enable All:** One-click to enable all three features for every pattern provider in the network.
+- **Disable All:** One-click to disable all three features for every pattern provider in the network.
 
-## 使用方法
-1. 将**样板供应器状态控制器**放置在您的ME网络中
-2. 右键点击控制器打开配置界面
-3. 根据您的管理需求，点击相应的按钮即可全局调整所有样板供应器的状态
+## How to Use
+1. Place the **Pattern Provider Status Controller** in your ME network.
+2. Right-click the controller to open the configuration interface.
+3. Click the corresponding buttons to adjust the status of all pattern providers globally according to your management needs.
 
-> **注意**：该控制器影响网络中**所有**样板供应器。如需对单个供应器进行独立配置，仍需直接在该供应器的界面中进行操作。
+> **Note:** This controller affects **all** pattern providers in the network. To configure individual providers separately, you must still use the UI of each provider.

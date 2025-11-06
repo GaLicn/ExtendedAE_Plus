@@ -1,143 +1,141 @@
 ---
 navigation:
-  title: 辅助功能总览
+  title: Feature Overview
   parent: introduction/index.md
   position: 0
 categories:
   - extendedae_plus features
 ---
 
-# 模组功能总览
+# Mod Feature Overview
 
-## 一、样板供应器增强
+## I. Pattern Provider Enhancements
 
-以下功能若无特殊说明，默认仅支持 **AE2 样板供应器** 与 **ExtendedAE 扩展样板供应器**。
+Unless otherwise stated, the following features support **AE2 Pattern Providers** and **ExtendedAE Pattern Providers** only.
 
-### 1、智能阻挡模式
+### 1. Smart Blocking Mode
 
-在 AE2 原有阻挡机制基础上进行了强化。  当相同样板的相同配方材料持续发配时，可避免配方串联造成的并行浪费。 （支持 AdvancedAE 系列供应器）
+Enhanced based on AE2’s original blocking mechanism. When identical pattern materials are continuously dispatched, this prevents waste caused by concurrent recipe execution. (Supports AdvancedAE series providers)
 
-> 需开启原版阻挡功能。
-
-<br/>
-
-### 2、智能倍增模式
-
-在 AE2 下单操作中自动计算一次性发配所需的全部材料。  该机制等效于玩家手动将样板翻倍至对应数量的效果。  （支持 AdvancedAE 系列供应器）
-
-可通过配置文件自定义以下选项：
-- 翻倍上限  
-- 多样板供应器轮询发配（提升并发与分摊效率）  
-- 最小收益因子  
-
-**示例：**  
-
-样板：1 圆石 + 2 熔岩 → 1 石头  
-
-下单 1000 石头时，系统一次性发配 1000 圆石与 2000 熔岩。
-
-**额外配置：**  
-
-可在样板供应器左侧输入框手动设定单样物品的发配上限
-
-例：样板 1 圆石 + 2 熔岩 → 1 石头，限制 64，则下单 1000 石头时单次发配仅 32 圆石与 64 熔岩。  
-
-支持类型：物品、流体、Mek 化学品。
+> Requires the original blocking feature to be enabled.
 
 <br/>
 
-### 3、手动倍增按钮
+### 2. Smart Multiplication Mode
 
-在样板供应器 GUI 内提供倍增控制按钮，玩家可快速设定样板倍数，无需重复编辑。
+Automatically calculates the total materials required for a crafting order in AE2.  
+This mechanism is equivalent to manually duplicating the pattern to the corresponding quantity. (Supports AdvancedAE series providers)
+
+Configurable options include:
+- Maximum multiplication limit
+- Multi-pattern provider polling dispatch (improves concurrency and distribution efficiency)
+- Minimum yield factor
+
+**Example:**
+
+Pattern: 1 Cobblestone + 2 Lava → 1 Stone
+
+When ordering 1000 Stone, the system dispatches 1000 Cobblestone and 2000 Lava at once.
+
+**Additional Configuration:**
+
+Manually set the single-item dispatch limit in the left input box of the pattern provider.
+
+Example: Pattern 1 Cobblestone + 2 Lava → 1 Stone, limit 64; ordering 1000 Stone will dispatch only 32 Cobblestone and 64 Lava at a time.
+
+Supported types: Items, Fluids, Mekanism chemicals.
+
+<br/>
+
+### 3. Manual Multiplication Button
+
+A multiplication control button is added in the pattern provider GUI, allowing players to quickly set pattern multipliers without repeated editing.
 
 ---
 
-##  二、AE2 相关功能
+## II. AE2 Related Features
 
-### 1、快捷操作增强
+### 1. Enhanced Quick Operations
 
-- **中键拉取方块：**  鼠标中键点击任意方块时，若 AE 网络中有库存，将自动将该方块拉取至手上（需携带无线终端）。
-- **自动填充空白样板：**  打开样板编码终端时，系统将自动填充 AE 网络中的空白样板至槽位。
-
-<br/>
-
-### 2、合成监控界面强化
-
-- **Shift + 点击 材料：**  快速打开对应机器界面。  
-
-- **Shift + 右键 材料：**  打开对应供应器 UI，并高亮对应样板槽位。同时在世界中高亮目标供应器位置。  
-  
-- **Shift + 点击 取消按钮：**  自动将缺失材料添加至 JEI 书签。
+- **Middle-click to pull blocks:** Middle-clicking any block will automatically pull it from the AE network if available (requires a wireless terminal).
+- **Auto-fill blank patterns:** Opening the Pattern Encoding Terminal automatically fills empty patterns from the AE network into slots.
 
 <br/>
 
-### 3、样板编码终端增强
+### 2. Crafting Monitoring Interface Enhancements
 
-- **上传功能：**  可通过上传按钮直接将样板上传至对应机器的样板供应器。JEI 拉取的处理配方可识别对应机器名称，并自动搜索匹配供应器。  自动搜索采用映射表。可在上传界面添加映射键。
-- **快捷清空：**  右键点击上传搜索框可快速清空输入内容。
-
-<br/>
-
-### 4、样板数量显示与命名优化
-
-- 在 AE2 与 ExtendedAE 的样板管理终端及样板供应器中，添加“样板制作数量”显示。  
-- 样板供应器的 UI 标题将显示玩家自定义名称。
+- **Shift + Click Material:** Quickly opens the corresponding machine interface.
+- **Shift + Right-click Material:** Opens the corresponding provider UI and highlights the matching pattern slot. The target provider is also highlighted in the world.
+- **Shift + Click Cancel Button:** Automatically adds missing materials to JEI bookmarks.
 
 <br/>
 
-### 5、 AE 性能优化
+### 3. Pattern Encoding Terminal Enhancements
 
-- 新增配置项 **合成暂停检查阈值**（默认值：100000）。  该项用于调节 AE 在构建合成计划时的线程 Sleep 行为，  对大量样板的合成计划可显著提升计算速度。
+- **Upload Feature:** Directly upload patterns to the corresponding machine’s pattern provider via the upload button. JEI-pulled recipes detect the machine name and automatically search for matching providers. Automatic search uses a mapping table; mapping keys can be added in the upload interface.
+- **Quick Clear:** Right-click the upload search box to clear input quickly.
 
 <br/>
 
-### 6、石英切割刀功能扩展
+### 4. Pattern Quantity Display & Naming Optimization
 
-- **Shift + 右键 方块或 AE 部件：** 复制其名称。  支持复制 **格雷大型机器** 的不同处理配方子名称。
+- Adds “Pattern Craft Quantity” display in AE2 and ExtendedAE pattern management terminals and providers.
+- Pattern provider UI title displays player-customized names.
+
+<br/>
+
+### 5. AE Performance Optimization
+
+- New config option **Crafting Pause Threshold** (default: 100000) adjusts AE’s thread sleep behavior during crafting plan calculation, significantly improving speed for large crafting plans.
+
+<br/>
+
+### 6. Quartz Cutter Function Extension
+
+- **Shift + Right-click Block or AE Component:** Copies its name, supporting copying of sub-recipe names from large GregTech machines.
 
 ---
 
-## 三、ExtendedAE 增强功能
+## III. ExtendedAE Enhancements
 
-### 1、样板快速上传功能
+### 1. Fast Pattern Upload
 
-- **自动检测装配矩阵：**  
-  若网络中存在装配矩阵，则样板编码终端完成的合成、锻造台、切石机样板将自动上传。 若已有相同样板，系统将自动检测并返还，避免重复上传。  
-
-<br/>
-
-### 2、配置属性：
-
-  可通过配置文件调整扩展样板供应器的样板槽位数倍率。
+- **Auto-detect Assembly Matrix:** If an assembly matrix exists in the network, patterns completed in the Pattern Encoding Terminal (for crafting, smelting, or cutting) are automatically uploaded. Existing identical patterns are detected and returned, avoiding duplicates.
 
 <br/>
 
-### 3、终端交互强化
+### 2. Configurable Properties
 
-- **搜索高亮：**  为 ME 扩展样板管理终端增加搜索高亮功能（18x18 边框 + 彩虹流转高亮）。
+- Extendable pattern provider slot multipliers can be adjusted via the config file.
+
+<br/>
+
+### 3. Terminal Interaction Enhancements
+
+- **Search Highlight:** Adds a search highlight feature to ExtendedAE pattern management terminals (18x18 border + rainbow flow highlight).
 
 ---
 
-##  四、JEI 与 AE2 深度联动
+## IV. Deep JEI & AE2 Integration
 
-### 1、双向交互增强
+### 1. Bidirectional Interaction
 
-- **Shift + 左键（JEI → AE 网络）：**  若 AE 网络中有该物品，将直接取出至玩家手上；若缺失，则自动跳转至下单界面。  
-> 需携带无线终端（饰品槽亦可）。
+- **Shift + Left-click (JEI → AE Network):** Pulls the item directly if available in AE network; if missing, jumps to ordering interface.
+> Requires a wireless terminal (can also be in accessory slot).
 
-- **中键点击JEI界面物品：**  若 AE 网络存在该物品的自动化合成方案，将自动跳转至下单界面。
+- **Middle-click JEI item:** If an automated crafting plan exists in AE, jumps to ordering interface.
 
 <br/>
 
-### 2、 JEI 与终端同步操作
+### 2. JEI & Terminal Synchronization
 
-- **F 键：**  将 JEI 中的物品名称同步至 AE2 搜索栏与 ExtendedAE 扩展样板管理界面。  
-- **样板优先匹配：**  编写样板时优先匹配 JEI 书签靠前的物品。
-
+- **F Key:** Syncs the JEI item name to AE2 search bar and ExtendedAE pattern management interface.
+- **Pattern Priority Matching:** Prioritize JEI bookmarks when writing patterns.
 
 ---
-## 五、其他改进与实用功能
 
-### 样板信息显示
+## V. Other Improvements & Utilities
 
-- 在编码完成的样板上显示编写者信息： `由 <玩家名> 编写`
+### Pattern Information Display
+
+- Shows author information on completed patterns: `Written by <PlayerName>`
