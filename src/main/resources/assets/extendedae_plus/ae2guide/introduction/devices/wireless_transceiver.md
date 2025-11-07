@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: 无线收发器
+  title: Wireless Transceiver
   position: 1
   icon: extendedae_plus:wireless_transceiver
 categories:
@@ -10,39 +10,41 @@ item_ids:
   - extendedae_plus:wireless_transceiver
 ---
 
-# 无线收发器
+# Wireless Transceiver
 
 <BlockImage id="extendedae_plus:wireless_transceiver" scale="5" />
-无线收发器是一种高级无线AE设备，它融合了无线连接器的便捷性与量子环的跨维度能力，能够将ME网络的频道以无线方式远程传输至多个地点。
 
-## 工作机制
+The **Wireless Transceiver** is an advanced wireless AE device that combines the convenience of wireless connectors with the cross-dimensional capabilities of Quantum Rings, allowing ME network channels to be transmitted wirelessly to multiple locations.
 
-### 基本概念
-无线收发器采用**一主多从**的架构：
-- **主端 (Master)**: 连接至提供频道的源ME网络
-- **从端 (Slave)**: 放置在需要频道的位置，从一个主端接收频道。**一个主端可以为多个从端提供频道**
+## Operating Mechanism
 
-### 跨维度传输
-支持跨维度传输频道，传输的前提是**主端与从端所在的区块均必须保持加载状态**
+### Basic Concept
+The Wireless Transceiver uses a **master-slave** architecture:
+- **Master:** Connected to the source ME network providing the channel.
+- **Slave:** Placed where the channel is needed, receiving it from a master. **One master can serve multiple slaves.**
 
-## 操作指南
+### Cross-Dimensional Transmission
+Supports cross-dimensional channel transmission.  
+**Requirement:** Both master and slave chunks must remain loaded.
 
-### 模式与频率设置
+## Operation Guide
 
-- **空手右键**: 切换设备的**主从模式**
-- **Shift + 右键**: **增加**设备的配对频率
-- **Shift + 左键**: **减少**设备的配对频率
-- **手持扳手左键**: 快捷调整无线收发器的频率
-- **扳手右键**: **锁定**设备当前的工作模式与频率，防止意外更改
-- **石英切割刀**: 可为无线收发器重命名。重命名后，从端的Jade将显示其所连接的主端名称，便于识别和管理
+### Mode & Frequency Settings
 
-### 所有权与安全 (v1.4.4+)
+- **Right-click empty hand:** Toggle the device's **Master/Slave mode**.
+- **Shift + Right-click:** **Increase** the device’s pairing frequency.
+- **Shift + Left-click:** **Decrease** the device’s pairing frequency.
+- **Hold Wrench + Left-click:** Quickly adjust the transceiver’s frequency.
+- **Wrench + Right-click:** **Lock** the current mode and frequency to prevent accidental changes.
+- **Quartz Cutter:** Rename the transceiver. The slave’s Jade UI will display the connected master’s name for easier identification and management.
 
-自版本 1.4.4 起，无线收发器支持绑定所有权，以增强安全性与频道隔离。
-- **默认归属**: 1.4.4 版本前放置的无线收发器将被视为**公用**设备。
-- **自动绑定**: 1.4.4 及之后版本，玩家放置的无线收发器在放下时即会自动绑定到该玩家。
-- **FTB Teams 支持**: 设备可绑定至FTB队伍。**不同队伍或玩家的无线收发器，即使频率相同，也无法互通**，实现了频道隔离。
+### Ownership & Security (v1.4.4+)
 
-> **重要更新提示**
-> 如果您从旧版本更新至 1.4.4 或更高版本，请务必注意：
-> - 破坏掉旧的**公共主端**后，您需要将对应的**从端挖下并重新放置**，以完成其所有权的绑定，否则将无法连接。
+Starting from version 1.4.4, the Wireless Transceiver supports ownership binding for enhanced security and channel isolation:
+- **Default Ownership:** Transceivers placed before 1.4.4 are considered **public devices**.
+- **Automatic Binding:** From 1.4.4 onward, newly placed transceivers automatically bind to the player who placed them.
+- **FTB Teams Support:** Devices can be bound to FTB teams. **Transceivers from different teams or players cannot communicate even if frequencies match**, ensuring channel isolation.
+
+> **Important Update Notice:**  
+> When updating from an older version to 1.4.4 or later:
+> - If the old **public master** is removed, you must break and replace the corresponding **slave devices** to complete ownership binding, otherwise they will fail to connect.

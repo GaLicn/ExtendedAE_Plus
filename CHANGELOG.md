@@ -2,6 +2,42 @@
 
 ## [Unreleased]
 
+## [1.4.5] / [未发布]
+
+### Added / 新增
+- 全新的智能倍增，极端情况下（合成深度 > 100万）不再造成由本模组引起的AE2计算合成树时数据包过大
+  - Completely revamped Smart Multiplication, now prevents excessively large data packets caused by this mod when AE2 calculates crafting trees in extreme scenarios (crafting depth > 1 million)
+- 添加智能倍增对AAE高级处理样板的支持
+  - Added Smart Multiplication support for AAE Advanced Processing Patterns
+- 添加单独供应器翻倍限制，可以设置单样物品发配数量上限（具体例子查看GuideME中的介绍）
+  - Added individual provider doubling limit, allowing to set the maximum distribution quantity per item type (see the GuideME for specific examples)
+- 添加本模组的GuideME介绍
+  - Added GuideME introduction for this mod
+- 添加上传样板列表自然排序功能
+  - Added natural sorting functionality for the upload pattern list
+- 添加合成计划字节数显示的格式化功能
+  - Added formatted display for crafting plan byte count
+
+### Changed / 变更
+- 调整实体加速器模型
+  - Adjusted Entity Accelerator model
+- 优化实体加速器性能
+  - Optimized Entity Accelerator performance
+- 调整接口倍增按钮位置
+  - Adjusted the position of the interface multiplication button
+- 去除智能倍增最小收益因子配置项
+  - Removed the minimum benefit factor configuration option for Smart Multiplication
+- 添加对MAE2版本的限制
+  - Added version restrictions for MAE2
+- 为部分文本添加翻译键支持，改善国际化体验 
+  - Added translation key support for some previously hardcoded text, improving internationalization experience
+
+### Fixed / 修复
+- 修复供应器高亮在服务器中不显示的问题
+  - Fixed the issue where provider highlighting was not displayed on servers
+- 修复上传核心挖掘无掉落物和加速的问题
+  - Fixed the issue where the upload core had no drops and acceleration when mined
+
 ## [1.4.4]
 ### Added / 新增
 - 实体加速器支持对 AppliedFlux 存储电量的扣除

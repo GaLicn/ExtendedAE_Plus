@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: 实体加速器
+  title: Entity Accelerator
   position: 5
   icon: extendedae_plus:entity_speed_ticker
 categories:
@@ -10,86 +10,89 @@ item_ids:
   - extendedae_plus:entity_speed_ticker
 ---
 
-# 实体加速器
-实体加速器通过消耗应用能源2（AE2）网络中的能量，为前方一格方块实体提供运行加速，其功能与“加速火把”类似。
+# Entity Accelerator
+
+The **Entity Accelerator** consumes energy from the AE2 network to accelerate block entities in the front block space, functioning similarly to a “Speed Torch”.
 
 <GameScene zoom="8" background="transparent">
 <ImportStructure src="../../structure/entity_speed_ticker.snbt"></ImportStructure>
 </GameScene>
 
-## 工作机制
-1. **启用条件**：必须在加速器中插入“**<ItemLink id="extendedae_plus:entity_speed_card" tag="{'EAS:mult':2}" />**”才能激活加速功能
-2. **加速效果**：最高可为方块实体提供**1024倍**的加速倍率
-3. **能量供应**：加速过程持续消耗AE网络能量。当AE能量不足时，加速功能将自动暂停直至能量恢复。如安装Applied Flux模组，网络磁盘中存在FE能量且AE能量不足时，可消耗磁盘存储的FE能量继续加速（优先级可配置）
-4. **配置选项**：可通过配置文件调整基础能耗、设置实体黑名单，以及为特定实体配置独立的能量消耗倍率
+## Operating Mechanism
 
-![实体加速器界面](../../picture/entity_speed_ticker.png)
+1. **Activation Requirement:** The accelerator must contain at least one **<ItemLink id="extendedae_plus:entity_speed_card" tag="{'EAS:mult':2}" />** to enable acceleration.
+2. **Acceleration Effect:** Can accelerate block entities up to **1024×**.
+3. **Energy Supply:** Acceleration continuously consumes AE network energy. When AE energy is insufficient, acceleration automatically pauses until energy is restored.
+    - If the *Applied Flux* mod is installed, FE energy stored in network disks can be consumed to continue acceleration when AE energy is insufficient (priority configurable).
+4. **Configuration Options:** Base energy consumption, entity blacklist, and per-entity energy multiplier can be adjusted via the config file.
 
-## 能量消耗机制
+![Entity Accelerator Interface](../../picture/entity_speed_ticker.png)
 
-### 基础能量计算
+## Energy Consumption Mechanism
 
-实体加速器的能量消耗由基础配置值 `baseCost` 和目标加速倍率共同决定。
+### Base Energy Calculation
 
-令：
-- \( M \) = 目标加速倍率（2, 4, 8, ..., 1024）
-- \( B \) = 基础能量配置值（默认512）
-- \( L \) = log_2(M)
+The energy consumption of the Entity Accelerator is determined by the base configuration value `baseCost` and the target acceleration multiplier.
 
-**基础能量消耗公式：**
+Let:
+- \( M \) = target multiplier (2, 4, 8, ..., 1024)
+- \( B \) = base energy config (default 512)
+- \( L \) = log₂(M)
+
+**Base energy consumption formula:**
 
 ![eformula1](../../picture/eformula1.png)
 
-**基础能耗参考表（baseCost = 512）**
+**Base Energy Reference Table (baseCost = 512)**
 
-| 加速倍率 | 基础能量消耗（AE） |
-| -------- | ------------------ |
-| 2        | 256                |
-| 4        | 1,024              |
-| 8        | 2,048              |
-| 16       | 8,192              |
-| 32       | 16,384             |
-| 64       | 65,536             |
-| 128      | 131,072            |
-| 256      | 524,288            |
-| 512      | 268,435,456        |
-| 1024     | 2,147,483,648      |
+| Multiplier | Base Energy (AE) |
+|------------|----------------|
+| 2          | 256            |
+| 4          | 1,024          |
+| 8          | 2,048          |
+| 16         | 8,192          |
+| 32         | 16,384         |
+| 64         | 65,536         |
+| 128        | 131,072        |
+| 256        | 524,288        |
+| 512        | 268,435,456    |
+| 1024       | 2,147,483,648 |
 
-### 能量卡节能效果
+### Energy Card Efficiency
 
-安装能量卡可有效降低设备能耗，节能效果随卡数量增加而提升，但存在边际递减效应。
+Installing Energy Cards reduces power consumption. The effect increases with the number of cards but has diminishing returns.
 
-令 \( N \) = 安装的能量卡数量
+Let \( N \) = number of installed energy cards
 
-**能耗比例公式：**
+**Energy Ratio Formula:**  
 ![eformula1](../../picture/eformula2.png)
 
-**能量卡节能效果表：**
+**Energy Card Efficiency Table:**
 
-| 能量卡数量 | 节能效果 | 实际能耗比例 |
-| ---------- | -------- | ------------ |
-| 0          | 0%       | 100%         |
-| 1          | 10%      | 90%          |
-| 2          | 14.5%    | 85.5%        |
-| 3          | 17.15%   | 82.85%       |
-| 4          | 19.0%    | 81.0%        |
-| 5          | 20.21%   | 79.79%       |
-| 6          | 21.15%   | 78.85%       |
-| 7          | 21.9%    | 78.1%        |
-| ≥8         | 50%      | 50%          |
+| Number of Cards | Efficiency | Actual Energy Ratio |
+|----------------|------------|------------------|
+| 0              | 0%         | 100%             |
+| 1              | 10%        | 90%              |
+| 2              | 14.5%      | 85.5%            |
+| 3              | 17.15%     | 82.85%           |
+| 4              | 19.0%      | 81.0%            |
+| 5              | 20.21%     | 79.79%           |
+| 6              | 21.15%     | 78.85%           |
+| 7              | 21.9%      | 78.1%            |
+| ≥8             | 50%        | 50%              |
 
-### 最终能耗计算
+### Final Energy Calculation
 
-**最终能量消耗公式：**
+**Final Power Formula:**
 
 **finalPower = basePower × energyRatio**
 
-**计算示例：**
+**Calculation Example:**
 
-- 目标加速倍率：64倍
-- 安装能量卡：3张
-- 基础能耗：65,536 AE
-- 能耗比例：82.85%
-- **最终能耗**：65,536 × 0.8285 ≈ 54,267AE
+- Target Multiplier: 64×
+- Energy Cards Installed: 3
+- Base Energy: 65,536 AE
+- Energy Ratio: 82.85%
+- **Final Energy Consumption:** 65,536 × 0.8285 ≈ 54,267 AE
 
-> 实际能耗可能因实体类型配置而有所调整
+> Actual energy consumption may vary depending on entity-specific configuration.

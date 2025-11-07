@@ -117,7 +117,7 @@ dependencies {
     // Runtime test
     modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
     modImplementation "curse.maven:jade-324717:5339264"
-    modRuntimeOnly "curse.maven:architectury-api-419699:${architectury_version}"
+    modRuntimeOnly "dev.architectury:architectury-forge:9.2.14"
     modRuntimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
     modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     modRuntimeOnly "curse.maven:cloth-config-348521:5729105"

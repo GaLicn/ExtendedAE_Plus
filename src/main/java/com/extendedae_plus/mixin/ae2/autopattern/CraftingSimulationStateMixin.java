@@ -3,19 +3,16 @@ package com.extendedae_plus.mixin.ae2.autopattern;
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.CraftingCalculation;
 import appeng.crafting.CraftingPlan;
-import appeng.crafting.CraftingTreeProcess;
 import appeng.crafting.inv.CraftingSimulationState;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
 import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
-import com.extendedae_plus.api.smartDoubling.ICraftingSimulationStateExt;
-import com.extendedae_plus.api.smartDoubling.ICraftingTreeProcessExt;
+import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.util.smartDoubling.PatternScaler;
 import com.google.common.collect.Iterables;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -23,11 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@SuppressWarnings({"AddedMixinMembersNamePattern"})
 @Mixin(value = CraftingSimulationState.class, remap = false)
-public abstract class CraftingSimulationStateMixin implements ICraftingSimulationStateExt {
-    @Unique private CraftingTreeProcess sourceProcess;
-
+public abstract class CraftingSimulationStateMixin {
     /**
      * 替换 CraftingPlan 构建逻辑，在此统一处理样板倍率
      */
@@ -64,15 +58,12 @@ public abstract class CraftingSimulationStateMixin implements ICraftingSimulatio
                 perCraftLimit = ModConfig.INSTANCE.smartScalingMaxMultiplier;
             }
 
-            // 获取供应器数量
-            CraftingTreeProcess process = ((ICraftingSimulationStateExt) state).getSourceProcess();
-            CraftingService craftingService = (CraftingService) ((ICraftingTreeProcessExt) process).getCraftingService();
-            long providerCount = Iterables.size(craftingService.getProviders(processingPattern));
-            if (providerCount <= 0) providerCount = 1;
-
             if (perCraftLimit <= 0) {
                 // 检查是否开启 provider 轮询分配功能
                 if (ModConfig.INSTANCE.providerRoundRobinEnable) {
+                    CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid().getCraftingService();
+                    int providerCount = Math.max(Iterables.size(craftingService.getProviders(processingPattern)), 1);
+
                     long base = totalAmount / providerCount;
                     long remainder = totalAmount % providerCount;
 
@@ -111,15 +102,5 @@ public abstract class CraftingSimulationStateMixin implements ICraftingSimulatio
 
         crafts.clear();
         crafts.putAll(finalCrafts);
-    }
-
-    @Override
-    public CraftingTreeProcess getSourceProcess() {
-        return this.sourceProcess;
-    }
-
-    @Override
-    public void setSourceProcess(CraftingTreeProcess process) {
-        this.sourceProcess = process;
     }
 }

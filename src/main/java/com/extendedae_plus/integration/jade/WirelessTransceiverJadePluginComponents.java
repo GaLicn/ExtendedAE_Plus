@@ -18,7 +18,7 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
             if (data.contains("frequency")) {
                 long frequency = data.getLong("frequency");
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.frequency", frequency));
+                tooltip.add(Component.translatable("extendedae_plus.jade.frequency", frequency));
             }
         }
     },
@@ -27,7 +27,8 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
             if (data.contains("masterMode")) {
                 boolean masterMode = data.getBoolean("masterMode");
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.master_mode", masterMode ? "主模式" : "从模式"));
+                String modeKey = masterMode ? "extendedae_plus.jade.mode_master" : "extendedae_plus.jade.mode_slave";
+                tooltip.add(Component.translatable("extendedae_plus.jade.mode", Component.translatable(modeKey)));
             }
         }
     },
@@ -39,12 +40,14 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 String dim = data.contains("masterDim") ? data.getString("masterDim") : "";
                 String customName = data.contains("customName") ? data.getString("customName") : null;
                 if (customName != null) {
-                    tooltip.add(Component.literal("主节点: " + customName + "(" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                    tooltip.add(Component.translatable("extendedae_plus.jade.master_node_with_name",
+                            customName, pos.getX(), pos.getY(), pos.getZ()));
                 } else {
-                    tooltip.add(Component.literal("主节点位置: (" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ")"));
+                    tooltip.add(Component.translatable("extendedae_plus.jade.master_node_location",
+                            pos.getX(), pos.getY(), pos.getZ()));
                 }
                 if (!dim.isEmpty()) {
-                    tooltip.add(Component.literal("维度: " + dim));
+                    tooltip.add(Component.translatable("extendedae_plus.jade.dimension", dim));
                 }
             }
         }
@@ -54,16 +57,8 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
             if (data.contains("locked")) {
                 boolean locked = data.getBoolean("locked");
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.locked", locked ? "已锁定" : "未锁定"));
-            }
-        }
-    },
-    NETWORK_USABLE("wt_network_usable") {
-        @Override
-        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
-            if (data.contains("networkUsable")) {
-                boolean usable = data.getBoolean("networkUsable");
-                tooltip.add(Component.literal((usable ? "设备在线" : "设备离线")));
+                String statusKey = locked ? "extendedae_plus.jade.locked" : "extendedae_plus.jade.unlocked";
+                tooltip.add(Component.translatable("extendedae_plus.jade.lock_status", Component.translatable(statusKey)));
             }
         }
     },
@@ -76,10 +71,10 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 // 参考AE2的显示方式
                 if (maxChannels <= 0) {
                     // 无限频道或未设置
-                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels", usedChannels));
+                    tooltip.add(Component.translatable("extendedae_plus.jade.channels", usedChannels));
                 } else {
                     // 显示 "已使用/最大"
-                    tooltip.add(Component.translatable("extendedae_plus.tooltip.channels_of", usedChannels, maxChannels));
+                    tooltip.add(Component.translatable("extendedae_plus.jade.channels_of", usedChannels, maxChannels));
                 }
             }
         }
@@ -89,14 +84,24 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
             if (data.contains("ownerName")) {
                 String ownerName = data.getString("ownerName");
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", ownerName));
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner", ownerName));
             } else if (data.contains("placerId")) {
                 // 有placerId但没有名称，显示UUID
                 java.util.UUID placerId = data.getUUID("placerId");
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", placerId.toString().substring(0, 8) + "..."));
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner", placerId.toString().substring(0, 8) + "..."));
             } else {
                 // 没有所有者信息（公共收发器）
-                tooltip.add(Component.translatable("extendedae_plus.tooltip.owner.public"));
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner.public"));
+            }
+        }
+    },
+    NETWORK_USABLE("wt_network_usable") {
+        @Override
+        protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data) {
+            if (data.contains("networkUsable")) {
+                boolean usable = data.getBoolean("networkUsable");
+                String statusKey = usable ? "extendedae_plus.jade.online" : "extendedae_plus.jade.offline";
+                tooltip.add(Component.translatable(statusKey));
             }
         }
     };
@@ -121,5 +126,3 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
 
     protected abstract void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, CompoundTag data);
 }
-
-

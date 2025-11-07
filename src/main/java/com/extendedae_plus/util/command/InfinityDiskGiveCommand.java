@@ -31,12 +31,12 @@ public class InfinityDiskGiveCommand {
         try {
             ServerPlayer player = source.getPlayerOrException();
             if (player.level() == null || !(player.level() instanceof ServerLevel)) {
-                source.sendFailure(Component.literal("This command must be run on server side."));
+                source.sendFailure(Component.translatable("extendedae_plus.command.server_side_only"));
                 return 0;
             }
             InfinityStorageManager mgr = ExtendedAEPlus.STORAGE_INSTANCE;
             if (mgr == null) {
-                source.sendFailure(Component.literal("InfinityStorageManager is not initialized."));
+                source.sendFailure(Component.translatable("extendedae_plus.command.storage_manager_not_initialized"));
                 return 0;
             }
 
@@ -50,13 +50,11 @@ public class InfinityDiskGiveCommand {
                 given++;
             }
             final int finalGiven = given;
-            source.sendSuccess(() -> Component.literal("Gave " + finalGiven + " infinity disks."), false);
+            source.sendSuccess(() -> Component.translatable("extendedae_plus.command.gave_infinity_disks", finalGiven), false);
             return given;
         } catch (Exception ex) {
-            source.sendFailure(Component.literal("Error: " + ex.getMessage()));
+            source.sendFailure(Component.translatable("extendedae_plus.command.error", ex.getMessage()));
             return 0;
-      }
+        }
     }
 }
-
-

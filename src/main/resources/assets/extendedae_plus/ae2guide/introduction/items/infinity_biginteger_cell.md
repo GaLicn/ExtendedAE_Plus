@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: "吞噬万籁的寂静"
+  title: "Devourer of Cosmic Silence"
   position: 7
   icon: extendedae_plus:infinity_biginteger_cell
 categories:
@@ -10,21 +10,27 @@ item_ids:
   - extendedae_plus:infinity_biginteger_cell
 ---
 
-# 吞噬万籁的寂静
+# Devourer of Cosmic Silence
 
 <ItemImage id="extendedae_plus:infinity_biginteger_cell" scale="4" />
 
-“吞噬万籁的寂静”是一种终极的ME存储磁盘，它提供了无限的物品种类支持与无限的存储容量。
+**Devourer of Cosmic Silence** is an ultimate ME storage disk that provides truly infinite item-type support and storage capacity.
 
-## 功能特性
+## Features
 
-- **无限类型**：**不限制**可存储的物品种类数量。
-- **无限容量**：存储容量为 **BigInteger** 级别，理论上是无限的。
-- **显示限制**：受AE2系统自身界面显示的限制，在ME终端中最大显示存储量为 **9.2E (9,223,372,036,854,775,808)**，但**实际上可以继续向其中存入物品**，远超此显示数值。
-- **广泛兼容**：能够存储通过附属模组（如Applied Flux、Applied Mekanistics等）接入AE2系统的各类资源（如FE、Mek化学品、魔源等）。存储这些资源需要安装对应的附属模组。
+- **Infinite Types**:  
+  There is **no limit** to the number of item types it can store.
+- **Infinite Capacity**:  
+  Storage capacity is based on the **BigInteger** data type, effectively making it limitless.
+- **Display Limitation**:  
+  Due to AE2’s interface constraints, the ME terminal can display a maximum stored value of **9.2E (9,223,372,036,854,775,808)**.  
+  However, the disk **continues to accept items** far beyond this displayed number.
+- **Broad Compatibility**:  
+  Capable of storing various resources integrated into AE2 via add-on mods (such as *Applied Flux*, *Applied Mekanistics*, etc.), including FE, Mekanism chemicals, Ars Nouveau mana, and more.  
+  Storing these resources requires the corresponding add-on mod to be installed.
 
-## 数据安全与恢复
+## Data Security & Recovery
 
-此磁盘包含一项数据安全保障机制：
-- 使用指令 `/eap give_infinity_disks` 可以获得存档中存储数据对应的磁盘副本。
-- 此功能作为**保底手段**，可在原始磁盘意外丢失的情况下**恢复存储数据**。
+This disk includes a built-in data protection mechanism:
+- Use the command `/eap give_infinity_disks` to obtain a copy of the disk corresponding to the saved storage data in the current world.
+- This serves as a **failsafe measure**, allowing you to **recover stored data** if the original disk is accidentally lost.

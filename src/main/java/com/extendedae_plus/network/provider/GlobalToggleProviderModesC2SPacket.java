@@ -90,8 +90,7 @@ public class GlobalToggleProviderModesC2SPacket {
 
             int affected = applyToAllProviders(grid, msg);
             // 向发起玩家反馈影响数量，便于判断按钮是否生效
-            player.displayClientMessage(Component.literal("E+ 全局切换已应用到 " + affected + " 个样板供应器"), true);
-        });
+            player.displayClientMessage(Component.translatable("extendedae_plus.chat.pattern_provider.global_toggle_applied", affected), true);        });
         ctx.setPacketHandled(true);
     }
 

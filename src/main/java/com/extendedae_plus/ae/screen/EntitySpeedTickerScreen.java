@@ -49,15 +49,15 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
             public List<Component> getTooltipMessage() {
                 if (menu.targetBlacklisted) {
                     return List.of(
-                            Component.literal("实体加速"),
-                            Component.literal("已禁用（目标在黑名单）")
+                            Component.translatable("extendedae_plus.gui.entity_acceleration.title"),
+                            Component.translatable("extendedae_plus.gui.entity_acceleration.blacklisted")
                     );
                 }
                 boolean enabled = eap$entitySpeedTickerEnabled;
                 return List.of(
-                        Component.literal("实体加速"),
-                        enabled ? Component.literal("已启用: 将加速目标方块实体的tick") :
-                                Component.literal("已关闭: 不会对目标方块实体进行加速")
+                        Component.translatable("extendedae_plus.gui.entity_acceleration.title"),
+                        enabled ? Component.translatable("extendedae_plus.gui.entity_acceleration.enabled") :
+                                Component.translatable("extendedae_plus.gui.entity_acceleration.disabled")
                 );
             }
 

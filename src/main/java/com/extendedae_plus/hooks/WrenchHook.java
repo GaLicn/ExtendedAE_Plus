@@ -95,7 +95,8 @@ public final class WrenchHook {
                 boolean newLocked = !te.isLocked();
                 te.setLocked(newLocked);
                 // 提示玩家
-                player.displayClientMessage(Component.literal(newLocked ? "已锁定收发器" : "已解锁收发器"), true);
+                String translationKey = newLocked ? "extendedae_plus.chat.wireless_transceiver.locked_status" : "extendedae_plus.chat.wireless_transceiver.unlocked_status";
+                player.displayClientMessage(Component.translatable(translationKey), true);
                 // 轻微反馈音效
                 level.playSound(player, hit.getBlockPos(), SoundEvents.LEVER_CLICK, SoundSource.BLOCKS, 0.5F, newLocked ? 0.6F : 0.9F);
 
