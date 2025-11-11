@@ -29,7 +29,7 @@ public abstract class CraftingSimulationStateMixin {
     private static void onBuildCraftingPlan(CraftingSimulationState state, CraftingCalculation calculation, long calculatedAmount, CallbackInfoReturnable<CraftingPlan> cir) {
         CraftingSimulationStateAccessor accessor = (CraftingSimulationStateAccessor) state;
         Map<IPatternDetails, Long> crafts = accessor.getCrafts();
-        // 新建 Map 存放最终分配后的 crafts
+        // 存放最终分配后的 crafts
         Map<IPatternDetails, Long> finalCrafts = new LinkedHashMap<>();
 
         for (Map.Entry<IPatternDetails, Long> entry : crafts.entrySet()) {
@@ -63,6 +63,11 @@ public abstract class CraftingSimulationStateMixin {
                 if (ModConfig.INSTANCE.providerRoundRobinEnable) {
                     CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid().getCraftingService();
                     int providerCount = Math.max(Iterables.size(craftingService.getProviders(processingPattern)), 1);
+
+                    // totalAmount < providerCount → 只激活 totalAmount 台 provider
+                    if (totalAmount < providerCount) {
+                        providerCount = (int) totalAmount;
+                    }
 
                     long base = totalAmount / providerCount;
                     long remainder = totalAmount % providerCount;
