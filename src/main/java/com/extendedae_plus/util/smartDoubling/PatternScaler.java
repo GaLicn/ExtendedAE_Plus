@@ -73,17 +73,19 @@ public final class PatternScaler {
         for (IPatternDetails.IInput input : proc.getInputs()) {
             long amt = input.getMultiplier();
             if (amt <= 0) continue;
+            var possible = input.getPossibleInputs();
+            if (possible == null || possible.length == 0) continue;
+            AEKey key = possible[0].what();
+            long unitMul = getUnitMultiplier(key);
+            long limitInUnit = (long) limit * unitMul;
 
-            AEKey key = input.getPossibleInputs()[0].what();
-            long unitMultiplier = getUnitMultiplier(key);
-            long limitInAEUnit = (long) limit * unitMultiplier;
-
-            long allowedMul = limitInAEUnit / amt;
-            allowedMul = Math.max(1, allowedMul); // 至少 1
-            minMul = Math.min(minMul, allowedMul);
+            long allowed = limitInUnit / amt;
+            allowed = Math.max(1L, allowed);
+            minMul = Math.min(minMul, allowed);
         }
 
-        return minMul != Long.MAX_VALUE ? (int) Math.min(minMul, Integer.MAX_VALUE) : 0;
+        if (minMul == Long.MAX_VALUE) return 0; // 无有效输入 → 不限制
+        return minMul > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) minMul;
     }
 
     private static long getUnitMultiplier(AEKey key) {
@@ -95,8 +97,7 @@ public final class PatternScaler {
             if ("me.ramidzkh.mekae2.ae2.MekanismKey".equals(key.getClass().getName())) {
                 return 1000L;
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
         return 1L;
     }
 }
