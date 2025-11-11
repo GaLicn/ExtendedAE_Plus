@@ -26,7 +26,10 @@ public abstract class CraftingSimulationStateMixin {
      * 替换 CraftingPlan 构建逻辑，在此统一处理样板倍率
      */
     @Inject(method = "buildCraftingPlan", at = @At("HEAD"))
-    private static void onBuildCraftingPlan(CraftingSimulationState state, CraftingCalculation calculation, long calculatedAmount, CallbackInfoReturnable<CraftingPlan> cir) {
+    private static void onBuildCraftingPlan(CraftingSimulationState state,
+                                            CraftingCalculation calculation,
+                                            long calculatedAmount,
+                                            CallbackInfoReturnable<CraftingPlan> cir) {
         CraftingSimulationStateAccessor accessor = (CraftingSimulationStateAccessor) state;
         Map<IPatternDetails, Long> crafts = accessor.getCrafts();
         // 存放最终分配后的 crafts
