@@ -1,12 +1,12 @@
 package com.extendedae_plus.init;
 
-import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
-import com.extendedae_plus.content.matrix.UploadCoreBlock;
-import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import appeng.block.crafting.CraftingUnitBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.core.definitions.AEBlockEntities;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.matrix.UploadCoreBlock;
+import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -24,7 +24,7 @@ public final class ModBlocks {
             () -> new WirelessTransceiverBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
-                            .strength(1.5F, 6.0F)
+                            .strength(2F, 6.0F)
                             .requiresCorrectToolForDrops()
             )
     );
