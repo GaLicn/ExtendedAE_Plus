@@ -8,11 +8,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModCreativeTabs {
-    private ModCreativeTabs() {}
-
     public static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ExtendedAEPlus.MODID);
-
     public static final RegistryObject<CreativeModeTab> MAIN = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + ExtendedAEPlus.MODID + ".main"))
@@ -35,11 +32,20 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.createEntitySpeedCardStack(4));
                         output.accept(ModItems.createEntitySpeedCardStack(8));
                         output.accept(ModItems.createEntitySpeedCardStack(16));
-
-                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
-                        
                         // 频道卡
                         output.accept(ModItems.CHANNEL_CARD.get());
+
+                        output.accept(ModItems.OBLIVION_SINGULARITY.get());
+                        output.accept(ModItems.STORAGE_CORE.get());
+                        if (ModItems.ENERGY_CORE != null) {
+                            output.accept(ModItems.ENERGY_CORE.get());
+                        }
+                        if (ModItems.QUANTUM_STORAGE_CORE != null) {
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
+                        }
+                        output.accept(ModItems.SPATIAL_CORE.get());
+
+                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
                     })
                     .build());
 }

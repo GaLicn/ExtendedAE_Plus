@@ -8,15 +8,15 @@ import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModItems {
-    private ModItems() {}
-
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, ExtendedAEPlus.MODID);
 
     public static final RegistryObject<Item> WIRELESS_TRANSCEIVER = ITEMS.register(
@@ -63,7 +63,7 @@ public final class ModItems {
 
     public static final RegistryObject<EntitySpeedTickerPartItem> ENTITY_TICKER_PART_ITEM = ITEMS.register(
             "entity_speed_ticker",
-                    () -> new EntitySpeedTickerPartItem(new Item.Properties())
+            () -> new EntitySpeedTickerPartItem(new Item.Properties())
     );
 
     // AE Upgrade Cards: 实体加速卡（四个等级：x2,x4,x8,x16）
@@ -73,7 +73,7 @@ public final class ModItems {
             () -> new EntitySpeedCardItem(new Item.Properties())
     );
 
-    public static final RegistryObject<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+    public static final RegistryObject<InfinityBigIntegerCellItem> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
             "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
     );
 
@@ -83,6 +83,42 @@ public final class ModItems {
             () -> new ChannelCardItem(new Item.Properties())
     );
 
+    public static final RegistryObject<Item> STORAGE_CORE = ITEMS.register(
+            "storage_core",
+            () -> new Item(new Item.Properties())
+    );
+    public static final RegistryObject<Item> SPATIAL_CORE = ITEMS.register(
+            "spatial_core",
+            () -> new Item(new Item.Properties())
+    );
+    public static final RegistryObject<Item> OBLIVION_SINGULARITY = ITEMS.register(
+            "oblivion_singularity",
+            () -> new Item(new Item.Properties())
+    );
+    public static final RegistryObject<Item> ENERGY_CORE;
+    public static final RegistryObject<Item> QUANTUM_STORAGE_CORE;
+
+    static {
+        if (ModCheckUtils.isAppfluxLoading()) {
+            ENERGY_CORE = ITEMS.register(
+                    "energy_core",
+                    () -> new Item(new Item.Properties())
+            );
+        } else {
+            ENERGY_CORE = null;
+        }
+
+        if (ModCheckUtils.isAAELoading()) {
+            QUANTUM_STORAGE_CORE = ITEMS.register(
+                    "quantum_storage_core",
+                    () -> new Item(new Item.Properties())
+            );
+        } else {
+            QUANTUM_STORAGE_CORE = null;
+        }
+    }
+
+    private ModItems() {}
 
     /**
      * 为 PartItem 注册 AE2 部件模型。
@@ -99,7 +135,7 @@ public final class ModItems {
     /**
      * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
      */
-    public static net.minecraft.world.item.ItemStack createEntitySpeedCardStack(int multiplier) {
+    public static ItemStack createEntitySpeedCardStack(int multiplier) {
         return EntitySpeedCardItem.withMultiplier(multiplier);
     }
 }
