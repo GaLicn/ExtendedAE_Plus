@@ -37,13 +37,14 @@ public final class ModCreativeTabs {
 
                         output.accept(ModItems.OBLIVION_SINGULARITY.get());
                         output.accept(ModItems.STORAGE_CORE.get());
-                        if (ModItems.ENERGY_CORE != null) {
-                            output.accept(ModItems.ENERGY_CORE.get());
+                        if (ModItems.ENERGY_STORAGE_CORE != null) {
+                            output.accept(ModItems.ENERGY_STORAGE_CORE.get());
                         }
                         if (ModItems.QUANTUM_STORAGE_CORE != null) {
                             output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
                         }
                         output.accept(ModItems.SPATIAL_CORE.get());
+                        output.accept(ModItems.INFINITY_CORE.get());
 
                         output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
                     })

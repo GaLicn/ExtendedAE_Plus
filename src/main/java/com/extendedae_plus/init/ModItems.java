@@ -91,21 +91,25 @@ public final class ModItems {
             "spatial_core",
             () -> new Item(new Item.Properties())
     );
+    public static final RegistryObject<Item> INFINITY_CORE = ITEMS.register(
+            "infinity_core",
+            () -> new Item(new Item.Properties())
+    );
     public static final RegistryObject<Item> OBLIVION_SINGULARITY = ITEMS.register(
             "oblivion_singularity",
             () -> new Item(new Item.Properties())
     );
-    public static final RegistryObject<Item> ENERGY_CORE;
+    public static final RegistryObject<Item> ENERGY_STORAGE_CORE;
     public static final RegistryObject<Item> QUANTUM_STORAGE_CORE;
 
     static {
         if (ModCheckUtils.isAppfluxLoading()) {
-            ENERGY_CORE = ITEMS.register(
-                    "energy_core",
+            ENERGY_STORAGE_CORE = ITEMS.register(
+                    "energy_storage_core",
                     () -> new Item(new Item.Properties())
             );
         } else {
-            ENERGY_CORE = null;
+            ENERGY_STORAGE_CORE = null;
         }
 
         if (ModCheckUtils.isAAELoading()) {
