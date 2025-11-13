@@ -20,6 +20,9 @@ public class CraftConfirmScreenMixin {
             )
     )
     private String useCustomFormat(NumberFormat instance, long number) {
+        if (number < 10_000) {
+            return NumberFormat.getInstance().format(number);
+        }
         return NumberFormatUtil.formatNumber(number);
     }
 }
