@@ -33,11 +33,20 @@ public class EntitySpeedCardItem extends UpgradeCardItem {
     }
 
     public static int readMultiplier(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return 1;
-        CompoundTag t = stack.getTag();
-        if (t == null) return 1;
-        int v = t.getInt(NBT_MULTIPLIER);
-        return v <= 0 ? 1 : v;
+        if (stack == null || stack.isEmpty()) return 2;
+        CompoundTag tag = stack.getTag();
+        if (tag == null || !tag.contains(NBT_MULTIPLIER)) {
+            // 关键：检测到没有 NBT，直接强制写一个默认合法值
+            CompoundTag newTag = stack.getOrCreateTag();
+            newTag.putInt(NBT_MULTIPLIER, 2);
+            return 2;
+        }
+        int v = tag.getInt(NBT_MULTIPLIER);
+        // 合法性检查
+        return switch (v) {
+            case 2, 4, 8, 16 -> v;
+            default -> 2; // 非法值一律纠正为 x2
+        };
     }
 
     @Override
@@ -54,8 +63,7 @@ public class EntitySpeedCardItem extends UpgradeCardItem {
         return Component.translatable(key);
     }
 
-
-    public List<Component> getTooltipLines(ItemStack stack) {
+    private List<Component> getTooltipLines(ItemStack stack) {
         int mult = readMultiplier(stack);
         long cap = 1L;
         switch (mult) {
@@ -77,5 +85,3 @@ public class EntitySpeedCardItem extends UpgradeCardItem {
         lines.addAll(this.getTooltipLines(stack));
     }
 }
-
-
