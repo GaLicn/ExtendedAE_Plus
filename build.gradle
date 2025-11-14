@@ -11,6 +11,14 @@ base {
     archivesName = project.archives_name
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/generated/resources'
+        }
+    }
+}
+
 loom {
     silentMojangMappingsLicense()
 
@@ -19,11 +27,13 @@ loom {
     }
 
     runs {
-        client1 {
-            client()
-            name "Client 1"
-            runDir "run/client1"
-            programArgs "--username", "Player1"
+        data {
+            data()
+            name "Data Generation"
+            // IDE 启动时传入参数
+            programArgs.addAll(
+                    '--mod', project.name, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+            )
         }
     }
 }
@@ -66,6 +76,7 @@ dependencies {
     minecraft "net.minecraft:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
     forge "net.minecraftforge:forge:${forge_version}"
+    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
@@ -76,42 +87,34 @@ dependencies {
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
-    modCompileOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
-
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-
-    annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
-
+    modImplementation "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
     modImplementation "curse.maven:applied-flux-965012:6755986"
-    modCompileOnly "curse.maven:mega-cells-622112:${mega_cells_version}"
-    modCompileOnly "curse.maven:jade-324717:${jade_version}"
+    modImplementation "curse.maven:mega-cells-622112:${mega_cells_version}"
+
+    //mae2
+    //  modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6827727"
+    modCompileOnly "curse.maven:modern-ae2-additions-1028068:6827727"
+
+    //aea
+    modCompileOnly "curse.maven:advancedae-1084104:6939473"
+//    modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
+
+    modImplementation "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    modImplementation "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
     modCompileOnly "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
     modCompileOnly "curse.maven:ldlib-626676:${ldlib_version}"
 
     //curios
-    modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
-    modCompileOnly "curse.maven:curios-309927:${curios_version}"
+    modImplementation "curse.maven:curios-309927:${curios_version}"
 
     // Runtime test
-    modRuntimeOnly "curse.maven:curios-309927:${curios_version}"
-    modRuntimeOnly "curse.maven:jade-324717:${jade_version}"
     modRuntimeOnly "dev.architectury:architectury-forge:9.2.14"
-    modRuntimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     modRuntimeOnly "curse.maven:cloth-config-348521:5729105"
 
     //jec
-    modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
-
-
-    //mae2
-  //  modRuntimeOnly "curse.maven:modern-ae2-additions-1028068:6827727"
-    modCompileOnly "curse.maven:modern-ae2-additions-1028068:6827727"
-
-    //aea
-    modImplementation "curse.maven:advancedae-1084104:6939473"
+    modImplementation "curse.maven:just-enough-characters-250702:6680042"
 
     //geckolib
     modRuntimeOnly "curse.maven:geckolib-388172:6920925"
