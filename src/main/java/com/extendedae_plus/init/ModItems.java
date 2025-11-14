@@ -8,6 +8,7 @@ import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.ae.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.item.BasicCoreItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -83,6 +84,10 @@ public final class ModItems {
             () -> new ChannelCardItem(new Item.Properties())
     );
 
+    public static final RegistryObject<BasicCoreItem> BASIC_CORE = ITEMS.register(
+            "basic_core",
+            () -> new BasicCoreItem(new Item.Properties())
+    );
     public static final RegistryObject<Item> STORAGE_CORE = ITEMS.register(
             "storage_core",
             () -> new Item(new Item.Properties())

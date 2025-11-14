@@ -36,6 +36,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.CHANNEL_CARD.get());
 
                         output.accept(ModItems.OBLIVION_SINGULARITY.get());
+                        output.accept(ModItems.BASIC_CORE.get());
                         output.accept(ModItems.STORAGE_CORE.get());
                         if (ModItems.ENERGY_STORAGE_CORE != null) {
                             output.accept(ModItems.ENERGY_STORAGE_CORE.get());
