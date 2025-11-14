@@ -24,7 +24,7 @@ import java.util.UUID;
 
 public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchItem {
 
-    public InfinityBigIntegerCellItem() {
+    public InfinityBigIntegerCellItem(Properties props) {
         super(new Properties().stacksTo(1).fireResistant());
     }
 

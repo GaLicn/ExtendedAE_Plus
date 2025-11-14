@@ -75,7 +75,7 @@ public final class ModItems {
     );
 
     public static final RegistryObject<InfinityBigIntegerCellItem> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
-            "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
+            "infinity_biginteger_cell", () -> new InfinityBigIntegerCellItem(new Item.Properties())
     );
 
     // 频道卡（作为 AE 升级卡使用）
