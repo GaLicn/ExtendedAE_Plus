@@ -24,14 +24,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.ItemLike;
+import net.minecraftforge.common.crafting.ConditionalRecipe;
+import net.minecraftforge.common.crafting.conditions.ICondition;
+import net.minecraftforge.common.crafting.conditions.ModLoadedCondition;
+import net.minecraftforge.common.crafting.conditions.NotCondition;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements RecipeBuilder {
@@ -39,8 +40,10 @@ public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements Rec
     private final RecipeCategory category;
     private final ItemStack result;
     private final List<String> rows = Lists.newArrayList();
-    private final Map<Character, JsonObject> key = Maps.newLinkedHashMap(); // 改用 JsonObject！
+    private final Map<Character, JsonObject> key = Maps.newLinkedHashMap();
     private final Advancement.Builder advancement = Advancement.Builder.recipeAdvancement();
+    private final List<ICondition> conditions = new ArrayList<>();
+
     @Nullable private String group;
     private boolean showNotification = true;
 
@@ -111,24 +114,66 @@ public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements Rec
         return this;
     }
 
+    /** 添加 Forge 条件 */
+    public NBTShapedRecipeBuilder condition(ICondition condition) {
+        this.conditions.add(Objects.requireNonNull(condition));
+        return this;
+    }
+
+    /** 便捷：mod loaded 条件 */
+    public NBTShapedRecipeBuilder requiresMod(String modid) {
+        return condition(new ModLoadedCondition(modid));
+    }
+
+    /** NOT 条件：mod 未加载时生效 */
+    public NBTShapedRecipeBuilder notRequiresMod(String modid) {
+        return condition(new NotCondition(new ModLoadedCondition(modid)));
+    }
+
+    @Override
     public @NotNull Item getResult() {
         return this.result.getItem();
     }
 
-    public void save(Consumer<FinishedRecipe> consumer, @NotNull ResourceLocation id) {
+    // === save 方法重载 ===
+
+    @Override
+    public void save(@NotNull Consumer<FinishedRecipe> consumer, @NotNull String id) {
+        this.save(consumer, new ResourceLocation(id));
+    }
+
+    @Override
+    public void save(@NotNull Consumer<FinishedRecipe> consumer, @NotNull ResourceLocation id) {
         this.ensureValid(id);
-        this.advancement
-                .parent(RecipeBuilder.ROOT_RECIPE_ADVANCEMENT)
+
+        // 构建 advancement
+        Advancement.Builder advancementBuilder = this.advancement
+                .parent(ROOT_RECIPE_ADVANCEMENT)
                 .addCriterion("has_the_recipe", RecipeUnlockedTrigger.unlocked(id))
                 .rewards(AdvancementRewards.Builder.recipe(id))
                 .requirements(RequirementsStrategy.OR);
 
-        consumer.accept(new NBTResult(
+        // 构建普通配方结果
+        FinishedRecipe plainRecipe = new NBTResult(
                 id, this.result, this.group == null ? "" : this.group,
                 determineBookCategory(this.category), this.rows, this.key,
-                this.advancement, id.withPrefix("recipes/" + this.category.getFolderName() + "/"),
+                advancementBuilder, id.withPrefix("recipes/" + this.category.getFolderName() + "/"),
                 this.showNotification
-        ));
+        );
+
+        if (this.conditions.isEmpty()) {
+            // 无条件 → 直接保存
+            consumer.accept(plainRecipe);
+        } else {
+            // 有条件 → 使用 ConditionalRecipe 包装
+            ConditionalRecipe.Builder builder = ConditionalRecipe.builder();
+            for (ICondition cond : this.conditions) {
+                builder.addCondition(cond);
+            }
+            builder.addRecipe(c -> c.accept(plainRecipe));
+            builder.generateAdvancement();
+            builder.build(consumer, id);
+        }
     }
 
     private void ensureValid(ResourceLocation id) {
@@ -142,9 +187,9 @@ public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements Rec
                 defined.remove(c);
             }
         }
-        if (!defined.isEmpty()) throw new IllegalStateException("Unused ingredients");
-        if (this.rows.size() == 1 && this.rows.get(0).length() == 1) throw new IllegalStateException("Use shapeless");
-        if (this.advancement.getCriteria().isEmpty()) throw new IllegalStateException("No unlock criterion");
+        if (!defined.isEmpty()) throw new IllegalStateException("Unused ingredients: " + defined);
+        if (this.rows.size() == 1 && this.rows.get(0).length() == 1) throw new IllegalStateException("Use shapeless for 1x1");
+        if (this.advancement.getCriteria().isEmpty()) throw new IllegalStateException("No unlock criterion for " + id);
     }
 
     /** NBT → JsonElement（结构化） */
@@ -169,6 +214,10 @@ public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements Rec
                 else if (value instanceof LongTag) obj.addProperty(key, n.getAsLong());
                 else if (value instanceof FloatTag) obj.addProperty(key, n.getAsFloat());
                 else if (value instanceof DoubleTag) obj.addProperty(key, n.getAsDouble());
+            } else {
+                if (value != null) {
+                    obj.addProperty(key, value.getAsString());
+                }
             }
         });
         return obj;
@@ -194,7 +243,7 @@ public class NBTShapedRecipeBuilder extends CraftingRecipeBuilder implements Rec
         private final ItemStack result;
         private final String group;
         private final List<String> pattern;
-        private final Map<Character, JsonObject> key; // 直接存 JSON
+        private final Map<Character, JsonObject> key;
         private final Advancement.Builder advancement;
         private final ResourceLocation advancementId;
         private final boolean showNotification;
