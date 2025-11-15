@@ -3,12 +3,12 @@ package com.extendedae_plus.integration.jei;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.item.BasicCoreItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 
 @JeiPlugin
@@ -27,33 +27,40 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        // Register NBT-based subtype interpreter so JEI treats different multipliers as distinct items
+        // Entity Speed Card
         registration.registerSubtypeInterpreter(
                 ModItems.ENTITY_SPEED_CARD.get(),
-                (stack, context) -> String.valueOf(EntitySpeedCardItem.readMultiplier(stack))
+                (stack, ctx) -> String.valueOf(EntitySpeedCardItem.readMultiplier(stack))
         );
 
+        // Basic Core – 使用 CustomModelData + core_stage
         registration.registerSubtypeInterpreter(
                 ModItems.BASIC_CORE.get(),
-                (stack, context) -> {
-                    CompoundTag tag = stack.getTag();
-                    if (tag == null || !tag.contains("core_type") || !tag.contains("core_stage")) {
+                (stack, ctx) -> {
+                    if (!BasicCoreItem.isTyped(stack)) {
                         return "untyped";
                     }
-                    int type = tag.getInt("core_type");
-                    int stage = tag.getInt("core_stage");
 
-                    if (!isCoreTypeAvailable(type)) {
-                        return "hidden"; // JEI 忽略
+                    BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
+                    if (type == null) {
+                        return "untyped";
                     }
-                    return type + "_" + stage;
+
+                    int stage = BasicCoreItem.getStage(stack);
+
+                    // 依赖检查
+                    if (!isCoreTypeAvailable(type.id)) {
+                        return "hidden"; // JEI 隐藏
+                    }
+
+                    return type.id + "_" + stage;  // 如 "0_1", "1_4"
                 }
         );
     }
 
     private boolean isCoreTypeAvailable(int typeId) {
         return switch (typeId) {
-            case 0, 1 -> true; // storage, spatial
+            case 0, 1 -> true;                     // storage, spatial
             case 2 -> ModCheckUtils.isAppfluxLoading();
             case 3 -> ModCheckUtils.isAAELoading();
             default -> false;
