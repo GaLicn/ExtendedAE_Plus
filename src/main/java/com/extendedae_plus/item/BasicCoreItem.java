@@ -12,71 +12,47 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
 public class BasicCoreItem extends Item {
-
-    private static final String NBT_TYPE = "core_type";     // 0-3: 四大方向
-    private static final String NBT_STAGE = "core_stage";   // 0-4: 当前阶段
-
+    private static final String NBT_TYPE = "core_type";   // 0=存储, 1=空间, 2=能源, 3=量子
+    private static final String NBT_STAGE = "core_stage"; // 0=未定型, 1~4=四个阶段
     private static final int MAX_STAGE = 4;
-
-    public enum CoreType {
-        STORAGE(0, "storage_core", Rarity.UNCOMMON, ChatFormatting.AQUA),
-        INFINITY(1, "infinity_core", Rarity.RARE, ChatFormatting.LIGHT_PURPLE),
-        OBLIVION(2, "oblivion_singularity", Rarity.EPIC, ChatFormatting.DARK_PURPLE),
-        SPATIAL(3, "spatial_core", Rarity.EPIC, ChatFormatting.YELLOW);
-
-        public final int id;
-        public final String resultItem;
-        public final Rarity rarity;
-        public final ChatFormatting color;
-
-        CoreType(int id, String resultItem, Rarity rarity, ChatFormatting color) {
-            this.id = id;
-            this.resultItem = resultItem;
-            this.rarity = rarity;
-            this.color = color;
-        }
-
-        public static Optional<CoreType> byId(int id) {
-            return switch (id) {
-                case 0 -> Optional.of(STORAGE);
-                case 1 -> Optional.of(INFINITY);
-                case 2 -> Optional.of(OBLIVION);
-                case 3 -> Optional.of(SPATIAL);
-                default -> Optional.empty();
-            };
-        }
-    }
 
     public BasicCoreItem(Properties props) {
         super(props.stacksTo(1).setNoRepair());
     }
 
-    // ==================== 工厂方法 ====================
-    public static ItemStack storage()  { return of(CoreType.STORAGE, 1); }
-    public static ItemStack infinity() { return of(CoreType.INFINITY, 1); }
-    public static ItemStack oblivion() { return of(CoreType.OBLIVION, 1); }
-    public static ItemStack spatial()  { return of(CoreType.SPATIAL, 1); }
-
-    /** 创建指定类型 + 阶段的核心 */
+    /**
+     * 创建指定类型和阶段的核心（用于配方输出）
+     *
+     * @param type  核心类型
+     * @param stage 阶段（1-4），0=未定型
+     */
     public static ItemStack of(CoreType type, int stage) {
         ItemStack stack = new ItemStack(ModItems.BASIC_CORE.get());
-        CompoundTag tag = stack.getOrCreateTag();
-        tag.putInt(NBT_TYPE, type.id);
-        tag.putInt(NBT_STAGE, stage);
+        if (type != null && stage >= 0 && stage <= MAX_STAGE) {
+            CompoundTag tag = stack.getOrCreateTag();
+            tag.putInt(NBT_TYPE, type.id);
+            tag.putInt(NBT_STAGE, stage);
+        }
         return stack;
     }
 
-    // ==================== NBT 读取 ====================
+    // ==================== 工厂方法：支持 4 条线路 + 4 个阶段 ====================
+    public static ItemStack storageStage(int stage) {return of(CoreType.STORAGE, stage);}
+    public static ItemStack spatialStage(int stage) {return of(CoreType.SPATIAL, stage);}
+    public static ItemStack energyStage(int stage) {return of(CoreType.ENERGY, stage);}
+    public static ItemStack quantumStage(int stage) {return of(CoreType.QUANTUM, stage);}
+
+    // ==================== NBT 查询 ====================
     public static Optional<CoreType> getType(ItemStack stack) {
         if (!stack.hasTag()) return Optional.empty();
-        int id = stack.getTag().getInt(NBT_TYPE);
-        return CoreType.byId(id);
+        return CoreType.byId(stack.getTag().getInt(NBT_TYPE));
     }
 
     public static int getStage(ItemStack stack) {
@@ -84,47 +60,28 @@ public class BasicCoreItem extends Item {
         return Math.min(stack.getTag().getInt(NBT_STAGE), MAX_STAGE);
     }
 
-    public static boolean isFinalStage(ItemStack stack) {
-        return getStage(stack) >= MAX_STAGE;
-    }
+    public static boolean isTyped(ItemStack stack) {return getStage(stack) > 0;}
 
-    // ==================== 显示 ====================
-    @Override
-    public Component getName(ItemStack stack) {
-        return getType(stack).<Component>map(type ->
-                Component.translatable("item." + ExtendedAEPlus.MODID + ".basic_core." + type.name().toLowerCase())
-                        .withStyle(type.color)
-        ).orElseGet(() ->
-                Component.translatable("item." + ExtendedAEPlus.MODID + ".basic_core")
-                        .withStyle(ChatFormatting.GRAY)
-        );
-    }
-
-    @Override
-    public Rarity getRarity(ItemStack stack) {
-        return getType(stack)
-                .map(t -> t.rarity)
-                .orElse(Rarity.COMMON);
-    }
+    public static boolean isFinalStage(ItemStack stack) {return getStage(stack) >= MAX_STAGE;}
 
     // ==================== 耐久条 ====================
     @Override
     public boolean isBarVisible(ItemStack stack) {
-        return true;
+        return getStage(stack) > 0;
     }
 
     @Override
-    public int getBarWidth(ItemStack stack) {
-        return Math.round(13.0f * getStage(stack) / MAX_STAGE);
-    }
-
-    @Override
-    public int getBarColor(ItemStack stack) {
+    public int getBarWidth(@NotNull ItemStack stack) {
         int stage = getStage(stack);
-        if (stage == 0) return 0xFF4444;        // 红色 - 未定型
-        if (stage == 1) return 0x4488FF;        // 蓝色 - 已定型
-        if (stage <= 3) return 0xFFFF44;        // 黄色 - 强化中
-        return 0xFFAA00;                        // 金色 - 可合成最终核心
+        return stage == 0 ? 0 : Math.round(13.0f * stage / MAX_STAGE);
+    }
+
+    @Override
+    public int getBarColor(@NotNull ItemStack stack) {
+        int stage = getStage(stack);
+        return getType(stack)
+                .map(type -> type.getTextColor().getColor())
+                .orElse(0xFFFFFF);
     }
 
     // ==================== Tooltip ====================
@@ -134,40 +91,94 @@ public class BasicCoreItem extends Item {
         int stage = getStage(stack);
 
         if (stage == 0) {
-            tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.stage_0")
-                    .withStyle(ChatFormatting.RED));
-            tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.stage_0_hint")
+            tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.untyped")
                     .withStyle(ChatFormatting.GRAY));
             return;
         }
 
         getType(stack).ifPresent(type -> {
-            tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.type",
-                    Component.translatable("item." + ExtendedAEPlus.MODID + "." + type.resultItem)
-                            .withStyle(type.color))
+            // 显示目标终极核心
+            String finalKey = "item." + ExtendedAEPlus.MODID + "." + type.key + "_core";
+            tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.evolving_to",
+                            Component.translatable(finalKey).withStyle(type.getTextColor()))
                     .withStyle(ChatFormatting.AQUA));
 
             tooltip.add(Component.empty());
+
             tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.progress")
                     .withStyle(ChatFormatting.YELLOW));
 
-            String[] stages = {
-                    "typed", "reinforced_1", "reinforced_2", "final_ready"
-            };
-            for (int i = 1; i <= stage; i++) {
-                tooltip.add(Component.literal("  ✔ ").withStyle(ChatFormatting.GREEN)
-                        .append(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.stage_" + i)));
-            }
-            for (int i = stage + 1; i <= MAX_STAGE; i++) {
-                tooltip.add(Component.literal("  ✘ ").withStyle(ChatFormatting.DARK_GRAY)
-                        .append(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.stage_" + i)));
+            for (int i = 1; i <= 4; i++) {
+                String key = "item." + ExtendedAEPlus.MODID + ".basic_core." + type.key + "." + (i - 1);
+                ChatFormatting color = i <= stage ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
+                String prefix = i <= stage ? "✔ " : "✘ ";
+                tooltip.add(Component.literal(prefix).withStyle(color)
+                        .append(Component.translatable(key)));
             }
 
             if (stage >= MAX_STAGE) {
                 tooltip.add(Component.empty());
-                tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.can_craft")
+                tooltip.add(Component.translatable("tooltip." + ExtendedAEPlus.MODID + ".basic_core.ready_to_craft")
                         .withStyle(ChatFormatting.GOLD));
             }
         });
+    }
+
+    // ==================== 显示名称 ====================
+    @Override
+    public @NotNull Component getName(@NotNull ItemStack stack) {
+        int stage = getStage(stack);
+        if (stage == 0) {
+            return Component.translatable("item." + ExtendedAEPlus.MODID + ".basic_core");
+        }
+
+        return getType(stack).<Component>map(type -> {
+            String key = "item." + ExtendedAEPlus.MODID + ".basic_core." + type.key + "." + (stage - 1);
+            return Component.translatable(key).withStyle(type.getTextColor());
+        }).orElseGet(() -> Component.translatable("item." + ExtendedAEPlus.MODID + ".basic_core"));
+    }
+
+    @Override
+    public @NotNull Rarity getRarity(@NotNull ItemStack stack) {
+        int stage = getStage(stack);
+        return getType(stack).map(t -> t.getRarity(stage)).orElse(Rarity.COMMON);
+    }
+
+    public enum CoreType {
+        STORAGE(0, "storage", ChatFormatting.AQUA),     // 存储：青色
+        SPATIAL(1, "spatial", ChatFormatting.YELLOW),     // 空间：金色
+        ENERGY(2, "energy_storage", ChatFormatting.RED),       // 能源：红色
+        QUANTUM(3, "quantum_storage", ChatFormatting.LIGHT_PURPLE); // 量子：亮紫
+
+        public final int id;
+        public final String key;
+        public final ChatFormatting textColor;  // 用于 Tooltip 和名称
+
+        CoreType(int id, String key, ChatFormatting textColor) {
+            this.id = id;
+            this.key = key;
+            this.textColor = textColor;
+        }
+
+        public static Optional<CoreType> byId(int id) {
+            return switch (id) {
+                case 0 -> Optional.of(STORAGE);
+                case 1 -> Optional.of(SPATIAL);
+                case 2 -> Optional.of(ENERGY);
+                case 3 -> Optional.of(QUANTUM);
+                default -> Optional.empty();
+            };
+        }
+
+        // 统一返回同一个颜色（文本）
+        public ChatFormatting getTextColor() {
+            return textColor;
+        }
+
+        public Rarity getRarity(int stage) {
+            return stage == 0 ? Rarity.COMMON :
+                    stage <= 2 ? Rarity.UNCOMMON :
+                            stage == 3 ? Rarity.RARE : Rarity.EPIC;
+        }
     }
 }
