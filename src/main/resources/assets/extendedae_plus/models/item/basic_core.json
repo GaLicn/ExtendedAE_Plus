@@ -1,4 +1,25 @@
 {
   "parent": "item/generated",
-  "textures": { "layer0": "extendedae_plus:item/basic_core" }
+  "textures": {
+    "layer0": "extendedae_plus:item/core/basic_core"
+  },
+  "overrides": [
+
+    {
+      "predicate": { "custom_model_data": 1 },
+      "model": "extendedae_plus:item/core/basic_core_storage"
+    },
+    {
+      "predicate": { "custom_model_data": 2 },
+      "model": "extendedae_plus:item/core/basic_core_spatial"
+    },
+    {
+      "predicate": { "custom_model_data": 3 },
+      "model": "extendedae_plus:item/core/basic_core_energy"
+    },
+    {
+      "predicate": { "custom_model_data": 4 },
+      "model": "extendedae_plus:item/core/basic_core_quantum"
+    }
+  ]
 }
