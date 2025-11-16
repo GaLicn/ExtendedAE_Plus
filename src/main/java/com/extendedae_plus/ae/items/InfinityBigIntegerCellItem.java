@@ -33,8 +33,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
                                 @Nullable Level world,
                                 @NotNull List<Component> tooltip,
                                 @NotNull TooltipFlag context) {
-        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon1"));
-        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon2"));
+        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell"));
 
         Preconditions.checkArgument(stack.getItem() == this);
         // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑

@@ -20,14 +20,14 @@ import java.util.Optional;
 
 public class BasicCoreItem extends Item {
     private static final String NBT_MODEL = "CustomModelData";  // 1~4 = 类型, 无或0 = 未定型
-    private static final String NBT_STAGE = "core_stage";       // 0~4 = 阶段
-    private static final int MAX_STAGE = 4;
+    private static final String NBT_STAGE = "core_stage";       // 0~3 = 阶段
+    private static final int MAX_STAGE = 3;
 
     public BasicCoreItem(Properties props) {
         super(props.stacksTo(1).setNoRepair());
     }
 
-    // ==================== 工厂方法：CustomModelData = CoreType.id (1~4) ====================
+    // ==================== 工厂方法 ====================
     public static ItemStack of(CoreType type, int stage) {
         ItemStack stack = new ItemStack(ModItems.BASIC_CORE.get());
         if (type != null && stage >= 0 && stage <= MAX_STAGE) {
@@ -70,7 +70,8 @@ public class BasicCoreItem extends Item {
 
     @Override
     public int getBarWidth(@NotNull ItemStack stack) {
-        return isTyped(stack) ? Math.round(13.0f * getStage(stack) / MAX_STAGE) : 0;
+        if (!isTyped(stack)) return 0;
+        return Math.round(13.0f * getStage(stack) / MAX_STAGE);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class BasicCoreItem extends Item {
                     .withStyle(ChatFormatting.YELLOW));
 
             int stage = getStage(stack);
-            for (int i = 1; i <= 4; i++) {
+            for (int i = 1; i <= 3; i++) {
                 String key = "item." + ExtendedAEPlus.MODID + ".basic_core." + type.key + "." + i;
                 ChatFormatting color = i <= stage ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
                 String prefix = i <= stage ? "✔ " : "✘ ";
@@ -135,7 +136,7 @@ public class BasicCoreItem extends Item {
                 : Rarity.COMMON;
     }
 
-    // ==================== 核心类型枚举：id = CustomModelData (1~4) ====================
+    // ==================== 核心类型枚举 ====================
     public enum CoreType {
         STORAGE (1, "storage",        ChatFormatting.AQUA),
         SPATIAL (2, "spatial",        ChatFormatting.YELLOW),
@@ -165,9 +166,11 @@ public class BasicCoreItem extends Item {
         public ChatFormatting getTextColor() { return textColor; }
 
         public Rarity getRarity(int stage) {
-            return stage == 0 ? Rarity.COMMON :
-                    stage <= 2 ? Rarity.UNCOMMON :
-                            stage == 3 ? Rarity.RARE : Rarity.EPIC;
+            return switch (stage) {
+                case 1, 2 -> Rarity.UNCOMMON;
+                case 3  -> Rarity.EPIC;
+                default -> Rarity.COMMON;
+            };
         }
     }
 }

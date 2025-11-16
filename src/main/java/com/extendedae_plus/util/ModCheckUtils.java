@@ -21,7 +21,8 @@ public class ModCheckUtils {
             MODID_FTB_TEAMS = "ftbteams",
             MODID_APPFLUX = "appflux",
             MODID_GUIDEME = "guideme",
-            MODID_MAE2 = "mae2";
+            MODID_MAE2 = "mae2",
+            MODID_MEGA = "megacells";
 
     /**
      * 检查指定模组是否存在

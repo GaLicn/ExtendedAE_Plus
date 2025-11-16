@@ -60,9 +60,9 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     private boolean isCoreTypeAvailable(int typeId) {
         return switch (typeId) {
-            case 0, 1 -> true;                     // storage, spatial
-            case 2 -> ModCheckUtils.isAppfluxLoading();
-            case 3 -> ModCheckUtils.isAAELoading();
+            case 1, 2 -> true;                     // storage, spatial
+            case 3 -> ModCheckUtils.isAppfluxLoading();
+            case 4 -> ModCheckUtils.isAAELoading();
             default -> false;
         };
     }
