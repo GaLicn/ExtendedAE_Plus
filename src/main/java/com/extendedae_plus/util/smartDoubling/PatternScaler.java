@@ -5,7 +5,7 @@ import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import net.minecraftforge.fml.loading.LoadingModList;
 
 import java.lang.reflect.Constructor;
@@ -23,7 +23,7 @@ public final class PatternScaler {
 
         try {
             // 尝试加载扩展类
-            Class<?> clazz = Class.forName("com.extendedae_plus.ae.api.crafting.ScaledProcessingPatternAdv");
+            Class<?> clazz = Class.forName("com.extendedae_plus.api.crafting.ScaledProcessingPatternAdv");
             ctor = clazz.getConstructor(AEProcessingPattern.class, long.class);
 
             // 加载接口

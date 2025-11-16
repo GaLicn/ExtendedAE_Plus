@@ -1,8 +1,8 @@
-package com.extendedae_plus.ae.api.storage;
+package com.extendedae_plus.api.storage;
 
 import appeng.api.storage.cells.ICellHandler;
 import appeng.api.storage.cells.ISaveProvider;
-import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import net.minecraft.world.item.ItemStack;
 
 public class InfinityBigIntegerCellHandler implements ICellHandler {

@@ -1,4 +1,4 @@
-package com.extendedae_plus.ae.client.gui;
+package com.extendedae_plus.gui;
 
 import appeng.client.gui.style.Blitter;
 import com.extendedae_plus.ExtendedAEPlus;

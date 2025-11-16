@@ -1,8 +1,8 @@
 package com.extendedae_plus.content.wireless;
 
-import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.item;
+package com.extendedae_plus.items;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;

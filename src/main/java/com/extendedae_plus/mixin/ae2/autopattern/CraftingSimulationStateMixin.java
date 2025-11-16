@@ -6,7 +6,7 @@ import appeng.crafting.CraftingPlan;
 import appeng.crafting.inv.CraftingSimulationState;
 import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
-import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfig;

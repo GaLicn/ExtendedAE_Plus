@@ -1,8 +1,8 @@
-package com.extendedae_plus.ae.items;
+package com.extendedae_plus.items;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.cells.ICellWorkbenchItem;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellInventory;
+import com.extendedae_plus.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.util.storage.InfinityConstants;
 import com.google.common.base.Preconditions;
 import net.minecraft.ChatFormatting;

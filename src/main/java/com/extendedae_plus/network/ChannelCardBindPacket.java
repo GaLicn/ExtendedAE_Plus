@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
-import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;

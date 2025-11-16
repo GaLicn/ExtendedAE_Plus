@@ -1,4 +1,4 @@
-package com.extendedae_plus.ae.api.storage;
+package com.extendedae_plus.api.storage;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.IActionSource;
@@ -10,7 +10,7 @@ import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
 import appeng.core.AELog;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.util.storage.InfinityConstants;
 import com.extendedae_plus.util.storage.InfinityDataStorage;
 import com.extendedae_plus.util.storage.InfinityStorageManager;

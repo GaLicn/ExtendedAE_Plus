@@ -1,4 +1,4 @@
-package com.extendedae_plus.ae.api.config;
+package com.extendedae_plus.api.config;
 
 import appeng.api.config.Setting;
 import appeng.api.config.YesNo;

@@ -1,4 +1,4 @@
-package com.extendedae_plus.ae.definitions.upgrades;
+package com.extendedae_plus.items.materials;
 
 import appeng.items.materials.UpgradeCardItem;
 import com.extendedae_plus.init.ModItems;
