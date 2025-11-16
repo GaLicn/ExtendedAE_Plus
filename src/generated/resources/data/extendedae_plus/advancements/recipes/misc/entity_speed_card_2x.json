@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_64x_accelerator": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "extendedae_plus:64x_crafting_accelerator"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_speed_card": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2:speed_card"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:entity_speed_card_2x"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_speed_card",
+      "has_64x_accelerator",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:entity_speed_card_2x"
+    ]
+  },
+  "sends_telemetry_event": false
+}

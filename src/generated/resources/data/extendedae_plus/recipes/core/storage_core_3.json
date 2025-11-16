@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:basic_core",
+      "nbt": {
+        "CustomModelData": 1,
+        "core_stage": 2
+      }
+    },
+    "C": {
+      "item": "ae2:cell_component_256k"
+    },
+    "M": {
+      "item": "ae2:quartz_block"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "MOM",
+    "CBC",
+    "MCM"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:basic_core",
+    "nbt": {
+      "CustomModelData": 1,
+      "core_stage": 3
+    }
+  },
+  "show_notification": true
+}

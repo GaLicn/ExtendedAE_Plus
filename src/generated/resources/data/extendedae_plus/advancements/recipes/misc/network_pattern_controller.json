@@ -1,0 +1,46 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_network_tool": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2:network_tool"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_pattern_provider": {
+      "conditions": {
+        "items": [
+          {
+            "tag": "ae2:pattern_provider"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:network_pattern_controller"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_network_tool",
+      "has_pattern_provider",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:network_pattern_controller"
+    ]
+  },
+  "sends_telemetry_event": false
+}

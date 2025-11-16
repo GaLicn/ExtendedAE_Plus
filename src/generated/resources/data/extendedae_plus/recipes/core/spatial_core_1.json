@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:basic_core"
+    },
+    "C": {
+      "item": "ae2:spatial_cell_component_2"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    },
+    "L": {
+      "item": "ae2:logic_processor"
+    },
+    "M": {
+      "tag": "forge:dusts/fluix"
+    },
+    "P": {
+      "item": "ae2:calculation_processor"
+    }
+  },
+  "pattern": [
+    "MCM",
+    "LBP",
+    "MEM"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:basic_core",
+    "nbt": {
+      "CustomModelData": 2,
+      "core_stage": 1
+    }
+  },
+  "show_notification": true
+}

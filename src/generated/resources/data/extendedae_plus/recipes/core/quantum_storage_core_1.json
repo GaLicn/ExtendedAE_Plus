@@ -1,0 +1,45 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "advanced_ae"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "B": {
+            "type": "forge:nbt",
+            "item": "extendedae_plus:basic_core"
+          },
+          "C": {
+            "item": "advanced_ae:quantum_storage_component"
+          },
+          "E": {
+            "item": "advanced_ae:quantum_processor"
+          },
+          "M": {
+            "item": "advanced_ae:quantum_alloy"
+          }
+        },
+        "pattern": [
+          "MCM",
+          "EBE",
+          "MEM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:basic_core",
+          "nbt": {
+            "CustomModelData": 4,
+            "core_stage": 1
+          }
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

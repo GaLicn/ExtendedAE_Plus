@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_assembler_matrix_wall": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "expatternprovider:assembler_matrix_wall"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:assembler_matrix_upload_core"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_assembler_matrix_wall",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:assembler_matrix_upload_core"
+    ]
+  },
+  "sends_telemetry_event": false
+}

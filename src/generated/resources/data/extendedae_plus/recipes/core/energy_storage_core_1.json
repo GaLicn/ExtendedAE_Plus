@@ -1,0 +1,45 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "appflux"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "B": {
+            "type": "forge:nbt",
+            "item": "extendedae_plus:basic_core"
+          },
+          "C": {
+            "item": "appflux:core_16k"
+          },
+          "E": {
+            "item": "appflux:energy_processor"
+          },
+          "M": {
+            "tag": "forge:gems/redstone"
+          }
+        },
+        "pattern": [
+          "MCM",
+          "EBE",
+          "MEM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:basic_core",
+          "nbt": {
+            "CustomModelData": 3,
+            "core_stage": 1
+          }
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

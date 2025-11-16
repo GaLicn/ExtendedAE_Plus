@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "I": {
+      "item": "expatternprovider:ex_io_port"
+    },
+    "Q": {
+      "item": "ae2:singularity"
+    },
+    "S": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:entity_speed_card",
+      "nbt": {
+        "EAS:mult": 2
+      }
+    },
+    "X": {
+      "item": "minecraft:nether_star"
+    },
+    "Z": {
+      "item": "ae2:dense_energy_cell"
+    }
+  },
+  "pattern": [
+    "SZS",
+    "QXQ",
+    "SIS"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:entity_speed_ticker"
+  },
+  "show_notification": true
+}

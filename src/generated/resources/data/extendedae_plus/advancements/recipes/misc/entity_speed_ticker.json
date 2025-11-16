@@ -1,0 +1,48 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_entity_speed_card_x2": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "extendedae_plus:entity_speed_card"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_singularity": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ae2:singularity"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:entity_speed_ticker"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_entity_speed_card_x2",
+      "has_singularity",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:entity_speed_ticker"
+    ]
+  },
+  "sends_telemetry_event": false
+}

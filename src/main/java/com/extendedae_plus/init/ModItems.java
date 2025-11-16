@@ -37,29 +37,29 @@ public final class ModItems {
     );
 
     // Crafting Accelerators
-    public static final RegistryObject<Item> ACCELERATOR_4x = ITEMS.register(
+    public static final RegistryObject<Item> CRAFTING_ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",
-            () -> new BlockItem(ModBlocks.ACCELERATOR_4x.get(), new Item.Properties())
+            () -> new BlockItem(ModBlocks.CRAFTING_ACCELERATOR_4x.get(), new Item.Properties())
     );
 
-    public static final RegistryObject<Item> ACCELERATOR_16x = ITEMS.register(
+    public static final RegistryObject<Item> CRAFTING_ACCELERATOR_16x = ITEMS.register(
             "16x_crafting_accelerator",
-            () -> new BlockItem(ModBlocks.ACCELERATOR_16x.get(), new Item.Properties())
+            () -> new BlockItem(ModBlocks.CRAFTING_ACCELERATOR_16x.get(), new Item.Properties())
     );
 
-    public static final RegistryObject<Item> ACCELERATOR_64x = ITEMS.register(
+    public static final RegistryObject<Item> CRAFTING_ACCELERATOR_64x = ITEMS.register(
             "64x_crafting_accelerator",
-            () -> new BlockItem(ModBlocks.ACCELERATOR_64x.get(), new Item.Properties())
+            () -> new BlockItem(ModBlocks.CRAFTING_ACCELERATOR_64x.get(), new Item.Properties())
     );
 
-    public static final RegistryObject<Item> ACCELERATOR_256x = ITEMS.register(
+    public static final RegistryObject<Item> CRAFTING_ACCELERATOR_256x = ITEMS.register(
             "256x_crafting_accelerator",
-            () -> new BlockItem(ModBlocks.ACCELERATOR_256x.get(), new Item.Properties())
+            () -> new BlockItem(ModBlocks.CRAFTING_ACCELERATOR_256x.get(), new Item.Properties())
     );
 
-    public static final RegistryObject<Item> ACCELERATOR_1024x = ITEMS.register(
+    public static final RegistryObject<Item> CRAFTING_ACCELERATOR_1024x = ITEMS.register(
             "1024x_crafting_accelerator",
-            () -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), new Item.Properties())
+            () -> new BlockItem(ModBlocks.CRAFTING_ACCELERATOR_1024x.get(), new Item.Properties())
     );
 
     public static final RegistryObject<EntitySpeedTickerPartItem> ENTITY_TICKER_PART_ITEM = ITEMS.register(
@@ -74,7 +74,7 @@ public final class ModItems {
             () -> new EntitySpeedCardItem(new Item.Properties())
     );
 
-    public static final RegistryObject<InfinityBigIntegerCellItem> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+    public static final RegistryObject<InfinityBigIntegerCellItem> INFINITY_BIGINTEGER_CELL = ITEMS.register(
             "infinity_biginteger_cell", () -> new InfinityBigIntegerCellItem(new Item.Properties())
     );
 

@@ -1,0 +1,49 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "appflux"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "B": {
+            "type": "forge:nbt",
+            "item": "extendedae_plus:basic_core",
+            "nbt": {
+              "CustomModelData": 3,
+              "core_stage": 1
+            }
+          },
+          "C": {
+            "item": "appflux:core_64k"
+          },
+          "M": {
+            "item": "appflux:charged_redstone"
+          },
+          "O": {
+            "item": "extendedae_plus:oblivion_singularity"
+          }
+        },
+        "pattern": [
+          "MOM",
+          "CBC",
+          "MOM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:basic_core",
+          "nbt": {
+            "CustomModelData": 3,
+            "core_stage": 2
+          }
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

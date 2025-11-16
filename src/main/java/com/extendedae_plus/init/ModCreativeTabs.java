@@ -20,11 +20,11 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
                         // 装配矩阵上传核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
-                        output.accept(ModItems.ACCELERATOR_4x.get());
-                        output.accept(ModItems.ACCELERATOR_16x.get());
-                        output.accept(ModItems.ACCELERATOR_64x.get());
-                        output.accept(ModItems.ACCELERATOR_256x.get());
-                        output.accept(ModItems.ACCELERATOR_1024x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_4x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_16x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_64x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_256x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_1024x.get());
                         output.accept(ModItems.ENTITY_TICKER_PART_ITEM.get());
 
                         // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
@@ -47,7 +47,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SPATIAL_CORE.get());
                         output.accept(ModItems.INFINITY_CORE.get());
 
-                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
+                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL.get());
                     })
                     .build());
 }

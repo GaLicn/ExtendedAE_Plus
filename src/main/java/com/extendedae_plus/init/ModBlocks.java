@@ -51,7 +51,7 @@ public final class ModBlocks {
     );
 
     // Crafting Accelerators (reuse MAE2 textures/models)
-    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_4x = BLOCKS.register(
+    public static final RegistryObject<CraftingUnitBlock> CRAFTING_ACCELERATOR_4x = BLOCKS.register(
             "4x_crafting_accelerator",
             () -> {
                 var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_4x);
@@ -60,7 +60,7 @@ public final class ModBlocks {
             }
     );
 
-    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_16x = BLOCKS.register(
+    public static final RegistryObject<CraftingUnitBlock> CRAFTING_ACCELERATOR_16x = BLOCKS.register(
             "16x_crafting_accelerator",
             () -> {
                 var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_16x);
@@ -69,7 +69,7 @@ public final class ModBlocks {
             }
     );
 
-    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_64x = BLOCKS.register(
+    public static final RegistryObject<CraftingUnitBlock> CRAFTING_ACCELERATOR_64x = BLOCKS.register(
             "64x_crafting_accelerator",
             () -> {
                 var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_64x);
@@ -78,7 +78,7 @@ public final class ModBlocks {
             }
     );
 
-    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_256x = BLOCKS.register(
+    public static final RegistryObject<CraftingUnitBlock> CRAFTING_ACCELERATOR_256x = BLOCKS.register(
             "256x_crafting_accelerator",
             () -> {
                 var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_256x);
@@ -87,7 +87,7 @@ public final class ModBlocks {
             }
     );
 
-    public static final RegistryObject<CraftingUnitBlock> ACCELERATOR_1024x = BLOCKS.register(
+    public static final RegistryObject<CraftingUnitBlock> CRAFTING_ACCELERATOR_1024x = BLOCKS.register(
             "1024x_crafting_accelerator",
             () -> {
                 var b = new CraftingUnitBlock(EPlusCraftingUnitType.ACCELERATOR_1024x);
