@@ -29,16 +29,16 @@ This mod introduces five higher-tier **Parallel Processing Units**, which are co
 ## Crafting Recipes
 
 ### 4x Parallel Processing Unit
-<Recipe id="extendedae_plus:4x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/4x_crafting_accelerator" />
 
 ### 16x Parallel Processing Unit
-<Recipe id="extendedae_plus:16x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/16x_crafting_accelerator" />
 
 ### 64x Parallel Processing Unit
-<Recipe id="extendedae_plus:64x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/64x_crafting_accelerator" />
 
 ### 256x Parallel Processing Unit
-<Recipe id="extendedae_plus:256x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/256x_crafting_accelerator" />
 
 ### 1024x Parallel Processing Unit
-<Recipe id="extendedae_plus:1024x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/1024x_crafting_accelerator" />
