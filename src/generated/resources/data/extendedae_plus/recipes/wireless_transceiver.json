@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "L": {
+      "item": "ae2:quantum_link"
+    },
+    "R": {
+      "item": "ae2:quantum_ring"
+    }
+  },
+  "pattern": [
+    "RRR",
+    "RLR",
+    "RRR"
+  ],
+  "result": {
+    "item": "extendedae_plus:wireless_transceiver"
+  },
+  "show_notification": true
+}

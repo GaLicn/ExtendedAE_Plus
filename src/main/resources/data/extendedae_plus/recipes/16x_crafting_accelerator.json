@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "ae2:crafting_accelerator" },
-    { "item": "ae2:cell_component_16k" }
-  ],
-  "result": { "item": "extendedae_plus:16x_crafting_accelerator", "count": 1 }
-}

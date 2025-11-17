@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    { "item": "ae2:advanced_card" },
-    { "item": "extendedae_plus:wireless_transceiver" }
-  ],
-  "result": { "item": "extendedae_plus:channel_card", "count": 1 }
-}

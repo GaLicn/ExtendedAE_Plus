@@ -28,23 +28,17 @@ public class MixinConditions implements IMixinConfigPlugin {
         try {
             // === MAE2 兼容 ===
             if (mixinClassName.contains("CraftingCPUClusterMixin")) {
-                boolean shouldApply = !ModCheckUtils.isLoaded(ModCheckUtils.MODID_MAE2);
-                log(mixinClassName, ModCheckUtils.MODID_MAE2, shouldApply);
-                return shouldApply;
+                return !ModCheckUtils.isLoaded(ModCheckUtils.MODID_MAE2);
             }
 
             // === AAE 兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae")) {
-                boolean shouldApply = ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
-                log(mixinClassName, ModCheckUtils.MODID_AAE, shouldApply);
-                return shouldApply;
+                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
             }
 
             // === GuideME 版本兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.guideme.")) {
-                boolean shouldApply = ModCheckUtils.isLoadedAndLowerThan(ModCheckUtils.MODID_GUIDEME, "20.1.14");
-                logVersion(mixinClassName, ModCheckUtils.MODID_GUIDEME, ModCheckUtils.getVersion(ModCheckUtils.MODID_GUIDEME), "20.1.14", shouldApply);
-                return shouldApply;
+                return ModCheckUtils.isLoadedAndLowerThan(ModCheckUtils.MODID_GUIDEME, "20.1.14");
             }
 
             return true;
@@ -72,16 +66,5 @@ public class MixinConditions implements IMixinConfigPlugin {
     @Override
     public void postApply(String targetClassName, org.objectweb.asm.tree.ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         // 应用后调用
-    }
-
-    // === 日志方法 ===
-    private void log(String mixin, String mod, boolean apply) {
-        System.out.printf("[ExtendedAE_Plus] 模组 %s 存在: %s, 应用 Mixin: %s, Mixin类：%s%n",
-                mod, ModCheckUtils.isLoaded(mod), apply, mixin);
-    }
-
-    private void logVersion(String mixin, String mod, String detected, String target, boolean apply) {
-        System.out.printf("[ExtendedAE_Plus] 模组 %s 版本检测: 当前 %s, 目标 < %s, 应用 Mixin: %s%n",
-                mod, detected, target, apply);
     }
 }

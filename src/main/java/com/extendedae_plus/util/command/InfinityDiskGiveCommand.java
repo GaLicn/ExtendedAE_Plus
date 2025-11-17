@@ -1,7 +1,7 @@
 package com.extendedae_plus.util.command;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;

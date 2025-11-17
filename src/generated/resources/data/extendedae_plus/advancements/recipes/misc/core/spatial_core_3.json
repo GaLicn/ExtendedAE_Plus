@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_spatial_stage_2": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "extendedae_plus:basic_core"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:core/spatial_core_3"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_spatial_stage_2",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:core/spatial_core_3"
+    ]
+  },
+  "sends_telemetry_event": false
+}

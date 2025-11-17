@@ -1,0 +1,50 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "advanced_ae"
+        },
+        {
+          "type": "forge:mod_loaded",
+          "modid": "appflux"
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "C": {
+            "item": "extendedae_plus:spatial_core"
+          },
+          "E": {
+            "item": "extendedae_plus:energy_storage_core"
+          },
+          "M": {
+            "item": "minecraft:netherite_block"
+          },
+          "O": {
+            "item": "extendedae_plus:oblivion_singularity"
+          },
+          "Q": {
+            "item": "extendedae_plus:quantum_storage_core"
+          },
+          "S": {
+            "item": "extendedae_plus:storage_core"
+          }
+        },
+        "pattern": [
+          "MQM",
+          "SOE",
+          "MCM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:infinity_core"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

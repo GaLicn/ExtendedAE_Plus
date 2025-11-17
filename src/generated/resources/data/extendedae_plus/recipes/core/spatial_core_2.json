@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:basic_core",
+      "nbt": {
+        "CustomModelData": 2,
+        "core_stage": 1
+      }
+    },
+    "C": {
+      "item": "ae2:spatial_cell_component_16"
+    },
+    "M": {
+      "tag": "forge:gems/fluix"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "MOM",
+    "CBC",
+    "MOM"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:basic_core",
+    "nbt": {
+      "CustomModelData": 2,
+      "core_stage": 2
+    }
+  },
+  "show_notification": true
+}

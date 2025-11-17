@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_oblivion_singularity": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "extendedae_plus:oblivion_singularity"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:infinity_biginteger_cell"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_oblivion_singularity",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:infinity_biginteger_cell"
+    ]
+  },
+  "sends_telemetry_event": false
+}

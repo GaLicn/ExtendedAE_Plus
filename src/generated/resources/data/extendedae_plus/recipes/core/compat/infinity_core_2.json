@@ -1,0 +1,53 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "advanced_ae"
+        },
+        {
+          "type": "forge:not",
+          "value": {
+            "type": "forge:mod_loaded",
+            "modid": "appflux"
+          }
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "C": {
+            "item": "extendedae_plus:spatial_core"
+          },
+          "M": {
+            "item": "minecraft:netherite_block"
+          },
+          "N": {
+            "item": "minecraft:nether_star"
+          },
+          "O": {
+            "item": "extendedae_plus:oblivion_singularity"
+          },
+          "Q": {
+            "item": "extendedae_plus:quantum_storage_core"
+          },
+          "S": {
+            "item": "extendedae_plus:storage_core"
+          }
+        },
+        "pattern": [
+          "MNM",
+          "SOQ",
+          "MCM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:infinity_core"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

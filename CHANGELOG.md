@@ -17,6 +17,8 @@
   - Added natural sorting functionality for the upload pattern list
 - 添加合成计划字节数显示的格式化功能
   - Added formatted display for crafting plan byte count
+- 添加部分物品用于磁盘合成（与AAE、APPFLUX、MEGA均有联动）
+  - Add some items for disk synthesis (linked with AAE, APPFLUX, MEGA)
 
 ### Changed / 变更
 - 调整实体加速器模型
@@ -31,6 +33,12 @@
   - Added version restrictions for MAE2
 - 为部分文本添加翻译键支持，改善国际化体验 
   - Added translation key support for some previously hardcoded text, improving internationalization experience
+- 略微提升无线收发器基础硬度，锁定状态下挖掘速度降至10%
+  - Slightly increased wireless transceiver base hardness, mining speed reduced to 10% when locked 
+- 调整部分物品合成配方
+  - Adjust the synthesis formula of some items
+- 优化本mod磁盘性能
+  - Optimize the disk performance of this mod
 
 ### Fixed / 修复
 - 修复供应器高亮在服务器中不显示的问题

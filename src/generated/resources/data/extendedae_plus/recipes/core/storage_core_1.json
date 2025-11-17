@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:basic_core"
+    },
+    "C": {
+      "item": "ae2:cell_component_16k"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    },
+    "L": {
+      "item": "ae2:logic_processor"
+    },
+    "M": {
+      "tag": "forge:dusts/certus_quartz"
+    },
+    "P": {
+      "item": "ae2:calculation_processor"
+    }
+  },
+  "pattern": [
+    "MCM",
+    "LBP",
+    "MEM"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:basic_core",
+    "nbt": {
+      "CustomModelData": 1,
+      "core_stage": 1
+    }
+  },
+  "show_notification": true
+}

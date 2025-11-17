@@ -103,13 +103,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
         // 注册可记忆的配置（YES/NO）
         this.getConfigManager().registerSetting(
-                com.extendedae_plus.ae.api.config.Settings.ACCELERATE,
+                com.extendedae_plus.api.config.Settings.ACCELERATE,
                 YesNo.YES
         );
     }
 
     public boolean getAccelerateEnabled() {
-        return this.getConfigManager().getSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE) == YesNo.YES;
+        return this.getConfigManager().getSetting(com.extendedae_plus.api.config.Settings.ACCELERATE) == YesNo.YES;
     }
 
     /**
@@ -118,7 +118,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @param enabled 是否启用加速
      */
     public void setAccelerateEnabled(boolean enabled) {
-        this.getConfigManager().putSetting(com.extendedae_plus.ae.api.config.Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
+        this.getConfigManager().putSetting(com.extendedae_plus.api.config.Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
         if (menu != null) {
             menu.setAccelerateEnabled(enabled);
         }

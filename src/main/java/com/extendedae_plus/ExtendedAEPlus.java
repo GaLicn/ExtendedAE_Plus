@@ -2,7 +2,7 @@ package com.extendedae_plus;
 
 import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.*;

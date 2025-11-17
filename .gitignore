@@ -87,9 +87,6 @@ classes/
 *.zip
 
 # Reference source code (should not be tracked)
-ExtendedAE-1.20-1.4.2-forge/
-GTLCore/
-
 # Gradle wrapper (optional - some prefer to commit this)
 # gradle/wrapper/gradle-wrapper.jar
 # gradle/wrapper/gradle-wrapper.properties
@@ -118,6 +115,6 @@ temp/
 tmp/
 
 # Allow dependencies in libs
-!libs/
-!libs/*.jar
-!libs/**/*.jar
+libs/*
+!libs/ExtendedAE-1.20-1.4.2-forge.jar
+/src/generated/resources/.cache

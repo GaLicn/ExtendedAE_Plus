@@ -1,9 +1,8 @@
 package com.extendedae_plus.content.crafting;
 
 import appeng.block.crafting.ICraftingUnitType;
-import net.minecraft.world.item.Item;
-
 import com.extendedae_plus.init.ModItems;
+import net.minecraft.world.item.Item;
 
 public enum EPlusCraftingUnitType implements ICraftingUnitType {
     ACCELERATOR_4x(0, 4),
@@ -34,11 +33,11 @@ public enum EPlusCraftingUnitType implements ICraftingUnitType {
     @Override
     public Item getItemFromType() {
         return switch (this) {
-            case ACCELERATOR_4x -> ModItems.ACCELERATOR_4x.get();
-            case ACCELERATOR_16x -> ModItems.ACCELERATOR_16x.get();
-            case ACCELERATOR_64x -> ModItems.ACCELERATOR_64x.get();
-            case ACCELERATOR_256x -> ModItems.ACCELERATOR_256x.get();
-            case ACCELERATOR_1024x -> ModItems.ACCELERATOR_1024x.get();
+            case ACCELERATOR_4x -> ModItems.CRAFTING_ACCELERATOR_4x.get();
+            case ACCELERATOR_16x -> ModItems.CRAFTING_ACCELERATOR_16x.get();
+            case ACCELERATOR_64x -> ModItems.CRAFTING_ACCELERATOR_64x.get();
+            case ACCELERATOR_256x -> ModItems.CRAFTING_ACCELERATOR_256x.get();
+            case ACCELERATOR_1024x -> ModItems.CRAFTING_ACCELERATOR_1024x.get();
         };
     }
 }

@@ -1,8 +1,8 @@
 package com.extendedae_plus.content.wireless;
 
-import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -152,6 +153,21 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             }
         }
         super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    @Override
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        // 基础挖掘进度
+        float baseProgress = super.getDestroyProgress(state, player, level, pos);
+
+        // 获取方块实体并检查锁定状态
+        if (level.getBlockEntity(pos) instanceof WirelessTransceiverBlockEntity te) {
+            if (te.isLocked()) {
+                // 如果被锁定，大幅降低挖掘速度
+                return baseProgress * 0.1f; // 只有10%的挖掘速度
+            }
+        }
+        return baseProgress; // 正常挖掘速度
     }
 
     @Override

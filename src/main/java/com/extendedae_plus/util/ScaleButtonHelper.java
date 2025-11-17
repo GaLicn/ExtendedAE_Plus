@@ -1,6 +1,6 @@
 package com.extendedae_plus.util;
 
-import com.extendedae_plus.ae.client.gui.NewIcon;
+import com.extendedae_plus.gui.NewIcon;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 
 import java.util.ArrayList;

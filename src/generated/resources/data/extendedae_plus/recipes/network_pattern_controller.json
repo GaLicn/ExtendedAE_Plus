@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "ae2:illuminated_panel"
+    },
+    {
+      "tag": "ae2:pattern_provider"
+    },
+    {
+      "item": "ae2:network_tool"
+    }
+  ],
+  "result": {
+    "item": "extendedae_plus:network_pattern_controller"
+  }
+}

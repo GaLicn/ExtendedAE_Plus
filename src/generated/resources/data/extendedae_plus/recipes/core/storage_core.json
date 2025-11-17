@@ -1,0 +1,51 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:not",
+          "value": {
+            "type": "forge:mod_loaded",
+            "modid": "megacells"
+          }
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "B": {
+            "type": "forge:nbt",
+            "item": "extendedae_plus:basic_core",
+            "nbt": {
+              "CustomModelData": 1,
+              "core_stage": 3
+            }
+          },
+          "C": {
+            "item": "ae2:cell_component_256k"
+          },
+          "M": {
+            "item": "minecraft:netherite_block"
+          },
+          "N": {
+            "item": "minecraft:nether_star"
+          },
+          "O": {
+            "item": "extendedae_plus:oblivion_singularity"
+          }
+        },
+        "pattern": [
+          "MOM",
+          "NBN",
+          "MCM"
+        ],
+        "result": {
+          "type": "forge:partial_nbt",
+          "item": "extendedae_plus:storage_core"
+        },
+        "show_notification": true
+      }
+    }
+  ]
+}

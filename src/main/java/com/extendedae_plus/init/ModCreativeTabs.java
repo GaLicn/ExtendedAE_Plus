@@ -8,11 +8,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class ModCreativeTabs {
-    private ModCreativeTabs() {}
-
     public static final DeferredRegister<CreativeModeTab> TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ExtendedAEPlus.MODID);
-
     public static final RegistryObject<CreativeModeTab> MAIN = TABS.register("main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + ExtendedAEPlus.MODID + ".main"))
@@ -23,11 +20,11 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
                         // 装配矩阵上传核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
-                        output.accept(ModItems.ACCELERATOR_4x.get());
-                        output.accept(ModItems.ACCELERATOR_16x.get());
-                        output.accept(ModItems.ACCELERATOR_64x.get());
-                        output.accept(ModItems.ACCELERATOR_256x.get());
-                        output.accept(ModItems.ACCELERATOR_1024x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_4x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_16x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_64x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_256x.get());
+                        output.accept(ModItems.CRAFTING_ACCELERATOR_1024x.get());
                         output.accept(ModItems.ENTITY_TICKER_PART_ITEM.get());
 
                         // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
@@ -35,11 +32,22 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.createEntitySpeedCardStack(4));
                         output.accept(ModItems.createEntitySpeedCardStack(8));
                         output.accept(ModItems.createEntitySpeedCardStack(16));
-
-                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get());
-                        
                         // 频道卡
                         output.accept(ModItems.CHANNEL_CARD.get());
+
+                        output.accept(ModItems.OBLIVION_SINGULARITY.get());
+                        output.accept(ModItems.BASIC_CORE.get());
+                        output.accept(ModItems.STORAGE_CORE.get());
+                        if (ModItems.ENERGY_STORAGE_CORE != null) {
+                            output.accept(ModItems.ENERGY_STORAGE_CORE.get());
+                        }
+                        if (ModItems.QUANTUM_STORAGE_CORE != null) {
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
+                        }
+                        output.accept(ModItems.SPATIAL_CORE.get());
+                        output.accept(ModItems.INFINITY_CORE.get());
+
+                        output.accept(ModItems.INFINITY_BIGINTEGER_CELL.get());
                     })
                     .build());
 }
