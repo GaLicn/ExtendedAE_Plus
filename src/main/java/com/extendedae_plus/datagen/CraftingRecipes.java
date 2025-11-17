@@ -11,7 +11,6 @@ import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.appflux.common.AFItemAndBlock;
-import com.glodblock.github.appflux.util.AFTags;
 import com.glodblock.github.extendedae.common.EPPItemAndBlock;
 import gripe._90.megacells.definition.MEGAItems;
 import net.minecraft.data.PackOutput;
@@ -289,7 +288,7 @@ public class CraftingRecipes extends RecipeProvider {
                 .pattern("MCM")
                 .pattern("EBE")
                 .pattern("MEM")
-                .define('M', AFTags.REDSTONE_GEM)
+                .define('M', AFItemAndBlock.REDSTONE_CRYSTAL)
                 .define('C', AFItemAndBlock.CORE_16k)
                 .define('E', AFItemAndBlock.ENERGY_PROCESSOR)
                 .defineNbt('B', base)
@@ -315,7 +314,7 @@ public class CraftingRecipes extends RecipeProvider {
                 .pattern("MOM")
                 .pattern("CBC")
                 .pattern("MCM")
-                .define('M', AFTags.SKY_RESIN_INGOT)
+                .define('M', AFItemAndBlock.SKY_HARDEN_INSULATING_RESIN)
                 .define('O', ModItems.OBLIVION_SINGULARITY.get())
                 .define('C', AFItemAndBlock.CORE_256k)
                 .defineNbt('B', BasicCoreItem.energyStage(2))
