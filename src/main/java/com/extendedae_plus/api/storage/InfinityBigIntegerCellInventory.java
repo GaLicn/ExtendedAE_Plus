@@ -42,9 +42,12 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 存储的物品种类数量
     private int totalAEKeyType;
     // 存储的物品总数
-    private BigInteger totalAEKey2Amounts = BigInteger.ZERO;
+    private BigInteger totalAEKey2Amounts = BI_ZERO;
     // 标记是否已持久化到 SavedData
     private boolean isPersisted = true;
+
+    private static final BigInteger BI_ZERO = BigInteger.ZERO;
+    private static final BigInteger BI_LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
 
 
     public InfinityBigIntegerCellInventory(InfinityBigIntegerCellItem cell, ItemStack stack, ISaveProvider saveProvider) {
@@ -93,15 +96,16 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private void initData() {
         // 如果磁盘有 UUID，加载存储的物品数据
         if (hasUUID()) {
-            this.totalAEKeyType = getCellStorage().amounts.size();
-            this.totalAEKey2Amounts = getCellStorage().itemCount.equals(BigInteger.ZERO) ?
-                    BigInteger.ZERO :
-                    getCellStorage().itemCount;
+            InfinityDataStorage storage = getCellStorage();
+            this.totalAEKeyType = storage.amounts.size();
+            this.totalAEKey2Amounts = storage.itemCount.equals(BI_ZERO) ?
+                    BI_ZERO :
+                    storage.itemCount;
 
         } else {
             // 否则初始化为空
             this.totalAEKeyType = 0;
-            this.totalAEKey2Amounts = BigInteger.ZERO;
+            this.totalAEKey2Amounts = BI_ZERO;
             // 加载物品数据
             getCellStoredMap();
         }
@@ -111,7 +115,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     @Override
     public CellState getStatus() {
         // 如果没有存储任何物品，返回空状态
-        if (this.getTotalAEKey2Amounts().equals(BigInteger.ZERO)) {
+        if (this.getTotalAEKey2Amounts().equals(BI_ZERO)) {
             return CellState.EMPTY;
         }
         // 否则返回满状态
@@ -130,7 +134,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (this.isPersisted)
             return;
 
-        if (totalAEKey2Amounts.equals(BigInteger.ZERO)) {
+        if (totalAEKey2Amounts.equals(BI_ZERO)) {
             if (hasUUID()) {
                 getStorageManagerInstance().removeCell(getUUID());
                 if (self.hasTag()) {
@@ -152,12 +156,12 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         // 创建物品数量列表
         ListTag amounts = new ListTag();
         // 初始化物品总数
-        BigInteger itemCount = BigInteger.ZERO;
+        BigInteger itemCount = BI_ZERO;
 
         for (var entry : this.AEKey2AmountsMap.object2ObjectEntrySet()) {
             BigInteger amount = entry.getValue();
             // 如果数量大于 0，添加到键和数量列表
-            if (amount.compareTo(BigInteger.ZERO) > 0) {
+            if (amount.compareTo(BI_ZERO) > 0) {
                 keys.add(entry.getKey().toTagGeneric());
                 CompoundTag amountTag = new CompoundTag();
                 amountTag.putByteArray("value", amount.toByteArray());
@@ -233,7 +237,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取或初始化存储映射
     private Object2ObjectMap<AEKey, BigInteger> getCellStoredMap() {
         if (AEKey2AmountsMap == null) {
-            AEKey2AmountsMap = new Object2ObjectOpenHashMap<>();
+            AEKey2AmountsMap = new Object2ObjectOpenHashMap<>(512, 0.6f);
             this.loadCellStoredMap();
         }
         return AEKey2AmountsMap;
@@ -242,29 +246,38 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取所有可用的物品堆栈及其数量
     @Override
     public void getAvailableStacks(KeyCounter out) {
-        BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
-        if(this.getCellStoredMap() == null) return;
-        for (var entry : this.getCellStoredMap().object2ObjectEntrySet()) {
-            AEKey key = entry.getKey();
-            BigInteger value = entry.getValue();
+        var map = getCellStoredMap();
+        if (map == null || map.isEmpty()) {
+            return;
+        }
 
-            // 获取 KeyCounter 中已有的值
+        for (var entry : map.object2ObjectEntrySet()) {
+            AEKey key = entry.getKey();
+            BigInteger amount = entry.getValue();
+
+            // 如果当前要添加的数量本身就超过 Long.MAX_VALUE，直接设为 MAX
+            if (amount.compareTo(BI_LONG_MAX) > 0) {
+                out.set(key, Long.MAX_VALUE);
+                continue;
+            }
+
+            long addAmount = amount.longValue();
             long existing = out.get(key);
 
-            // 计算总和并限制到 Long.MAX_VALUE
-            BigInteger sum = BigInteger.valueOf(existing).add(value);
-            long toSet = sum.compareTo(maxLong) > 0 ? Long.MAX_VALUE : sum.longValue();
-            // 更新 KeyCounter
+            // 如果已有值已是 MAX，直接跳过
             if (existing == Long.MAX_VALUE) {
                 continue;
             }
-            long delta = toSet - existing;
-            if (delta != 0) {
-                out.add(key, delta);
+
+            // 计算总和，防止溢出
+            long sum = existing + addAmount;
+            if (sum < 0 || sum < existing) { // 溢出检测
+                out.set(key, Long.MAX_VALUE);
+            } else {
+                out.add(key, addAmount); // 安全添加
             }
         }
     }
-
 
     // 从存储中加载物品映射
     private void loadCellStoredMap() {
@@ -282,7 +295,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             AEKey key = AEKey.fromTagGeneric(keys.getCompound(i));
             BigInteger amount = new BigInteger(amounts.getCompound(i).getByteArray("value"));
             // 检查数据是否损坏
-            if (amount.compareTo(BigInteger.ZERO) <= 0 || key == null) {
+            if (amount.compareTo(BI_ZERO) <= 0 || key == null) {
                 dataCorruption = true;
             } else {
                 AEKey2AmountsMap.put(key, amount);
@@ -303,7 +316,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         // 更新存储的物品种类数量
         this.totalAEKeyType = this.AEKey2AmountsMap.size();
         // 重置物品总数
-        this.totalAEKey2Amounts = BigInteger.ZERO;
+        this.totalAEKey2Amounts = BI_ZERO;
         // 计算物品总数
         for (BigInteger AEKey2Amounts : this.AEKey2AmountsMap.values()) {
             this.totalAEKey2Amounts = this.totalAEKey2Amounts.add(AEKey2Amounts);
@@ -341,7 +354,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             loadCellStoredMap();
         }
         // 获取当前物品数量
-        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BigInteger.ZERO);
+        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BI_ZERO);
 
         if (mode == Actionable.MODULATE) {
             // 实际插入，更新数量并保存
@@ -355,9 +368,9 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 从存储单元提取物品
     @Override
     public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
-        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BigInteger.ZERO);
+        BigInteger currentAmount = this.getCellStoredMap().getOrDefault(what, BI_ZERO);
         // 如果有物品可提取
-        if (currentAmount.compareTo(BigInteger.ZERO) > 0) {
+        if (currentAmount.compareTo(BI_ZERO) > 0) {
 
             BigInteger requested = BigInteger.valueOf(amount);
 
@@ -367,7 +380,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
                     getCellStoredMap().remove(what);
                     this.saveChanges();
                 }
-                return currentAmount.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0 ? Long.MAX_VALUE : currentAmount.longValue();
+                return currentAmount.compareTo(BI_LONG_MAX) > 0 ? Long.MAX_VALUE : currentAmount.longValue();
             } else {
                 // 提取部分数量
                 if (mode == Actionable.MODULATE) {
