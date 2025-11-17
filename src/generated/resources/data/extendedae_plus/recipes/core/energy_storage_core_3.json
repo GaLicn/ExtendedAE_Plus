@@ -23,7 +23,7 @@
             "item": "appflux:core_256k"
           },
           "M": {
-            "tag": "forge:ingots/sky_insulating_resin"
+            "item": "appflux:sky_harden_insulating_resin"
           },
           "O": {
             "item": "extendedae_plus:oblivion_singularity"

@@ -22,7 +22,7 @@
             "item": "appflux:energy_processor"
           },
           "M": {
-            "tag": "forge:gems/redstone"
+            "item": "appflux:redstone_crystal"
           }
         },
         "pattern": [
