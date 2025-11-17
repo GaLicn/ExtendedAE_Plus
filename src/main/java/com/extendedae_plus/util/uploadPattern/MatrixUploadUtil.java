@@ -85,12 +85,6 @@ public final class MatrixUploadUtil {
                 return;
             }
         }
-
-        // 未找到可用矩阵或全部拒收
-        sendPlayerMessage(player,
-                inventories.isEmpty()
-                        ? Component.translatable("extendedae_plus.upload_to_matrix.fail_no_matrix")
-                        : Component.translatable("extendedae_plus.upload_to_matrix.fail_full"));
     }
 
     /**
