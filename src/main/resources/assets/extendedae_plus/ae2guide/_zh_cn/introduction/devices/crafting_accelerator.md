@@ -28,16 +28,16 @@ item_ids:
 
 ## 合成配方
 ### 4x并行处理单元
-<Recipe id="extendedae_plus:4x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/4x_crafting_accelerator" />
 
 ### 16x并行处理单元
-<Recipe id="extendedae_plus:16x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/16x_crafting_accelerator" />
 
 ### 64x并行处理单元
-<Recipe id="extendedae_plus:64x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/64x_crafting_accelerator" />
 
 ### 256x并行处理单元
-<Recipe id="extendedae_plus:256x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/256x_crafting_accelerator" />
 
 ### 1024x并行处理单元
-<Recipe id="extendedae_plus:1024x_crafting_accelerator" />
+<Recipe id="extendedae_plus:network/crafting/1024x_crafting_accelerator" />
