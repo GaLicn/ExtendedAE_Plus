@@ -2,7 +2,7 @@ package com.extendedae_plus.mixin.ae2.autopattern.gtceu;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.ae.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.google.common.collect.BiMap;
 import org.gtlcore.gtlcore.common.machine.multiblock.part.ae.MEPatternBufferPartMachine;
