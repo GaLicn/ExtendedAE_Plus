@@ -1,0 +1,91 @@
+name: Bug report / 错误报告
+description: You found a bug or encountered a crash? Please report it here. / 你发现了一个bug或遇到了崩溃？请在这里报告。
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide a summary of the issue in the Title above. / 请在上面的标题中提供问题的摘要。
+  - type: checkboxes
+    id: existing-issue
+    attributes:
+      label: Checked for existing issues / 已检查现有问题
+      description: You have checked for existing reports of this issue, open or closed. / 您已检查过此问题的现有报告（开放或已关闭）。
+      options:
+        - label: I have checked for existing issues, and have found none. / 我已检查现有问题，未发现相同报告。
+          required: true
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: Minecraft Version / Minecraft 版本
+      description: The version of Minecraft you were using when this bug was encountered. If you do not know where to find this, it is in the bottom left of the main menu. Any version not listed is not supported. / 遇到此错误时使用的 Minecraft 版本。如果不知道如何查找，它位于主菜单的左下角。未列出的任何版本均不受支持。
+      options:
+        - "1.20.1 Forge"
+        - "1.21 NeoForge"
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment / 环境
+      description: How you were playing on the world. Hybrid servers are unsupported. / 您在世界中游玩的方式。不支持混合服务器。
+      options:
+        - "Singleplayer / 单人游戏"
+        - "Multiplayer - Open to LAN / 多人游戏 - 开放局域网"
+        - "Multiplayer - Dedicated Server / 多人游戏 - 专用服务器"
+  - type: textarea
+    id: mod-version
+    attributes:
+      label: Mod Versions / 模组版本
+      placeholder: |
+        - Applied Energistics 2 version:
+        - ExtendedAE version:
+        - ExtendedAE Plus version:
+    validations:
+      required: true
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other Installed Mods / 其他已安装模组
+      description: Enter the name of the modpack you're playing, or list all mods you have installed here. / 输入您正在游玩的整合包名称，或在此处列出所有已安装的模组。
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug / 描述错误
+      description: |
+        Please describe as best as possible. / 请尽可能详细地描述问题
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期行为
+      description: |
+        A clear and concise description of what you expected to happen. / 清晰而简洁地描述你期望发生的事情。
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Actual Behavior / 实际行为
+      description: What happened despite your expectations. Attach screenshots here as necessary. / 与您预期不符的实际发生情况。必要时在此处附加截图。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce the bug / 重现步骤
+      description: |
+        Please provide the steps to reproduce it, otherwise we might not be able to fix it. / 请提供复制它的步骤，否则我们可能无法修复它。
+    validations:
+      required: true
+  - type: input
+    id: crashlog
+    attributes:
+      label: Crash log
+      description: |
+        Provide a link to a crashlog. E.g. on [Gist](https://gist.github.com/), [pastebin](https://pastebin.com/), or similar.
+        If it is not a crash report, you can hold F3+C for over 10 seconds to force one. This provides with more details to reproduce it without needing to manually acquire them.
+        Please do not have it expire after some time. We might have to go back to it in the future to compare it with other bug reports, or simply have to delay it when being pretty minor.

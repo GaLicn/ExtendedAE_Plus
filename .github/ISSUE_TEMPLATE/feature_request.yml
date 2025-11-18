@@ -1,0 +1,26 @@
+name: Feature Request / 功能请求
+description: A feature request or suggestion to improve ExtendedAE_Plus / 改进ExtendedAE_Plus的功能请求或建议
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide a summary of the issue in the Title above. / 请在上面的标题中提供问题的摘要。
+  - type: dropdown
+    id: minecraft-version
+    attributes:
+      label: Minecraft Version / Minecraft 版本
+      description: The version of Minecraft you wish this feature was added for. / 您希望此功能添加到的 Minecraft 版本。
+      options:
+        - "Both"
+        - "1.20.1 Forge"
+        - "1.21 NeoForge"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description / 功能描述
+      description: "What feature would you like to have? Please describe it here. / 您希望拥有什么功能？请在此描述。"
+      placeholder: "Example: I want to be able to do... / 例如：我希望能够做..."
+    validations:
+      required: true
