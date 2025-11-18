@@ -89,6 +89,9 @@
   "extendedae_plus.gui.entity_acceleration.blacklisted": "Target is blacklisted",
   "extendedae_plus.gui.entity_acceleration.enabled": "Accelerate target block entity ticks",
   "extendedae_plus.gui.entity_acceleration.disabled": "Do not accelerate target block entities",
+  "extendedae_plus.gui.redstone_control.title": "Redstone Control",
+  "extendedae_plus.gui.redstone_control.enabled": "Control acceleration with redstone signal",
+  "extendedae_plus.gui.redstone_control.disabled": "Ignore redstone signals",
 
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",

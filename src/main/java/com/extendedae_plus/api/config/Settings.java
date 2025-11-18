@@ -11,6 +11,7 @@ import java.util.Map;
 public final class Settings {
     private static final Map<String, Setting<?>> SETTINGS = new HashMap<>();
     public static final Setting<YesNo> ACCELERATE = register("accelerate", YesNo.NO, YesNo.YES);
+    public static final Setting<YesNo> REDSTONE_CONTROL = register("redstoneControl", YesNo.NO, YesNo.YES);
 
 
     private Settings() {

@@ -23,6 +23,7 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.api.config.Settings;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
@@ -38,6 +39,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -66,6 +68,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     private static volatile MethodHandle cachedFEExtractHandle;
     private static volatile boolean FE_UNAVAILABLE;
+    // 红石信号状态
+    private YesNo redstoneState = YesNo.UNDECIDED;
 
     // 静态块：初始化缓存
     static {
@@ -103,13 +107,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
         // 注册可记忆的配置（YES/NO）
         this.getConfigManager().registerSetting(
-                com.extendedae_plus.api.config.Settings.ACCELERATE,
+                Settings.ACCELERATE,
                 YesNo.YES
+        );
+        // 注册红石控制配置
+        this.getConfigManager().registerSetting(
+                Settings.REDSTONE_CONTROL,
+                YesNo.NO
         );
     }
 
     public boolean getAccelerateEnabled() {
-        return this.getConfigManager().getSetting(com.extendedae_plus.api.config.Settings.ACCELERATE) == YesNo.YES;
+        return this.getConfigManager().getSetting(Settings.ACCELERATE) == YesNo.YES;
+    }
+    
+    public boolean getRedstoneControlEnabled() {
+        return this.getConfigManager().getSetting(Settings.REDSTONE_CONTROL) == YesNo.YES;
     }
 
     /**
@@ -118,9 +131,17 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @param enabled 是否启用加速
      */
     public void setAccelerateEnabled(boolean enabled) {
-        this.getConfigManager().putSetting(com.extendedae_plus.api.config.Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
+        this.getConfigManager().putSetting(Settings.ACCELERATE, enabled ? YesNo.YES : YesNo.NO);
         if (menu != null) {
             menu.setAccelerateEnabled(enabled);
+        }
+    }
+    
+    public void setRedstoneControlEnabled(boolean enabled) {
+        this.getConfigManager().putSetting(Settings.REDSTONE_CONTROL, enabled ? YesNo.YES : YesNo.NO);
+        if (menu != null) {
+            // 需要在EntitySpeedTickerMenu中添加对应的更新方法
+            menu.broadcastChanges();
         }
     }
 
@@ -208,6 +229,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         }
     }
 
+    @Override
+    public void onNeighborChanged(BlockGetter level, BlockPos pos, BlockPos neighbor) {
+        super.onNeighborChanged(level, pos, neighbor);
+        // 当邻居方块变化时，更新红石状态
+        updateRedstoneState();
+    }
+
     /**
      * 网络定时回调，处理目标方块实体的加速。
      *
@@ -220,6 +248,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (!getAccelerateEnabled()) {
             return TickRateModulation.IDLE;
         }
+        
+        // 检查红石控制
+        if (getRedstoneControlEnabled() && !getRedstoneState()) {
+            // 如果启用了红石控制且没有红石信号，则不执行加速
+            return TickRateModulation.IDLE;
+        }
+        
         updateCachedTarget();
         if (cachedTarget != null && isActive()) {
             ticker(cachedTarget);
@@ -454,5 +489,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         super.removeFromWorld();
         cachedTarget = null;
         cachedTargetPos = null;
+    }
+
+    // 获取红石信号状态
+    private boolean getRedstoneState() {
+        // 每次调用都更新红石状态，确保及时性
+        updateRedstoneState();
+        return redstoneState == YesNo.YES;
+    }
+    
+    // 更新红石信号状态
+    private void updateRedstoneState() {
+        var be = this.getHost().getBlockEntity();
+        if (be != null && be.getLevel() != null) {
+            redstoneState = be.getLevel().hasNeighborSignal(be.getBlockPos())
+                    ? YesNo.YES
+                    : YesNo.NO;
+        }
     }
 }

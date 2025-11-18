@@ -21,12 +21,13 @@ import net.minecraftforge.registries.ForgeRegistries;
  */
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
     @GuiSync(716) public boolean accelerateEnabled = true;       // 是否启用加速
-    @GuiSync(717) public int entitySpeedCardCount;               // 已安装的实体加速卡数量
-    @GuiSync(718) public int energyCardCount;                    // 已安装的能量卡数量
-    @GuiSync(719) public int effectiveSpeed = 1;                 // 当前生效的加速倍率
-    @GuiSync(720) public double multiplier = 1.0;                // 目标方块的配置倍率
-    @GuiSync(721) public boolean targetBlacklisted = false;      // 目标方块是否在黑名单中
-    @GuiSync(722) public boolean networkEnergySufficient = true; // 网络能量是否充足
+    @GuiSync(717) public boolean redstoneControlEnabled = false;  // 是否启用红石控制
+    @GuiSync(718) public int entitySpeedCardCount;               // 已安装的实体加速卡数量
+    @GuiSync(719) public int energyCardCount;                    // 已安装的能量卡数量
+    @GuiSync(720) public int effectiveSpeed = 1;                 // 当前生效的加速倍率
+    @GuiSync(721) public double multiplier = 1.0;                // 目标方块的配置倍率
+    @GuiSync(722) public boolean targetBlacklisted = false;      // 目标方块是否在黑名单中
+    @GuiSync(723) public boolean networkEnergySufficient = true; // 网络能量是否充足
 
     /**
      * 构造函数，初始化菜单并绑定部件。
@@ -39,6 +40,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         if (host != null) {
             host.menu = this; // 绑定菜单到部件
             this.accelerateEnabled = host.getAccelerateEnabled(); // 同步初始开关状态
+            this.redstoneControlEnabled = host.getRedstoneControlEnabled(); // 同步红石控制状态
         }
     }
 
@@ -49,6 +51,10 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
     public boolean getAccelerateEnabled() {
         return this.accelerateEnabled;
     }
+    
+    public boolean getRedstoneControlEnabled() {
+        return this.redstoneControlEnabled;
+    }
 
     /**
      * 设置加速开关状态，并同步到部件。
@@ -58,6 +64,14 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         this.accelerateEnabled = enabled;
         if (getHost() != null) {
             getHost().setAccelerateEnabled(enabled); // 同步到部件
+        }
+        broadcastChanges(); // 广播状态变化
+    }
+    
+    public void setRedstoneControlEnabled(boolean enabled) {
+        this.redstoneControlEnabled = enabled;
+        if (getHost() != null) {
+            getHost().setRedstoneControlEnabled(enabled); // 同步到部件
         }
         broadcastChanges(); // 广播状态变化
     }
@@ -81,6 +95,9 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         updateTargetStatus();        // 更新目标方块的黑名单和倍率
         updateEffectiveSpeed();      // 计算生效速度
         updateNetworkEnergyStatus(); // 同步能量状态
+        if (!isClientSide() && getHost() != null) {
+            this.redstoneControlEnabled = getHost().getRedstoneControlEnabled(); // 同步红石控制状态
+        }
         if (isClientSide()) {
             refreshClientGui();      // 客户端刷新界面
         }

@@ -9,37 +9,56 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
- * C2S: Toggle the accelerateEnabled flag on the EntitySpeedTickerPart bound to the open menu.
+ * C2S: 切换 EntitySpeedTickerPart 的某个布尔配置项
  */
 public class ToggleEntityTickerC2SPacket {
-    public ToggleEntityTickerC2SPacket() {
+
+    private final Setting setting;
+
+    public ToggleEntityTickerC2SPacket(Setting setting) {
+        this.setting = setting;
     }
 
     public static void encode(ToggleEntityTickerC2SPacket msg, FriendlyByteBuf buf) {
+        buf.writeEnum(msg.setting);
     }
 
     public static ToggleEntityTickerC2SPacket decode(FriendlyByteBuf buf) {
-        return new ToggleEntityTickerC2SPacket();
+        return new ToggleEntityTickerC2SPacket(buf.readEnum(Setting.class));
     }
 
     public static void handle(ToggleEntityTickerC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        var ctx = ctxSupplier.get();
+        NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
+
             if (!(player.containerMenu instanceof EntitySpeedTickerMenu menu)) return;
 
             EntitySpeedTickerPart part = menu.getHost();
             if (part == null) return;
 
-            // 切换部件上的状态，并把新状态同步到菜单字段，随后广播以通知客户端
-            boolean current = part.getAccelerateEnabled();
-            boolean next = !current;
-            part.setAccelerateEnabled(next);
-            // 确保菜单上的字段也被更新，这样 @GuiSync 会把状态发回客户端
-            menu.setAccelerateEnabled(next);
+            switch (msg.setting) {
+                case accelerateEnabled -> {
+                    boolean newValue = !part.getAccelerateEnabled();
+                    part.setAccelerateEnabled(newValue);
+                    menu.setAccelerateEnabled(newValue);
+                }
+                case redstoneControlEnabled -> {
+                    boolean newValue = !part.getRedstoneControlEnabled();
+                    part.setRedstoneControlEnabled(newValue);
+                    menu.setRedstoneControlEnabled(newValue);
+                }
+            }
+
+            // 统一广播，让所有打开界面的客户端同步最新状态
             menu.broadcastChanges();
         });
         ctx.setPacketHandled(true);
+    }
+
+    public enum Setting {
+        accelerateEnabled,
+        redstoneControlEnabled
     }
 }
