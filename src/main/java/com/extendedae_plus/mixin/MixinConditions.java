@@ -41,6 +41,10 @@ public class MixinConditions implements IMixinConfigPlugin {
                 return ModCheckUtils.isLoadedAndLowerThan(ModCheckUtils.MODID_GUIDEME, "20.1.14");
             }
 
+            if (mixinClassName.contains("CraftConfirmScreen")) {
+                return !ModCheckUtils.isLoaded(ModCheckUtils.MODID_EPA);
+            }
+
             return true;
         } catch (Exception e) {
             System.err.println("[ExtendedAE_Plus] 检查 Mixin 条件时出错: " + e.getMessage());
