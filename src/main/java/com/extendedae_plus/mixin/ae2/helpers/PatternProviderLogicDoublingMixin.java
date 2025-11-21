@@ -5,8 +5,11 @@ import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
 import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicPatternsAccessor;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -72,4 +75,16 @@ public class PatternProviderLogicDoublingMixin implements SmartDoublingHolder {
 
     @Shadow
     public void saveChanges() {}
+
+    @Inject(method = "exportSettings", at = @At("TAIL"))
+    private void onExportSettings(DataComponentMap.Builder builder, CallbackInfo ci) {
+        builder.set(EAPComponents.SMART_DOUBLING, this.eap$smartDoubling);
+    }
+
+    @Inject(method = "importSettings", at = @At("TAIL"))
+    private void onImportSettings(DataComponentMap input, Player player, CallbackInfo ci) {
+        this.eap$smartDoubling = Boolean.TRUE.equals(input.get(EAPComponents.SMART_DOUBLING.get()));
+        // 持久化到 world
+        this.saveChanges();
+    }
 }

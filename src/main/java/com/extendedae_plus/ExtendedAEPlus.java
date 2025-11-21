@@ -7,6 +7,7 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
@@ -55,6 +56,7 @@ public class ExtendedAEPlus {
         // Register the Deferred Register to the mod event bus so menu types get registered
         ModMenuTypes.MENUS.register(modEventBus);
 
+        EAPComponents.DR.register(modEventBus);
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
