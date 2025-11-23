@@ -4,14 +4,12 @@ import appeng.api.crafting.IPatternDetails.IInput;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.crafting.pattern.AEProcessingPattern;
-import com.extendedae_plus.content.ScaledProcessingPattern;
 import com.extendedae_plus.api.SmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.content.ScaledProcessingPattern;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 public final class PatternScaler {
     private PatternScaler() {

@@ -5,7 +5,6 @@ import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
 import appeng.me.service.helpers.ConnectionWrapper;
 import com.extendedae_plus.config.ModConfigs;
-import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 

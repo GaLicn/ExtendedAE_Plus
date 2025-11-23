@@ -1,8 +1,6 @@
 package com.extendedae_plus.compat;
 
 import appeng.client.gui.implementations.PatternProviderScreen;
-import appeng.client.gui.widgets.UpgradesPanel;
-import com.extendedae_plus.util.ExtendedAELogger;
 
 /**
  * AppliedFlux 兼容性处理工具类

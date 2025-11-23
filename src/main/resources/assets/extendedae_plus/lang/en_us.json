@@ -129,5 +129,13 @@
   
   "group.pattern_provider.name": "Pattern Provider",
   "group.storage.name": "Storage Bus",
-  "group.entity_ticker.name": "Entity Ticker"
+  "group.entity_ticker.name": "Entity Ticker",
+
+  "gui.tooltips.extendedae_plus.Accelerate": "Entity Acceleration",
+  "gui.tooltips.extendedae_plus.AccelerateEnabled": "Target is blacklisted",
+  "gui.tooltips.extendedae_plus.AccelerateDisabled": "Accelerate target block entity ticks",
+  "gui.tooltips.extendedae_plus.AccelerateBlacklisted": "Do not accelerate target block entities",
+  "gui.tooltips.extendedae_plus.RedstoneControl": "Redstone Control",
+  "gui.tooltips.extendedae_plus.RedstoneControlEnabled": "Control acceleration with redstone signal",
+  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "Ignore redstone signals"
 }

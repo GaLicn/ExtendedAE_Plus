@@ -1,11 +1,13 @@
 package com.extendedae_plus.ae.menu;
 
+import appeng.api.config.YesNo;
+import appeng.api.util.IConfigManager;
 import appeng.core.definitions.AEItems;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.UpgradeableMenu;
-import appeng.menu.slot.OptionalFakeSlot;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
+import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
@@ -21,14 +23,21 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * 实体加速器菜单，负责管理客户端与服务端的数据同步，处理加速卡、能量卡和目标方块的状态。
  */
 public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart> {
-    @GuiSync(716) public boolean accelerateEnabled = true;       // 是否启用加速
-    @GuiSync(717) public int entitySpeedCardCount;               // 已安装的实体加速卡数量
-    @GuiSync(718) public int energyCardCount;                    // 已安装的能量卡数量
-    @GuiSync(719) public int effectiveSpeed = 1;                 // 当前生效的加速倍率
-    @GuiSync(720) public double multiplier = 1.0;                // 目标方块的配置倍率
-    @GuiSync(721) public boolean targetBlacklisted = false;      // 目标方块是否在黑名单中
-    @GuiSync(722) public boolean networkEnergySufficient = true; // 网络能量是否充足
+    @GuiSync(716) public YesNo accelerate;       // 是否启用加速
+    @GuiSync(717) public YesNo redstoneControl;  // 是否启用红石控制
+    private int entitySpeedCardCount;               // 已安装的实体加速卡数量
+    @GuiSync(719) public int energyCardCount;                    // 已安装的能量卡数量
+    @GuiSync(720) public int effectiveSpeed = 1;                 // 当前生效的加速倍率
+    @GuiSync(721) public double multiplier = 1.0;                // 目标方块的配置倍率
+    @GuiSync(722) public boolean targetBlacklisted = false;      // 目标方块是否在黑名单中
+    @GuiSync(723) public YesNo networkEnergySufficient; // 网络能量是否充足
 
+    protected final EntitySpeedTickerPart logic;
+
+    @Override
+    protected void loadSettingsFromHost(IConfigManager cm) {
+        // 不需要模糊模式
+    }
     /**
      * 构造函数，初始化菜单并绑定部件。
      * @param id 菜单ID
@@ -37,39 +46,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      */
     public EntitySpeedTickerMenu(int id, Inventory ip, EntitySpeedTickerPart host) {
         super(ModMenuTypes.ENTITY_TICKER_MENU.get(), id, ip, host);
-        if (host != null) {
-            host.menu = this; // 绑定菜单到部件
-            this.accelerateEnabled = host.getAccelerateEnabled(); // 同步初始开关状态
-        }
-    }
-
-    /**
-     * 获取加速开关状态。
-     * @return 是否启用加速
-     */
-    public boolean getAccelerateEnabled() {
-        return this.accelerateEnabled;
-    }
-
-    /**
-     * 设置加速开关状态，并同步到部件。
-     * @param enabled 是否启用加速
-     */
-    public void setAccelerateEnabled(boolean enabled) {
-        this.accelerateEnabled = enabled;
-        if (getHost() != null) {
-            getHost().setAccelerateEnabled(enabled); // 同步到部件
-        }
-        broadcastChanges(); // 广播状态变化
-    }
-
-    /**
-     * 更新网络能量充足状态并广播到客户端。
-     * @param sufficient 是否能量充足
-     */
-    public void setNetworkEnergySufficient(boolean sufficient) {
-        this.networkEnergySufficient = sufficient;
-        broadcastChanges();
+        this.logic = host;
     }
 
     /**
@@ -81,7 +58,7 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
         updateCardCounts();          // 更新卡数量
         updateTargetStatus();        // 更新目标方块的黑名单和倍率
         updateEffectiveSpeed();      // 计算生效速度
-        updateNetworkEnergyStatus(); // 同步能量状态
+//        updateNetworkEnergyStatus(); // 同步能量状态
         if (isClientSide()) {
             refreshClientGui();      // 客户端刷新界面
         }
@@ -106,14 +83,21 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      */
     @Override
     public void broadcastChanges() {
-        for (Object o : this.slots) {
-            if (o instanceof OptionalFakeSlot fs && !fs.isSlotEnabled() && !fs.getDisplayStack().isEmpty()) {
-                fs.clearStack(); // 清理未启用槽位的显示
-            }
+        if (isServerSide()) {
+            this.accelerate = logic.getConfigManager().getSetting(EAPSettings.ACCELERATE);
+            this.redstoneControl = logic.getConfigManager().getSetting(EAPSettings.REDSTONE_CONTROL);
+            this.networkEnergySufficient = logic.isNetworkEnergySufficient() ? YesNo.YES : YesNo.NO;
         }
-        standardDetectAndSendChanges();
+        super.broadcastChanges();
     }
 
+    public YesNo getAccelerate() {
+        return this.accelerate;
+    }
+
+    public YesNo getRedstoneControl() {
+        return this.redstoneControl;
+    }
     /**
      * 更新加速卡和能量卡的数量。
      */
@@ -142,15 +126,6 @@ public class EntitySpeedTickerMenu extends UpgradeableMenu<EntitySpeedTickerPart
      */
     private void updateEffectiveSpeed() {
         this.effectiveSpeed = targetBlacklisted ? 0 : (int) PowerUtils.computeProductWithCap(getUpgrades(), 8);
-    }
-
-    /**
-     * 同步网络能量状态（仅服务端）。
-     */
-    private void updateNetworkEnergyStatus() {
-        if (!isClientSide() && getHost() != null) {
-            this.networkEnergySufficient = getHost().isNetworkEnergySufficient();
-        }
     }
 
     /**

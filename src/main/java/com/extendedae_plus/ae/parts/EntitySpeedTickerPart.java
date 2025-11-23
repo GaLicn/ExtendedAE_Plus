@@ -1,7 +1,10 @@
 package com.extendedae_plus.ae.parts;
 
+
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
+import appeng.api.config.Setting;
+import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyService;
@@ -14,6 +17,7 @@ import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartModel;
 import appeng.api.storage.MEStorage;
 import appeng.api.upgrades.IUpgradeableObject;
+import appeng.api.util.IConfigManager;
 import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
 import appeng.menu.MenuOpener;
@@ -22,6 +26,7 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
@@ -65,13 +70,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
     }
 
+    private final IConfigManager configManager;
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
-    private boolean accelerateEnabled = true;       // 是否启用加速
-    private boolean networkEnergySufficient = true; // 网络能量是否充足
-
-
+    private YesNo networkEnergySufficient; // 网络能量是否充足
+    private YesNo redstoneState = YesNo.UNDECIDED;
     /**
      * 构造函数，初始化部件并设置网络节点属性。
+     *
      * @param partItem 部件物品
      */
     public EntitySpeedTickerPart(IPartItem<?> partItem) {
@@ -80,51 +85,40 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                 .setFlags(GridFlags.REQUIRE_CHANNEL)
                 .setIdlePowerUsage(1)
                 .addService(IGridTickable.class, this);
+        configManager = IConfigManager.builder(this::configChanged)
+                .registerSetting(EAPSettings.ACCELERATE, YesNo.NO)
+                .registerSetting(EAPSettings.REDSTONE_CONTROL, YesNo.YES)
+                .build();
     }
 
-    public boolean getAccelerateEnabled() {
-        return this.accelerateEnabled;
+    private void configChanged(IConfigManager manager, Setting<?> setting) {
+        this.saveChanges();
+    }
+
+    public void saveChanges() {
+        getHost().markForSave();
+    }
+
+    public boolean isAccelerate() {
+        return this.configManager.getSetting(EAPSettings.ACCELERATE) == YesNo.YES;
+    }
+
+    public boolean isRedstoneControl() {
+        return this.configManager.getSetting(EAPSettings.REDSTONE_CONTROL) == YesNo.YES;
     }
 
     public boolean isNetworkEnergySufficient() {
-        return this.networkEnergySufficient;
-    }
-
-    /**
-     * 设置加速开关状态并通知菜单。
-     * @param enabled 是否启用加速
-     */
-    public void setAccelerateEnabled(boolean enabled) {
-        this.accelerateEnabled = enabled;
-        if (menu != null) {
-            menu.setAccelerateEnabled(enabled);
-        }
+        return this.networkEnergySufficient == YesNo.YES;
     }
 
     /**
      * 更新网络能量充足状态并通知菜单。
+     *
      * @param sufficient 是否能量充足
      */
-    private void updateNetworkEnergySufficient(boolean sufficient) {
-        this.networkEnergySufficient = sufficient;
-        if (menu != null) {
-            menu.setNetworkEnergySufficient(sufficient);
-        }
-    }
-
-    /**
-     * 获取当前状态的渲染模型。
-     * @return 当前状态的模型
-     */
-    @Override
-    public IPartModel getStaticModels() {
-        if (this.isActive() && this.isPowered()) {
-            return MODELS_HAS_CHANNEL;
-        } else if (this.isPowered()) {
-            return MODELS_ON;
-        } else {
-            return MODELS_OFF;
-        }
+    private void setNetworkEnergySufficient(boolean sufficient) {
+        this.networkEnergySufficient = sufficient ? YesNo.YES : YesNo.NO;
+        saveChanges();
     }
 
     /**
@@ -140,6 +134,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
             MenuOpener.open(ModMenuTypes.ENTITY_TICKER_MENU.get(), player, MenuLocators.forPart(this));
         }
         return true;
+    }
+
+    /**
+     * 获取当前状态的渲染模型。
+     *
+     * @return 当前状态的模型
+     */
+    @Override
+    public IPartModel getStaticModels() {
+        if (this.isActive() && this.isPowered()) {
+            return MODELS_HAS_CHANNEL;
+        } else if (this.isPowered()) {
+            return MODELS_ON;
+        } else {
+            return MODELS_OFF;
+        }
     }
 
     /**
@@ -166,17 +176,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     /**
-     * 当升级卡数量发生变化时调用，通知菜单更新
-     */
-    @Override
-    public void upgradesChanged() {
-        if (this.menu != null) {
-            // 使用 AE2 风格：当升级发生变化时让菜单广播变化（槽/数据会被同步），客户端会基于槽内容重新计算并刷新界面
-            this.menu.broadcastChanges();
-        }
-    }
-
-    /**
      * 网络定时回调，每次 tick 时调用
      *
      * @param iGridNode          网络节点
@@ -186,7 +185,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
         // 如果部件的加速开关被关闭，则不进行加速（提前返回）
-        if (!this.getAccelerateEnabled()) {
+        if (!isAccelerate()) {
+            return TickRateModulation.IDLE;
+        }
+
+        // 检查红石控制
+        if (isRedstoneControl() && !getRedstoneState()) {
+            // 如果启用了红石控制且没有红石信号，则不执行加速
             return TickRateModulation.IDLE;
         }
 
@@ -201,8 +206,9 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 对目标方块实体执行加速 tick 操作。
+     *
      * @param blockEntity 目标方块实体
-     * @param <T> 方块实体类型
+     * @param <T>         方块实体类型
      */
     private <T extends BlockEntity> void ticker(@NotNull T blockEntity) {
         if (!isValidForTicking()) {
@@ -234,6 +240,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 检查网络节点是否有效。
+     *
      * @return 是否可以执行 tick
      */
     private boolean isValidForTicking() {
@@ -242,6 +249,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 获取目标方块实体的 ticker。
+     *
      * @param blockEntity 目标方块实体
      * @return ticker 或 null
      */
@@ -252,6 +260,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 计算加速倍率。
+     *
      * @return 生效的加速倍率
      */
     private int calculateSpeed() {
@@ -262,7 +271,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 计算所需能量。
-     * @param speed 加速倍率
+     *
+     * @param speed   加速倍率
      * @param blockId 目标方块ID
      * @return 所需能量
      */
@@ -274,6 +284,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     /**
      * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
+     *
      * @param requiredPower 所需能量（AE 单位）
      * @return 是否成功提取足够能量
      */
@@ -296,10 +307,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (simulated >= requiredPower) {
             double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
             boolean sufficient = extracted >= requiredPower;
-            updateNetworkEnergySufficient(sufficient);
+            setNetworkEnergySufficient(sufficient);
             return sufficient;
         }
-        updateNetworkEnergySufficient(false);
+        setNetworkEnergySufficient(false);
 
         // 如果 appflux 存在且优先 AE 能量，尝试提取 FE 能量作为备用
         if (appFluxLoaded && !preferDiskEnergy) {
@@ -321,21 +332,22 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
             long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
             long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
             if (feExtracted >= feRequired) {
-                updateNetworkEnergySufficient(true);
+                setNetworkEnergySufficient(true);
                 return true;
             }
         } catch (Exception e) {
             // 如果反射失败，视为 FE 不可用
         }
-        updateNetworkEnergySufficient(false);
+        setNetworkEnergySufficient(false);
         return false;
     }
 
     /**
      * 执行加速 tick 操作。
+     *
      * @param blockEntity 目标方块实体
-     * @param ticker 方块实体 ticker
-     * @param speed 加速倍率
+     * @param ticker      方块实体 ticker
+     * @param speed       加速倍率
      */
     private <T extends BlockEntity> void performTicks(T blockEntity,
                                                       BlockEntityTicker<T> ticker,
@@ -394,5 +406,37 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @Override
     protected int getUpgradeSlots() {
         return 8;
+    }
+
+    /**
+     * 当升级卡数量发生变化时调用，通知菜单更新
+     */
+    @Override
+    public void upgradesChanged() {
+        if (this.menu != null) {
+            // 使用 AE2 风格：当升级发生变化时让菜单广播变化（槽/数据会被同步），客户端会基于槽内容重新计算并刷新界面
+            this.menu.broadcastChanges();
+        }
+    }
+
+    public IConfigManager getConfigManager() {
+        return this.configManager;
+    }
+
+    // 获取红石信号状态
+    private boolean getRedstoneState() {
+        // 每次调用都更新红石状态，确保及时性
+        updateRedstoneState();
+        return redstoneState == YesNo.YES;
+    }
+
+    // 更新红石信号状态
+    private void updateRedstoneState() {
+        var be = this.getHost().getBlockEntity();
+        if (be != null && be.getLevel() != null) {
+            redstoneState = be.getLevel().hasNeighborSignal(be.getBlockPos())
+                    ? YesNo.YES
+                    : YesNo.NO;
+        }
     }
 }

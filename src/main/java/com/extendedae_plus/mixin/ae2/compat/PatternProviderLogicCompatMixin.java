@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
-import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.IGridConnection;
+import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -9,13 +9,13 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
-import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;

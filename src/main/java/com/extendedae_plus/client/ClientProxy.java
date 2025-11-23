@@ -4,7 +4,6 @@ import appeng.client.render.crafting.CraftingCubeModel;
 import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
-import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
@@ -77,6 +76,6 @@ public final class ClientProxy {
         /**
          * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
          */
-        InitScreens.register(event, ModMenuTypes.ENTITY_TICKER_MENU.get(), EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new, "/screens/entity_speed_ticker.json");
+        InitScreens.register(event, ModMenuTypes.ENTITY_TICKER_MENU.get(), EntitySpeedTickerScreen::new, "/screens/entity_speed_ticker.json");
     }
 }

@@ -119,15 +119,24 @@
   "extendedae_plus.tooltip.frequency": "频率: %d",
   "extendedae_plus.tooltip.master_mode": "模式: %s",
   "extendedae_plus.tooltip.locked": "状态: %s",
-  
+
   "gui.extendedae_plus.frequency_input.title": "设置频率",
   "gui.extendedae_plus.frequency_input.field": "频率",
   "gui.extendedae_plus.frequency_input.confirm": "确认",
   "gui.extendedae_plus.frequency_input.cancel": "取消",
   "extendedae_plus.wireless.locked": "已锁定收发器",
   "extendedae_plus.wireless.unlocked": "已解锁收发器",
-  
+
   "group.pattern_provider.name": "样板供应器",
   "group.storage.name": "存储总线",
-  "group.entity_ticker.name": "实体加速器"
+  "group.entity_ticker.name": "实体加速器",
+
+  "gui.tooltips.extendedae_plus.Accelerate": "实体加速",
+  "gui.tooltips.extendedae_plus.AccelerateEnabled": "加速目标方块实体的tick",
+  "gui.tooltips.extendedae_plus.AccelerateDisabled": "不加速目标方块实体",
+  "gui.tooltips.extendedae_plus.AccelerateBlacklisted": "目标在黑名单中",
+
+  "gui.tooltips.extendedae_plus.RedstoneControl": "红石控制",
+  "gui.tooltips.extendedae_plus.RedstoneControlEnabled": "使用红石信号控制加速",
+  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "忽略红石信号"
 }
