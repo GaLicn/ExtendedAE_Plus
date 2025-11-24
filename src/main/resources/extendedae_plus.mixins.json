@@ -46,6 +46,7 @@
     "advancedae.helpers.AdvPatternProviderLogicDoublingMixin",
     "advancedae.menu.AdvPatternProviderMenuAdvancedMixin",
     "advancedae.menu.AdvPatternProviderMenuDoublingMixin",
+    "advancedae.compat.PatternProviderLogicVirtualCompletionMixin",
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",
