@@ -89,6 +89,9 @@
   "extendedae_plus.gui.entity_acceleration.blacklisted": "目标在黑名单中",
   "extendedae_plus.gui.entity_acceleration.enabled": "加速目标方块实体的tick",
   "extendedae_plus.gui.entity_acceleration.disabled": "不加速目标方块实体",
+  "extendedae_plus.gui.redstone_control.title": "红石控制",
+  "extendedae_plus.gui.redstone_control.enabled": "使用红石信号控制加速",
+  "extendedae_plus.gui.redstone_control.disabled": "忽略红石信号",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",

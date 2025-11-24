@@ -8,6 +8,9 @@ import appeng.api.storage.StorageHelper;
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
+import appeng.menu.locator.MenuLocators;
+import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
@@ -165,8 +168,32 @@ public class PickFromWirelessC2SPacket {
             }
 
             long extracted = StorageHelper.poweredExtraction(energy, storage, targetKey, space, new PlayerSource(player));
-            if (extracted <= 0) {
-                return;
+            // 1. 网络里为 0
+            // 2. 主手当前是空的  OR  主手拿的不是这个物品
+            // 3. 这个物品可以被 AE2 合成
+            if (extracted == 0) {
+                ItemStack mainHandItem = player.getMainHandItem();
+                boolean handIsEmpty = mainHandItem.isEmpty();
+                boolean handIsDifferentItem = !handIsEmpty && !AEItemKey.of(mainHandItem).equals(targetKey);
+
+                if (handIsEmpty || handIsDifferentItem) {
+                    var craftingService = grid.getCraftingService();
+                    if (craftingService.isCraftable(targetKey)) {
+                        // 主手为空一组
+                        if (curiosSlotId != null && curiosIndex >= 0) {
+                            CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), targetKey, 64);
+                        } else {
+                            var hand = located.getHand();
+                            int slot = located.getSlotIndex();
+                            if (hand != null) {
+                                CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), targetKey, 64);
+                            } else if (slot >= 0) {
+                                CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), targetKey, 64);
+                            }
+                        }
+                        return; // 打开界面后直接结束，不执行后面的放物品逻辑
+                    }
+                }
             }
 
             if (placeToMainHand) {

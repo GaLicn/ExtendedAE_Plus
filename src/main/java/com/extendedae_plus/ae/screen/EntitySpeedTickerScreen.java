@@ -24,7 +24,9 @@ import java.util.Map;
  */
 public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends UpgradeableScreen<C> {
     private boolean eap$entitySpeedTickerEnabled = false;                   // 本地缓存的加速开关状态
+    private boolean eap$redstoneControlEnabled = false;                     // 本地缓存的红石控制状态
     private final SettingToggleButton<YesNo> eap$entitySpeedTickerToggle;   // 加速开关按钮
+    private final SettingToggleButton<YesNo> eap$redstoneControlToggle;     // 红石控制开关按钮
 
     /**
      * 构造函数，初始化界面和控件。
@@ -37,13 +39,14 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
         super((C) menu, playerInventory, title, style);
         this.addToLeftToolbar(CommonButtons.togglePowerUnit()); // 添加功率单位切换按钮
         this.eap$entitySpeedTickerEnabled = menu.getAccelerateEnabled();
+        this.eap$redstoneControlEnabled = menu.getRedstoneControlEnabled();
 
         // 初始化加速开关按钮
         eap$entitySpeedTickerToggle = new SettingToggleButton<>(
                 Settings.BLOCKING_MODE,
                 this.eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO,
                 (btn, backwards) ->
-                        ModNetwork.CHANNEL.sendToServer(new ToggleEntityTickerC2SPacket())
+                        ModNetwork.CHANNEL.sendToServer(new ToggleEntityTickerC2SPacket(ToggleEntityTickerC2SPacket.Setting.accelerateEnabled))
         ) {
             @Override
             public List<Component> getTooltipMessage() {
@@ -69,6 +72,30 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
         };
         eap$entitySpeedTickerToggle.set(this.eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO);
         this.addToLeftToolbar(eap$entitySpeedTickerToggle);
+
+        // 初始化加速开关按钮
+        eap$redstoneControlToggle = new SettingToggleButton<>(
+                Settings.BLOCKING_MODE,
+                this.eap$redstoneControlEnabled ? YesNo.YES : YesNo.NO,
+                (btn, backwards) ->
+                        ModNetwork.CHANNEL.sendToServer(new ToggleEntityTickerC2SPacket(ToggleEntityTickerC2SPacket.Setting.redstoneControlEnabled))
+        ) {
+            @Override
+            public List<Component> getTooltipMessage() {
+                boolean enabled = eap$redstoneControlEnabled;
+                return List.of(
+                        Component.translatable("extendedae_plus.gui.redstone_control.title"),
+                        enabled ? Component.translatable("extendedae_plus.gui.redstone_control.enabled") :
+                                Component.translatable("extendedae_plus.gui.redstone_control.disabled")                );
+            }
+
+            @Override
+            protected Icon getIcon() {
+                return this.getCurrentValue() == YesNo.YES ? Icon.REDSTONE_LOW : Icon.REDSTONE_IGNORE;
+            }
+        };
+        eap$redstoneControlToggle.set(this.eap$redstoneControlEnabled ? YesNo.YES : YesNo.NO);
+        this.addToLeftToolbar(eap$redstoneControlToggle);
     }
 
     /**
@@ -83,6 +110,12 @@ public class EntitySpeedTickerScreen<C extends EntitySpeedTickerMenu> extends Up
             eap$entitySpeedTickerToggle.set(menu.targetBlacklisted ? YesNo.NO : (eap$entitySpeedTickerEnabled ? YesNo.YES : YesNo.NO));
             eap$entitySpeedTickerToggle.active = !menu.targetBlacklisted;
         }
+        
+        if (eap$redstoneControlToggle != null && menu != null) {
+            eap$redstoneControlEnabled = menu.getRedstoneControlEnabled();
+            eap$redstoneControlToggle.set(eap$redstoneControlEnabled ? YesNo.YES : YesNo.NO);
+        }
+        
         textData();
     }
 
