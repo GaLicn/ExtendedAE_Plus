@@ -12,6 +12,9 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvCraftingCPULogicAccessor;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobAccessor;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
@@ -21,6 +24,7 @@ import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
 import com.extendedae_plus.util.Logger;
+import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
@@ -141,6 +145,23 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                         if (progress != null && progress.extendedae_plus$getValue() <= 1) {
                             cluster.cancelJob();
                             break;
+                        }
+                    }
+                }
+                continue;
+            }
+            if (cpu instanceof AdvCraftingCPU advCpu) {
+                var logic = advCpu.craftingLogic;
+                if (logic instanceof AdvCraftingCPULogicAccessor advLogicAccessor) {
+                    var job = advLogicAccessor.eap$getAdvJob();
+                    if (job != null && job instanceof AdvExecutingCraftingJobAccessor advJobAccessor) {
+                        var tasks = advJobAccessor.eap$getAdvTasks();
+                        var progress = tasks.get(patternDetails);
+                        if (progress instanceof AdvExecutingCraftingJobTaskProgressAccessor advProgressAccessor) {
+                            if (advProgressAccessor.eap$getAdvValue() <= 1) {
+                                advCpu.cancelJob();
+                                break;
+                            }
                         }
                     }
                 }

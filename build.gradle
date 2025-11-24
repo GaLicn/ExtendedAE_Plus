@@ -88,7 +88,7 @@ dependencies {
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
     modImplementation "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
-    modCompileOnly "curse.maven:applied-flux-965012:6755986"
+    modImplementation "curse.maven:applied-flux-965012:6755986"
     modImplementation "curse.maven:mega-cells-622112:${mega_cells_version}"
 
     //mae2
