@@ -25,7 +25,7 @@ public class PatternProviderLogicContainsRedirectMixin {
         try {
             if (o instanceof ScaledProcessingPattern scaled) {
                 IPatternDetails base = scaled.getOriginal();
-                if (base != null && list.indexOf(base) != -1) {
+                if (list.indexOf(base) != -1) {
                     return true;
                 }
             }
