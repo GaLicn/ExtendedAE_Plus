@@ -152,6 +152,9 @@
   "item.extendedae_plus.channel_card.owner.player": "Owner: Player %s",
   "item.extendedae_plus.channel_card.owner.bound": "Bound to: %s",
   "item.extendedae_plus.channel_card.owner.cleared": "Owner binding cleared",
+  "item.extendedae_plus.virtual_crafting_card": "Virtual Crafting Card",
+  "item.extendedae_plus.virtual_crafting_card.tooltip_main": "Auto-completes crafting jobs once the current pattern is about to finish",
+  "item.extendedae_plus.virtual_crafting_card.tooltip_detail": "Install inside a Pattern Provider upgrade slot",
 
   "extendedae_plus.screen.frequency_input.title": "Set Frequency",
   "extendedae_plus.screen.frequency_input.current": "Current Frequency: %s",

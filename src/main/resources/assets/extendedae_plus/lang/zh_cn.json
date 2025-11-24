@@ -152,6 +152,9 @@
   "item.extendedae_plus.channel_card.owner.player": "所有者：玩家 %s",
   "item.extendedae_plus.channel_card.owner.bound": "已绑定至：%s",
   "item.extendedae_plus.channel_card.owner.cleared": "已清除所有者绑定",
+  "item.extendedae_plus.virtual_crafting_card": "虚拟合成卡",
+  "item.extendedae_plus.virtual_crafting_card.tooltip_main": "当前样板即将完成时尝试终止剩余合成",
+  "item.extendedae_plus.virtual_crafting_card.tooltip_detail": "需安装在样板供应器的升级槽内",
 
   "extendedae_plus.screen.frequency_input.title": "设置频率",
   "extendedae_plus.screen.frequency_input.current": "当前频率：%s",

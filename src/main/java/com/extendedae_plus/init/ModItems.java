@@ -9,6 +9,7 @@ import com.extendedae_plus.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
+import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -82,6 +83,12 @@ public final class ModItems {
     public static final RegistryObject<ChannelCardItem> CHANNEL_CARD = ITEMS.register(
             "channel_card",
             () -> new ChannelCardItem(new Item.Properties())
+    );
+
+    // 虚拟合成卡
+    public static final RegistryObject<VirtualCraftingCardItem> VIRTUAL_CRAFTING_CARD = ITEMS.register(
+            "virtual_crafting_card",
+            () -> new VirtualCraftingCardItem(new Item.Properties())
     );
 
     public static final RegistryObject<BasicCoreItem> BASIC_CORE = ITEMS.register(

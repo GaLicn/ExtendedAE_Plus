@@ -25,14 +25,18 @@ public final class UpgradeCards {
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.INTERFACE, 1, interfaceGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.INTERFACE, 1, interfaceGroup);
 
-            // 新增：样板供应器（方块与部件）支持频道卡，每台最多 1 张
+            // 新增：样板供应器（方块与部件）支持频道卡、虚拟合成卡，每台最多 1 张
             String patternProviderGroup = "group.pattern_provider.name";
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.PATTERN_PROVIDER, 1, patternProviderGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), AEBlocks.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), AEParts.PATTERN_PROVIDER, 1, patternProviderGroup);
 
             // ExtendedAE 的扩展样板供应器（方块与部件）
             Upgrades.add(ModItems.CHANNEL_CARD.get(),EX_PATTERN_PROVIDER, 1, patternProviderGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(),EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(),EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(),EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
 
             //EAE 的扩展接口与超大接口（方块与部件）支持频道卡
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_INTERFACE, 1, interfaceGroup);
