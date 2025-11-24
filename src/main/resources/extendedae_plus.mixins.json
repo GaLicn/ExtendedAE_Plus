@@ -12,6 +12,7 @@
     "advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor",
     "advancedae.helpers.AdvPatternProviderLogicAdvancedMixin",
     "advancedae.helpers.AdvPatternProviderLogicDoublingMixin",
+    "advancedae.compat.PatternProviderLogicVirtualCompletionMixin",
     "advancedae.menu.AdvPatternProviderMenuAdvancedMixin",
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCalculationMixin",
