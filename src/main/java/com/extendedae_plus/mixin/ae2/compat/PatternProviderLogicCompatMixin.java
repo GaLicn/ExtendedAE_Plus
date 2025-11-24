@@ -15,6 +15,9 @@ import appeng.me.cluster.implementations.CraftingCPUCluster;
 import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvCraftingCPULogicAccessor;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobAccessor;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
@@ -26,6 +29,7 @@ import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -527,6 +531,41 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                         if (progress != null && progress.eap$getValue() <= 1) {
                             cluster.cancelJob();
                             break;
+                        }
+                    }
+                }
+                continue;
+            }
+            if (cpu instanceof AdvCraftingCPU advCpu) {
+                var logic = advCpu.craftingLogic;
+                if (logic instanceof AdvCraftingCPULogicAccessor advLogicAccessor) {
+                    var job = advLogicAccessor.eap$getAdvJob();
+                    if (job != null && job instanceof AdvExecutingCraftingJobAccessor advJobAccessor) {
+                        var tasks = advJobAccessor.eap$getAdvTasks();
+                        var progress = tasks.get(patternDetails);
+                        if (progress == null && patternDetails != null) {
+                            var patternDefinition = patternDetails.getDefinition();
+                            for (var entry : tasks.entrySet()) {
+                                var taskPattern = entry.getKey();
+                                if (taskPattern == patternDetails) {
+                                    progress = entry.getValue();
+                                    break;
+                                }
+                                if (taskPattern != null && patternDefinition != null) {
+                                    var taskDefinition = taskPattern.getDefinition();
+                                    if (taskDefinition != null && taskDefinition.equals(patternDefinition)) {
+                                        progress = entry.getValue();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (progress instanceof AdvExecutingCraftingJobTaskProgressAccessor advProgressAccessor) {
+                            if (advProgressAccessor.eap$getAdvValue() <= 1) {
+                                advCpu.cancelJob();
+                                break;
+                            }
                         }
                     }
                 }
