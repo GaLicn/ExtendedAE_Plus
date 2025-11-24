@@ -177,7 +177,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 // 只有在升级槽功能启用时才创建升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
                     host.getTerminalIcon().getItem(), 
-                    1, 
+                    2, 
                     this::eap$compatOnUpgradesChanged
                 );
             } else if (channelCard) {

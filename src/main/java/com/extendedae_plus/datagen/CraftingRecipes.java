@@ -136,6 +136,13 @@ public class CraftingRecipes extends RecipeProvider {
                 .unlockedBy("has_advanced_card", has(AEItems.ADVANCED_CARD))
                 .save(consumer);
 
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.VIRTUAL_CRAFTING_CARD.get())
+                .requires(AEItems.ADVANCED_CARD)
+                .requires(Items.CRAFTING_TABLE)
+                .requires(Items.LEVER)
+                .unlockedBy("has_virtual_crafting_card_ingredients", has(AEItems.ADVANCED_CARD))
+                .save(consumer);
+
         // 2x Entity Speed Card
         NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC, EntitySpeedCardItem.withMultiplier(2))
                 .pattern("SBS")
