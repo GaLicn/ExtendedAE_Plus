@@ -11,16 +11,13 @@ import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.client.gui.widgets.EAPServerSettingToggleButton;
 import com.extendedae_plus.client.gui.widgets.EAPSettingToggleButton;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class EntitySpeedTickerScreen extends UpgradeableScreen<EntitySpeedTickerMenu> {
     private final EAPSettingToggleButton<YesNo> accelerateButton; // 加速开关按钮
     private final EAPSettingToggleButton<YesNo> redstoneControlButton; // 加速开关按钮
+    private final TextUpdater textUpdater = new TextUpdater();
 
     /**
      * 构造函数，初始化界面和控件。
@@ -37,7 +34,7 @@ public class EntitySpeedTickerScreen extends UpgradeableScreen<EntitySpeedTicker
         super(menu, playerInventory, title, style);
         this.addToLeftToolbar(CommonButtons.togglePowerUnit()); // 添加功率单位切换按钮
 
-        this.accelerateButton = new EAPServerSettingToggleButton<>(EAPSettings.ACCELERATE, YesNo.NO);
+        this.accelerateButton = new EAPServerSettingToggleButton<>(EAPSettings.ACCELERATE, YesNo.YES);
         this.addToLeftToolbar(this.accelerateButton);
 
         this.redstoneControlButton = new EAPServerSettingToggleButton<>(EAPSettings.REDSTONE_CONTROL, YesNo.NO);
@@ -54,47 +51,55 @@ public class EntitySpeedTickerScreen extends UpgradeableScreen<EntitySpeedTicker
         } else {
             this.accelerateButton.set(this.menu.getAccelerate());
         }
-
         this.redstoneControlButton.set(this.menu.getRedstoneControl());
-        this.textData();
-    }
-
-    @Override
-    public void drawBG(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks) {
-        super.drawBG(guiGraphics, offsetX, offsetY, mouseX, mouseY, partialTicks);
+        // 文本更新统一处理
+        this.textUpdater.update();
     }
 
     public void refreshGui() {
-        this.textData();
+        this.textUpdater.update();
     }
 
-    /**
-     * 更新界面文本内容，包括加速状态、速度、能耗和倍率。
-     */
-    private void textData() {
-        Map<String, Component> textContents = new HashMap<>();
-        if (this.getMenu().targetBlacklisted) {
-            // 黑名单禁用时的默认显示
-            textContents.put("enable", Component.translatable("screen.extendedae_plus.entity_speed_ticker.enable"));
-            textContents.put("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", 0));
-            textContents.put("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(0.0, false)));
-            textContents.put("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(0.0)));
-            textContents.put("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", 0.0)));
-        } else {
-            // 正常状态下显示实际数据
-            int energyCardCount = this.getMenu().energyCardCount;
-            double multiplier = this.getMenu().multiplier;
-            int effectiveSpeed = this.getMenu().effectiveSpeed;
-            double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
-            double remainingRatio = PowerUtils.getRemainingRatio(energyCardCount);
-
-            textContents.put("enable", this.getMenu().networkEnergySufficient == YesNo.YES ? null :
-                    Component.translatable("screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient"));
-            textContents.put("speed", Component.translatable("screen.extendedae_plus.entity_speed_ticker.speed", effectiveSpeed));
-            textContents.put("energy", Component.translatable("screen.extendedae_plus.entity_speed_ticker.energy", Platform.formatPower(finalPower, false)));
-            textContents.put("power_ratio", Component.translatable("screen.extendedae_plus.entity_speed_ticker.power_ratio", PowerUtils.formatPercentage(remainingRatio)));
-            textContents.put("multiplier", Component.translatable("screen.extendedae_plus.entity_speed_ticker.multiplier", String.format("%.2fx", multiplier)));
+    private class TextUpdater {
+        void update() {
+            if (EntitySpeedTickerScreen.this.menu.targetBlacklisted) {
+                this.updateBlacklist();
+            } else {
+                this.updateNormal();
+            }
         }
-        textContents.forEach(this::setTextContent);
+
+        private void updateBlacklist() {
+            this.set("enable", this.translatable("enable"));
+            this.set("speed", this.translatable("speed", 0));
+            this.set("energy", this.translatable("energy", Platform.formatPower(0, false)));
+            this.set("power_ratio", this.translatable("power_ratio", PowerUtils.formatPercentage(0.0)));
+            this.set("multiplier", this.translatable("multiplier", "0.00x"));
+        }
+
+        private void updateNormal() {
+            int energyCardCount = EntitySpeedTickerScreen.this.menu.energyCardCount;
+            double multiplier = EntitySpeedTickerScreen.this.menu.multiplier;
+            int effectiveSpeed = EntitySpeedTickerScreen.this.menu.effectiveSpeed;
+            double finalPower = PowerUtils.computeFinalPowerForProduct(effectiveSpeed, energyCardCount);
+            double powerRatio = PowerUtils.getRemainingRatio(energyCardCount);
+
+            this.set("enable", EntitySpeedTickerScreen.this.menu.networkEnergySufficient == YesNo.YES
+                    ? null
+                    : this.translatable("warning_network_energy_insufficient"));
+
+            this.set("speed", this.translatable("speed", effectiveSpeed));
+            this.set("energy", this.translatable("energy", Platform.formatPower(finalPower, false)));
+            this.set("power_ratio", this.translatable("power_ratio", PowerUtils.formatPercentage(powerRatio)));
+            this.set("multiplier", this.translatable("multiplier", String.format("%.2fx", multiplier)));
+        }
+
+        private Component translatable(String key, Object... args) {
+            return Component.translatable("screen.extendedae_plus.entity_speed_ticker." + key, args);
+        }
+
+        private void set(String id, Component c) {
+            EntitySpeedTickerScreen.this.setTextContent(id, c);
+        }
     }
 }
