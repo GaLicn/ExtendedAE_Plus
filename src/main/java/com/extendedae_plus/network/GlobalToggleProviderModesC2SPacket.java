@@ -3,31 +3,31 @@ package com.extendedae_plus.network;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.IGrid;
+import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
-import com.extendedae_plus.api.SmartDoublingHolder;
-import appeng.api.networking.IInWorldGridNodeHost;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
+import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * C2S：全网批量切换样板供应器的三种模式：
  * - 阻挡模式（AE2 内置 BLOCKING_MODE 设置）
- * - 高级阻挡模式（AdvancedBlockingHolder mixin）
- * - 智能翻倍模式（SmartDoublingHolder mixin）
+ * - 高级阻挡模式（IAdvancedBlocking mixin）
+ * - 智能翻倍模式（ISmartDoubling mixin）
  *
  * 负载为三个操作码（各1字节），分别对应：blocking、advancedBlocking、smartDoubling。
  */
@@ -44,38 +44,15 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
             },
             buf -> new GlobalToggleProviderModesC2SPacket(Op.byId(buf.readByte()), Op.byId(buf.readByte()), Op.byId(buf.readByte()), buf.readBlockPos())
     );
-    public enum Op {
-        NOOP((byte) 0),
-        SET_TRUE((byte) 1),
-        SET_FALSE((byte) 2),
-        TOGGLE((byte) 3);
-        public final byte id;
-        Op(byte id) { this.id = id; }
-        public static Op byId(byte id) {
-            return switch (id) {
-                case 1 -> SET_TRUE;
-                case 2 -> SET_FALSE;
-                case 3 -> TOGGLE;
-                default -> NOOP;
-            };
-        }
-    }
-
     private final Op opBlocking;
     private final Op opAdvancedBlocking;
     private final Op opSmartDoubling;
     private final BlockPos controllerPos;
-
     public GlobalToggleProviderModesC2SPacket(Op opBlocking, Op opAdvancedBlocking, Op opSmartDoubling, BlockPos controllerPos) {
         this.opBlocking = opBlocking;
         this.opAdvancedBlocking = opAdvancedBlocking;
         this.opSmartDoubling = opSmartDoubling;
         this.controllerPos = controllerPos;
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
     }
 
     public static void handle(final GlobalToggleProviderModesC2SPacket msg, final IPayloadContext ctx) {
@@ -176,14 +153,14 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
             }
         }
         // 2) 高级阻挡（mixin 接口）
-        if (msg.opAdvancedBlocking != Op.NOOP && logic instanceof AdvancedBlockingHolder adv) {
+        if (msg.opAdvancedBlocking != Op.NOOP && logic instanceof IAdvancedBlocking adv) {
             boolean current = adv.eap$getAdvancedBlocking();
             boolean target = computeTarget(current, msg.opAdvancedBlocking);
             adv.eap$setAdvancedBlocking(target);
             changed = changed || (current != target);
         }
         // 3) 智能翻倍（mixin 接口）
-        if (msg.opSmartDoubling != Op.NOOP && logic instanceof SmartDoublingHolder sd) {
+        if (msg.opSmartDoubling != Op.NOOP && logic instanceof ISmartDoubling sd) {
             boolean current = sd.eap$getSmartDoubling();
             boolean target = computeTarget(current, msg.opSmartDoubling);
             sd.eap$setSmartDoubling(target);
@@ -207,5 +184,29 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
 
     private static boolean safeIsBlocking(PatternProviderLogic logic) {
         try { return logic.isBlocking(); } catch (Throwable t) { return false; }
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
+    public enum Op {
+        NOOP((byte) 0),
+        SET_TRUE((byte) 1),
+        SET_FALSE((byte) 2),
+        TOGGLE((byte) 3);
+        public final byte id;
+
+        Op(byte id) {this.id = id;}
+
+        static Op byId(byte id) {
+            return switch (id) {
+                case 1 -> SET_TRUE;
+                case 2 -> SET_FALSE;
+                case 3 -> TOGGLE;
+                default -> NOOP;
+            };
+        }
     }
 }

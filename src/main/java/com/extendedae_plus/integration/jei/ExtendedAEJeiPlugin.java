@@ -1,7 +1,7 @@
 package com.extendedae_plus.integration.jei;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
+import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;

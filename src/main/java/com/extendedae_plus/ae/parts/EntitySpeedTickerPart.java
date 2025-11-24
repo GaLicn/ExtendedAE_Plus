@@ -373,7 +373,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
         try {
-            Class<?> helperClass = Class.forName("com.extendedae_plus.util.FluxEnergyHelper");
+            Class<?> helperClass = Class.forName("com.extendedae_plus.util.entitySpeed.FluxEnergyHelper");
             Method extractMethod = helperClass.getMethod(
                     "extractFE",
                     IEnergyService.class,

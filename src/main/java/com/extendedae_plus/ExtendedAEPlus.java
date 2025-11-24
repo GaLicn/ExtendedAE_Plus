@@ -6,8 +6,8 @@ import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.items.parts.PartModelsHelper;
-import com.extendedae_plus.ae.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.api.ids.EAPComponents;
+import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
@@ -37,6 +37,10 @@ public class ExtendedAEPlus {
     // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
+    @Nullable
+    private static InfinityStorageManager storageManager;
+    @Nullable
+    private static MinecraftServer storageManagerServer;
 
     // The constructor for the mod class is the first code that is run when your mod is loaded.
     // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
@@ -74,6 +78,23 @@ public class ExtendedAEPlus {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
+    private static void onServerStarted(ServerStartedEvent event) {
+        storageManagerServer = event.getServer();
+        storageManager = InfinityStorageManager.getInstance(event.getServer());
+    }
+
+    private static void onServerStopped(ServerStoppedEvent event) {
+        if (storageManagerServer == event.getServer()) {
+            storageManagerServer = null;
+            storageManager = null;
+        }
+    }
+
+    @Nullable
+    public static InfinityStorageManager currentStorageManager() {
+        return storageManager;
+    }
+
     private void commonSetup(FMLCommonSetupEvent event) {
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
@@ -93,7 +114,7 @@ public class ExtendedAEPlus {
                                 ModItems.ENTITY_TICKER_PART_ITEM.get().getPartClass().asSubclass(IPart.class)
                         )
                 );
-                
+
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
                 try {
                     appeng.menu.locator.MenuLocators.register(
@@ -134,29 +155,6 @@ public class ExtendedAEPlus {
                 LOGGER.warn("Failed to bind block entities: {}", t.toString());
             }
         });
-    }
-
-    @Nullable
-    private static InfinityStorageManager storageManager;
-
-    @Nullable
-    private static MinecraftServer storageManagerServer;
-
-    private static void onServerStarted(ServerStartedEvent event) {
-        storageManagerServer = event.getServer();
-        storageManager = InfinityStorageManager.getInstance(event.getServer());
-    }
-
-    private static void onServerStopped(ServerStoppedEvent event) {
-        if (storageManagerServer == event.getServer()) {
-            storageManagerServer = null;
-            storageManager = null;
-        }
-    }
-
-    @Nullable
-    public static InfinityStorageManager currentStorageManager() {
-        return storageManager;
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call

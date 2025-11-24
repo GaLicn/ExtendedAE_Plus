@@ -1,9 +1,9 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.util.WirelessTeamUtil;
+import com.extendedae_plus.items.materials.ChannelCardItem;
+import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -37,47 +37,47 @@ public class ChannelCardBindPacket implements CustomPacketPayload {
         this.hand = hand;
     }
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-    
     public static void handle(final ChannelCardBindPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) {
                 return;
             }
-            
+
             ItemStack stack = player.getItemInHand(msg.hand);
             if (stack.getItem() != ModItems.CHANNEL_CARD.get()) {
                 return;
             }
-            
+
             ServerLevel level = player.serverLevel();
             UUID currentOwner = ChannelCardItem.getOwnerUUID(stack);
-            
+
             if (currentOwner != null) {
                 // 已有所有者，清除
                 ChannelCardItem.clearOwner(stack);
                 player.displayClientMessage(
-                    Component.translatable("item.extendedae_plus.channel_card.owner.cleared"), 
+                    Component.translatable("item.extendedae_plus.channel_card.owner.cleared"),
                     true
                 );
             } else {
                 // 写入当前玩家的UUID和团队信息
                 UUID playerUUID = player.getUUID();
                 ChannelCardItem.setOwnerUUID(stack, playerUUID);
-                
+
                 // 获取团队名称用于显示
                 Component teamName = WirelessTeamUtil.getNetworkOwnerName(level, playerUUID);
                 ChannelCardItem.setTeamName(stack, teamName.getString());
-                
+
                 player.displayClientMessage(
-                    Component.translatable("item.extendedae_plus.channel_card.owner.bound", teamName), 
+                    Component.translatable("item.extendedae_plus.channel_card.owner.bound", teamName),
                     true
                 );
             }
         });
+    }
+    
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }
 

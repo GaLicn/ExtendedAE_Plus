@@ -5,8 +5,8 @@ import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
+import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import net.minecraft.client.Minecraft;
@@ -50,7 +50,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
     private void eap$initAdvancedBlocking(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 使用 @GuiSync 初始化
         try {
-            if (menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
             }
         } catch (Throwable t) {
@@ -69,7 +69,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
         ) {
             @Override
             public java.util.List<Component> getTooltipMessage() {
-                boolean enabled = eap$AdvancedBlockingEnabled;
+                boolean enabled = SmallAdvPatternProviderScreenMixin.this.eap$AdvancedBlockingEnabled;
                 var title = Component.literal("智能阻挡");
                 var line = enabled
                         ? Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
@@ -84,7 +84,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
 
         // 智能翻倍按钮：与高级阻挡同款样式，点击仅发送C2S，状态由@GuiSync驱动
         try {
-            if (menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
             }
         } catch (Throwable t) {
@@ -101,7 +101,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
         ) {
             @Override
             public java.util.List<Component> getTooltipMessage() {
-                boolean enabled = eap$SmartDoublingEnabled;
+                boolean enabled = SmallAdvPatternProviderScreenMixin.this.eap$SmartDoublingEnabled;
                 var title = Component.literal("智能翻倍");
                 var line = enabled
                         ? Component.literal("已启用：根据请求量对处理样板进行智能缩放")
@@ -119,7 +119,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
     private void eap$updateAdvancedBlocking(CallbackInfo ci) {
         if (this.eap$AdvancedBlockingToggle != null) {
             boolean desired = this.eap$AdvancedBlockingEnabled;
-            if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (this.menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 desired = sync.eap$getAdvancedBlockingSynced();
             }
             this.eap$AdvancedBlockingEnabled = desired;
@@ -128,7 +128,7 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
 
         if (this.eap$SmartDoublingToggle != null) {
             boolean desired2 = this.eap$SmartDoublingEnabled;
-            if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (this.menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 desired2 = sync2.eap$getSmartDoublingSynced();
             }
             this.eap$SmartDoublingEnabled = desired2;

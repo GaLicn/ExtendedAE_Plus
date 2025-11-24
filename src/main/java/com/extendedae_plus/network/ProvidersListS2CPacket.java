@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.ui.ProviderSelectScreen;
+import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -48,15 +48,10 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
     private final List<String> names;
     private final List<Integer> emptySlots;
 
-    public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots) {
+    ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots) {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
     }
 
     public static void handle(final ProvidersListS2CPacket msg, final IPayloadContext ctx) {
@@ -69,5 +64,10 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
         if (mc == null) return;
         var current = mc.screen;
         mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

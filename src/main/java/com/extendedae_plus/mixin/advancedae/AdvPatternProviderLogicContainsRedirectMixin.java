@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.advancedae;
 
 import appeng.api.crafting.IPatternDetails;
-import com.extendedae_plus.content.ScaledProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

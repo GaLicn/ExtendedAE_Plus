@@ -1,8 +1,8 @@
 package com.extendedae_plus.util.entitySpeed;
 
 import appeng.api.upgrades.IUpgradeInventory;
-import com.extendedae_plus.ae.definitions.upgrades.EntitySpeedCardItem;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public final class PowerUtils {
     /**
      * 根据最高单卡倍率返回上限值。
      */
-    public static long capForHighestMultiplier(int highestMultiplier) {
+    private static long capForHighestMultiplier(int highestMultiplier) {
         if (highestMultiplier >= 16) return 1024L;
         if (highestMultiplier >= 8) return 256L;
         if (highestMultiplier >= 4) return 64L;

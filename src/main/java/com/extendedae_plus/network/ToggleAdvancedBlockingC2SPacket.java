@@ -4,7 +4,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
@@ -30,11 +30,6 @@ public class ToggleAdvancedBlockingC2SPacket implements CustomPacketPayload {
 
     private ToggleAdvancedBlockingC2SPacket() {}
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-
     public static void handle(final ToggleAdvancedBlockingC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
@@ -42,7 +37,7 @@ public class ToggleAdvancedBlockingC2SPacket implements CustomPacketPayload {
             if (containerMenu instanceof PatternProviderMenu menu) {
                 var accessor = (PatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof AdvancedBlockingHolder holder) {
+                if (logic instanceof IAdvancedBlocking holder) {
                     boolean current = holder.eap$getAdvancedBlocking();
                     boolean next = !current;
                     holder.eap$setAdvancedBlocking(next);
@@ -54,7 +49,7 @@ public class ToggleAdvancedBlockingC2SPacket implements CustomPacketPayload {
             }else if (containerMenu instanceof AdvPatternProviderMenu menu){
                 var accessor = (AdvPatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof AdvancedBlockingHolder holder) {
+                if (logic instanceof IAdvancedBlocking holder) {
                     boolean current = holder.eap$getAdvancedBlocking();
                     boolean next = !current;
                     holder.eap$setAdvancedBlocking(next);
@@ -65,5 +60,10 @@ public class ToggleAdvancedBlockingC2SPacket implements CustomPacketPayload {
                 }
             }
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

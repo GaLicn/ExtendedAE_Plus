@@ -4,7 +4,7 @@ import appeng.helpers.InterfaceLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.ToolboxMenu;
 import appeng.menu.implementations.InterfaceMenu;
-import com.extendedae_plus.bridge.IUpgradableMenu;
+import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,20 +22,20 @@ public abstract class InterfaceMenuUpgradesMixin extends AEBaseMenu implements I
     @Unique
     private ToolboxMenu eap$toolbox;
 
+    public InterfaceMenuUpgradesMixin(MenuType<?> menuType, int id, Inventory playerInventory, Object host) {
+        super(menuType, id, playerInventory, host);
+    }
+
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/InterfaceLogicHost;)V",
             at = @At("TAIL"))
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, InterfaceLogicHost host, CallbackInfo ci) {
         this.eap$toolbox = new ToolboxMenu(this);
-        
+
         // InterfaceMenu已经继承自UpgradeableMenu，会自动处理升级槽
     }
 
     @Override
     public ToolboxMenu eap$getToolbox() {
         return this.eap$toolbox;
-    }
-
-    public InterfaceMenuUpgradesMixin(MenuType<?> menuType, int id, Inventory playerInventory, Object host) {
-        super(menuType, id, playerInventory, host);
     }
 }

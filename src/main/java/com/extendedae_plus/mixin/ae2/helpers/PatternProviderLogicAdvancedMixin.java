@@ -6,7 +6,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
-import com.extendedae_plus.api.AdvancedBlockingHolder;
+import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
 import com.extendedae_plus.api.ids.EAPComponents;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 
 @Mixin(value = PatternProviderLogic.class, remap = false)
-public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder {
+public class PatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
     @Unique
     private static final String EAP_ADV_BLOCKING_KEY = "epp_advanced_blocking";
 
@@ -32,7 +32,7 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
 
     @Override
     public boolean eap$getAdvancedBlocking() {
-        return eap$advancedBlocking;
+        return this.eap$advancedBlocking;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class PatternProviderLogicAdvancedMixin implements AdvancedBlockingHolder
 
         // 仅当高级阻挡启用时启用“匹配则不阻挡”
         if (this.eap$advancedBlocking) {
-            if (eap$targetFullyMatchesPatternInputs(adapter, patternDetails)) {
+            if (this.eap$targetFullyMatchesPatternInputs(adapter, patternDetails)) {
                 // 返回 false 表示“不包含阻挡关键物”，从而不触发 continue，允许发配
                 return false;
             }

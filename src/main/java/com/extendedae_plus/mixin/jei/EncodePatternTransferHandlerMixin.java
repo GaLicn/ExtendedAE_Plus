@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.jei;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.integration.modules.rei.transfer.EncodePatternTransferHandler;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.spongepowered.asm.mixin.Mixin;

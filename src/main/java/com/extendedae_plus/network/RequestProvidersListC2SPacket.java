@@ -4,7 +4,7 @@ import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -27,12 +27,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
     public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC =
             StreamCodec.unit(INSTANCE);
 
-    public RequestProvidersListC2SPacket() {}
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    private RequestProvidersListC2SPacket() {}
 
     public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -78,5 +73,10 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             }
             player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

@@ -9,8 +9,8 @@ import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import de.mari_023.ae2wtlib.api.registration.WTDefinition;
 import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.core.BlockPos;
@@ -54,11 +54,6 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
         this.pos = pos;
         this.face = face;
         this.hitLoc = hitLoc;
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
     }
 
     public static void handle(final PickFromWirelessC2SPacket msg, final IPayloadContext ctx) {
@@ -174,5 +169,10 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             located.commit();
             player.containerMenu.broadcastChanges();
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

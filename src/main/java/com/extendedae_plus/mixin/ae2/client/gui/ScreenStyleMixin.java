@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
-import com.extendedae_plus.util.IStyleAccessor;
+import com.extendedae_plus.api.IStyleAccessor;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

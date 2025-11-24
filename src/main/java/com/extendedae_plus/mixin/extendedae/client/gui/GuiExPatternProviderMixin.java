@@ -5,8 +5,9 @@ import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.menu.SlotSemantics;
 import appeng.menu.slot.AppEngSlot;
-import com.extendedae_plus.NewIcon;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
+import com.extendedae_plus.api.IExPatternButton;
+import com.extendedae_plus.api.IExPatternPage;
+import com.extendedae_plus.client.gui.NewIcon;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
@@ -27,38 +28,63 @@ import java.lang.reflect.Method;
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
 
 @Mixin(value = GuiExPatternProvider.class, remap = false)
-public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements ExPatternButtonsAccessor, com.extendedae_plus.api.ExPatternPageAccessor {
-
-    @Unique
-    ScreenStyle eap$screenStyle;
-
-    // 跟踪上次屏幕尺寸，处理 GUI 缩放/窗口大小变化后按钮丢失问题
-    @Unique private int eap$lastScreenWidth = -1;
-    @Unique private int eap$lastScreenHeight = -1;
-
-    // 不再使用右侧 VerticalButtonBar，直接把按钮注册为独立 AE2 小部件
+public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<ContainerExPatternProvider> implements IExPatternButton, IExPatternPage {
 
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
+    @Unique private
+    ScreenStyle eap$screenStyle;
+    // 跟踪上次屏幕尺寸，处理 GUI 缩放/窗口大小变化后按钮丢失问题
+    @Unique private int eap$lastScreenWidth = -1;
 
+    // 不再使用右侧 VerticalButtonBar，直接把按钮注册为独立 AE2 小部件
+    @Unique private int eap$lastScreenHeight = -1;
     @Unique
     private int eap$currentPage = 0;
 
     @Unique
     private int eap$maxPageLocal = 1;
-
-    public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style) {
-        super(menu, playerInventory, title, style);
-    }
+    private ActionEPPButton nextPage;
 
 
 
     // 移除手动挪动 Slot 坐标，交由 SlotGridLayout + 原生布局控制
+    private ActionEPPButton prevPage;
+    private ActionEPPButton x2Button;
+    private ActionEPPButton divideBy2Button;
+    private ActionEPPButton x5Button;
+    private ActionEPPButton divideBy5Button;
+    private ActionEPPButton x10Button;
+    private ActionEPPButton divideBy10Button;
+    public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super(menu, playerInventory, title, style);
+    }
+
+    @Unique
+    private static Field eap$findFieldRecursive(Class<?> cls, String name) {
+        Class<?> c = cls;
+        while (c != null && c != Object.class) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {}
+            c = c.getSuperclass();
+        }
+        return null;
+    }
+
+    @Unique
+    private static void eap$setIntFieldRecursive(Object obj, String name, int value) {
+        if (obj == null) return;
+        Field f = eap$findFieldRecursive(obj.getClass(), name);
+        if (f != null) {
+            try { f.setAccessible(true); f.set(obj, value); } catch (Throwable ignored) {}
+        }
+    }
 
     @Unique
     private int getCurrentPage() {
         // 优先使用本地 GUI 维护的页码
-        return Math.max(0, eap$currentPage % Math.max(1, eap$maxPageLocal));
+        return Math.max(0, this.eap$currentPage % Math.max(1, this.eap$maxPageLocal));
     }
 
     @Unique
@@ -84,36 +110,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         } catch (Throwable ignored) {}
         return 1;
     }
-
-    @Unique
-    private static Field eap$findFieldRecursive(Class<?> cls, String name) {
-        Class<?> c = cls;
-        while (c != null && c != Object.class) {
-            try {
-                return c.getDeclaredField(name);
-            } catch (NoSuchFieldException ignored) {}
-            c = c.getSuperclass();
-        }
-        return null;
-    }
-
-    @Unique
-    private static void eap$setIntFieldRecursive(Object obj, String name, int value) {
-        if (obj == null) return;
-        Field f = eap$findFieldRecursive(obj.getClass(), name);
-        if (f != null) {
-            try { f.setAccessible(true); f.set(obj, value); } catch (Throwable ignored) {}
-        }
-    }
-
-    public ActionEPPButton nextPage;
-    public ActionEPPButton prevPage;
-    public ActionEPPButton x2Button;
-    public ActionEPPButton divideBy2Button;
-    public ActionEPPButton x5Button;
-    public ActionEPPButton divideBy5Button;
-    public ActionEPPButton x10Button;
-    public ActionEPPButton divideBy10Button;
     
     // 在构造器返回后初始化按钮与翻页控制
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -139,8 +135,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         // 翻页按钮（当存在多页时显示；支持仅由配置决定的“空白页”）
         if (desiredMaxPage > 1) {
             this.prevPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
+                int currentPage = this.getCurrentPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, this.getMaxPage());
                 int newPage = (currentPage - 1 + maxPage) % maxPage;
                 try {
                     ContainerExPatternProvider menu1 = this.getMenu();
@@ -164,12 +160,12 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
                 // 更新当前页可见状态
-                eap$updatePageSlotActivity();
+                this.eap$updatePageSlotActivity();
             }, Icon.ARROW_LEFT);
 
             this.nextPage = new ActionEPPButton((b) -> {
-                int currentPage = getCurrentPage();
-                int maxPage = Math.max(this.eap$maxPageLocal, getMaxPage());
+                int currentPage = this.getCurrentPage();
+                int maxPage = Math.max(this.eap$maxPageLocal, this.getMaxPage());
                 int newPage = (currentPage + 1) % maxPage;
                 try {
                     ContainerExPatternProvider menu1 = this.getMenu();
@@ -193,7 +189,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 this.repositionSlots(SlotSemantics.STORAGE);
                 this.hoveredSlot = null;
                 // 更新当前页可见状态
-                eap$updatePageSlotActivity();
+                this.eap$updatePageSlotActivity();
             }, Icon.ARROW_RIGHT);
 
             // 恢复到 AE2 左侧工具栏
@@ -249,7 +245,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
 
     @Override
     public int eap$getCurrentPage() {
-        return getCurrentPage();
+        return this.getCurrentPage();
     }
 
     // 页码文本绘制移交给 AEBaseScreenMixin.renderLabels 尾部执行
@@ -259,26 +255,26 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Override
     public void eap$updateButtonsLayout() {
         // 只处理按钮可见性与定位，不再强制 showPage 或挪动 Slot 坐标，避免与原布局/tooltip 冲突
-        if (nextPage != null && prevPage != null) {
+        if (this.nextPage != null && this.prevPage != null) {
             this.nextPage.setVisibility(true);
             this.prevPage.setVisibility(true);
         }
-        if (x2Button != null) {
+        if (this.x2Button != null) {
             this.x2Button.setVisibility(true);
         }
-        if (divideBy2Button != null) {
+        if (this.divideBy2Button != null) {
             this.divideBy2Button.setVisibility(true);
         }
-        if (x10Button != null) {
+        if (this.x10Button != null) {
             this.x10Button.setVisibility(true);
         }
-        if (divideBy10Button != null) {
+        if (this.divideBy10Button != null) {
             this.divideBy10Button.setVisibility(true);
         }
-        if (divideBy5Button != null) {
+        if (this.divideBy5Button != null) {
             this.divideBy5Button.setVisibility(true);
         }
-        if (x5Button != null) {
+        if (this.x5Button != null) {
             this.x5Button.setVisibility(true);
         }
 
@@ -306,9 +302,9 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         } catch (Throwable ignored) {}
 
         // 如果屏幕尺寸发生变化（窗口/GUI缩放），重新注册右侧外列的自定义按钮，翻页按钮由左侧工具栏托管
-        if (this.width != eap$lastScreenWidth || this.height != eap$lastScreenHeight) {
-            eap$lastScreenWidth = this.width;
-            eap$lastScreenHeight = this.height;
+        if (this.width != this.eap$lastScreenWidth || this.height != this.eap$lastScreenHeight) {
+            this.eap$lastScreenWidth = this.width;
+            this.eap$lastScreenHeight = this.height;
             try {
                 if (this.divideBy2Button != null) {
                     this.removeWidget(this.divideBy2Button);
@@ -368,7 +364,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         }
 
         // 每帧确保当前页槽位处于启用状态，非当前页禁用
-        eap$updatePageSlotActivity();
+        this.eap$updatePageSlotActivity();
     }
 
     // 本文件原包含本地样板缩放实现（单机模式）和 ExtendedAE 网络派发，已移除以兼容 1.21.1 与最小可构建集。
@@ -381,7 +377,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             var list = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN);
             if (list == null || list.isEmpty()) return;
 
-            int currentPage = getCurrentPage();
+            int currentPage = this.getCurrentPage();
             int base = currentPage * SLOTS_PER_PAGE;
             int end = Math.min(list.size(), base + SLOTS_PER_PAGE);
 
