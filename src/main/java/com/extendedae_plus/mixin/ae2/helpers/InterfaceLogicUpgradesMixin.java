@@ -5,7 +5,7 @@ import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
-import com.extendedae_plus.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.world.item.Item;

@@ -13,8 +13,8 @@ import appeng.me.helpers.PlayerSource;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator;
-import com.extendedae_plus.util.WirelessTerminalLocator.LocatedTerminal;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -37,11 +37,6 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
 
     public PullFromJeiOrCraftC2SPacket(GenericStack stack) {
         this.stack = stack;
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
     }
 
     public static void handle(final PullFromJeiOrCraftC2SPacket msg, final IPayloadContext ctx) {
@@ -106,5 +101,10 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
                 CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, 1);
             }
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

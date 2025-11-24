@@ -2,7 +2,7 @@ package com.extendedae_plus.network;
 
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.api.SmartDoublingHolder;
+import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
 import net.minecraft.network.FriendlyByteBuf;
@@ -28,11 +28,6 @@ public class ToggleSmartDoublingC2SPacket implements CustomPacketPayload {
 
     private ToggleSmartDoublingC2SPacket() {}
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-
     public static void handle(final ToggleSmartDoublingC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
@@ -40,7 +35,7 @@ public class ToggleSmartDoublingC2SPacket implements CustomPacketPayload {
             if (containerMenu instanceof PatternProviderMenu menu) {
                 var accessor = (PatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof SmartDoublingHolder holder) {
+                if (logic instanceof ISmartDoubling holder) {
                     boolean current = holder.eap$getSmartDoubling();
                     boolean next = !current;
                     holder.eap$setSmartDoubling(next);
@@ -49,7 +44,7 @@ public class ToggleSmartDoublingC2SPacket implements CustomPacketPayload {
             }else if (containerMenu instanceof AdvPatternProviderMenu menu){
                 var accessor = (AdvPatternProviderMenuAdvancedAccessor) menu;
                 var logic = accessor.eap$logic();
-                if (logic instanceof SmartDoublingHolder holder) {
+                if (logic instanceof ISmartDoubling holder) {
                     boolean current = holder.eap$getSmartDoubling();
                     boolean next = !current;
                     holder.eap$setSmartDoubling(next);
@@ -57,5 +52,10 @@ public class ToggleSmartDoublingC2SPacket implements CustomPacketPayload {
                 }
             }
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

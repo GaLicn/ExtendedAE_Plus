@@ -7,9 +7,9 @@ import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.SettingToggleButton;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.ExPatternButtonsAccessor;
-import com.extendedae_plus.api.PatternProviderMenuAdvancedSync;
-import com.extendedae_plus.api.PatternProviderMenuDoublingSync;
+import com.extendedae_plus.api.IExPatternButton;
+import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
+import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.network.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.ToggleSmartDoublingC2SPacket;
 import com.extendedae_plus.util.ExtendedAELogger;
@@ -51,7 +51,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     private void eap$initAdvancedBlocking(C menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 使用 @GuiSync 初始化
         try {
-            if (menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 this.eap$AdvancedBlockingEnabled = sync.eap$getAdvancedBlockingSynced();
             }
         } catch (Throwable t) {
@@ -71,7 +71,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         ) {
             @Override
             public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
-                boolean enabled = eap$AdvancedBlockingEnabled;
+                boolean enabled = PatternProviderScreenMixin.this.eap$AdvancedBlockingEnabled;
                 var title = net.minecraft.network.chat.Component.literal("智能阻挡");
                 var line = enabled
                         ? net.minecraft.network.chat.Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
@@ -87,7 +87,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
         // 智能翻倍按钮：与高级阻挡同款样式，点击仅发送C2S，状态由@GuiSync驱动
         try {
-            if (menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 this.eap$SmartDoublingEnabled = sync2.eap$getSmartDoublingSynced();
             }
         } catch (Throwable t) {
@@ -105,7 +105,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
         ) {
             @Override
             public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
-                boolean enabled = eap$SmartDoublingEnabled;
+                boolean enabled = PatternProviderScreenMixin.this.eap$SmartDoublingEnabled;
                 var title = net.minecraft.network.chat.Component.literal("智能翻倍");
                 var line = enabled
                         ? net.minecraft.network.chat.Component.literal("已启用：根据请求量对处理样板进行智能缩放")
@@ -123,7 +123,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
     private void eap$updateAdvancedBlocking(CallbackInfo ci) {
         if (this.eap$AdvancedBlockingToggle != null) {
             boolean desired = this.eap$AdvancedBlockingEnabled;
-            if (this.menu instanceof PatternProviderMenuAdvancedSync sync) {
+            if (this.menu instanceof IPatternProviderMenuAdvancedSync sync) {
                 desired = sync.eap$getAdvancedBlockingSynced();
             }
             // debug removed
@@ -133,7 +133,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
         if (this.eap$SmartDoublingToggle != null) {
             boolean desired2 = this.eap$SmartDoublingEnabled;
-            if (this.menu instanceof PatternProviderMenuDoublingSync sync2) {
+            if (this.menu instanceof IPatternProviderMenuDoublingSync sync2) {
                 desired2 = sync2.eap$getSmartDoublingSynced();
             }
             // debug removed
@@ -143,7 +143,7 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
 
         if ((Object) this instanceof GuiExPatternProvider) {
             try {
-                ((ExPatternButtonsAccessor) this).eap$updateButtonsLayout();
+                ((IExPatternButton) this).eap$updateButtonsLayout();
             } catch (Throwable t) {
                 // debug removed
             }

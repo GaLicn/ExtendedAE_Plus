@@ -5,8 +5,8 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.ToolboxMenu;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.bridge.CompatUpgradeProvider;
-import com.extendedae_plus.bridge.IUpgradableMenu;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -26,11 +26,15 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     @Unique
     private ToolboxMenu eap$toolbox;
 
+    public PatternProviderMenuUpgradesMixin(MenuType<?> menuType, int id, Inventory playerInventory, Object host) {
+        super(menuType, id, playerInventory, host);
+    }
+
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V",
             at = @At("TAIL"))
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         this.eap$toolbox = new ToolboxMenu(this);
-        
+
         // 当未安装 AppliedFlux 时，我们负责注入升级槽；安装了 AF 则由 AF 的菜单 Mixin 负责，避免重复渲染
         if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
@@ -41,9 +45,5 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     @Override
     public ToolboxMenu eap$getToolbox() {
         return this.eap$toolbox;
-    }
-
-    public PatternProviderMenuUpgradesMixin(MenuType<?> menuType, int id, Inventory playerInventory, Object host) {
-        super(menuType, id, playerInventory, host);
     }
 }

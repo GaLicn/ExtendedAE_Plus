@@ -12,18 +12,17 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-import com.extendedae_plus.ae.items.ChannelCardItem;
-import com.extendedae_plus.bridge.CompatUpgradeProvider;
-import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
-import com.extendedae_plus.wireless.WirelessSlaveLink;
-import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -91,7 +90,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 this.eap$compatUpgrades = UpgradeInventories.empty();
                 
                 // 尝试监听AppliedFlux的升级变更
-                eap$tryHookAppliedFluxUpgradeChanges();
+                this.eap$tryHookAppliedFluxUpgradeChanges();
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化兼容升级槽失败", t);
@@ -102,10 +101,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     private void eap$compatOnUpgradesChanged() {
         try {
             this.host.saveChanges();
-            eap$compatLastChannel = -1;
-            eap$compatHasInitialized = false;
-            eap$compatInitializeChannelLink();
-            eap$compatSyncVirtualCraftingState();
+            this.eap$compatLastChannel = -1;
+            this.eap$compatHasInitialized = false;
+            this.eap$compatInitializeChannelLink();
+            this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 兼容升级变更处理失败", t);
         }
@@ -147,10 +146,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades", registries);
             }
             // 无论哪种模式都重新初始化
-            eap$compatLastChannel = -1;
-            eap$compatHasInitialized = false;
-            eap$compatInitializeChannelLink();
-            eap$compatSyncVirtualCraftingState();
+            this.eap$compatLastChannel = -1;
+            this.eap$compatHasInitialized = false;
+            this.eap$compatInitializeChannelLink();
+            this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 读取兼容升级失败", t);
         }
@@ -183,11 +182,11 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
     private void eap$compatOnNodeChange(CallbackInfo ci) {
         try {
-            eap$compatLastChannel = -1;
-            eap$compatHasInitialized = false;
+            this.eap$compatLastChannel = -1;
+            this.eap$compatHasInitialized = false;
             // 直接初始化，不使用延迟
-            eap$compatInitializeChannelLink();
-            mainNode.ifPresent((grid, node) -> {
+            this.eap$compatInitializeChannelLink();
+            this.mainNode.ifPresent((grid, node) -> {
                 try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
             });
         } catch (Throwable t) {
@@ -200,22 +199,126 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Override
     public void eap$updateWirelessLink() {
-        if (eap$compatLink != null) {
-            eap$compatLink.updateStatus();
+        if (this.eap$compatLink != null) {
+            this.eap$compatLink.updateStatus();
         }
     }
 
+    @Override
+    public boolean eap$isWirelessConnected() {
+        if (this.host.getBlockEntity() != null && this.host.getBlockEntity().getLevel() != null && this.host.getBlockEntity().getLevel().isClientSide) {
+            return this.eap$compatClientConnected;
+        } else {
+            return this.eap$compatLink != null && this.eap$compatLink.isConnected();
+        }
+    }
+
+    @Override
+    public void eap$setClientWirelessState(boolean connected) {
+        this.eap$compatClientConnected = connected;
+    }
+
+    @Override
+    public boolean eap$hasTickInitialized() {
+        return this.eap$compatHasInitialized;
+    }
+
+    @Override
+    public void eap$setTickInitialized(boolean initialized) {
+        this.eap$compatHasInitialized = initialized;
+    }
+
+    @Override
+    public void eap$handleDelayedInit() {
+        // 如果还未初始化，或者需要重新检查AppliedFlux升级槽
+        if (!this.eap$compatHasInitialized) {
+            this.eap$compatInitializeChannelLink();
+        } else if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            // 安装了AppliedFlux时，定期检查升级槽变化
+            try {
+                IUpgradeInventory afUpgrades = this.eap$getAppliedFluxUpgrades();
+                if (afUpgrades != null && this.eap$hasChannelCard(afUpgrades)) {
+                    // 检查频道是否发生变化
+                    for (ItemStack stack : afUpgrades) {
+                        if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                            long newChannel = ChannelCardItem.getChannel(stack);
+                            if (newChannel != this.eap$compatLastChannel) {
+                                this.eap$compatLastChannel = -1; // 强制重新初始化
+                                this.eap$compatHasInitialized = false;
+                                this.eap$compatInitializeChannelLink();
+                                this.eap$compatSyncVirtualCraftingState();
+                            }
+                            break;
+                        }
+                    }
+                } else if (this.eap$compatLastChannel != 0L) {
+                    // 频道卡被移除
+                    this.eap$compatLastChannel = -1;
+                    this.eap$compatHasInitialized = false;
+                    this.eap$compatInitializeChannelLink();
+                    this.eap$compatSyncVirtualCraftingState();
+                }
+            } catch (Throwable t) {
+            }
+        }
+    }
+
+    /**
+     * 指示 PatternProviderLogic 的 Ticker 是否需要保持慢速 tick 以轮询频道卡或维持无线连接。
+     */
+    @Override
+    public boolean eap$shouldKeepTicking() {
+        try {
+            // 仅在服务端保持tick
+            if (this.host.getBlockEntity() == null || this.host.getBlockEntity().getLevel() == null || this.host.getBlockEntity().getLevel().isClientSide) {
+                return false;
+            }
+            // 未初始化：需要继续tick直到初始化完成
+            if (!this.eap$compatHasInitialized) {
+                return true;
+            }
+            // 安装了 AppliedFlux：根据连接状态与频道卡存在性决定是否维持慢速tick
+            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                // 若曾经设置过频道或者当前存在未连通的链接，则保持tick
+                if (this.eap$compatLastChannel != 0L) {
+                    return true;
+                }
+                if (this.eap$compatLink != null && !this.eap$compatLink.isConnected()) {
+                    return true;
+                }
+                try {
+                    IUpgradeInventory afUpgrades = this.eap$getAppliedFluxUpgrades();
+                    if (afUpgrades != null && this.eap$hasChannelCard(afUpgrades)) {
+                        // 槽中有频道卡，保持tick以尽快完成连接
+                        return true;
+                    }
+                } catch (Throwable ignored) {
+                }
+                // 否则可以休眠
+                return false;
+            }
+            // 未安装 AppliedFlux：当存在频道卡但连接尚未建立时保持tick
+            if (this.eap$compatUpgrades != null && this.eap$hasChannelCard(this.eap$compatUpgrades)) {
+                if (this.eap$compatLink == null || !this.eap$compatLink.isConnected()) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
     @Unique
-    public void eap$compatInitializeChannelLink() {
+    private void eap$compatInitializeChannelLink() {
         try {
             // 客户端早退
-            if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
+            if (this.host.getBlockEntity() != null && this.host.getBlockEntity().getLevel() != null && this.host.getBlockEntity().getLevel().isClientSide) {
                 return;
             }
-            if (eap$compatHasInitialized) {
+            if (this.eap$compatHasInitialized) {
                 return;
             }
-            if (mainNode == null || mainNode.getNode() == null) {
+            if (this.mainNode == null || this.mainNode.getNode() == null) {
                 return;
             }
 
@@ -223,13 +326,13 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             boolean found = false;
 
             IUpgradeInventory upgrades = null;
-            
+
             // 优先尝试从AppliedFlux获取升级槽（如果安装了的话）
             if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                 // 安装了appflux：优先使用appflux的升级槽
                 try {
                     // 更安全的方式获取AppliedFlux升级槽
-                    upgrades = eap$getAppliedFluxUpgrades();
+                    upgrades = this.eap$getAppliedFluxUpgrades();
                     if (upgrades != null) {
                     } else {
                         ExtendedAELogger.LOGGER.warn("[样板供应器] 无法获取 appflux 升级槽，回退到兼容槽");
@@ -243,22 +346,22 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 // 未安装appflux：使用我们的兼容升级槽
                 upgrades = this.eap$compatUpgrades;
             }
-            
+
             // 双重保险：如果主要方式失败，尝试备用方式
-            if (upgrades == null || !eap$hasChannelCard(upgrades)) {
-                
+            if (upgrades == null || !this.eap$hasChannelCard(upgrades)) {
+
                 if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                     // 如果我们的槽无频道卡，尝试检查是否有AppliedFlux的槽
                     try {
-                        IUpgradeInventory backupUpgrades = eap$getAppliedFluxUpgrades();
-                        if (backupUpgrades != null && eap$hasChannelCard(backupUpgrades)) {
+                        IUpgradeInventory backupUpgrades = this.eap$getAppliedFluxUpgrades();
+                        if (backupUpgrades != null && this.eap$hasChannelCard(backupUpgrades)) {
                             upgrades = backupUpgrades;
                         }
                     } catch (Throwable t) {
                     }
                 } else {
                     // 如果AppliedFlux的槽无频道卡，尝试我们的兼容槽
-                    if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
+                    if (this.eap$compatUpgrades != null && this.eap$hasChannelCard(this.eap$compatUpgrades)) {
                         upgrades = this.eap$compatUpgrades;
                     }
                 }
@@ -275,23 +378,26 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
 
             if (!found) {
-                eap$compatSyncVirtualCraftingState();
-                if (eap$compatLink != null) {
-                    eap$compatLink.setFrequency(0L);
-                    eap$compatLink.updateStatus();
+                this.eap$compatSyncVirtualCraftingState();
+                if (this.eap$compatLink != null) {
+                    this.eap$compatLink.setFrequency(0L);
+                    this.eap$compatLink.updateStatus();
                 }
-                eap$compatLastChannel = 0L;
-                eap$compatHasInitialized = true;
-                try { host.saveChanges(); } catch (Throwable ignored) {}
+                this.eap$compatLastChannel = 0L;
+                this.eap$compatHasInitialized = true;
+                try {
+                    this.host.saveChanges();
+                } catch (Throwable ignored) {
+                }
                 // 唤醒节点，加速 AE2 感知到连接断开
-                mainNode.ifPresent((grid, node) -> {
+                this.mainNode.ifPresent((grid, node) -> {
                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
                     // 兜底：如仍存在针对无线主端的直连（非 in-world），强制销毁
                     try {
                         for (IGridConnection gc : node.getConnections()) {
                             if (gc != null && !gc.isInWorld()) {
                                 var other = gc.getOtherSide(node);
-                                if (other != null && other.getOwner() instanceof com.extendedae_plus.wireless.IWirelessEndpoint) {
+                                if (other != null && other.getOwner() instanceof com.extendedae_plus.ae.wireless.IWirelessEndpoint) {
                                     gc.destroy();
                                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
                                     try { if (other.getGrid() != null) { other.getGrid().getTickManager().wakeDevice(other); } } catch (Throwable ignored2) {}
@@ -303,140 +409,42 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 return;
             }
 
-            if (eap$compatLink == null) {
-                var endpoint = new GenericNodeEndpointImpl(() -> host.getBlockEntity(), () -> this.mainNode.getNode());
-                eap$compatLink = new WirelessSlaveLink(endpoint);
+            if (this.eap$compatLink == null) {
+                var endpoint = new GenericNodeEndpointImpl(() -> this.host.getBlockEntity(), () -> this.mainNode.getNode());
+                this.eap$compatLink = new WirelessSlaveLink(endpoint);
             }
 
-            eap$compatLink.setFrequency(channel);
-            eap$compatLink.updateStatus();
-            eap$compatLastChannel = channel; // 记录当前频道
-            try { host.saveChanges(); } catch (Throwable ignored) {}
-            mainNode.ifPresent((grid, node) -> {
+            this.eap$compatLink.setFrequency(channel);
+            this.eap$compatLink.updateStatus();
+            this.eap$compatLastChannel = channel; // 记录当前频道
+            try {
+                this.host.saveChanges();
+            } catch (Throwable ignored) {
+            }
+            this.mainNode.ifPresent((grid, node) -> {
                 try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
             });
 
-            if (eap$compatLink.isConnected()) {
-                eap$compatHasInitialized = true;
+            if (this.eap$compatLink.isConnected()) {
+                this.eap$compatHasInitialized = true;
             } else {
-                eap$compatHasInitialized = false;
+                this.eap$compatHasInitialized = false;
                 // 如果连接失败，唤醒设备以便稍后重试
-                mainNode.ifPresent((grid, node) -> {
+                this.mainNode.ifPresent((grid, node) -> {
                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
                 });
             }
 
-            eap$compatSyncVirtualCraftingState();
+            this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化频道链接失败", t);
         }
     }
 
-    @Override
-    public void eap$setClientWirelessState(boolean connected) {
-        eap$compatClientConnected = connected;
-    }
-
-    @Override
-    public boolean eap$isWirelessConnected() {
-        if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
-            return eap$compatClientConnected;
-        } else {
-            return eap$compatLink != null && eap$compatLink.isConnected();
-        }
-    }
-
-    @Override
-    public boolean eap$hasTickInitialized() {
-        return eap$compatHasInitialized;
-    }
-
-    @Override
-    public void eap$setTickInitialized(boolean initialized) {
-        eap$compatHasInitialized = initialized;
-    }
-
-    @Override
-    public void eap$handleDelayedInit() {
-        // 如果还未初始化，或者需要重新检查AppliedFlux升级槽
-        if (!eap$compatHasInitialized) {
-            eap$compatInitializeChannelLink();
-        } else if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            // 安装了AppliedFlux时，定期检查升级槽变化
-            try {
-                IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
-                if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
-                    // 检查频道是否发生变化
-                    for (ItemStack stack : afUpgrades) {
-                        if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                            long newChannel = ChannelCardItem.getChannel(stack);
-                            if (newChannel != eap$compatLastChannel) {
-                                eap$compatLastChannel = -1; // 强制重新初始化
-                                eap$compatHasInitialized = false;
-                                eap$compatInitializeChannelLink();
-                                eap$compatSyncVirtualCraftingState();
-                            }
-                            break;
-                        }
-                    }
-                } else if (eap$compatLastChannel != 0L) {
-                    // 频道卡被移除
-                    eap$compatLastChannel = -1;
-                    eap$compatHasInitialized = false;
-                    eap$compatInitializeChannelLink();
-                    eap$compatSyncVirtualCraftingState();
-                }
-            } catch (Throwable t) {
-            }
-        }
-    }
-
-    /**
-     * 指示 PatternProviderLogic 的 Ticker 是否需要保持慢速 tick 以轮询频道卡或维持无线连接。
-     */
-    public boolean eap$shouldKeepTicking() {
-        try {
-            // 仅在服务端保持tick
-            if (host.getBlockEntity() == null || host.getBlockEntity().getLevel() == null || host.getBlockEntity().getLevel().isClientSide) {
-                return false;
-            }
-            // 未初始化：需要继续tick直到初始化完成
-            if (!eap$compatHasInitialized) {
-                return true;
-            }
-            // 安装了 AppliedFlux：根据连接状态与频道卡存在性决定是否维持慢速tick
-            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                // 若曾经设置过频道或者当前存在未连通的链接，则保持tick
-                if (eap$compatLastChannel != 0L) {
-                    return true;
-                }
-                if (eap$compatLink != null && !eap$compatLink.isConnected()) {
-                    return true;
-                }
-                try {
-                    IUpgradeInventory afUpgrades = eap$getAppliedFluxUpgrades();
-                    if (afUpgrades != null && eap$hasChannelCard(afUpgrades)) {
-                        // 槽中有频道卡，保持tick以尽快完成连接
-                        return true;
-                    }
-                } catch (Throwable ignored) {}
-                // 否则可以休眠
-                return false;
-            }
-            // 未安装 AppliedFlux：当存在频道卡但连接尚未建立时保持tick
-            if (this.eap$compatUpgrades != null && eap$hasChannelCard(this.eap$compatUpgrades)) {
-                if (eap$compatLink == null || !eap$compatLink.isConnected()) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {}
-        return false;
-    }
-
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
     @Unique
     private boolean eap$hasChannelCard(IUpgradeInventory inventory) {
-        return eap$compatInventoryContains(inventory, ModItems.CHANNEL_CARD.get());
+        return this.eap$compatInventoryContains(inventory, ModItems.CHANNEL_CARD.get());
     }
 
     /**
@@ -471,14 +479,13 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Inject(method = "pushPattern", at = @At("RETURN"), cancellable = true)
     private void eap$compatAfterPushPattern(IPatternDetails patternDetails, KeyCounter[] inputHolder, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValueZ()) {
-            eap$compatTryVirtualCompletion(patternDetails);
+            this.eap$compatTryVirtualCompletion(patternDetails);
         }
     }
 
-
     @Unique
     private void eap$compatTryVirtualCompletion(IPatternDetails patternDetails) {
-        if (!eap$compatVirtualCraftingEnabled) {
+        if (!this.eap$compatVirtualCraftingEnabled) {
             return;
         }
 
@@ -531,7 +538,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                         }
                     }
                 }
-                continue;
             }
         }
     }
@@ -549,8 +555,8 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private void eap$compatSyncVirtualCraftingState() {
         try {
-            IUpgradeInventory upgrades = eap$compatGetEffectiveUpgrades();
-            this.eap$compatVirtualCraftingEnabled = eap$compatInventoryContains(upgrades, ModItems.VIRTUAL_CRAFTING_CARD.get());
+            IUpgradeInventory upgrades = this.eap$compatGetEffectiveUpgrades();
+            this.eap$compatVirtualCraftingEnabled = this.eap$compatInventoryContains(upgrades, ModItems.VIRTUAL_CRAFTING_CARD.get());
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 同步虚拟合成卡状态失败", t);
         }
@@ -562,14 +568,14 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
             upgrades = this.eap$compatUpgrades;
         } else {
-            upgrades = eap$getAppliedFluxUpgrades();
+            upgrades = this.eap$getAppliedFluxUpgrades();
         }
 
         if (upgrades == null || upgrades == UpgradeInventories.empty()) {
             if (upgrades != this.eap$compatUpgrades && this.eap$compatUpgrades != null) {
                 upgrades = this.eap$compatUpgrades;
             } else {
-                var fallback = eap$getAppliedFluxUpgrades();
+                var fallback = this.eap$getAppliedFluxUpgrades();
                 if (fallback != null) {
                     upgrades = fallback;
                 }

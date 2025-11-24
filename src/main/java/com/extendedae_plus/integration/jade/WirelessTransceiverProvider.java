@@ -2,9 +2,10 @@ package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
+import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
-import com.extendedae_plus.wireless.IWirelessEndpoint;
-import com.extendedae_plus.wireless.WirelessMasterRegistry;
+import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -37,7 +38,7 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                 var level = blockEntity.getServerLevel();
                 if (level != null) {
                     // 使用WirelessTeamUtil自动判断显示团队或玩家名称
-                    Component ownerName = com.extendedae_plus.util.WirelessTeamUtil.getNetworkOwnerName(level, placerId);
+                    Component ownerName = WirelessTeamUtil.getNetworkOwnerName(level, placerId);
                     data.putString("ownerName", ownerName.getString());
                 }
             }

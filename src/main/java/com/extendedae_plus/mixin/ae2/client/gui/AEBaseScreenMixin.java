@@ -13,13 +13,12 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
 import appeng.menu.slot.AppEngSlot;
-import com.extendedae_plus.api.ExPatternPageAccessor;
+import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,6 +38,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class AEBaseScreenMixin {
+
+    @Unique
+    private static int eap$getIntField(Object self, String name, int def) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Integer i) return i;
+            } catch (Throwable ignored) {}
+            c = c.getSuperclass();
+        }
+        return def;
+    }
+
+    @Unique
+    private static Font eap$getFont(Object self) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField("font");
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Font font) return font;
+            } catch (Throwable ignored) {}
+            c = c.getSuperclass();
+        }
+        return net.minecraft.client.Minecraft.getInstance().font;
+    }
 
     @Unique
     private ScreenStyle eap$getStyle(Object self) {
@@ -109,36 +138,6 @@ public abstract class AEBaseScreenMixin {
             cir.setReturnValue(true);
         } catch (Throwable ignored) {
         }
-    }
-
-    @Unique
-    private static int eap$getIntField(Object self, String name, int def) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField(name);
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Integer i) return i;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return def;
-    }
-
-    @Unique
-    private static Font eap$getFont(Object self) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField("font");
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Font font) return font;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return net.minecraft.client.Minecraft.getInstance().font;
     }
 
     /**
@@ -266,7 +265,7 @@ public abstract class AEBaseScreenMixin {
 
             int cur = 1;
             int max = 1;
-            if (self instanceof ExPatternPageAccessor accessor) {
+            if (self instanceof IExPatternPage accessor) {
                 cur = Math.max(0, accessor.eap$getCurrentPage()) + 1;
             }
             try {
@@ -281,7 +280,7 @@ public abstract class AEBaseScreenMixin {
 
             String pageText = "第" + cur + "页" + "/" + max + "页";
 
-            ScreenStyle style = eap$getStyle(self);
+            ScreenStyle style = this.eap$getStyle(self);
             int color = 0xFFFFFFFF;
             if (style != null) {
                 try {

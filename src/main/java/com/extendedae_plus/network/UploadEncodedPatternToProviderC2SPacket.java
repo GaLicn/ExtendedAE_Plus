@@ -1,7 +1,7 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -26,11 +26,6 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
         this.providerId = providerId;
     }
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
-
     public static void handle(final UploadEncodedPatternToProviderC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
@@ -45,5 +40,10 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
                 ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
             }
         });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }

@@ -23,7 +23,7 @@ public abstract class PatternProviderLogicVirtualCompletionMixin {
 
     @Inject(method = "pushPattern", at = @At("RETURN"))
     private void eap$advancedaeVirtualCompletion(IPatternDetails patternDetails, KeyCounter[] inputHolder,
-                                                CallbackInfoReturnable<Boolean> cir) {
+                                                 CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) {
             return;
         }

@@ -3,11 +3,11 @@ package com.extendedae_plus.content.wireless;
 import appeng.api.networking.*;
 import appeng.api.util.AECableType;
 import appeng.blockentity.AEBaseBlockEntity;
+import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
+import com.extendedae_plus.ae.wireless.WirelessMasterLink;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.wireless.IWirelessEndpoint;
-import com.extendedae_plus.wireless.WirelessMasterLink;
-import com.extendedae_plus.wireless.WirelessSlaveLink;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -60,6 +60,21 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         this.slaveLink = new WirelessSlaveLink(this);
     }
 
+    /* ===================== Tick ===================== */
+    static void serverTick(Level level, BlockPos pos, BlockState state, WirelessTransceiverBlockEntity be) {
+        if (!(level instanceof ServerLevel)) return;
+        if (!be.masterMode) {
+            // 从端需要周期检查与维护连接
+            be.slaveLink.updateStatus();
+        }
+    }
+
+    /* ===================== IInWorldGridNodeHost ===================== */
+    @Override
+    public @Nullable IGridNode getGridNode(Direction dir) {
+        return this.getGridNode();
+    }
+
     @Override
     public AECableType getCableConnectionType(Direction dir) {
         // 根据相邻方块的实际连接类型渲染（优先采用相邻主机返回的类型），回退为 GLASS。
@@ -74,12 +89,6 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         return AECableType.GLASS;
     }
 
-    /* ===================== IInWorldGridNodeHost ===================== */
-    @Override
-    public @Nullable IGridNode getGridNode(Direction dir) {
-        return getGridNode();
-    }
-
     /* ===================== IWirelessEndpoint ===================== */
     @Override
     public ServerLevel getServerLevel() {
@@ -88,13 +97,8 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     @Override
-    public BlockPos getBlockPos() {
-        return this.worldPosition;
-    }
-
-    @Override
     public IGridNode getGridNode() {
-        return managedNode == null ? null : managedNode.getNode();
+        return this.managedNode == null ? null : this.managedNode.getNode();
     }
 
     @Override
@@ -104,56 +108,61 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
 
     /* ===================== 公共方法（交互调用） ===================== */
     
+    @Override
+    public BlockPos getBlockPos() {
+        return this.worldPosition;
+    }
+    
     /**
      * 设置放置者UUID和名称（在方块放置时调用）
      */
-    public void setPlacerId(@Nullable UUID placerId, @Nullable String placerName) {
+    void setPlacerId(@Nullable UUID placerId, @Nullable String placerName) {
         if (this.placerId != null && !this.placerId.equals(placerId)) {
             // 如果所有者改变，需要重新注册
             if (this.masterMode) {
-                masterLink.onUnloadOrRemove();
+                this.masterLink.onUnloadOrRemove();
             } else {
-                slaveLink.onUnloadOrRemove();
+                this.slaveLink.onUnloadOrRemove();
             }
         }
         this.placerId = placerId;
         this.placerName = placerName;
         this.masterLink.setPlacerId(placerId);
         this.slaveLink.setPlacerId(placerId);
-        setChanged();
+        this.setChanged();
+    }
+    
+    @Nullable
+    public UUID getPlacerId() {
+        return this.placerId;
     }
     
     /**
      * 仅设置UUID（兼容旧代码）
      */
     public void setPlacerId(@Nullable UUID placerId) {
-        setPlacerId(placerId, null);
-    }
-    
-    @Nullable
-    public UUID getPlacerId() {
-        return placerId;
+        this.setPlacerId(placerId, null);
     }
     
     @Nullable
     public String getPlacerName() {
-        return placerName;
+        return this.placerName;
     }
-    
+
     public long getFrequency() {
-        return frequency;
+        return this.frequency;
     }
 
     public void setFrequency(long frequency) {
         if (this.locked) return;
         if (this.frequency == frequency) return;
         this.frequency = frequency;
-        if (isMasterMode()) {
-            masterLink.setFrequency(frequency);
+        if (this.isMasterMode()) {
+            this.masterLink.setFrequency(frequency);
         } else {
-            slaveLink.setFrequency(frequency);
+            this.slaveLink.setFrequency(frequency);
         }
-        setChanged();
+        this.setChanged();
     }
 
     /**
@@ -163,64 +172,55 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     public void setFrequencyForced(long frequency) {
         if (this.frequency == frequency) return;
         this.frequency = frequency;
-        if (isMasterMode()) {
-            masterLink.setFrequency(frequency);
+        if (this.isMasterMode()) {
+            this.masterLink.setFrequency(frequency);
         } else {
-            slaveLink.setFrequency(frequency);
+            this.slaveLink.setFrequency(frequency);
         }
-        setChanged();
+        this.setChanged();
     }
 
     public boolean isMasterMode() {
-        return masterMode;
+        return this.masterMode;
     }
 
-    public void setMasterMode(boolean masterMode) {
+    void setMasterMode(boolean masterMode) {
         if (this.locked) return;
         if (this.masterMode == masterMode) return;
         // 切换前清理原模式状态
         if (this.masterMode) {
-            masterLink.onUnloadOrRemove();
+            this.masterLink.onUnloadOrRemove();
         } else {
-            slaveLink.onUnloadOrRemove();
+            this.slaveLink.onUnloadOrRemove();
         }
         this.masterMode = masterMode;
         // 切换后应用频率
         if (this.masterMode) {
-            masterLink.setFrequency(frequency);
+            this.masterLink.setFrequency(this.frequency);
         } else {
-            slaveLink.setFrequency(frequency);
+            this.slaveLink.setFrequency(this.frequency);
         }
-        setChanged();
+        this.setChanged();
     }
 
     public boolean isLocked() {
-        return locked;
+        return this.locked;
     }
 
     public void setLocked(boolean locked) {
         if (this.locked == locked) return;
         this.locked = locked;
-        setChanged();
+        this.setChanged();
     }
 
-    public void onRemoved() {
+    void onRemoved() {
         if (this.masterMode) {
-            masterLink.onUnloadOrRemove();
+            this.masterLink.onUnloadOrRemove();
         } else {
-            slaveLink.onUnloadOrRemove();
+            this.slaveLink.onUnloadOrRemove();
         }
-        if (managedNode != null) {
-            managedNode.destroy();
-        }
-    }
-
-    /* ===================== Tick ===================== */
-    public static void serverTick(Level level, BlockPos pos, BlockState state, WirelessTransceiverBlockEntity be) {
-        if (!(level instanceof ServerLevel)) return;
-        if (!be.masterMode) {
-            // 从端需要周期检查与维护连接
-            be.slaveLink.updateStatus();
+        if (this.managedNode != null) {
+            this.managedNode.destroy();
         }
     }
 
@@ -228,7 +228,7 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     public void onLoad() {
         super.onLoad();
         // 仅服务端创建节点
-        ServerLevel sl = getServerLevel();
+        ServerLevel sl = this.getServerLevel();
         if (sl == null) return;
         // 在首个 tick 创建，以保证区块已就绪
         GridHelper.onFirstTick(this, be -> {
@@ -244,49 +244,49 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         });
     }
 
-    /* ===================== NBT ===================== */
-    @Override
-    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.putLong("frequency", frequency);
-        tag.putBoolean("master", masterMode);
-        tag.putBoolean("locked", locked);
-        if (placerId != null) {
-            tag.putUUID("placerId", placerId);
-        }
-        if (placerName != null) {
-            tag.putString("placerName", placerName);
-        }
-        if (managedNode != null) {
-            managedNode.saveToNBT(tag);
-        }
-    }
-
     @Override
     public void loadTag(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadTag(tag, registries);
         this.frequency = tag.getLong("frequency");
         this.masterMode = tag.getBoolean("master");
         this.locked = tag.getBoolean("locked");
-        
+
         if (tag.hasUUID("placerId")) {
             this.placerId = tag.getUUID("placerId");
             this.masterLink.setPlacerId(this.placerId);
             this.slaveLink.setPlacerId(this.placerId);
         }
-        
+
         if (tag.contains("placerName")) {
             this.placerName = tag.getString("placerName");
         }
 
-        if (managedNode != null) {
-            managedNode.loadFromNBT(tag);
+        if (this.managedNode != null) {
+            this.managedNode.loadFromNBT(tag);
         }
         // 应用到链接器
-        if (masterMode) {
-            masterLink.setFrequency(frequency);
+        if (this.masterMode) {
+            this.masterLink.setFrequency(this.frequency);
         } else {
-            slaveLink.setFrequency(frequency);
+            this.slaveLink.setFrequency(this.frequency);
+        }
+    }
+
+    /* ===================== NBT ===================== */
+    @Override
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.putLong("frequency", this.frequency);
+        tag.putBoolean("master", this.masterMode);
+        tag.putBoolean("locked", this.locked);
+        if (this.placerId != null) {
+            tag.putUUID("placerId", this.placerId);
+        }
+        if (this.placerName != null) {
+            tag.putString("placerName", this.placerName);
+        }
+        if (this.managedNode != null) {
+            this.managedNode.saveToNBT(tag);
         }
     }
 
@@ -297,15 +297,19 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         public void onSaveChanges(WirelessTransceiverBlockEntity host, IGridNode node) {
             host.setChanged();
         }
+
+        @Override
+        public void onInWorldConnectionChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
+
+        @Override
+        public void onOwnerChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
+
+        @Override
+        public void onGridChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
+
         @Override
         public void onStateChanged(WirelessTransceiverBlockEntity host, IGridNode node, State state) {
             // 可在此响应 POWER/CHANNEL 等变化，刷新显示等
         }
-        @Override
-        public void onInWorldConnectionChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
-        @Override
-        public void onGridChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
-        @Override
-        public void onOwnerChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
     }
 }
