@@ -118,3 +118,4 @@ tmp/
 libs/*
 !libs/ExtendedAE-1.20-1.4.2-forge.jar
 /src/generated/resources/.cache
+othermods
