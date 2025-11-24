@@ -19,6 +19,7 @@
   "item.extendedae_plus.network_pattern_controller": "样板供应器状态控制器",
   "item.extendedae_plus.assembler_matrix_upload_core": "装配矩阵上传核心",
   "item.extendedae_plus.channel_card": "频道卡",
+  "item.extendedae_plus.virtual_crafting_card": "虚拟合成卡",
   "item.extendedae_plus.channel_card.channel": "频道: %d",
   "item.extendedae_plus.channel_card.channel.unset": "频道: 未设置",
   "item.extendedae_plus.channel_card.set": "频道已设置为: %d",
@@ -78,9 +79,6 @@
   "config.jade.plugin_extendedae_plus.wt_network_usable": "显示网络在线状态",
   "config.jade.plugin_extendedae_plus.wt_channels": "显示频道使用情况",
   "config.jade.plugin_extendedae_plus.wt_owner": "显示所有者信息",
-  "extendedae_plus.tooltip.frequency": "频率: %d",
-  "extendedae_plus.tooltip.master_mode": "模式: %s",
-  "extendedae_plus.tooltip.locked": "锁定状态: %s",
 
   "screen.extendedae_plus.title": "ExtendedAE Plus 配置",
   "config.extendedae_plus": "ExtendedAE Plus",
@@ -118,7 +116,8 @@
   "extendedae_plus.tooltip.channels_of": "频道: %d / %d",
   "extendedae_plus.tooltip.frequency": "频率: %d",
   "extendedae_plus.tooltip.master_mode": "模式: %s",
-  "extendedae_plus.tooltip.locked": "状态: %s",
+  "extendedae_plus.tooltip.locked": "锁定状态: %s",
+  "extendedae_plus.tooltip.locked_state": "状态: %s",
 
   "gui.extendedae_plus.frequency_input.title": "设置频率",
   "gui.extendedae_plus.frequency_input.field": "频率",

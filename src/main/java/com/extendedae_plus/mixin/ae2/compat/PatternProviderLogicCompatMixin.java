@@ -1,22 +1,30 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
+import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IManagedGridNode;
+import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.security.IActionSource;
+import appeng.api.stacks.KeyCounter;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import com.extendedae_plus.ae.items.ChannelCardItem;
 import com.extendedae_plus.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.wireless.WirelessSlaveLink;
 import com.extendedae_plus.wireless.endpoint.GenericNodeEndpointImpl;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +33,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -52,6 +61,9 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private boolean eap$compatHasInitialized = false;
 
+    @Unique
+    private boolean eap$compatVirtualCraftingEnabled = false;
+
     @Final
     @Shadow
     private PatternProviderLogicHost host;
@@ -72,7 +84,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                 // 未安装AppliedFlux，我们需要提供升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
-                        host.getTerminalIcon().getItem(), 1, this::eap$compatOnUpgradesChanged);
+                        host.getTerminalIcon().getItem(), 2, this::eap$compatOnUpgradesChanged);
             } else {
                 // 安装了AppliedFlux，我们不提供升级槽，但保留空的兼容槽用于备用
                 this.eap$compatUpgrades = UpgradeInventories.empty();
@@ -92,6 +104,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             eap$compatLastChannel = -1;
             eap$compatHasInitialized = false;
             eap$compatInitializeChannelLink();
+            eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 兼容升级变更处理失败", t);
         }
@@ -136,6 +149,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             eap$compatLastChannel = -1;
             eap$compatHasInitialized = false;
             eap$compatInitializeChannelLink();
+            eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 读取兼容升级失败", t);
         }
@@ -260,6 +274,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
 
             if (!found) {
+                eap$compatSyncVirtualCraftingState();
                 if (eap$compatLink != null) {
                     eap$compatLink.setFrequency(0L);
                     eap$compatLink.updateStatus();
@@ -309,6 +324,8 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
                 });
             }
+
+            eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化频道链接失败", t);
         }
@@ -356,6 +373,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                                 eap$compatLastChannel = -1; // 强制重新初始化
                                 eap$compatHasInitialized = false;
                                 eap$compatInitializeChannelLink();
+                                eap$compatSyncVirtualCraftingState();
                             }
                             break;
                         }
@@ -365,6 +383,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     eap$compatLastChannel = -1;
                     eap$compatHasInitialized = false;
                     eap$compatInitializeChannelLink();
+                    eap$compatSyncVirtualCraftingState();
                 }
             } catch (Throwable t) {
             }
@@ -416,15 +435,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
     @Unique
     private boolean eap$hasChannelCard(IUpgradeInventory inventory) {
-        if (inventory == null) {
-            return false;
-        }
-        for (ItemStack stack : inventory) {
-            if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                return true;
-            }
-        }
-        return false;
+        return eap$compatInventoryContains(inventory, ModItems.CHANNEL_CARD.get());
     }
 
     /**
@@ -454,5 +465,118 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public IUpgradeInventory eap$getCompatUpgrades() {
         return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
+    }
+
+    @Inject(method = "pushPattern", at = @At("RETURN"), cancellable = true)
+    private void eap$compatAfterPushPattern(IPatternDetails patternDetails, KeyCounter[] inputHolder, CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValueZ()) {
+            eap$compatTryVirtualCompletion(patternDetails);
+        }
+    }
+
+
+    @Unique
+    private void eap$compatTryVirtualCompletion(IPatternDetails patternDetails) {
+        if (!eap$compatVirtualCraftingEnabled) {
+            return;
+        }
+
+        var node = this.mainNode.getNode();
+        if (node == null) {
+            return;
+        }
+
+        var grid = node.getGrid();
+        if (grid == null) {
+            return;
+        }
+
+        var craftingService = grid.getCraftingService();
+        if (craftingService == null) {
+            return;
+        }
+
+        for (ICraftingCPU cpu : craftingService.getCpus()) {
+            if (!cpu.isBusy()) {
+                continue;
+            }
+            if (cpu instanceof CraftingCPUCluster cluster) {
+                if (cluster.craftingLogic instanceof CraftingCpuLogicAccessor logicAccessor) {
+                    var job = logicAccessor.eap$getJob();
+                    if (job instanceof ExecutingCraftingJobAccessor accessor) {
+                        var tasks = accessor.eap$getTasks();
+                        var progress = tasks.get(patternDetails);
+                        if (progress == null && patternDetails != null) {
+                            var patternDefinition = patternDetails.getDefinition();
+                            for (var entry : tasks.entrySet()) {
+                                var taskPattern = entry.getKey();
+                                if (taskPattern == patternDetails) {
+                                    progress = entry.getValue();
+                                    break;
+                                }
+                                if (taskPattern != null && patternDefinition != null) {
+                                    var taskDefinition = taskPattern.getDefinition();
+                                    if (taskDefinition != null && taskDefinition.equals(patternDefinition)) {
+                                        progress = entry.getValue();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (progress != null && progress.eap$getValue() <= 1) {
+                            cluster.cancelJob();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Unique
+    private void eap$compatSyncVirtualCraftingState() {
+        try {
+            IUpgradeInventory upgrades = eap$compatGetEffectiveUpgrades();
+            this.eap$compatVirtualCraftingEnabled = eap$compatInventoryContains(upgrades, ModItems.VIRTUAL_CRAFTING_CARD.get());
+        } catch (Throwable t) {
+            ExtendedAELogger.LOGGER.error("[样板供应器] 同步虚拟合成卡状态失败", t);
+        }
+    }
+
+    @Unique
+    private IUpgradeInventory eap$compatGetEffectiveUpgrades() {
+        IUpgradeInventory upgrades;
+        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            upgrades = this.eap$compatUpgrades;
+        } else {
+            upgrades = eap$getAppliedFluxUpgrades();
+        }
+
+        if (upgrades == null || upgrades == UpgradeInventories.empty()) {
+            if (upgrades != this.eap$compatUpgrades && this.eap$compatUpgrades != null) {
+                upgrades = this.eap$compatUpgrades;
+            } else {
+                var fallback = eap$getAppliedFluxUpgrades();
+                if (fallback != null) {
+                    upgrades = fallback;
+                }
+            }
+        }
+
+        return upgrades;
+    }
+
+    @Unique
+    private boolean eap$compatInventoryContains(IUpgradeInventory inventory, Item item) {
+        if (inventory == null) {
+            return false;
+        }
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && stack.getItem() == item) {
+                return true;
+            }
+        }
+        return false;
     }
 }
