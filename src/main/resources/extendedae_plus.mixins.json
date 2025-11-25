@@ -62,7 +62,7 @@
     "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
-    "advancedae.client.gui.AdvPatternProviderScreenMixin",
+    "advancedae.client.gui.AdvPatternProviderSmartFeaturesMixin",
     "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",
     "ae2.QuartzCuttingKnifeItemMixin",
     "ae2.accessor.AEBaseScreenAccessor",
