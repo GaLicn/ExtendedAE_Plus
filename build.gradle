@@ -176,6 +176,9 @@ dependencies {
     runtimeOnly "curse.maven:ftb-library-forge-404465:7029003"
     runtimeOnly "curse.maven:architectury-api-419699:5786327"
 
+    //biggerae2
+   // runtimeOnly "curse.maven:bigger-ae2-1013772:6587078"
+
 
     runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 

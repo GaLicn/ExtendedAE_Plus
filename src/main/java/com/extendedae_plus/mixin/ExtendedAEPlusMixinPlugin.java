@@ -26,6 +26,14 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("net.pedroksl.advanced_ae.AdvancedAE");
 	}
 
+	private static boolean isUfoPresent() {
+		return isClassPresent("com.raishxn.ufo.UfoMod");
+	}
+
+	private static boolean isBiggerAePresent() {
+		return isClassPresent("cn.dancingsnow.bigger_ae2.BiggerAE2Mod");
+	}
+
 	@Override
 	public void onLoad(String mixinPackage) { }
 
@@ -41,6 +49,11 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		}
 		if (!isAdvancedAePresent()) {
 			if (mixinClassName.equals("com.extendedae_plus.mixin.advancedae.compat.PatternProviderLogicVirtualCompletionMixin")) {
+				return false;
+			}
+		}
+		if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.CraftingCPUClusterMixin")) {
+			if (isUfoPresent() || isBiggerAePresent()) {
 				return false;
 			}
 		}
