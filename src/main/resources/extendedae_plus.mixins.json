@@ -43,7 +43,6 @@
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.menu.AEBaseMenuUpgradesDedupMixin",
     "ae2.menu.ContainerPatternEncodingTermMenuMixin",
-    "ae2.menu.InterfaceMenuUpgradesMixin",
     "ae2.menu.MEStorageMenuMixin",
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
