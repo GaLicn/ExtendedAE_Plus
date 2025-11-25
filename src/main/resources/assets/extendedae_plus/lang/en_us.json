@@ -138,5 +138,11 @@
   "gui.tooltips.extendedae_plus.AccelerateBlacklisted": "Do not accelerate target block entities",
   "gui.tooltips.extendedae_plus.RedstoneControl": "Redstone Control",
   "gui.tooltips.extendedae_plus.RedstoneControlEnabled": "Control acceleration with redstone signal",
-  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "Ignore redstone signals"
+  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "Ignore redstone signals",
+  "gui.tooltips.extendedae_plus.AdvancedBlocking": "Smart Blocking",
+  "gui.tooltips.extendedae_plus.AdvancedBlockingEnabled": "Will not block the same recipe type (requires vanilla blocking mode enabled)",
+  "gui.tooltips.extendedae_plus.AdvancedBlockingDisabled": "Use vanilla blocking logic",
+  "gui.tooltips.extendedae_plus.SmartDoubling": "Smart Doubling",
+  "gui.tooltips.extendedae_plus.SmartDoublingEnabled": "Intelligently double processing patterns based on request quantity",
+  "gui.tooltips.extendedae_plus.SmartDoublingDisabled": "Distribute according to original pattern quantity"
 }

@@ -1,5 +1,7 @@
 package com.extendedae_plus.api.advancedBlocking;
 
+import appeng.api.config.YesNo;
+
 public interface IPatternProviderMenuAdvancedSync {
-    boolean eap$getAdvancedBlockingSynced();
+    YesNo eap$getAdvancedBlockingSynced();
 }
