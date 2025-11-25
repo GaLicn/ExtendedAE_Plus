@@ -2,6 +2,7 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
@@ -14,11 +15,15 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
 
 public final class InputEvents {
+	private static final Logger log = LoggerFactory.getLogger(InputEvents.class);
+
 	private InputEvents() {}
 
 	private static Optional<?> getIngredientUnderMouse() {
@@ -136,14 +141,18 @@ public final class InputEvents {
 	public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
 		if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
 
+		var screen = Minecraft.getInstance().screen;
+		if (!(screen instanceof MEStorageScreen<?> || screen instanceof GuiExPatternTerminal<?>)) {
+			return;
+		}
 		Optional<?> hovered = getIngredientUnderMouse();
-		if (hovered.isEmpty()) return;
+		if (hovered.isEmpty()) {
+			return;}
 
 		Object typed = hovered.get();
 		String name = getTypedIngredientDisplayName(typed);
-		if (name == null || name.isEmpty()) return;
-
-		var screen = Minecraft.getInstance().screen;
+		if (name == null || name.isEmpty()) {
+			return;}
 		if (screen instanceof MEStorageScreen<?> me) {
 			try {
 				MEStorageScreenAccessor acc = (MEStorageScreenAccessor) (Object) me;

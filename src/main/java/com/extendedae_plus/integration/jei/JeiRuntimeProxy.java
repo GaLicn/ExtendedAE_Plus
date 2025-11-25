@@ -24,6 +24,10 @@ public final class JeiRuntimeProxy {
 		RUNTIME = runtime;
 	}
 
+	private static Class<?> eap$getIngredientTypeClass() throws ClassNotFoundException {
+		return Class.forName("mezz.jei.api.ingredients.IIngredientType");
+	}
+
 	@Nullable
 	public static Object get() {
 		return RUNTIME;
@@ -55,16 +59,17 @@ public final class JeiRuntimeProxy {
 		Object rt = RUNTIME;
 		if (rt == null) return Optional.empty();
 		try {
+			Class<?> ingredientTypeClass = eap$getIngredientTypeClass();
 			Method getRecipesGui = rt.getClass().getMethod("getRecipesGui");
 			Object gui = getRecipesGui.invoke(rt);
 			if (gui == null) return Optional.empty();
 			Object ingredientManager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
 			Class<?> vanillaTypes = Class.forName("mezz.jei.api.constants.VanillaTypes");
 			Object itemType = vanillaTypes.getField("ITEM_STACK").get(null);
-			Method getUnder = gui.getClass().getMethod("getIngredientUnderMouse", itemType.getClass());
+			Method getUnder = gui.getClass().getMethod("getIngredientUnderMouse", ingredientTypeClass);
 			Object valueOpt = getUnder.invoke(gui, itemType);
 			if (!(valueOpt instanceof Optional<?> value) || value.isEmpty()) return Optional.empty();
-			Method createTyped = ingredientManager.getClass().getMethod("createTypedIngredient", itemType.getClass(), Object.class);
+			Method createTyped = ingredientManager.getClass().getMethod("createTypedIngredient", ingredientTypeClass, Object.class);
 			Object typedOpt = createTyped.invoke(ingredientManager, itemType, value.get());
 			return typedOpt instanceof Optional<?> o ? o : Optional.empty();
 		} catch (Throwable ignored) {}
@@ -87,10 +92,11 @@ public final class JeiRuntimeProxy {
 		Object rt = RUNTIME;
 		if (rt == null || typed == null) return "";
 		try {
+			Class<?> ingredientTypeClass = eap$getIngredientTypeClass();
 			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
 			Method getType = typed.getClass().getMethod("getType");
 			Object type = getType.invoke(typed);
-			Method getHelper = manager.getClass().getMethod("getIngredientHelper", type.getClass());
+			Method getHelper = manager.getClass().getMethod("getIngredientHelper", ingredientTypeClass);
 			Object helper = getHelper.invoke(manager, type);
 			Method getIngredient = typed.getClass().getMethod("getIngredient");
 			Object ingredient = getIngredient.invoke(typed);
@@ -144,9 +150,10 @@ public final class JeiRuntimeProxy {
 			Field f = overlay.getClass().getDeclaredField("bookmarkList");
 			f.setAccessible(true);
 			Object list = f.get(overlay);
+			Class<?> ingredientTypeClass = eap$getIngredientTypeClass();
 			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
 			Object itemType = Class.forName("mezz.jei.api.constants.VanillaTypes").getField("ITEM_STACK").get(null);
-			Method createTyped = manager.getClass().getMethod("createTypedIngredient", itemType.getClass(), Object.class);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", ingredientTypeClass, Object.class);
 			Object typedOpt = createTyped.invoke(manager, itemType, stack);
 			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
 				Object typed = opt.get();
@@ -174,9 +181,10 @@ public final class JeiRuntimeProxy {
 			Field f = overlay.getClass().getDeclaredField("bookmarkList");
 			f.setAccessible(true);
 			Object list = f.get(overlay);
+			Class<?> ingredientTypeClass = eap$getIngredientTypeClass();
 			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
 			Object fluidType = Class.forName("mezz.jei.api.neoforge.NeoForgeTypes").getField("FLUID_STACK").get(null);
-			Method createTyped = manager.getClass().getMethod("createTypedIngredient", fluidType.getClass(), Object.class);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", ingredientTypeClass, Object.class);
 			Object typedOpt = createTyped.invoke(manager, fluidType, fluidStack);
 			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
 				Object typed = opt.get();
@@ -203,6 +211,7 @@ public final class JeiRuntimeProxy {
 			Field f = overlay.getClass().getDeclaredField("bookmarkList");
 			f.setAccessible(true);
 			Object list = f.get(overlay);
+			Class<?> ingredientTypeClass = eap$getIngredientTypeClass();
 			Object manager = rt.getClass().getMethod("getIngredientManager").invoke(rt);
 			String mekanismJeiClass = "mekanism.client.recipe_viewer.jei.MekanismJEI";
 			Class<?> jeiCls = Class.forName(mekanismJeiClass);
@@ -212,7 +221,7 @@ public final class JeiRuntimeProxy {
 			}
 			if (typeField == null) return;
 			Object typeConst = typeField.get(null);
-			Method createTyped = manager.getClass().getMethod("createTypedIngredient", typeConst.getClass(), Object.class);
+			Method createTyped = manager.getClass().getMethod("createTypedIngredient", ingredientTypeClass, Object.class);
 			Object typedOpt = createTyped.invoke(manager, typeConst, chemicalStack);
 			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
 				Object typed = opt.get();
