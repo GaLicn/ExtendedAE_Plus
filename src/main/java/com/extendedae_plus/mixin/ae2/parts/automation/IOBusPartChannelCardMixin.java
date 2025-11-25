@@ -11,6 +11,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.nbt.CompoundTag;
+import java.util.UUID;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,6 +29,9 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
     
     @Unique
     private long eap$lastChannel = -1;
+    
+    @Unique
+    private UUID eap$lastOwner;
     
     @Unique
     private boolean eap$clientConnected = false;
@@ -94,16 +98,23 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
             IUpgradeInventory inv = this.getUpgrades();
             long channel = 0L;
             boolean found = false;
+            UUID owner = null;
             for (var stack : inv) {
                 if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                     channel = ChannelCardItem.getChannel(stack);
+                    owner = ChannelCardItem.getOwnerUUID(stack);
+                    if (owner == null) {
+                        owner = this.eap$getFallbackOwner();
+                    }
                     found = true;
                     break;
                 }
             }
 
             // 频道没有变化则跳过
-            if (this.eap$lastChannel == channel) {
+            boolean sameOwner = (this.eap$lastOwner == null && owner == null)
+                    || (this.eap$lastOwner != null && this.eap$lastOwner.equals(owner));
+            if (this.eap$link != null && this.eap$lastChannel == channel && sameOwner) {
                 return;
             }
             this.eap$lastChannel = channel;
@@ -112,11 +123,14 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
             if (!found) {
                 // 无频道卡则断开
                 if (this.eap$link != null) {
+                    this.eap$link.setPlacerId(null);
                     this.eap$link.setFrequency(0L);
                     this.eap$link.updateStatus();
                     // 立即通知客户端状态变化（断开连接无需延迟）
                     ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
                 }
+                this.eap$lastChannel = 0L;
+                this.eap$lastOwner = null;
                 return;
             }
 
@@ -128,13 +142,26 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
                 this.eap$link = new WirelessSlaveLink(endpoint);
             }
 
+            this.eap$link.setPlacerId(owner);
             this.eap$link.setFrequency(channel);
             this.eap$link.updateStatus();
+            this.eap$lastOwner = owner;
 
             // 通知客户端状态变化
             ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
         } catch (Exception e) {
             ExtendedAELogger.LOGGER.error("[服务端] IOBus 初始化频道链接失败", e);
         }
+    }
+
+    @Unique
+    private UUID eap$getFallbackOwner() {
+        try {
+            var node = ((IActionHost)(Object)this).getActionableNode();
+            if (node != null) {
+                return node.getOwningPlayerProfileId();
+            }
+        } catch (Throwable ignored) {}
+        return null;
     }
 }

@@ -9,6 +9,7 @@ import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import net.minecraft.world.item.ItemStack;
+import java.util.UUID;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,6 +30,8 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     private WirelessSlaveLink eap$link;
     @Unique
     private long eap$lastChannel = -1;
+    @Unique
+    private UUID eap$lastOwner;
     @Unique
     private boolean eap$clientConnected = false;
     @Unique
@@ -136,9 +139,14 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
         try {
             long channel = 0L;
             boolean found = false;
+            UUID owner = null;
             for (ItemStack stack : this.getUpgrades()) {
                 if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                     channel = ChannelCardItem.getChannel(stack);
+                    owner = ChannelCardItem.getOwnerUUID(stack);
+                    if (owner == null) {
+                        owner = this.eap$getFallbackOwner();
+                    }
                     found = true;
                     break;
                 }
@@ -147,10 +155,13 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
             if (!found) {
                 // 无频道卡：断开并视为初始化完成
                 if (this.eap$link != null) {
+                    this.eap$link.setPlacerId(null);
                     this.eap$link.setFrequency(0L);
                     this.eap$link.updateStatus();
                 }
                 this.eap$hasInitialized = true;
+                this.eap$lastChannel = 0L;
+                this.eap$lastOwner = null;
                 // 保存一次状态
                 try {
                     this.host.saveChanges();
@@ -165,13 +176,23 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 return;
             }
 
+            boolean sameOwner = (this.eap$lastOwner == null && owner == null)
+                    || (this.eap$lastOwner != null && this.eap$lastOwner.equals(owner));
+            if (this.eap$link != null && this.eap$lastChannel == channel && sameOwner) {
+                this.eap$hasInitialized = this.eap$link.isConnected();
+                return;
+            }
+
             if (this.eap$link == null) {
                 var endpoint = new InterfaceNodeEndpointImpl(this.host, () -> this.mainNode.getNode());
                 this.eap$link = new WirelessSlaveLink(endpoint);
             }
 
+            this.eap$link.setPlacerId(owner);
             this.eap$link.setFrequency(channel);
             this.eap$link.updateStatus();
+            this.eap$lastChannel = channel;
+            this.eap$lastOwner = owner;
             try {
                 this.host.saveChanges();
             } catch (Throwable ignored) {
@@ -239,5 +260,11 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
         }
     }
     
-    // eap$initializeChannelLink方法已在上面实现
+    @Unique
+    private UUID eap$getFallbackOwner() {
+        if (this.mainNode != null && this.mainNode.getNode() != null) {
+            return this.mainNode.getNode().getOwningPlayerProfileId();
+        }
+        return null;
+    }
 }

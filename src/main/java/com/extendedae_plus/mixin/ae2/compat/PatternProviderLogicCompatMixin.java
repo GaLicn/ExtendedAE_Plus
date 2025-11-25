@@ -36,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 样板供应器频道卡兼容实现：
@@ -54,6 +55,9 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Unique
     private long eap$compatLastChannel = -1;
+
+    @Unique
+    private UUID eap$compatLastOwner;
 
     @Unique
     private boolean eap$compatClientConnected = false;
@@ -102,6 +106,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         try {
             this.host.saveChanges();
             this.eap$compatLastChannel = -1;
+            this.eap$compatLastOwner = null;
             this.eap$compatHasInitialized = false;
             this.eap$compatInitializeChannelLink();
             this.eap$compatSyncVirtualCraftingState();
@@ -183,6 +188,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     private void eap$compatOnNodeChange(CallbackInfo ci) {
         try {
             this.eap$compatLastChannel = -1;
+            this.eap$compatLastOwner = null;
             this.eap$compatHasInitialized = false;
             // 直接初始化，不使用延迟
             this.eap$compatInitializeChannelLink();
@@ -244,6 +250,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                             long newChannel = ChannelCardItem.getChannel(stack);
                             if (newChannel != this.eap$compatLastChannel) {
                                 this.eap$compatLastChannel = -1; // 强制重新初始化
+                                this.eap$compatLastOwner = null;
                                 this.eap$compatHasInitialized = false;
                                 this.eap$compatInitializeChannelLink();
                                 this.eap$compatSyncVirtualCraftingState();
@@ -253,10 +260,13 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     }
                 } else if (this.eap$compatLastChannel != 0L) {
                     // 频道卡被移除
-                    this.eap$compatLastChannel = -1;
-                    this.eap$compatHasInitialized = false;
-                    this.eap$compatInitializeChannelLink();
-                    this.eap$compatSyncVirtualCraftingState();
+                    if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+                        this.eap$compatLastChannel = -1;
+                        this.eap$compatLastOwner = null;
+                        this.eap$compatHasInitialized = false;
+                        this.eap$compatInitializeChannelLink();
+                        this.eap$compatSyncVirtualCraftingState();
+                    }
                 }
             } catch (Throwable t) {
             }
@@ -324,6 +334,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
             long channel = 0L;
             boolean found = false;
+            UUID owner = null;
 
             IUpgradeInventory upgrades = null;
 
@@ -371,6 +382,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 for (ItemStack stack : upgrades) {
                     if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
                         channel = ChannelCardItem.getChannel(stack);
+                        owner = ChannelCardItem.getOwnerUUID(stack);
+                        if (owner == null) {
+                            owner = this.eap$getFallbackOwner();
+                        }
                         found = true;
                         break;
                     }
@@ -380,10 +395,12 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (!found) {
                 this.eap$compatSyncVirtualCraftingState();
                 if (this.eap$compatLink != null) {
+                    this.eap$compatLink.setPlacerId(null);
                     this.eap$compatLink.setFrequency(0L);
                     this.eap$compatLink.updateStatus();
                 }
                 this.eap$compatLastChannel = 0L;
+                this.eap$compatLastOwner = null;
                 this.eap$compatHasInitialized = true;
                 try {
                     this.host.saveChanges();
@@ -409,14 +426,25 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 return;
             }
 
+            boolean sameOwner = (this.eap$compatLastOwner == null && owner == null)
+                    || (this.eap$compatLastOwner != null && this.eap$compatLastOwner.equals(owner));
+            if (this.eap$compatLink != null && this.eap$compatLastChannel == channel && sameOwner) {
+                if (this.eap$compatLink.isConnected()) {
+                    this.eap$compatHasInitialized = true;
+                }
+                return;
+            }
+
             if (this.eap$compatLink == null) {
                 var endpoint = new GenericNodeEndpointImpl(() -> this.host.getBlockEntity(), () -> this.mainNode.getNode());
                 this.eap$compatLink = new WirelessSlaveLink(endpoint);
             }
 
+            this.eap$compatLink.setPlacerId(owner);
             this.eap$compatLink.setFrequency(channel);
             this.eap$compatLink.updateStatus();
             this.eap$compatLastChannel = channel; // 记录当前频道
+            this.eap$compatLastOwner = owner;
             try {
                 this.host.saveChanges();
             } catch (Throwable ignored) {
@@ -439,6 +467,14 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化频道链接失败", t);
         }
+    }
+
+    @Unique
+    private UUID eap$getFallbackOwner() {
+        if (this.mainNode != null && this.mainNode.getNode() != null) {
+            return this.mainNode.getNode().getOwningPlayerProfileId();
+        }
+        return null;
     }
 
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
