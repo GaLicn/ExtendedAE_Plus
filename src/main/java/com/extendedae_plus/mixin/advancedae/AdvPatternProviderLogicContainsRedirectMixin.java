@@ -25,14 +25,14 @@ public class AdvPatternProviderLogicContainsRedirectMixin {
         try {
             if (o instanceof ScaledProcessingPattern scaled) {
                 IPatternDetails base = scaled.getOriginal();
-                if (list.indexOf(base) != -1) {
+                if (list.contains(base)) {
                     return true;
                 }
             }
             // 使用 indexOf 避免再次触发对 List.contains 的 redirect（防止递归）
-            return list.indexOf(o) != -1;
+            return list.contains(o);
         } catch (Throwable t) {
-            return list.indexOf(o) != -1;
+            return list.contains(o);
         }
     }
 }

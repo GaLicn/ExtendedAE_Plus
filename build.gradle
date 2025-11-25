@@ -166,6 +166,7 @@ dependencies {
     runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
 
     //aea
+//    compileOnly "curse.maven:advancedae-1084104:6932981"
     implementation "curse.maven:advancedae-1084104:6932981"
 
     //geckolib
