@@ -5,6 +5,7 @@ import appeng.api.config.PowerMultiplier;
 import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.ticking.IGridTickable;
@@ -12,8 +13,10 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
+
 import appeng.api.parts.IPartModel;
 import appeng.api.storage.MEStorage;
+import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
@@ -23,16 +26,22 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.config.Settings;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.Logger;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
@@ -51,12 +60,16 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 实体加速器部件，用于加速目标方块实体的 tick 速率，消耗 AE 网络能量，支持加速卡和能量卡升级。
  * 灵感来源于 <a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>。
  */
-public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject {
+public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject,
+        IInterfaceWirelessLinkBridge {
+
     public static final ResourceLocation MODEL_BASE = new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
 
     @PartModels
@@ -92,6 +105,11 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     private int cachedEnergyCardCount = -1;          // 缓存的能量卡数量
     private BlockEntity cachedTarget = null;
     private BlockPos cachedTargetPos = null;
+    private WirelessSlaveLink wirelessLink;
+    private long lastChannelFrequency = -1L;
+    private UUID lastChannelOwner;
+    private boolean wirelessClientConnected = false;
+    private boolean wirelessPendingInit = true;
 
     /**
      * 构造函数，初始化部件并设置网络节点属性。
@@ -227,13 +245,16 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (menu != null) {
             menu.broadcastChanges();
         }
+
+        scheduleWirelessInit();
     }
 
     @Override
-    public void onNeighborChanged(BlockGetter level, BlockPos pos, BlockPos neighbor) {
-        super.onNeighborChanged(level, pos, neighbor);
-        // 当邻居方块变化时，更新红石状态
-        updateRedstoneState();
+    protected void onMainNodeStateChanged(IGridNodeListener.State reason) {
+        super.onMainNodeStateChanged(reason);
+        if (reason == IGridNodeListener.State.GRID_BOOT) {
+            scheduleWirelessInit();
+        }
     }
 
     /**
@@ -245,6 +266,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
+        handleWirelessLogic();
+
         if (!getAccelerateEnabled()) {
             return TickRateModulation.IDLE;
         }
@@ -489,6 +512,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         super.removeFromWorld();
         cachedTarget = null;
         cachedTargetPos = null;
+        if (wirelessLink != null) {
+            wirelessLink.onUnloadOrRemove();
+            wirelessLink = null;
+        }
     }
 
     // 获取红石信号状态
@@ -506,5 +533,144 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                     ? YesNo.YES
                     : YesNo.NO;
         }
+    }
+
+    private void handleWirelessLogic() {
+        if (!isServerEnvironmentReady()) {
+            return;
+        }
+        if (wirelessPendingInit) {
+            initializeWirelessLink();
+        } else {
+            eap$updateWirelessLink();
+        }
+    }
+
+    private boolean isServerEnvironmentReady() {
+        var be = getBlockEntity();
+        return be != null && be.getLevel() != null && !be.getLevel().isClientSide();
+    }
+
+    private void scheduleWirelessInit() {
+        wirelessPendingInit = true;
+    }
+
+    private void resetWirelessState() {
+        lastChannelFrequency = -1L;
+        lastChannelOwner = null;
+        scheduleWirelessInit();
+    }
+
+    private void initializeWirelessLink() {
+        if (!isServerEnvironmentReady()) {
+            return;
+        }
+
+        wirelessPendingInit = false;
+
+        try {
+            IUpgradeInventory upgrades = this.getUpgrades();
+            long channel = 0L;
+            UUID ownerUUID = null;
+            boolean found = false;
+            for (var stack : upgrades) {
+                if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                    channel = ChannelCardItem.getChannel(stack);
+                    ownerUUID = ChannelCardItem.getOwnerUUID(stack);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                disconnectWirelessLink();
+                return;
+            }
+
+            if (wirelessLink == null) {
+                var endpoint = new GenericNodeEndpointImpl(
+                        () -> {
+                            var host = this.getHost();
+                            return host != null ? host.getBlockEntity() : null;
+                        },
+                        this::getActionableNode
+                );
+                wirelessLink = new WirelessSlaveLink(endpoint);
+                Logger.EAP$LOGGER.debug("[服务端] EntitySpeedTicker 创建无线链接");
+            }
+
+            boolean changed = lastChannelFrequency != channel || !Objects.equals(lastChannelOwner, ownerUUID);
+
+            wirelessLink.setPlacerId(ownerUUID);
+            wirelessLink.setFrequency(channel);
+            wirelessLink.updateStatus();
+            lastChannelFrequency = channel;
+            lastChannelOwner = ownerUUID;
+
+            if (changed) {
+                markPartForUpdate();
+                Logger.EAP$LOGGER.debug("[服务端] EntitySpeedTicker 设置频道: {}, connected={}",
+                        channel, wirelessLink.isConnected());
+            }
+        } catch (Exception e) {
+            Logger.EAP$LOGGER.error("[服务端] EntitySpeedTicker 初始化频道链接失败", e);
+        }
+    }
+
+    private void disconnectWirelessLink() {
+        lastChannelFrequency = 0L;
+        lastChannelOwner = null;
+        if (wirelessLink != null) {
+            wirelessLink.setFrequency(0L);
+            wirelessLink.updateStatus();
+        }
+        markPartForUpdate();
+    }
+
+    private void markPartForUpdate() {
+        var host = this.getHost();
+        if (host != null) {
+            host.markForUpdate();
+        }
+    }
+
+    @Override
+    public void eap$updateWirelessLink() {
+        if (wirelessLink != null && isServerEnvironmentReady()) {
+            wirelessLink.updateStatus();
+        }
+    }
+
+    @Override
+    public boolean eap$isWirelessConnected() {
+        if (this.isClientSide()) {
+            return wirelessClientConnected;
+        }
+        return wirelessLink != null && wirelessLink.isConnected();
+    }
+
+    @Override
+    public void eap$setClientWirelessState(boolean connected) {
+        this.wirelessClientConnected = connected;
+    }
+
+    @Override
+    public boolean eap$hasTickInitialized() {
+        return !wirelessPendingInit;
+    }
+
+    @Override
+    public void eap$setTickInitialized(boolean initialized) {
+        this.wirelessPendingInit = !initialized;
+    }
+
+    @Override
+    public void eap$initializeChannelLink() {
+        scheduleWirelessInit();
+    }
+
+    @Override
+    public void eap$handleDelayedInit() {
+        handleWirelessLogic();
     }
 }
