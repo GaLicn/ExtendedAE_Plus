@@ -28,27 +28,27 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         int x = this.leftPos + (this.imageWidth - totalW3) / 2;
 
         // 行1：三个单项切换
-        addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_blocking"), b ->
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_blocking"), b ->
                 PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
-                        GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         this.menu.getBlockEntityPos()
                 ))).bounds(x, y, w, h).build());
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_adv_blocking"), b ->
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_adv_blocking"), b ->
                 PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
-                        GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
                         this.menu.getBlockEntityPos()
                 ))).bounds(x + w + s, y, w, h).build());
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_smart_doubling"), b ->
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.toggle_smart_doubling"), b ->
                 PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
-                        GlobalToggleProviderModesC2SPacket.Op.NOOP,
-                        GlobalToggleProviderModesC2SPacket.Op.TOGGLE,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.NOOP,
+                        GlobalToggleProviderModesC2SPacket.Operation.TOGGLE,
                         this.menu.getBlockEntityPos()
                 ))).bounds(x + (w + s) * 2, y, w, h).build());
 
@@ -57,21 +57,34 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         // 第二行：两列按钮，总宽并居中
         int totalW2 = w * 2 + s;
         int x2 = this.leftPos + (this.imageWidth - totalW2) / 2;
-        addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_on"), b ->
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_on"), b ->
                 PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
-                        GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
-                        GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
-                        GlobalToggleProviderModesC2SPacket.Op.SET_TRUE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_TRUE,
                         this.menu.getBlockEntityPos()
                 ))).bounds(x2, y2, w, h).build());
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_off"), b ->
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.extendedae_plus.global.all_off"), b ->
                 PacketDistributor.sendToServer(new GlobalToggleProviderModesC2SPacket(
-                        GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
-                        GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
-                        GlobalToggleProviderModesC2SPacket.Op.SET_FALSE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
+                        GlobalToggleProviderModesC2SPacket.Operation.SET_FALSE,
                         this.menu.getBlockEntityPos()
                 ))).bounds(x2 + w + s, y2, w, h).build());
+    }
+
+    @Override
+    public void render(net.minecraft.client.gui.GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(gfx, mouseX, mouseY, partialTicks);
+        super.render(gfx, mouseX, mouseY, partialTicks);
+        gfx.drawString(this.font, CUSTOM_TITLE, this.leftPos + 10, this.topPos + 8, 0xFFFFFF, false);
+    }
+
+    @Override
+    protected void renderLabels(net.minecraft.client.gui.GuiGraphics gfx, int mouseX, int mouseY) {
+        // 不绘制默认的玩家物品栏标题（例如“物品栏”），避免与自定义面板重叠
+        // 标题已在 render() 中手动绘制
     }
 
     @Override
@@ -91,18 +104,5 @@ public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPa
         gfx.fill(panelLeft, panelBottom - 1, panelRight, panelBottom, 0x80000000);
         gfx.fill(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x80FFFFFF);
         gfx.fill(panelRight - 1, panelTop, panelRight, panelBottom, 0x80000000);
-    }
-
-    @Override
-    public void render(net.minecraft.client.gui.GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(gfx, mouseX, mouseY, partialTicks);
-        super.render(gfx, mouseX, mouseY, partialTicks);
-        gfx.drawString(this.font, CUSTOM_TITLE, this.leftPos + 10, this.topPos + 8, 0xFFFFFF, false);
-    }
-
-    @Override
-    protected void renderLabels(net.minecraft.client.gui.GuiGraphics gfx, int mouseX, int mouseY) {
-        // 不绘制默认的玩家物品栏标题（例如“物品栏”），避免与自定义面板重叠
-        // 标题已在 render() 中手动绘制
     }
 }

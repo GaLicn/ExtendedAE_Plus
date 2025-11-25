@@ -9,8 +9,7 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
-import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
+import com.extendedae_plus.api.config.EAPSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -19,188 +18,244 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * C2S：全网批量切换样板供应器的三种模式：
- * - 阻挡模式（AE2 内置 BLOCKING_MODE 设置）
- * - 高级阻挡模式（IAdvancedBlocking mixin）
- * - 智能翻倍模式（ISmartDoubling mixin）
- *
- * 负载为三个操作码（各1字节），分别对应：blocking、advancedBlocking、smartDoubling。
+ * C2S 包：全局批量切换样板供应器的三种模式
+ *  - 普通阻挡模式（AE2 原生 BLOCKING_MODE）
+ *  - 高级阻挡模式
+ *  - 智能翻倍模式
+ * <p>
+ * 包体包含三个操作码（每个 1 byte）以及控制器方块位置，用于定位所属 ME 网络。
  */
 public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
+
     public static final Type<GlobalToggleProviderModesC2SPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "global_toggle_provider_modes"));
 
     public static final StreamCodec<FriendlyByteBuf, GlobalToggleProviderModesC2SPacket> STREAM_CODEC = StreamCodec.of(
-            (buf, pkt) -> {
-                buf.writeByte(pkt.opBlocking.id);
-                buf.writeByte(pkt.opAdvancedBlocking.id);
-                buf.writeByte(pkt.opSmartDoubling.id);
-                buf.writeBlockPos(pkt.controllerPos);
+            (buf, packet) -> {
+                buf.writeByte(packet.blockingModeOperation.id);
+                buf.writeByte(packet.advancedBlockingOperation.id);
+                buf.writeByte(packet.smartDoublingOperation.id);
+                buf.writeBlockPos(packet.controllerBlockPos);
             },
-            buf -> new GlobalToggleProviderModesC2SPacket(Op.byId(buf.readByte()), Op.byId(buf.readByte()), Op.byId(buf.readByte()), buf.readBlockPos())
+            buf -> new GlobalToggleProviderModesC2SPacket(
+                    Operation.byId(buf.readByte()),
+                    Operation.byId(buf.readByte()),
+                    Operation.byId(buf.readByte()),
+                    buf.readBlockPos())
     );
-    private final Op opBlocking;
-    private final Op opAdvancedBlocking;
-    private final Op opSmartDoubling;
-    private final BlockPos controllerPos;
-    public GlobalToggleProviderModesC2SPacket(Op opBlocking, Op opAdvancedBlocking, Op opSmartDoubling, BlockPos controllerPos) {
-        this.opBlocking = opBlocking;
-        this.opAdvancedBlocking = opAdvancedBlocking;
-        this.opSmartDoubling = opSmartDoubling;
-        this.controllerPos = controllerPos;
+
+    private final Operation blockingModeOperation;
+    private final Operation advancedBlockingOperation;
+    private final Operation smartDoublingOperation;
+
+    /**
+     * 发起请求的玩家的控制器位置，用于获取对应的 IGrid
+     */
+    private final BlockPos controllerBlockPos;
+
+    public GlobalToggleProviderModesC2SPacket(Operation blockingModeOperation,
+                                              Operation advancedBlockingOperation,
+                                              Operation smartDoublingOperation,
+                                              BlockPos controllerBlockPos) {
+        this.blockingModeOperation = blockingModeOperation;
+        this.advancedBlockingOperation = advancedBlockingOperation;
+        this.smartDoublingOperation = smartDoublingOperation;
+        this.controllerBlockPos = controllerBlockPos;
     }
 
-    public static void handle(final GlobalToggleProviderModesC2SPacket msg, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            if (!(ctx.player() instanceof ServerPlayer player)) return;
-            if (player == null) return;
+    public static void handle(final GlobalToggleProviderModesC2SPacket message, final IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (!(context.player() instanceof ServerPlayer player)) return;
 
-            // 从控制方块实体的 AE2 节点确定 AE 网络上下文
             var level = player.serverLevel();
-            var be = level.getBlockEntity(msg.controllerPos);
-            if (!(be instanceof IInWorldGridNodeHost host)) return;
-            var node = host.getGridNode(null);
-            if (node == null) return;
-            IGrid grid = node.getGrid();
+            var blockEntity = level.getBlockEntity(message.controllerBlockPos);
+            if (!(blockEntity instanceof IInWorldGridNodeHost gridNodeHost)) return;
+
+            var gridNode = gridNodeHost.getGridNode(null);
+            if (gridNode == null) return;
+
+            IGrid grid = gridNode.getGrid();
             if (grid == null) return;
 
-            int affected = applyToAllProviders(grid, msg);
-            // 向发起玩家反馈影响数量，便于判断按钮是否生效
-            player.displayClientMessage(Component.literal("E+ 全局切换已应用到 " + affected + " 个样板供应器"), true);
+            int affectedCount = applyToAllPatternProviders(grid, message);
+
+            // 给发起者一个短暂的行动条提示，方便知道本次操作实际影响了多少个供应器
+            player.displayClientMessage(
+                    Component.literal("E+ 全局切换已应用到 " + affectedCount + " 个样板供应器"),
+                    true);
         });
     }
 
-    private static int applyToAllProviders(IGrid grid, GlobalToggleProviderModesC2SPacket msg) {
-        int affected = 0;
-        // 去重集合，避免同一逻辑重复计数
-        Set<PatternProviderLogic> all = new HashSet<>();
+    /**
+     * 遍历当前 ME 网络中所有样板供应器（方块、零件、第三方实现），并应用切换操作
+     */
+    private static int applyToAllPatternProviders(IGrid grid, GlobalToggleProviderModesC2SPacket message) {
+        int affectedCount = 0;
+        // 用 Set 去重，因为同一个 Logic 实例可能被多种方式收集到
+        Set<PatternProviderLogic> uniqueLogics = new HashSet<>();
 
-        // 方块形式的样板供应器（全部/在线）
-        try {
-            Set<PatternProviderBlockEntity> blocksAll = grid.getMachines(PatternProviderBlockEntity.class);
-            Set<PatternProviderBlockEntity> blocksActive = grid.getActiveMachines(PatternProviderBlockEntity.class);
-            for (PatternProviderBlockEntity be : blocksAll) if (be != null && be.getLogic() != null) all.add(be.getLogic());
-            for (PatternProviderBlockEntity be : blocksActive) if (be != null && be.getLogic() != null) all.add(be.getLogic());
-        } catch (Throwable ignored) {}
+        // 1. AE2 原生的方块实体形式（Pattern Provider BlockEntity）
+        collectLogicsFromMachineSet(grid.getMachines(PatternProviderBlockEntity.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(PatternProviderBlockEntity.class), uniqueLogics);
 
-        // Part 形式的样板供应器（全部/在线）
-        try {
-            Set<PatternProviderPart> partsAll = grid.getMachines(PatternProviderPart.class);
-            Set<PatternProviderPart> partsActive = grid.getActiveMachines(PatternProviderPart.class);
-            for (PatternProviderPart part : partsAll) if (part != null && part.getLogic() != null) all.add(part.getLogic());
-            for (PatternProviderPart part : partsActive) if (part != null && part.getLogic() != null) all.add(part.getLogic());
-        } catch (Throwable ignored) {}
+        // 2. AE2 原生的电缆零件形式（Pattern Provider Part）
+        collectLogicsFromMachineSet(grid.getMachines(PatternProviderPart.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(PatternProviderPart.class), uniqueLogics);
 
-        // 兼容：任意实现了 PatternProviderLogicHost 的机器（例如 ExtendedAE 的 PartExPatternProvider）
-        try {
-            Set<PatternProviderLogicHost> hostsAll = grid.getMachines(PatternProviderLogicHost.class);
-            Set<PatternProviderLogicHost> hostsActive = grid.getActiveMachines(PatternProviderLogicHost.class);
-            for (PatternProviderLogicHost host : hostsAll) if (host != null && host.getLogic() != null) all.add(host.getLogic());
-            for (PatternProviderLogicHost host : hostsActive) if (host != null && host.getLogic() != null) all.add(host.getLogic());
-        } catch (Throwable ignored) {}
+        // 3. 任何实现了 PatternProviderLogicHost 接口的机器（包括 ExtendedAE 自己的扩展）
+        collectLogicsFromMachineSet(grid.getMachines(PatternProviderLogicHost.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(PatternProviderLogicHost.class), uniqueLogics);
 
-        // 兼容：显式匹配第三方具体类（通过反射），避免 AE2 仅按精确类型匹配导致 interface 不返回的问题
-        collectByClassName(grid, all, "com.glodblock.github.extendedae.common.parts.PartExPatternProvider");
-        collectByClassName(grid, all, "com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider");
+        // 4. 兼容 ExtendedAE（glodblock）自己的 ExPatternProvider（因为 AE2 的 getMachines 只按精确类匹配接口会漏）
+        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.parts.PartExPatternProvider");
+        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider");
 
-        for (PatternProviderLogic logic : all) {
-            if (applyToLogic(logic, msg)) affected++;
+        // 真正执行切换
+        for (PatternProviderLogic logic : uniqueLogics) {
+            if (applyOperationToLogic(logic, message)) {
+                affectedCount++;
+            }
         }
-        return affected;
+        return affectedCount;
     }
 
-    private static void collectByClassName(IGrid grid, Set<PatternProviderLogic> out, String className) {
-        try {
-            Class<?> cls = Class.forName(className);
-            // 收集全部与在线两类机器
-            Set<?> all = grid.getMachines((Class) cls);
-            Set<?> active = grid.getActiveMachines((Class) cls);
-            for (Object o : all) addLogicIfPresent(out, o);
-            for (Object o : active) addLogicIfPresent(out, o);
-        } catch (Throwable ignored) {}
+    /**
+     * 工具方法：把一个 Set<? extends SomeMachine> 中的 Logic 加入去重集合
+     */
+    private static void collectLogicsFromMachineSet(Set<?> machineSet, Set<PatternProviderLogic> target) {
+        if (machineSet == null) return;
+        for (Object obj : machineSet) {
+            addLogicIfPresent(target, obj);
+        }
     }
 
-    private static void addLogicIfPresent(Set<PatternProviderLogic> out, Object o) {
+    /**
+     * 通过反射兼容第三方精确类（防止接口匹配漏掉）
+     */
+    private static void collectByReflection(IGrid grid, Set<PatternProviderLogic> target, String className) {
         try {
-            if (o instanceof PatternProviderLogicHost host) {
-                var logic = host.getLogic();
-                if (logic != null) out.add(logic);
+            Class<?> clazz = Class.forName(className);
+            collectLogicsFromMachineSet(grid.getMachines(clazz), target);
+            collectLogicsFromMachineSet(grid.getActiveMachines(clazz), target);
+        } catch (Throwable ignored) {
+            // 如果类不存在（比如玩家没装 ExtendedAE）直接忽略
+        }
+    }
+
+    /**
+     * 从任意对象里尝试取出 PatternProviderLogic（兼容多种实现）
+     */
+    private static void addLogicIfPresent(Set<PatternProviderLogic> target, Object obj) {
+        if (obj == null) return;
+        try {
+            if (obj instanceof PatternProviderLogicHost host && host.getLogic() != null) {
+                target.add(host.getLogic());
                 return;
             }
-            // 兜底：若对象有 getLogic 方法且返回 PatternProviderLogic
-            var m = o.getClass().getMethod("getLogic");
-            Object ret = m.invoke(o);
-            if (ret instanceof PatternProviderLogic logic) out.add(logic);
-        } catch (Throwable ignored) {}
+            // 兜底反射调用 getLogic()
+            var method = obj.getClass().getMethod("getLogic");
+            Object result = method.invoke(obj);
+            if (result instanceof PatternProviderLogic logic) {
+                target.add(logic);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
-    private static boolean applyToLogic(PatternProviderLogic logic, GlobalToggleProviderModesC2SPacket msg) {
+    /**
+     * 对单个 PatternProviderLogic 应用本次包里携带的三种操作
+     */
+    private static boolean applyOperationToLogic(PatternProviderLogic logic, GlobalToggleProviderModesC2SPacket message) {
         if (logic == null) return false;
-        boolean changed = false;
-        // 1) 阻挡模式（AE2 内置设置）
-        if (msg.opBlocking != Op.NOOP) {
-            boolean current = safeIsBlocking(logic);
-            boolean target = computeTarget(current, msg.opBlocking);
-            var cm = logic.getConfigManager();
-            if (cm != null) {
-                cm.putSetting(Settings.BLOCKING_MODE, target ? YesNo.YES : YesNo.NO);
-                changed = changed || (current != target);
+        var configManager = logic.getConfigManager();
+        if (configManager == null) return false;
+
+        boolean anyChanged = false;
+
+        // 1. AE2 原生阻挡模式
+        if (message.blockingModeOperation != Operation.NOOP) {
+            boolean current = isBlockingModeEnabled(logic);
+            boolean target = calculateTargetState(current, message.blockingModeOperation);
+            configManager.putSetting(Settings.BLOCKING_MODE, target ? YesNo.YES : YesNo.NO);
+            anyChanged |= (current != target);
+        }
+
+        // 2. 高级阻挡模式
+        if (message.advancedBlockingOperation != Operation.NOOP) {
+            boolean current = configManager.getSetting(EAPSettings.ADVANCED_BLOCKING) == YesNo.YES;
+            boolean target = calculateTargetState(current, message.advancedBlockingOperation);
+            configManager.putSetting(EAPSettings.ADVANCED_BLOCKING, target ? YesNo.YES : YesNo.NO);
+            anyChanged |= (current != target);
+        }
+
+        // 3. 智能翻倍模式
+        if (message.smartDoublingOperation != Operation.NOOP) {
+            boolean current = configManager.getSetting(EAPSettings.SMART_DOUBLING) == YesNo.YES;
+            boolean target = calculateTargetState(current, message.smartDoublingOperation);
+            configManager.putSetting(EAPSettings.SMART_DOUBLING, target ? YesNo.YES : YesNo.NO);
+            anyChanged |= (current != target);
+        }
+
+        // 有改动时保存并让 AE2 同步到客户端
+        if (anyChanged) {
+            try {
+                logic.saveChanges();
+            } catch (Throwable ignored) {
             }
         }
-        // 2) 高级阻挡（mixin 接口）
-        if (msg.opAdvancedBlocking != Op.NOOP && logic instanceof IAdvancedBlocking adv) {
-            boolean current = adv.eap$getAdvancedBlocking();
-            boolean target = computeTarget(current, msg.opAdvancedBlocking);
-            adv.eap$setAdvancedBlocking(target);
-            changed = changed || (current != target);
-        }
-        // 3) 智能翻倍（mixin 接口）
-        if (msg.opSmartDoubling != Op.NOOP && logic instanceof ISmartDoubling sd) {
-            boolean current = sd.eap$getSmartDoubling();
-            boolean target = computeTarget(current, msg.opSmartDoubling);
-            sd.eap$setSmartDoubling(target);
-            changed = changed || (current != target);
-        }
-        // 保存更改并让 AE2 同步
-        if (changed) {
-            try { logic.saveChanges(); } catch (Throwable ignored) {}
-        }
-        return changed;
+        return anyChanged;
     }
 
-    private static boolean computeTarget(boolean current, Op op) {
-        return switch (op) {
+    /**
+     * 根据当前状态和操作码计算目标状态
+     */
+    private static boolean calculateTargetState(boolean currentValue, Operation operation) {
+        return switch (operation) {
             case SET_TRUE -> true;
             case SET_FALSE -> false;
-            case TOGGLE -> !current;
-            default -> current;
+            case TOGGLE -> !currentValue;
+            case NOOP -> currentValue;
         };
     }
 
-    private static boolean safeIsBlocking(PatternProviderLogic logic) {
-        try { return logic.isBlocking(); } catch (Throwable t) { return false; }
+    /**
+     * 安全获取 AE2 原生阻挡模式状态（防止旧版本抛异常）
+     */
+    private static boolean isBlockingModeEnabled(PatternProviderLogic logic) {
+        try {
+            return logic.isBlocking();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
-    public enum Op {
-        NOOP((byte) 0),
-        SET_TRUE((byte) 1),
-        SET_FALSE((byte) 2),
-        TOGGLE((byte) 3);
+    /**
+     * 操作类型枚举（对应客户端发来的 1 byte）
+     */
+    public enum Operation {
+        NOOP((byte) 0),      // 不执行任何操作
+        SET_TRUE((byte) 1),  // 强制开启
+        SET_FALSE((byte) 2), // 强制关闭
+        TOGGLE((byte) 3);    // 切换当前状态
+
         public final byte id;
 
-        Op(byte id) {this.id = id;}
+        Operation(byte id) {
+            this.id = id;
+        }
 
-        static Op byId(byte id) {
+        static Operation byId(byte id) {
             return switch (id) {
                 case 1 -> SET_TRUE;
                 case 2 -> SET_FALSE;
