@@ -7,10 +7,10 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.crafting.pattern.AEProcessingPattern;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,126 +18,163 @@ import java.util.Objects;
  * 缩放后的处理样板，结构完全模拟 AEProcessingPattern。
  * 保持 sparse/condensed/inputs 的一致性，同时保存原始样板。
  */
-public final class ScaledProcessingPattern implements IPatternDetails {
+public class ScaledProcessingPattern implements IPatternDetails {
+    protected final @NotNull IPatternDetails original;
+    protected final long multiplier;
 
-    private final AEProcessingPattern original;        // 原始样板引用
-    private final AEItemKey definition;                // 样板物品
-    private final List<GenericStack> sparseInputs;     // 缩放后的稀疏输入（List 以适配 1.21 API）
-    private final List<GenericStack> sparseOutputs;    // 缩放后的稀疏输出（List 以适配 1.21 API）
-    private final IInput[] inputs;                     // 缩放后的压缩输入
-    private final List<GenericStack> condensedOutputs; // 缩放后的压缩输出（List 以适配 1.21 API）
-
-    public ScaledProcessingPattern(
-            AEProcessingPattern original,
-            AEItemKey definition,
-            List<GenericStack> sparseInputs,
-            List<GenericStack> sparseOutputs,
-            IInput[] inputs,
-            List<GenericStack> condensedOutputs
-    ) {
-        this.original = Objects.requireNonNull(original);
-        this.definition = Objects.requireNonNull(definition);
-        this.sparseInputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseInputs)));
-        this.sparseOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(sparseOutputs)));
-        this.inputs = Objects.requireNonNull(inputs);
-        this.condensedOutputs = Collections.unmodifiableList(new ArrayList<>(Objects.requireNonNull(condensedOutputs)));
+    public ScaledProcessingPattern(@NotNull IPatternDetails original, long multiplier) {
+        if (multiplier <= 0) throw new IllegalArgumentException("multiplier must be > 0");
+        this.original = original;
+        this.multiplier = multiplier;
     }
 
-    /* -------------------- API 实现 -------------------- */
-
-    public AEProcessingPattern getOriginal() {
-        return this.original;
-    }
+    public @NotNull IPatternDetails getOriginal() {return this.original;}
 
     @Override
     public AEItemKey getDefinition() {
-        return this.definition;
+        return this.original.getDefinition();
     }
 
     @Override
     public IInput[] getInputs() {
-        return this.inputs;
-    }
-
-    @Override
-    public GenericStack getPrimaryOutput() {
-        if (!this.condensedOutputs.isEmpty()) return this.condensedOutputs.get(0);
-        return this.original.getPrimaryOutput();
+        IInput[] original = this.original.getInputs();
+        IInput[] scaled = new IInput[original.length];
+        for (int i = 0; i < original.length; i++) {
+            scaled[i] = new ScaledInput(original[i], this.multiplier);
+        }
+        return scaled;
     }
 
     @Override
     public List<GenericStack> getOutputs() {
-        return this.condensedOutputs;
+        var original = this.original.getOutputs();
+        List<GenericStack> scaled = new ArrayList<>(original.size());
+        for (GenericStack g : original) {
+            if (g != null) {
+                scaled.add(new GenericStack(g.what(), g.amount() * this.multiplier));
+            }
+        }
+        return scaled;
     }
 
     @Override
-    public boolean supportsPushInputsToExternalInventory() {
-        return this.original.supportsPushInputsToExternalInventory();
-    }
+    public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink sink) {
+        // 如果 sparseInputs 与 inputs 一一对应，则无需 reorder
+        if (((AEProcessingPattern) this.original).getSparseInputs().size() == this.original.getInputs().length) {
+            // AEProcessingPattern 的默认逻辑
+            IPatternDetails.super.pushInputsToExternalInventory(inputHolder, sink);
+            return;
+        }
 
-    @Override
-    public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink inputSink) {
-        // 保持和 AEProcessingPattern 一致，用 sparseInputs 驱动
-        if (this.sparseInputs.size() == this.inputs.length) {
-            IPatternDetails.super.pushInputsToExternalInventory(inputHolder, inputSink);
-        } else {
-            KeyCounter allInputs = new KeyCounter();
-            for (KeyCounter counter : inputHolder) {
-                allInputs.addAll(counter);
+        // 否则必须按 sparse 输入顺序推送
+        var allInputs = new KeyCounter();
+        for (var ctr : inputHolder) {
+            allInputs.addAll(ctr);
+        }
+
+        var sparse = this.getSparseInputs(); // 使用已缩放倍率的顺序表
+
+        for (var sparseInput : sparse) {
+            if (sparseInput == null) continue;
+
+            var key = sparseInput.what();
+            long amount = sparseInput.amount();
+
+            long available = allInputs.get(key);
+            if (available < amount) {
+                throw new IllegalStateException(
+                        "Expected " + amount + " of " + key + " but only " + available + " available"
+                );
             }
-            for (GenericStack sparseInput : this.sparseInputs) {
-                if (sparseInput != null) {
-                    AEKey key = sparseInput.what();
-                    long amount = sparseInput.amount();
-                    long available = allInputs.get(key);
-                    if (available < amount) {
-                        throw new RuntimeException("Expected at least %d of %s when pushing scaled pattern, but only %d available"
-                                .formatted(amount, key, available));
-                    }
-                    inputSink.pushInput(key, amount);
-                    allInputs.remove(key, amount);
-                }
-            }
+
+            sink.pushInput(key, amount);
+            allInputs.remove(key, amount);
         }
     }
 
-    public List<GenericStack> getSparseInputs() {
-        return this.sparseInputs;
+    protected List<GenericStack> getSparseInputs() {
+        var original = ((AEProcessingPattern) this.original).getSparseInputs();
+        List<GenericStack> scaled = new ArrayList<>(original.size());
+        for (GenericStack g : original) {
+            if (g != null) {
+                scaled.add(new GenericStack(g.what(), g.amount() * this.multiplier));
+            } else {
+                scaled.add(null); // 保持 null 位
+            }
+        }
+        return scaled;
     }
 
     public List<GenericStack> getSparseOutputs() {
-        return this.sparseOutputs;
+        var original = ((AEProcessingPattern) this.original).getSparseOutputs();
+        List<GenericStack> scaled = new ArrayList<>(original.size());
+        for (GenericStack g : original) {
+            if (g != null) {
+                scaled.add(new GenericStack(g.what(), g.amount() * this.multiplier));
+            } else {
+                scaled.add(null);
+            }
+        }
+        return scaled;
     }
 
-    /* -------------------- 缩放输入代理 -------------------- */
+    // equals / hashCode 必须包含 multiplier！不同倍率 = 不同 key
+    @Override
+    public int hashCode() {
+        int h = this.original.hashCode();
+        h = 31 * h + Long.hashCode(this.multiplier);
+        return h;
+    }
 
-    public static final class Input implements IPatternDetails.IInput {
-        private final GenericStack[] template;
-        private final long multiplier;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof ScaledProcessingPattern sp)) return false;
+        return sp.original.equals(this.original) && sp.multiplier == this.multiplier;
+    }
 
-        public Input(GenericStack[] template, long multiplier) {
-            this.template = template;
-            this.multiplier = multiplier;
-        }
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Scaled[Mult=")
+                .append(this.multiplier)
+                .append("] ");
+
+        sb.append("Inputs: [");
+        sb.append(String.join(", ",
+                java.util.Arrays.stream(this.original.getInputs())
+                        .filter(i -> i.getPossibleInputs() != null && i.getPossibleInputs().length > 0)
+                        .map(i -> {
+                            GenericStack stack = i.getPossibleInputs()[0];
+                            return stack.what() + "×" + i.getMultiplier();
+                        })
+                        .toArray(String[]::new)
+        ));
+        sb.append("] ");
+
+        sb.append("Outputs: [");
+        sb.append(String.join(", ",
+                this.original.getOutputs().stream()
+                        .filter(Objects::nonNull)
+                        .map(s -> s.what() + "×" + s.amount())
+                        .toArray(String[]::new)
+        ));
+        sb.append("]");
+
+        return sb.toString();
+    }
+
+
+    private record ScaledInput(IInput original, long multiplier) implements IInput {
+        @Override
+        public GenericStack[] getPossibleInputs() {return this.original.getPossibleInputs();}
 
         @Override
-        public GenericStack[] getPossibleInputs() {
-            return this.template;
-        }
+        public long getMultiplier() {return this.original.getMultiplier() * this.multiplier;}
 
         @Override
-        public long getMultiplier() {
-            return this.multiplier;
-        }
+        public boolean isValid(AEKey input, Level level) {return this.original.isValid(input, level);}
 
         @Override
-        public boolean isValid(AEKey input, Level level) {
-            return input.matches(this.template[0]);
-        }
-
-        @Override
-        public @Nullable AEKey getRemainingKey(AEKey template) {
-            return null;
-        }
+        public @Nullable AEKey getRemainingKey(AEKey template) {return this.original.getRemainingKey(template);}
     }
 }

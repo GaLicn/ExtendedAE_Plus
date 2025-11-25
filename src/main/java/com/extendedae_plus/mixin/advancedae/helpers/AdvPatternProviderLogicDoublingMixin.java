@@ -1,7 +1,6 @@
 package com.extendedae_plus.mixin.advancedae.helpers;
 
 import appeng.api.crafting.IPatternDetails;
-import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderLogicPatternsAccessor;
@@ -35,7 +34,7 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoubling {
         try {
             var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
             for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
+                if (details instanceof ISmartDoublingAwarePattern aware) {
                     aware.eap$setAllowScaling(value);
                 }
             }
@@ -63,7 +62,7 @@ public class AdvPatternProviderLogicDoublingMixin implements ISmartDoubling {
             var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
             boolean allow = this.eap$smartDoubling;
             for (IPatternDetails details : list) {
-                if (details instanceof AEProcessingPattern proc && proc instanceof ISmartDoublingAwarePattern aware) {
+                if (details instanceof ISmartDoublingAwarePattern aware) {
                     aware.eap$setAllowScaling(allow);
                 }
             }
