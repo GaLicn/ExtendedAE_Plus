@@ -1,6 +1,5 @@
 package com.extendedae_plus.ae.parts;
 
-
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.Setting;
@@ -27,10 +26,14 @@ import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
+import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
@@ -43,6 +46,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -51,14 +55,14 @@ import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Method;
+import java.util.UUID;
 
 /**
  * EntitySpeedTickerPart 是一个可升级的 AE2 部件<p>
  * 该部件可以加速目标方块实体的 tick 速率，消耗 AE 网络能量，并支持加速卡升级<p>
  * 功能受<a href="https://github.com/GilbertzRivi/crazyae2addons">Crazy AE2 Addons</a>启发
  */
-public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject {
+public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTickable, MenuProvider, IUpgradeableObject, InterfaceWirelessLinkBridge {
     private static final ResourceLocation MODEL_BASE = ResourceLocation.fromNamespaceAndPath(
             ExtendedAEPlus.MODID, "part/entity_speed_ticker_part");
     @PartModels
@@ -76,6 +80,12 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
     private YesNo networkEnergySufficient = YesNo.YES; // 网络能量是否充足
+    private WirelessSlaveLink wirelessLink;
+    private long lastChannel = -1;
+    private UUID lastOwner;
+    private boolean clientWirelessConnected = false;
+    private boolean hasInitializedWireless = false;
+    private int delayedInitTicks = 0;
 
     /**
      * 构造函数，初始化部件并设置网络节点属性。
@@ -235,6 +245,13 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      */
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
+        if (!this.isClientSide()) {
+            if (!this.hasInitializedWireless) {
+                this.initializeWirelessLink();
+            } else if (this.wirelessLink != null && this.lastChannel != 0L) {
+                this.wirelessLink.updateStatus();
+            }
+        }
         if (!this.isAccelerate()) {
             return TickRateModulation.IDLE;
         }
@@ -335,66 +352,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     /**
-     * 提取网络能量并更新状态，优先从 AE2 网络提取 AE 能量，不足时从磁盘提取 FE 能量。
-     *
-     * @param requiredPower 所需能量（AE 单位）
-     * @return 是否成功提取足够能量
-     */
-    private boolean extractPower(double requiredPower) {
-        IEnergyService energyService = this.getMainNode().getGrid().getEnergyService();
-        MEStorage storage = this.getMainNode().getGrid().getStorageService().getInventory();
-        IActionSource source = IActionSource.ofMachine(this);
-        boolean appFluxLoaded = ModList.get().isLoaded("appflux");
-        boolean preferDiskEnergy = appFluxLoaded && ModConfigs.PRIORITIZE_DISK_ENERGY.get();
-
-        // 如果 appflux 存在且优先磁盘能量，尝试提取 FE 能量
-        if (appFluxLoaded && preferDiskEnergy) {
-            if (this.tryExtractFE(energyService, storage, requiredPower, source)) {
-                return true;
-            }
-        }
-
-        // 尝试提取 AE 能量（当 appflux 不存在、优先 AE 能量或 FE 提取失败时）
-        double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated >= requiredPower) {
-            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-            boolean sufficient = extracted >= requiredPower;
-            this.setNetworkEnergySufficient(sufficient);
-            return sufficient;
-        }
-        this.setNetworkEnergySufficient(false);
-
-        // 如果 appflux 存在且优先 AE 能量，尝试提取 FE 能量作为备用
-        if (appFluxLoaded && !preferDiskEnergy) {
-            return this.tryExtractFE(energyService, storage, requiredPower, source);
-        }
-        return false;
-    }
-
-    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
-        try {
-            Class<?> helperClass = Class.forName("com.extendedae_plus.util.entitySpeed.FluxEnergyHelper");
-            Method extractMethod = helperClass.getMethod(
-                    "extractFE",
-                    IEnergyService.class,
-                    MEStorage.class,
-                    long.class,
-                    IActionSource.class
-            );
-            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
-            long feExtracted = (long) extractMethod.invoke(null, energyService, storage, feRequired, source);
-            if (feExtracted >= feRequired) {
-                this.setNetworkEnergySufficient(true);
-                return true;
-            }
-        } catch (Exception e) {
-            // 如果反射失败，视为 FE 不可用
-        }
-        this.setNetworkEnergySufficient(false);
-        return false;
-    }
-
-    /**
      * 执行加速 tick 操作。
      *
      * @param blockEntity 目标方块实体
@@ -477,5 +434,201 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
                                                       @NotNull Inventory playerInventory,
                                                       @NotNull Player player) {
         return new EntitySpeedTickerMenu(containerId, playerInventory, this);
+    }
+
+    @Override
+    public void upgradesChanged() {
+        super.upgradesChanged();
+        if (this.isClientSide()) {
+            return;
+        }
+        this.hasInitializedWireless = false;
+        this.lastChannel = -1;
+        this.lastOwner = null;
+        this.initializeWirelessLink();
+    }
+
+    @Override
+    public void eap$updateWirelessLink() {
+        if (this.isClientSide()) {
+            return;
+        }
+        if (this.wirelessLink != null) {
+            this.wirelessLink.updateStatus();
+        }
+    }
+
+    @Override
+    public boolean eap$isWirelessConnected() {
+        if (this.isClientSide()) {
+            return this.clientWirelessConnected;
+        }
+        return this.wirelessLink != null && this.wirelessLink.isConnected();
+    }
+
+    @Override
+    public void eap$setClientWirelessState(boolean connected) {
+        this.clientWirelessConnected = connected;
+    }
+
+    @Override
+    public boolean eap$hasTickInitialized() {
+        return this.hasInitializedWireless;
+    }
+
+    @Override
+    public void eap$setTickInitialized(boolean initialized) {
+        this.hasInitializedWireless = initialized;
+    }
+
+    @Override
+    public void eap$initializeChannelLink() {
+        this.initializeWirelessLink();
+    }
+
+    @Override
+    public void eap$handleDelayedInit() {
+        if (this.isClientSide()) {
+            return;
+        }
+        if (!this.hasInitializedWireless) {
+            this.initializeWirelessLink();
+            return;
+        }
+        if (this.delayedInitTicks > 0) {
+            this.delayedInitTicks--;
+            if (this.delayedInitTicks == 0 && this.wirelessLink != null && !this.wirelessLink.isConnected()) {
+                this.hasInitializedWireless = false;
+                this.initializeWirelessLink();
+            }
+        }
+    }
+
+    @Override
+    public boolean eap$shouldKeepTicking() {
+        if (this.isClientSide()) {
+            return false;
+        }
+        if (!this.hasInitializedWireless) {
+            return true;
+        }
+        if (this.lastChannel == 0L) {
+            return false;
+        }
+        return this.wirelessLink == null || !this.wirelessLink.isConnected();
+    }
+
+    private boolean extractPower(double requiredPower) {
+        if (requiredPower <= 0) {
+            return true;
+        }
+        try {
+            var node = this.getMainNode();
+            if (node == null || node.getGrid() == null) {
+                this.setNetworkEnergySufficient(false);
+                return false;
+            }
+            IEnergyService energyService = node.getGrid().getEnergyService();
+            double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+            if (simulated + 1e-6 < requiredPower) {
+                this.setNetworkEnergySufficient(false);
+                return false;
+            }
+            energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            this.setNetworkEnergySufficient(true);
+            return true;
+        } catch (Throwable ignored) {
+        }
+        this.setNetworkEnergySufficient(false);
+        return false;
+    }
+
+    private void initializeWirelessLink() {
+        if (this.isClientSide()) {
+            return;
+        }
+        var node = this.getMainNode();
+        if (node == null || node.getNode() == null) {
+            this.hasInitializedWireless = false;
+            return;
+        }
+
+        long channel = 0L;
+        UUID owner = null;
+        boolean found = false;
+        for (ItemStack stack : this.getUpgrades()) {
+            if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
+                channel = ChannelCardItem.getChannel(stack);
+                owner = ChannelCardItem.getOwnerUUID(stack);
+                if (owner == null) {
+                    owner = this.getFallbackOwner();
+                }
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            this.disconnectWirelessLink();
+            this.lastChannel = 0L;
+            this.lastOwner = null;
+            this.hasInitializedWireless = true;
+            this.delayedInitTicks = 0;
+            try {
+                this.getHost().markForUpdate();
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
+
+        boolean sameOwner = (this.lastOwner == null && owner == null)
+                || (this.lastOwner != null && this.lastOwner.equals(owner));
+        if (this.wirelessLink != null && this.lastChannel == channel && sameOwner) {
+            if (this.wirelessLink.isConnected()) {
+                this.hasInitializedWireless = true;
+            } else {
+                this.delayedInitTicks = Math.max(this.delayedInitTicks, 5);
+            }
+            return;
+        }
+
+        if (this.wirelessLink == null) {
+            var endpoint = new GenericNodeEndpointImpl(
+                    () -> this.getHost().getBlockEntity(),
+                    () -> this.getMainNode().getNode()
+            );
+            this.wirelessLink = new WirelessSlaveLink(endpoint);
+        }
+
+        this.wirelessLink.setPlacerId(owner);
+        this.wirelessLink.setFrequency(channel);
+        this.wirelessLink.updateStatus();
+        this.lastChannel = channel;
+        this.lastOwner = owner;
+        this.hasInitializedWireless = this.wirelessLink.isConnected();
+        if (!this.hasInitializedWireless) {
+            this.delayedInitTicks = 5;
+        } else {
+            this.delayedInitTicks = 0;
+        }
+        try {
+            this.getHost().markForUpdate();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private void disconnectWirelessLink() {
+        if (this.wirelessLink != null) {
+            this.wirelessLink.setPlacerId(null);
+            this.wirelessLink.setFrequency(0L);
+            this.wirelessLink.updateStatus();
+        }
+    }
+
+    private UUID getFallbackOwner() {
+        if (this.getMainNode() != null && this.getMainNode().getNode() != null) {
+            return this.getMainNode().getNode().getOwningPlayerProfileId();
+        }
+        return null;
     }
 }
