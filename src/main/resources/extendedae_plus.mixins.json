@@ -72,6 +72,7 @@
     "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.InterfaceScreenMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.client.gui.PatternEncodingTermUploadMixin",
     "ae2.client.gui.PatternProviderCloseMixin",
     "ae2.client.gui.PatternProviderScreenMixin",
     "ae2.client.gui.PatternProviderScreenUpgradesMixin",

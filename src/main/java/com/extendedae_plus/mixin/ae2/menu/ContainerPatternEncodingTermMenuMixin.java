@@ -4,6 +4,7 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
+import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
@@ -26,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder {
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync {
 
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
@@ -34,8 +35,25 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @Unique
     private Player epp$player;
 
+    @Unique
+    private boolean eap$pendingShiftUpload;
+
     @Shadow(remap = false)
     private RestrictedInputSlot encodedPatternSlot;
+
+    @Unique
+    @Override
+    public void eap$clientSetShiftUpload(boolean shiftDown) {
+        this.eap$pendingShiftUpload = shiftDown;
+    }
+
+    @Unique
+    @Override
+    public boolean eap$consumeShiftUploadFlag() {
+        boolean flag = this.eap$pendingShiftUpload;
+        this.eap$pendingShiftUpload = false;
+        return flag;
+    }
 
     @Unique
     private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
@@ -84,6 +102,9 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         try {
             if (!(this.epp$player instanceof ServerPlayer sp)) {
                 return; // 仅服务器执行
+            }
+            if (!this.eap$consumeShiftUploadFlag()) {
+                return; // 未按下 Shift，不自动上传
             }
             var menu = (PatternEncodingTermMenu) (Object) this;
             if (menu.getMode() != EncodingMode.CRAFTING

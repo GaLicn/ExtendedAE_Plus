@@ -33,14 +33,13 @@ displayURL = "https://github.com/GaLicn/ExtendedAE_Plus"
 logoFile="logo.png"
 
 # A text field displayed in the mod UI
-#credits="" #optional
+credits="GaLi,C-H716"
 
 # A text field displayed in the mod UI
 authors = "GaLi" #optional
 
 # The description text for the mod (multi line!) (#mandatory)
-description = '''Add more practical features and auxiliary operations to the Applied Energistics 2 mod. 
-Special thanks to contributor C-H716.'''
+description = '''Add more practical features and auxiliary operations to the Applied Energistics 2 mod.'''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 [[mixins]]
