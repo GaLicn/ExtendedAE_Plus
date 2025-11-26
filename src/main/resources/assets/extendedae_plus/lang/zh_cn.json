@@ -137,5 +137,12 @@
 
   "gui.tooltips.extendedae_plus.RedstoneControl": "红石控制",
   "gui.tooltips.extendedae_plus.RedstoneControlEnabled": "使用红石信号控制加速",
-  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "忽略红石信号"
+  "gui.tooltips.extendedae_plus.RedstoneControlDisabled": "忽略红石信号",
+
+  "gui.tooltips.extendedae_plus.advanced_blocking.title": "智能阻挡",
+  "gui.tooltips.extendedae_plus.advanced_blocking.enabled": "已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)",
+  "gui.tooltips.extendedae_plus.advanced_blocking.disabled": "已禁用：这么好的功能为什么不打开呢",
+  "gui.tooltips.extendedae_plus.smart_doubling.title": "智能翻倍",
+  "gui.tooltips.extendedae_plus.smart_doubling.enabled": "已启用：根据请求量对处理样板进行智能缩放",
+  "gui.tooltips.extendedae_plus.smart_doubling.disabled": "已禁用：按原始样板数量进行发配"
 }

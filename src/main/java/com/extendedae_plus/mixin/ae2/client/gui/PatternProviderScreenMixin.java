@@ -72,10 +72,11 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             @Override
             public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
                 boolean enabled = PatternProviderScreenMixin.this.eap$AdvancedBlockingEnabled;
-                var title = net.minecraft.network.chat.Component.literal("智能阻挡");
-                var line = enabled
-                        ? net.minecraft.network.chat.Component.literal("已启用：对于同一种配方将不再阻挡(需要开启原版的阻挡模式)")
-                        : net.minecraft.network.chat.Component.literal("已禁用：这么好的功能为什么不打开呢");
+                var title = net.minecraft.network.chat.Component.translatable("gui.tooltips.extendedae_plus.advanced_blocking.title");
+                var line = net.minecraft.network.chat.Component.translatable(
+                    enabled ? "gui.tooltips.extendedae_plus.advanced_blocking.enabled" 
+                           : "gui.tooltips.extendedae_plus.advanced_blocking.disabled"
+                );
                 return java.util.List.of(title, line);
             }
         };
@@ -106,10 +107,11 @@ public abstract class PatternProviderScreenMixin<C extends PatternProviderMenu> 
             @Override
             public java.util.List<net.minecraft.network.chat.Component> getTooltipMessage() {
                 boolean enabled = PatternProviderScreenMixin.this.eap$SmartDoublingEnabled;
-                var title = net.minecraft.network.chat.Component.literal("智能翻倍");
-                var line = enabled
-                        ? net.minecraft.network.chat.Component.literal("已启用：根据请求量对处理样板进行智能缩放")
-                        : net.minecraft.network.chat.Component.literal("已禁用：按原始样板数量进行发配");
+                var title = net.minecraft.network.chat.Component.translatable("gui.tooltips.extendedae_plus.smart_doubling.title");
+                var line = net.minecraft.network.chat.Component.translatable(
+                    enabled ? "gui.tooltips.extendedae_plus.smart_doubling.enabled" 
+                           : "gui.tooltips.extendedae_plus.smart_doubling.disabled"
+                );
                 return java.util.List.of(title, line);
             }
         };
