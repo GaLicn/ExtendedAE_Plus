@@ -61,7 +61,7 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     @Override
-    public appeng.api.util.AECableType getCableConnectionType(Direction dir) {
+    public AECableType getCableConnectionType(Direction dir) {
         // 根据相邻方块的实际连接类型渲染（优先采用相邻主机返回的类型），回退为 GLASS。
         if (this.level == null) return AECableType.GLASS;
         var adjacentPos = this.worldPosition.relative(dir);

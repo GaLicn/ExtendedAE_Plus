@@ -8,8 +8,9 @@ displayURL="https://github.com/GaLicn/ExtendedAE_Plus"
 issueTrackerURL = "https://github.com/GaLicn/ExtendedAE_Plus/issues"
 version = "${version}"
 displayName = "ExtendedAE Plus"
-authors = "GaLi, C-H716"
-description = "Add more practical features and auxiliary operations to the Applied Energistics 2 mod"
+credits = "GaLi,C-H716"
+authors = "GaLi"
+description = "Add more practical features and auxiliary operations to the Applied Energistics 2 mod."
 logoFile = "extendedae_plus.png"
 
 [[dependencies.extendedae_plus]]
