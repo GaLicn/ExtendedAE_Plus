@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [1.4.6]
+
+### Added / 新增
+- 添加虚拟合成卡，可在供应器升级槽中终止即将完成的合成
+  - Added the Virtual Crafting Card, allowing providers to abort near-finished jobs from their upgrade slot
+- 为实体加速器提供红石控制模式，支持信号启停
+  - Added redstone control support for the Entity Accelerator, enabling signal-based start/stop
+- 新增“中间下单”功能，允许直接在合成计划中插入新的订单
+  - Added the mid-order feature so new requests can be inserted directly into ongoing crafting plans
+- 样板编码终端上传至装配矩阵需按住 Shift 点击编码按钮才会触发
+  - Uploading crafting patterns to the Assembler Matrix now only triggers when Shift is held during encoding
+
+### Fixed / 修复
+- 修复吞噬盘与 AppFlux 联动配方异常的问题
+  - Fixed the Devouring Disk recipe integration issue with AppFlux
+- 修复合成计划界面与 ExtendedAE 冲突导致显示异常的问题
+  - Fixed visual conflicts between the crafting plan screen and ExtendedAE features
+
 ## [1.4.5]
 
 ### Added / 新增
