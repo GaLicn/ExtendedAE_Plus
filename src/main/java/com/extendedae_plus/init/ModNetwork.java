@@ -7,6 +7,7 @@ import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
 import com.extendedae_plus.network.provider.*;
+import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -46,6 +47,12 @@ public final class ModNetwork {
                 .encoder(PullFromJeiOrCraftC2SPacket::encode)
                 .decoder(PullFromJeiOrCraftC2SPacket::decode)
                 .consumerNetworkThread(PullFromJeiOrCraftC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(EncodeWithShiftFlagC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(EncodeWithShiftFlagC2SPacket::encode)
+                .decoder(EncodeWithShiftFlagC2SPacket::decode)
+                .consumerNetworkThread(EncodeWithShiftFlagC2SPacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(UploadEncodedPatternToProviderC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)

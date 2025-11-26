@@ -1,24 +1,29 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
+import appeng.api.config.ActionItems;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
+import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.IconButton;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -31,6 +36,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class PatternEncodingTermScreenMixin {
 
     @Unique private IconButton eap$uploadBtn;
+
+    @ModifyVariable(method = "<init>", at = @At(value = "STORE"), ordinal = 0)
+    private ActionButton eap$wrapEncodeButton(ActionButton original) {
+        return new ActionButton(ActionItems.ENCODE, act -> {
+            ModNetwork.CHANNEL.sendToServer(new EncodeWithShiftFlagC2SPacket(Screen.hasShiftDown()));
+            var screen = (PatternEncodingTermScreen<?>) (Object) this;
+            screen.getMenu().encode();
+        });
+    }
 
     // 只创建按钮
     @Inject(method = "<init>", at = @At("TAIL"))
