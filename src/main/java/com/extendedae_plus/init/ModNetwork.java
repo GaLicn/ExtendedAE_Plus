@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.*;
 import com.extendedae_plus.network.packet.EAPConfigButtonPacket;
+import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public class ModNetwork {
@@ -21,6 +22,7 @@ public class ModNetwork {
         registrar.playToServer(OpenProviderUiC2SPacket.TYPE, OpenProviderUiC2SPacket.STREAM_CODEC, OpenProviderUiC2SPacket::handle);
         registrar.playToServer(UploadEncodedPatternToProviderC2SPacket.TYPE, UploadEncodedPatternToProviderC2SPacket.STREAM_CODEC, UploadEncodedPatternToProviderC2SPacket::handle);
         registrar.playToServer(UploadInventoryPatternToProviderC2SPacket.TYPE, UploadInventoryPatternToProviderC2SPacket.STREAM_CODEC, UploadInventoryPatternToProviderC2SPacket::handle);
+        registrar.playToServer(EncodeWithShiftFlagC2SPacket.TYPE, EncodeWithShiftFlagC2SPacket.STREAM_CODEC, EncodeWithShiftFlagC2SPacket::handle);
         // 新增：JEI 中键打开合成界面 & 无线终端拾取方块物品
         registrar.playToServer(com.extendedae_plus.network.OpenCraftFromJeiC2SPacket.TYPE,
                 com.extendedae_plus.network.OpenCraftFromJeiC2SPacket.STREAM_CODEC,

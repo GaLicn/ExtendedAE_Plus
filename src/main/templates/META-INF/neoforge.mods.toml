@@ -33,7 +33,7 @@ displayURL = "https://github.com/GaLicn/ExtendedAE_Plus"
 logoFile="logo.png"
 
 # A text field displayed in the mod UI
-#credits="" #optional
+credits="C-H716"
 
 # A text field displayed in the mod UI
 authors = "${mod_authors}" #optional
