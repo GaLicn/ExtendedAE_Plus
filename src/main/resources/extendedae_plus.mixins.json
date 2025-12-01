@@ -87,6 +87,7 @@
     "appflux.AppfluxPatternProviderLogicMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
+    "extendedae.container.ContainerAssemblerMatrixPatternSlotTrackerMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",

@@ -14,6 +14,7 @@ import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraftforge.fml.ModList;
 
 /**
  * 客户端模型注册，将 formed 模型注册为内置模型。
@@ -68,6 +69,18 @@ public final class ClientRegistrar {
         InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
                 EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
                 "/screens/entity_speed_ticker.json");
+        registerExtendedAEScreens();
+    }
+
+    private static void registerExtendedAEScreens() {
+        try {
+            InitScreens.register(
+                    com.glodblock.github.extendedae.container.ContainerExPatternProvider.TYPE,
+                    com.glodblock.github.extendedae.client.gui.GuiExPatternProvider::new,
+                    "/screens/ex_pattern_provider.json"
+            );
+        } catch (Throwable ignored) {
+        }
     }
 
     /**
