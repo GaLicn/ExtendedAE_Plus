@@ -4,6 +4,7 @@
     "extendedae_plus:network_pattern_controller",
     "extendedae_plus:wireless_transceiver",
     "extendedae_plus:assembler_matrix_upload_core",
+    "extendedae_plus:assembler_matrix_speed_plus",
     "extendedae_plus:4x_crafting_accelerator",
     "extendedae_plus:16x_crafting_accelerator",
     "extendedae_plus:64x_crafting_accelerator",
