@@ -24,6 +24,9 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get());
                         //超级装配矩阵合成核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get());
+                        //超级装配矩阵样板核心
+                        output.accept(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get());
+
 
                         //实体加速器&加速卡
                         output.accept(ModItems.CRAFTING_ACCELERATOR_4x.get());

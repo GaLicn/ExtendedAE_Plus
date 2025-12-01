@@ -6,6 +6,7 @@ import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
@@ -95,6 +96,14 @@ public class ExtendedAEPlus {
                     null,
                     null
             );
+
+            ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
+                    PatternCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
         });
     }
 

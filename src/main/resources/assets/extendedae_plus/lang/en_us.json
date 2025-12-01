@@ -69,6 +69,7 @@
   "block.extendedae_plus.assembler_matrix_upload_core": "Assembler Matrix Upload Core",
   "block.extendedae_plus.assembler_matrix_speed_plus": "Assembler Matrix Speed Core Plus",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "Assembler Matrix Crafter Core Plus",
+  "block.extendedae_plus.assembler_matrix_pattern_plus": "Assembler Matrix Pattern Core Plus",
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern uploaded to the assembly matrix",
