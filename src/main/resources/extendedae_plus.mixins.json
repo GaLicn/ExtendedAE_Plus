@@ -33,7 +33,8 @@
     "minecraft.ModelBakeryMixin",
     "minecraft.PickFromWirelessMixin",
     "minecraft.accessor.AbstractContainerScreenAccessor",
-    "minecraft.accessor.ScreenAccessor"
+    "minecraft.accessor.ScreenAccessor",
+    "extendedae.client.gui.GuiAssemblerMatrixPatternInfoMixin"
   ],
   "mixins": [
     "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
