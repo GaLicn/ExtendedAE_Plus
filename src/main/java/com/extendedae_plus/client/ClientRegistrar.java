@@ -69,18 +69,6 @@ public final class ClientRegistrar {
         InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
                 EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
                 "/screens/entity_speed_ticker.json");
-        registerExtendedAEScreens();
-    }
-
-    private static void registerExtendedAEScreens() {
-        try {
-            InitScreens.register(
-                    com.glodblock.github.extendedae.container.ContainerExPatternProvider.TYPE,
-                    com.glodblock.github.extendedae.client.gui.GuiExPatternProvider::new,
-                    "/screens/ex_pattern_provider.json"
-            );
-        } catch (Throwable ignored) {
-        }
     }
 
     /**
