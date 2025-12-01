@@ -5,6 +5,7 @@ import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.core.definitions.AEBlockEntities;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
@@ -48,6 +49,12 @@ public final class ModBlocks {
                 // 注意：方块实体绑定延后到 commonSetup 的 enqueueWork 中执行，避免注册阶段循环依赖
                 return b;
             }
+    );
+
+    // 装配矩阵速度核心 Plus（内部功能块）
+    public static final RegistryObject<SpeedCorePlusBlock> ASSEMBLER_MATRIX_SPEED_PLUS = BLOCKS.register(
+            "assembler_matrix_speed_plus",
+            SpeedCorePlusBlock::new
     );
 
     // Crafting Accelerators (reuse MAE2 textures/models)

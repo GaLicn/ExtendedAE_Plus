@@ -20,6 +20,10 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
                         // 装配矩阵上传核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
+                        //超级装配矩阵速度核心
+                        output.accept(ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get());
+
+                        //实体加速器&加速卡
                         output.accept(ModItems.CRAFTING_ACCELERATOR_4x.get());
                         output.accept(ModItems.CRAFTING_ACCELERATOR_16x.get());
                         output.accept(ModItems.CRAFTING_ACCELERATOR_64x.get());

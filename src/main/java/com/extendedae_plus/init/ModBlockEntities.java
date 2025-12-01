@@ -1,10 +1,12 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -24,6 +26,11 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("network_pattern_controller",
                     () -> BlockEntityType.Builder.of(NetworkPatternControllerBlockEntity::new,
                             ModBlocks.NETWORK_PATTERN_CONTROLLER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SpeedCorePlusBlockEntity>> ASSEMBLER_MATRIX_SPEED_PLUS_BE =
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_speed_plus",
+                    ()-> BlockEntityType.Builder.of(SpeedCorePlusBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get()).build(null));
 
     // 装配矩阵上传核心
     public static final RegistryObject<BlockEntityType<UploadCoreBlockEntity>> UPLOAD_CORE_BE =

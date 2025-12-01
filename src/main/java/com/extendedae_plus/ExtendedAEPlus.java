@@ -80,6 +80,13 @@ public class ExtendedAEPlus {
                 null,
                 null
             );
+
+            ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
+                com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity.class,
+                ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                null,
+                null
+            );
         });
     }
 
