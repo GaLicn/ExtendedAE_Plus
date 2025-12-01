@@ -37,11 +37,17 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get(), new Item.Properties())
     );
 
+    //超级装配矩阵速度核心
     public static final RegistryObject<Item> ASSEMBLER_MATRIX_SPEED_PLUS = ITEMS.register(
             "assembler_matrix_speed_plus",
             ()-> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get(), new Item.Properties())
     );
 
+    //超级装配矩阵合成核心
+    public static final RegistryObject<Item> ASSEMBLER_MATRIX_CRAFTER_PLUS = ITEMS.register(
+            "assembler_matrix_crafter_plus",
+            ()-> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get(), new Item.Properties())
+    );
     // Crafting Accelerators
     public static final RegistryObject<Item> CRAFTING_ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",

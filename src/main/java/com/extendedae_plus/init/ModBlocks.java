@@ -5,6 +5,7 @@ import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.core.definitions.AEBlockEntities;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
@@ -55,6 +56,12 @@ public final class ModBlocks {
     public static final RegistryObject<SpeedCorePlusBlock> ASSEMBLER_MATRIX_SPEED_PLUS = BLOCKS.register(
             "assembler_matrix_speed_plus",
             SpeedCorePlusBlock::new
+    );
+
+    //超级装配矩阵合成核心
+    public static final RegistryObject<CrafterCorePlusBlock> ASSEMBLER_MATRIX_CRAFTER_PLUS = BLOCKS.register(
+            "assembler_matrix_crafter_plus",
+            CrafterCorePlusBlock::new
     );
 
     // Crafting Accelerators (reuse MAE2 textures/models)

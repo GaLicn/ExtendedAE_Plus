@@ -5,6 +5,7 @@ import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
@@ -86,6 +87,13 @@ public class ExtendedAEPlus {
                 ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
                 null,
                 null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().setBlockEntity(
+                    CrafterCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
+                    null,
+                    null
             );
         });
     }
