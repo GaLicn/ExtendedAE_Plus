@@ -47,7 +47,7 @@ import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
 @Pseudo
 @SuppressWarnings({"AddedMixinMembersNamePattern"})
 @Mixin(value = GuiExPatternTerminal.class)
-public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> {
+public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> implements com.extendedae_plus.mixin.extendedae.accessor.IGuiExPatternTerminalUploadAccessor {
     @Shadow(remap = false) @Final private static int GUI_PADDING_X;
     @Shadow(remap = false) @Final private static int GUI_PADDING_Y;
     @Shadow(remap = false) @Final private static int GUI_HEADER_HEIGHT;
@@ -91,41 +91,28 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     }
 
     /**
-     * 拦截鼠标点击事件，实现Shift+左键快速上传样板功能
-     * 注意：某些整合包的 ExtendedAE 版本不在该类中覆写 mouseClicked，此处设置 require=0 以防止注入失败导致崩溃。
+     * 实现接口方法：获取当前选择的样板供应器ID
      */
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, require = 0)
-    private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        // 检查是否是左键点击 + Shift键
-        if (button == 0 && hasShiftDown()) {
-            // 获取点击的槽位
-            Slot hoveredSlot = this.getSlotUnderMouse();
-            if (hoveredSlot != null && hoveredSlot.container == this.minecraft.player.getInventory()) {
-                // 点击的是玩家背包槽位
-                ItemStack clickedItem = hoveredSlot.getItem();
-
-                // 检查是否是有效的编码样板
-                if (!clickedItem.isEmpty() && PatternDetailsHelper.isEncodedPattern(clickedItem)) {
-                    // 检查是否选择了样板供应器
-                    if (currentlyChoicePatterProvider != -1) {
-                        // 执行快速上传
-                        this.eap$quickUploadPattern(hoveredSlot.getSlotIndex());
-                        // 取消默认的点击行为
-                        cir.setReturnValue(true);
-                    } else {
-                        // 显示提示消息：请先选择一个样板供应器
-                        sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.select_provider_first"));
-                    }
-                }
-            }
-        }
+    @Override
+    @Unique
+    public long eap$getCurrentlyChoicePatternProvider() {
+        return this.currentlyChoicePatterProvider;
     }
 
     /**
-     * 快速上传样板到当前选择的供应器
+     * 实现接口方法：快速上传样板
+     */
+    @Override
+    @Unique
+    public void eap$quickUploadPattern(int playerSlotIndex) {
+        this.eap$quickUploadPatternInternal(playerSlotIndex);
+    }
+
+    /**
+     * 快速上传样板到当前选择的供应器（内部实现）
      */
     @Unique
-    private void eap$quickUploadPattern(int playerSlotIndex) {
+    private void eap$quickUploadPatternInternal(int playerSlotIndex) {
         if (this.minecraft.player == null) return;
 
         ItemStack itemToUpload = this.minecraft.player.getInventory().getItem(playerSlotIndex);
@@ -216,14 +203,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
         // 添加到左侧工具栏
         this.addToLeftToolbar(this.eap$toggleSlotsButton);
-    }
-
-    @Inject(method = "init", at = @At("TAIL"), remap = false, require = 0)
-    private void eap$onInit(CallbackInfo ci) {
-        // 清理旧的打开UI按钮并标记需要重建
-        this.openUIButtons.values().forEach(this::removeWidget);
-        this.openUIButtons.clear();
-        this.buttonsDirty = true;
     }
 
     @Inject(method = "refreshList", at = @At("HEAD"), remap = false)

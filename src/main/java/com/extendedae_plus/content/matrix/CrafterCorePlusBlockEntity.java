@@ -4,6 +4,7 @@ import appeng.api.config.Actionable;
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.security.IActionSource;
 import appeng.api.networking.storage.IStorageService;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -12,6 +13,7 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.util.inv.CombinedInternalInventory;
 import com.extendedae_plus.init.ModBlockEntities;
+import com.glodblock.github.extendedae.common.me.CraftingMatrixThread;
 import com.glodblock.github.extendedae.common.me.CraftingThread;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixCrafter;
@@ -32,6 +34,7 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
     private final CraftingThread[] threads = new CraftingThread[MAX_THREAD];
     private final InternalInventory internalInv;
     private final BlockEntityType<?> overriddenType;
+    private short states = 0;
 
     public CrafterCorePlusBlockEntity(BlockPos pos, BlockState blockState) {
         super(pos, blockState);
@@ -39,11 +42,33 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
 
         InternalInventory[] inventories = new InternalInventory[MAX_THREAD];
         for (int i = 0; i < MAX_THREAD; i++) {
-            this.threads[i] = new CraftingThread(this);
-            this.threads[i].setPusher(this::pushResult);
+            int finalI = i;
+            this.threads[i] = new CraftingMatrixThread(this, this::getSrc, (signal) -> this.changeState(finalI, signal));
             inventories[i] = this.threads[i].getInternalInventory();
         }
         this.internalInv = new CombinedInternalInventory(inventories);
+    }
+
+    private void changeState(int index, boolean state) {
+        boolean oldState = this.states > 0;
+        if (state) {
+            this.states |= (short)(1 << index);
+        } else {
+            this.states &= (short)(~(1 << index));
+        }
+
+        if (state) {
+            if (!oldState) {
+                this.getMainNode().ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
+            }
+        } else if (oldState && this.states <= 0) {
+            this.getMainNode().ifPresent((grid, node) -> grid.getTickManager().sleepDevice(node));
+        }
+
+    }
+
+    private IActionSource getSrc() {
+        return this.cluster.getSrc();
     }
 
     public int usedThread() {
@@ -144,11 +169,7 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
             thread.updateSleepiness();
             isAwake |= thread.isAwake();
         }
-        if (isAwake) {
-            for (CraftingThread thread : this.threads) {
-                thread.forceAwake();
-            }
-        }
+
         return new TickingRequest(1, 1, !isAwake, false);
     }
 

@@ -19,14 +19,18 @@ import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAcces
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.mixin.extendedae.accessor.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -74,6 +78,57 @@ public abstract class AEBaseScreenMixin {
             }
 
             cir.setReturnValue(true);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 在 AEBaseScreen 的 mouseClicked 入口拦截 GuiExPatternTerminal 的 Shift+左键快速上传样板功能
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
+    private void eap$exPatternTerminalShiftClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        // 仅处理 GuiExPatternTerminal 实例
+        Object self = this;
+        if (!(self instanceof GuiExPatternTerminal<?> terminal) || !(self instanceof IGuiExPatternTerminalUploadAccessor accessor)) {
+            return;
+        }
+
+        // 检查是否是左键点击 + Shift键
+        if (button != 0 || !Screen.hasShiftDown()) {
+            return;
+        }
+
+        try {
+            // 获取点击的槽位（通过accessor访问hoveredSlot字段）
+            if (!(self instanceof AbstractContainerScreenAccessor<?> screenAccessor)) {
+                return;
+            }
+            Slot hoveredSlot = screenAccessor.eap$getHoveredSlot();
+            if (hoveredSlot == null || hoveredSlot.container != Minecraft.getInstance().player.getInventory()) {
+                return;
+            }
+
+            // 点击的是玩家背包槽位
+            ItemStack clickedItem = hoveredSlot.getItem();
+
+            // 检查是否是有效的编码样板
+            if (clickedItem.isEmpty() || !PatternDetailsHelper.isEncodedPattern(clickedItem)) {
+                return;
+            }
+
+            // 检查是否选择了样板供应器
+            if (accessor.eap$getCurrentlyChoicePatternProvider() != -1) {
+                // 执行快速上传
+                accessor.eap$quickUploadPattern(hoveredSlot.getSlotIndex());
+                // 取消默认的点击行为
+                cir.setReturnValue(true);
+            } else {
+                // 显示提示消息：请先选择一个样板供应器
+                if (Minecraft.getInstance().player != null) {
+                    Minecraft.getInstance().player.displayClientMessage(
+                            Component.translatable("extendedae_plus.screen.upload.select_provider_first"), false);
+                }
+            }
         } catch (Throwable ignored) {
         }
     }
