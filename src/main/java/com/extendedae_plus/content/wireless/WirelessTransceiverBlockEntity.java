@@ -207,6 +207,51 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
             // 从端需要周期检查与维护连接
             be.slaveLink.updateStatus();
         }
+        // 更新状态
+        be.updateState();
+    }
+
+    /**
+     * 根据连接状态和频道数更新方块状态
+     */
+    private void updateState() {
+        if (this.level == null || this.level.isClientSide) return;
+        
+        IGridNode node = this.getGridNode();
+        int newState = 5; // 默认状态：无连接
+        
+        if (node != null && node.isActive()) {
+            // 获取该节点使用的频道数（与 jade 中获取频道使用量的方式一致）
+            int usedChannels = 0;
+            for (var connection : node.getConnections()) {
+                usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
+            }
+            
+            // 根据频道数计算状态：
+            // 有连接但频道数 < 8：状态0（创建连接时）
+            // 频道数 >= 8 且 < 16：状态1
+            // 频道数 >= 16 且 < 24：状态2
+            // 频道数 >= 24 且 < 32：状态3
+            // 频道数 >= 32：状态4
+            if (usedChannels >= 32) {
+                newState = 4;
+            } else if (usedChannels >= 24) {
+                newState = 3;
+            } else if (usedChannels >= 16) {
+                newState = 2;
+            } else if (usedChannels >= 8) {
+                newState = 1;
+            } else if (usedChannels >= 0) {
+                newState = 0; // 有连接但频道数 < 8
+            }
+            // 如果 usedChannels == 0，保持 newState = 5（无连接状态）
+        }
+        
+        // 更新方块状态
+        BlockState currentState = this.getBlockState();
+        if (currentState.getValue(WirelessTransceiverBlock.STATE) != newState) {
+            this.level.setBlock(this.worldPosition, currentState.setValue(WirelessTransceiverBlock.STATE, newState), 3);
+        }
     }
 
     @Override
@@ -284,11 +329,18 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         @Override
         public void onStateChanged(WirelessTransceiverBlockEntity host, IGridNode node, State state) {
             // 可在此响应 POWER/CHANNEL 等变化，刷新显示等
+            host.updateState();
         }
         @Override
-        public void onInWorldConnectionChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
+        public void onInWorldConnectionChanged(WirelessTransceiverBlockEntity host, IGridNode node) {
+            // 连接变化时更新状态
+            host.updateState();
+        }
         @Override
-        public void onGridChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
+        public void onGridChanged(WirelessTransceiverBlockEntity host, IGridNode node) {
+            // 网格变化时更新状态
+            host.updateState();
+        }
         @Override
         public void onOwnerChanged(WirelessTransceiverBlockEntity host, IGridNode node) {}
     }
