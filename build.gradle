@@ -81,7 +81,7 @@ dependencies {
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
-    implementation "curse.maven:ex-pattern-provider-892005:7005572"
+    modImplementation "curse.maven:ex-pattern-provider-892005:7005572"
 
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"

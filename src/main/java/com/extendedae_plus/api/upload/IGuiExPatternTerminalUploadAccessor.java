@@ -1,4 +1,4 @@
-package com.extendedae_plus.mixin.extendedae.accessor;
+package com.extendedae_plus.api.upload;
 
 /**
  * 用于访问 GuiExPatternTerminalMixin 中快速上传功能的接口

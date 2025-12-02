@@ -19,7 +19,7 @@ import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAcces
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
-import com.extendedae_plus.mixin.extendedae.accessor.IGuiExPatternTerminalUploadAccessor;
+import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;

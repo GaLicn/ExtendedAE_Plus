@@ -10,6 +10,7 @@ import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.IconButton;
 import appeng.client.gui.widgets.Scrollbar;
 import appeng.menu.AEBaseMenu;
+import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor;
@@ -47,7 +48,7 @@ import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
 @Pseudo
 @SuppressWarnings({"AddedMixinMembersNamePattern"})
 @Mixin(value = GuiExPatternTerminal.class)
-public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> implements com.extendedae_plus.mixin.extendedae.accessor.IGuiExPatternTerminalUploadAccessor {
+public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu> implements IGuiExPatternTerminalUploadAccessor {
     @Shadow(remap = false) @Final private static int GUI_PADDING_X;
     @Shadow(remap = false) @Final private static int GUI_PADDING_Y;
     @Shadow(remap = false) @Final private static int GUI_HEADER_HEIGHT;
