@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [1.5.0]
+
+### Added / 新增
+- 新增超级装配矩阵速度核心
+  - Added Super Assembler Matrix Speed Core
+- 新增超级装配矩阵合成核心
+  - Added Super Assembler Matrix Crafting Core
+- 新增超级装配矩阵样板核心
+  - Added Super Assembler Matrix Pattern Core
+
+### Changed / 变更
+- 更替无线收发器材质
+  - Updated Wireless Transceiver textures
+- 更替样板供应器状态控制器材质
+  - Updated Network Pattern Controller textures
+- 更替模组 logo
+  - Updated mod logo
+- 更替 ExtendedAE 依赖版本为最低 1.4.6
+  - Raised minimum required ExtendedAE version to 1.4.6
+
 ## [1.4.6]
 
 ### Added / 新增

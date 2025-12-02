@@ -92,6 +92,38 @@ public class CraftingRecipes extends RecipeProvider {
                 .unlockedBy("has_assembler_matrix_wall", has(EPPItemAndBlock.ASSEMBLER_MATRIX_WALL))
                 .save(consumer);
 
+        //超级装配矩阵速度核心
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
+                .pattern("BRB")
+                .pattern("RLR")
+                .pattern("BRB")
+                .define('R', EPPItemAndBlock.ASSEMBLER_MATRIX_SPEED)
+                .define('L', Items.NETHER_STAR)
+                .define('B', EPPItemAndBlock.ASSEMBLER_MATRIX_WALL)
+                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                .save(consumer);
+
+        //超级装配矩阵合成核心
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+                .pattern("BRB")
+                .pattern("RLR")
+                .pattern("BRB")
+                .define('R', EPPItemAndBlock.ASSEMBLER_MATRIX_CRAFTER)
+                .define('L', Items.NETHER_STAR)
+                .define('B', EPPItemAndBlock.ASSEMBLER_MATRIX_WALL)
+                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                .save(consumer);
+
+        //超级装配矩阵样板核心
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+                .pattern("BRB")
+                .pattern("RLR")
+                .pattern("BRB")
+                .define('R', EPPItemAndBlock.ASSEMBLER_MATRIX_PATTERN)
+                .define('L', Items.NETHER_STAR)
+                .define('B', EPPItemAndBlock.ASSEMBLER_MATRIX_WALL)
+                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                .save(consumer);
     }
 
     private void addCraftingAccelerators(Consumer<FinishedRecipe> consumer) {
