@@ -1,10 +1,10 @@
 {
   "variants": {
-    "state=0": { "model": "extendedae_plus:block/wireless_transceiver_0" },
-    "state=1": { "model": "extendedae_plus:block/wireless_transceiver_1" },
-    "state=2": { "model": "extendedae_plus:block/wireless_transceiver_2" },
-    "state=3": { "model": "extendedae_plus:block/wireless_transceiver_3" },
-    "state=4": { "model": "extendedae_plus:block/wireless_transceiver_4" },
-    "state=5": { "model": "extendedae_plus:block/wireless_transceiver_5" }
+    "state=0": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_0" },
+    "state=1": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_1" },
+    "state=2": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_2" },
+    "state=3": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_3" },
+    "state=4": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_4" },
+    "state=5": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_5" }
   }
 }
