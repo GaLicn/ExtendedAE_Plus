@@ -35,6 +35,10 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     private long frequency = 1L;
     private boolean masterMode = false;
     private boolean locked = false;
+    /**
+     * 标记该方块实体是否正在被移除，用于避免在移除流程中再次 setBlock 导致方块“复活”。
+     */
+    private boolean beingRemoved = false;
     
     @Nullable
     private UUID placerId; // 放置者UUID，用于队伍隔离
@@ -190,6 +194,8 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     public void onRemoved() {
+        // 标记正在被移除，避免在 AE2 回调期间触发状态刷新把方块重新放回世界中
+        this.beingRemoved = true;
         if (this.masterMode) {
             masterLink.onUnloadOrRemove();
         } else {
@@ -216,6 +222,13 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
      */
     private void updateState() {
         if (this.level == null || this.level.isClientSide) return;
+        // 如果方块实体已经被标记为移除，或已经从世界中移除，不再尝试刷新状态
+        if (this.beingRemoved || this.isRemoved()) return;
+        // 确保当前位置仍然是本方块，防止在方块被替换/破坏时错误地重新放置方块
+        BlockState currentState = this.getBlockState();
+        if (!(currentState.getBlock() instanceof WirelessTransceiverBlock)) {
+            return;
+        }
         
         IGridNode node = this.getGridNode();
         int newState = 5; // 默认状态：无连接
@@ -248,7 +261,6 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         }
         
         // 更新方块状态
-        BlockState currentState = this.getBlockState();
         if (currentState.getValue(WirelessTransceiverBlock.STATE) != newState) {
             this.level.setBlock(this.worldPosition, currentState.setValue(WirelessTransceiverBlock.STATE, newState), 3);
         }
