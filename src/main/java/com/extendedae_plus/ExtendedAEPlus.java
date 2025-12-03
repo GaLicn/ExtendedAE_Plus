@@ -9,6 +9,7 @@ import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
@@ -155,6 +156,13 @@ public class ExtendedAEPlus {
                 ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
                         SpeedCorePlusBlockEntity.class,
                         ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                        null,
+                        null
+                );
+
+                ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().setBlockEntity(
+                        CrafterCorePlusBlockEntity.class,
+                        ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
                         null,
                         null
                 );

@@ -1,11 +1,13 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -56,4 +58,10 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("assembler_matrix_speed_plus",
                     ()->BlockEntityType.Builder.of(SpeedCorePlusBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get()).build(null));
+
+    //超级装配矩阵合成核心
+    public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<CrafterCorePlusBlockEntity>> ASSEMBLER_MATRIX_CRAFTER_PLUS_BE=
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_crafter_plus",
+                    ()-> BlockEntityType.Builder.of(CrafterCorePlusBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get()).build(null));
 }
