@@ -1,6 +1,8 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
@@ -31,7 +33,7 @@ public final class ModBlocks {
     // AE2 网络模式控制器方块
     public static final DeferredBlock<Block> NETWORK_PATTERN_CONTROLLER = BLOCKS.register(
             "network_pattern_controller",
-            () -> new com.extendedae_plus.content.controller.NetworkPatternControllerBlock(
+            () -> new NetworkPatternControllerBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
                             .strength(1.5F, 6.0F)
@@ -81,6 +83,14 @@ public final class ModBlocks {
             () -> new UploadCoreBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+    public static final DeferredBlock<SpeedCorePlusBlock> ASSEMBLER_MATRIX_SPEED_PLUS = BLOCKS.register(
+            "assembler_matrix_speed_plus",
+            () -> new SpeedCorePlusBlock(
+                    BlockBehaviour.Properties.of()
                             .strength(1.5F, 6.0F)
                             .requiresCorrectToolForDrops()
             )

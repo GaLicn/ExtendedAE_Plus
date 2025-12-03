@@ -30,7 +30,8 @@ public final class ModCreativeTabs {
                                 ModItems.CHANNEL_CARD.get().getDefaultInstance(),
                                 ModItems.VIRTUAL_CRAFTING_CARD.get().getDefaultInstance(),
                                 ModItems.ENTITY_TICKER_PART_ITEM.get().getDefaultInstance(),
-                                ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get().getDefaultInstance()
+                                ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance()
                         ).forEach(output::accept);
 
                         // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建

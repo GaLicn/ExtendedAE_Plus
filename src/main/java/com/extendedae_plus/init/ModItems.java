@@ -63,6 +63,11 @@ public final class ModItems {
             "assembler_matrix_upload_core",
             () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get(), new Item.Properties())
     );
+    //超级装配矩阵速度核心
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_SPEED_PLUS = ITEMS.register(
+            "assembler_matrix_speed_plus",
+            ()->new BlockItem(ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get(), new Item.Properties())
+    );
     static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())

@@ -1,6 +1,7 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
@@ -49,4 +50,10 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("upload_core",
                     () -> BlockEntityType.Builder.of(UploadCoreBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get()).build(null));
+
+    //超级装配矩阵速度核心
+    public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<SpeedCorePlusBlockEntity>> ASSEMBLER_MATRIX_SPEED_PLUS_BE=
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_speed_plus",
+                    ()->BlockEntityType.Builder.of(SpeedCorePlusBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get()).build(null));
 }

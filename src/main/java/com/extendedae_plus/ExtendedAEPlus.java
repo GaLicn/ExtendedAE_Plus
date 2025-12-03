@@ -9,6 +9,7 @@ import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
@@ -150,6 +151,14 @@ public class ExtendedAEPlus {
                     null,
                     null
                 );
+
+                ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
+                        SpeedCorePlusBlockEntity.class,
+                        ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                        null,
+                        null
+                );
+
                 LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");
             } catch (Throwable t) {
                 LOGGER.warn("Failed to bind block entities: {}", t.toString());

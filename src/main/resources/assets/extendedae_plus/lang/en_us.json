@@ -47,6 +47,9 @@
   "block.extendedae_plus.1024x_crafting_accelerator": "1024x Crafting Accelerator",
   "block.extendedae_plus.network_pattern_controller": "Pattern Provider Status Controller",
   "block.extendedae_plus.assembler_matrix_upload_core": "Assembly Matrix Upload Core",
+  "block.extendedae_plus.assembler_matrix_speed_plus": "Assembler Matrix Speed Core Plus",
+  "block.extendedae_plus.assembler_matrix_crafter_plus": "Assembler Matrix Crafter Core Plus",
+  "block.extendedae_plus.assembler_matrix_pattern_plus": "Assembler Matrix Pattern Core Plus",
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern Uploaded to Assembly Matrix",

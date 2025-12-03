@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "extendedae_plus:block/wireless_transceiver/wireless_transceiver_1"
+  }
+}
+
