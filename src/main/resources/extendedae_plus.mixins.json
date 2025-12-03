@@ -53,6 +53,7 @@
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
+    "extendedae.container.ContainerAssemblerMatrixPatternSlotTrackerMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin"
@@ -82,6 +83,7 @@
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
     "extendedae.client.HighlightButtonMixin",
+    "extendedae.client.gui.GuiAssemblerMatrixPatternInfoMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
     "hooks.ModelBakeryMixin",
