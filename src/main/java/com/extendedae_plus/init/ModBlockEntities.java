@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
@@ -64,4 +65,10 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("assembler_matrix_crafter_plus",
                     ()-> BlockEntityType.Builder.of(CrafterCorePlusBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get()).build(null));
+
+    //超级装配矩阵样板核心
+    public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<PatternCorePlusBlockEntity>> ASSEMBLER_MATRIX_PATTERN_PLUS_BE=
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_pattern_plus",
+                    ()-> BlockEntityType.Builder.of(PatternCorePlusBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get()).build(null));
 }

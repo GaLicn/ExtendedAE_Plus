@@ -72,6 +72,10 @@ public final class ModItems {
             "assembler_matrix_crafter_plus",
             ()->new BlockItem(ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get(),  new Item.Properties())
     );
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_PATTERN_PLUS = ITEMS.register(
+            "assembler_matrix_pattern_plus",
+            () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), new Item.Properties())
+    );
     static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
