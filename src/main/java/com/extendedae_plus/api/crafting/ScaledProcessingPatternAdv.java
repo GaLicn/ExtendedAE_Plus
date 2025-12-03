@@ -26,9 +26,6 @@ public final class ScaledProcessingPatternAdv extends ScaledProcessingPattern im
     }
 
     @Override
-    public @NotNull AdvProcessingPattern getOriginal() {return (AdvProcessingPattern) this.original;}
-
-    @Override
     public void pushInputsToExternalInventory(KeyCounter[] inputHolder, PatternInputSink sink) {
         // 如果 sparseInputs 与 inputs 一一对应，则无需 reorder
         if (((AdvProcessingPattern) this.original).getSparseInputs().size() == this.original.getInputs().length) {

@@ -11,8 +11,9 @@ import java.util.Map;
 public final class EAPSettings {
     private static final Map<String, Setting<?>> SETTINGS = new HashMap<>();
     public static final Setting<YesNo> ACCELERATE = register("accelerate", YesNo.NO, YesNo.YES);
-    public static final Setting<YesNo> REDSTONE_CONTROL = register("redstoneControl", YesNo.NO, YesNo.YES);
-
+    public static final Setting<YesNo> REDSTONE_CONTROL = register("redstone_control", YesNo.NO, YesNo.YES);
+    public static final Setting<YesNo> SMART_DOUBLING = register("smart_doubling", YesNo.NO, YesNo.YES);
+    public static final Setting<YesNo> ADVANCED_BLOCKING = register("advanced_blocking", YesNo.NO, YesNo.YES);
 
     private EAPSettings() {
     }

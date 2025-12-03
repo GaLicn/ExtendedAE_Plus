@@ -28,13 +28,13 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
     private final EnumSet<T> validValues;
     private T currentValue;
 
-    public EAPSettingToggleButton(Setting<T> setting, T val,
-                                  IHandler<EAPSettingToggleButton<T>> onPress) {
+    EAPSettingToggleButton(Setting<T> setting, T val,
+                           IHandler<EAPSettingToggleButton<T>> onPress) {
         this(setting, val, t -> true, onPress);
     }
 
-    public EAPSettingToggleButton(Setting<T> setting, T val, Predicate<T> isValidValue,
-                                  IHandler<EAPSettingToggleButton<T>> onPress) {
+    private EAPSettingToggleButton(Setting<T> setting, T val, Predicate<T> isValidValue,
+                                   IHandler<EAPSettingToggleButton<T>> onPress) {
         super(EAPSettingToggleButton::onPress);
         this.onPress = onPress;
 
@@ -64,6 +64,21 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
             registerApp(Icon.REDSTONE_IGNORE, EAPSettings.REDSTONE_CONTROL, YesNo.NO,
                     EAPText.RedstoneControl,
                     EAPText.RedstoneControlDisabled);
+
+            registerApp(Icon.BLOCKING_MODE_YES, EAPSettings.SMART_DOUBLING, YesNo.YES,
+                    EAPText.SmartDoubling,
+                    EAPText.SmartDoublingEnabled);
+            registerApp(Icon.BLOCKING_MODE_NO, EAPSettings.SMART_DOUBLING, YesNo.NO,
+                    EAPText.SmartDoubling,
+                    EAPText.SmartDoublingDisabled);
+
+            registerApp(Icon.BLOCKING_MODE_YES, EAPSettings.ADVANCED_BLOCKING, YesNo.YES,
+                    EAPText.AdvancedBlocking,
+                    EAPText.AdvancedBlockingEnabled);
+            registerApp(Icon.BLOCKING_MODE_NO, EAPSettings.ADVANCED_BLOCKING, YesNo.NO,
+                    EAPText.AdvancedBlocking,
+                    EAPText.AdvancedBlockingDisabled);
+
         }
     }
 
@@ -106,7 +121,7 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
         if (currentScreen instanceof AEBaseScreen) {
             backwards = ((AEBaseScreen<?>) currentScreen).isHandlingRightClick();
         }
-        onPress.handle(this, backwards);
+        this.onPress.handle(this, backwards);
     }
 
     @Nullable
@@ -119,7 +134,7 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
 
     @Override
     protected Icon getIcon() {
-        var app = getApperance();
+        var app = this.getApperance();
         if (app != null && app.icon != null) {
             return app.icon;
         }
@@ -128,7 +143,7 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
 
     @Override
     protected Item getItemOverlay() {
-        var app = getApperance();
+        var app = this.getApperance();
         if (app != null && app.item != null) {
             return app.item;
         }
@@ -150,7 +165,7 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
         return buttonAppearance.tooltipLines;
     }
 
-    public Setting<T> getSetting() {
+    Setting<T> getSetting() {
         return this.buttonSetting;
     }
 
@@ -165,7 +180,7 @@ public class EAPSettingToggleButton<T extends Enum<T>> extends IconButton {
     }
 
     public T getNextValue(boolean backwards) {
-        return EnumCycler.rotateEnum(currentValue, backwards, validValues);
+        return EnumCycler.rotateEnum(this.currentValue, backwards, this.validValues);
     }
 
     @FunctionalInterface

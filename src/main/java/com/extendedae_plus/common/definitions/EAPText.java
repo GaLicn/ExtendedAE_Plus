@@ -10,7 +10,15 @@ public enum EAPText implements LocalizationEnum {
 
     RedstoneControl("Redstone control", Type.TOOLTIP),
     RedstoneControlEnabled("Control acceleration with redstone signal", Type.TOOLTIP),
-    RedstoneControlDisabled("Ignore redstone signals", Type.TOOLTIP);
+    RedstoneControlDisabled("Ignore redstone signals", Type.TOOLTIP),
+
+    AdvancedBlocking("Smart Blocking", Type.TOOLTIP),
+    AdvancedBlockingEnabled("Will not block the same recipe type (requires vanilla blocking mode enabled)", Type.TOOLTIP),
+    AdvancedBlockingDisabled("Use vanilla blocking logic", Type.TOOLTIP),
+    SmartDoubling("Smart Doubling", Type.TOOLTIP),
+    SmartDoublingEnabled("Intelligently double processing patterns based on request quantity", Type.TOOLTIP),
+    SmartDoublingDisabled("Distribute according to original pattern quantity", Type.TOOLTIP);
+
 
     private final String englishText;
     private final Type type;

@@ -9,8 +9,8 @@ import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.client.gui.widgets.EAPServerSettingToggleButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.pedroksl.advanced_ae.client.gui.SmallAdvPatternProviderScreen;
-import net.pedroksl.advanced_ae.gui.advpatternprovider.SmallAdvPatternProviderMenu;
+import net.pedroksl.advanced_ae.client.gui.AdvPatternProviderScreen;
+import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,17 +22,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
-@Mixin(SmallAdvPatternProviderScreen.class)
-public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<SmallAdvPatternProviderMenu> {
+@Mixin(AdvPatternProviderScreen.class)
+public abstract class AdvPatternProviderSmartFeaturesMixin extends AEBaseScreen<AdvPatternProviderMenu> {
     @Unique private EAPServerSettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
     @Unique private EAPServerSettingToggleButton<YesNo> eap$SmartDoublingToggle;
 
-    public SmallAdvPatternProviderScreenMixin(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
+    public AdvPatternProviderSmartFeaturesMixin(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"), remap = false)
-    private void eap$initAdvancedBlocking(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
+    private void eap$initAdvancedBlocking(AdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         this.eap$AdvancedBlockingToggle = new EAPServerSettingToggleButton<>(EAPSettings.ADVANCED_BLOCKING, YesNo.YES);
         this.addToLeftToolbar(this.eap$AdvancedBlockingToggle);
         this.eap$SmartDoublingToggle = new EAPServerSettingToggleButton<>(EAPSettings.SMART_DOUBLING, YesNo.YES);

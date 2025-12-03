@@ -1,9 +1,9 @@
 package com.extendedae_plus.mixin.advancedae.menu;
 
-import appeng.menu.AEBaseMenu;
+import appeng.api.config.YesNo;
 import appeng.menu.guisync.GuiSync;
+import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
-import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
 import net.pedroksl.advanced_ae.gui.advpatternprovider.AdvPatternProviderMenu;
 import org.spongepowered.asm.mixin.Final;
@@ -14,27 +14,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(AdvPatternProviderMenu.class)
+@Mixin(value = AdvPatternProviderMenu.class, remap = false)
 public abstract class AdvPatternProviderMenuDoublingMixin implements IPatternProviderMenuDoublingSync {
-    @Final
-    @Shadow(remap = false)
-    protected AdvPatternProviderLogic logic;
-
-    @Unique
-    @GuiSync(23) private boolean eap$SmartDoubling = false;
+    @Shadow @Final protected AdvPatternProviderLogic logic;
+    @Unique @GuiSync(21) private YesNo eap$SmartDoubling;
 
     @Inject(method = "broadcastChanges", at = @At("HEAD"))
     private void eap$syncSmartDoubling(CallbackInfo ci) {
-        if (!((AEBaseMenu) (Object) this).isClientSide()) {
-            var l = this.logic;
-            if (l instanceof ISmartDoubling holder) {
-                this.eap$SmartDoubling = holder.eap$getSmartDoubling();
-            }
+        if (!((AdvPatternProviderMenu) (Object) this).isClientSide()) {
+            this.eap$SmartDoubling = this.logic.getConfigManager().getSetting(EAPSettings.SMART_DOUBLING);
         }
     }
 
     @Override
-    public boolean eap$getSmartDoublingSynced() {
+    public YesNo eap$getSmartDoublingSynced() {
         return this.eap$SmartDoubling;
     }
 }

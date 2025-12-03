@@ -1,75 +1,73 @@
 package com.extendedae_plus.mixin.advancedae.helpers;
 
+import appeng.api.config.Setting;
+import appeng.api.config.YesNo;
 import appeng.api.crafting.IPatternDetails;
-import com.extendedae_plus.api.smartDoubling.ISmartDoubling;
+import appeng.api.networking.IManagedGridNode;
+import appeng.api.util.IConfigManager;
+import appeng.util.ConfigManager;
+import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
-import com.extendedae_plus.mixin.advancedae.accessor.AdvPatternProviderLogicPatternsAccessor;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
+import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogicHost;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(value = AdvPatternProviderLogic.class, remap = false)
-public class AdvPatternProviderLogicDoublingMixin implements ISmartDoubling {
-    @Unique
-    private static final String EAP_SMART_DOUBLING_KEY = "eap_smart_doubling";
+public class AdvPatternProviderLogicDoublingMixin {
+    @Shadow @Final private List<IPatternDetails> patterns;
+    @Shadow @Final private IConfigManager configManager;
 
-    @Unique
-    private boolean eap$smartDoubling = false;
+    @Shadow
+    public IConfigManager getConfigManager() {return null;}
 
-    @Override
-    public boolean eap$getSmartDoubling() {
-        return this.eap$smartDoubling;
+    @Shadow
+    public void updatePatterns() {}
+
+    @Inject(
+            method = "<init>(Lappeng/api/networking/IManagedGridNode;Lnet/pedroksl/advanced_ae/common/logic/AdvPatternProviderLogicHost;I)V",
+            at = @At("TAIL")
+    )
+    private void onInitTail(IManagedGridNode mainNode, AdvPatternProviderLogicHost host, int patternInventorySize, CallbackInfo ci) {
+        // 直接往构建后的 configManager 里加 setting
+        ConfigManager configManager = (ConfigManager) this.getConfigManager();
+        configManager.registerSetting(EAPSettings.SMART_DOUBLING, YesNo.NO);
     }
 
-    @Override
-    public void eap$setSmartDoubling(boolean value) {
-        this.eap$smartDoubling = value;
-        // 立即将开关状态应用到当前 Provider 的样板上，避免等待下一次 updatePatterns
-        try {
-            var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
-            for (IPatternDetails details : list) {
-                if (details instanceof ISmartDoublingAwarePattern aware) {
-                    aware.eap$setAllowScaling(value);
-                }
-            }
-            // 触发一次刷新，让网络及时拿到最新状态（也会触发 ICraftingProvider.requestUpdate(mainNode)）
-            ((AdvPatternProviderLogic) (Object) this).updatePatterns();
-        } catch (Throwable ignored) {
+    @Inject(method = "configChanged", at = @At("HEAD"))
+    private void eap$onConfigChanged(IConfigManager manager, Setting<?> setting, CallbackInfo ci) {
+        if (setting == EAPSettings.SMART_DOUBLING) {
+            this.updatePatterns();
         }
-    }
-
-    @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$writeSmartDoublingToNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
-        tag.putBoolean(EAP_SMART_DOUBLING_KEY, this.eap$smartDoubling);
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$readSmartDoublingFromNbt(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
-        if (tag.contains(EAP_SMART_DOUBLING_KEY)) {
-            this.eap$smartDoubling = tag.getBoolean(EAP_SMART_DOUBLING_KEY);
+        // TODO
+        // 适配旧版本中的数据，后续版本删除
+        if (tag.contains("eap_smart_doubling")) {
+            this.configManager.putSetting(EAPSettings.SMART_DOUBLING,
+                    tag.getBoolean("eap_smart_doubling") ? YesNo.YES : YesNo.NO);
+            tag.remove("eap_smart_doubling");
         }
     }
 
     @Inject(method = "updatePatterns", at = @At("TAIL"))
     private void eap$applySmartDoublingToPatterns(CallbackInfo ci) {
-        try {
-            var list = ((AdvPatternProviderLogicPatternsAccessor) this).eap$patterns();
-            boolean allow = this.eap$smartDoubling;
-            for (IPatternDetails details : list) {
-                if (details instanceof ISmartDoublingAwarePattern aware) {
-                    aware.eap$setAllowScaling(allow);
-                }
+        IConfigManager configManager = this.getConfigManager();
+        boolean allowScaling = configManager.getSetting(EAPSettings.SMART_DOUBLING) == YesNo.YES;
+        for (IPatternDetails details : this.patterns) {
+            if (details instanceof ISmartDoublingAwarePattern aware) {
+                aware.eap$setAllowScaling(allowScaling);
             }
-        } catch (Throwable ignored) {
         }
     }
-
-    @Shadow
-    public void saveChanges() {}
 }
