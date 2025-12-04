@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_quantum_ring": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ae2:quantum_ring"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:assembler_matrix_speed_plus"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_quantum_ring"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:assembler_matrix_speed_plus"
+    ]
+  }
+}
