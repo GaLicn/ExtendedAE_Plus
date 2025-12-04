@@ -19,14 +19,26 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 public class WirelessTransceiverBlock extends Block implements EntityBlock {
+
+    public static IntegerProperty STATE = IntegerProperty.create("state", 0, 5);
+
+
     public WirelessTransceiverBlock(Properties props) {
         super(props);
+    }
+
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(STATE);
     }
 
     @Override

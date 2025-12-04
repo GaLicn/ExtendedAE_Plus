@@ -67,6 +67,11 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern {
         return this.patternInventory;
     }
 
+    @Override
+    public AppEngInternalInventory getExposedInventory() {
+        return this.patternInventory;
+    }
+
     public long getLocateID() {
         return this.worldPosition.asLong();
     }

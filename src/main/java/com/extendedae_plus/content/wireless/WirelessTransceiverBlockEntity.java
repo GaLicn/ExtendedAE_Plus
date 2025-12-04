@@ -67,7 +67,39 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
             // 从端需要周期检查与维护连接
             be.slaveLink.updateStatus();
         }
+            be.updateStates();
     }
+
+    public void updateStates() {
+        if(this.level== null||this.level.isClientSide) return;
+        IGridNode node = this.getGridNode();
+        int states=5;
+
+        if (node != null&&node.isActive()) {
+            int usedCount=0;
+            for(var connection: node.getConnections()){
+                usedCount=Math.max(usedCount,connection.getUsedChannels());
+            }
+
+            if(usedCount>=32){
+                states=4;
+            }else if(usedCount>=24){
+                states=3;
+            }else if(usedCount>=16){
+                states=2;
+            }else if(usedCount>=8){
+                states=1;
+            }else if(usedCount>=0){
+                states=0;
+            }
+        }
+
+        BlockState currentState=this.getBlockState();
+        if(currentState.getValue(WirelessTransceiverBlock.STATE)!=states){
+            this.level.setBlock(this.worldPosition,currentState.setValue(WirelessTransceiverBlock.STATE,states),3);
+        }
+    }
+
 
     /* ===================== IInWorldGridNodeHost ===================== */
     @Override

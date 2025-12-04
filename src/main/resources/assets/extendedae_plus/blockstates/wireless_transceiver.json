@@ -1,4 +1,4 @@
-{
+  {
   "variants": {
     "state=0": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_0" },
     "state=1": { "model": "extendedae_plus:block/wirelesstransceiver/wireless_transceiver_1" },
