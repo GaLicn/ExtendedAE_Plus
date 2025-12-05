@@ -16,6 +16,7 @@ import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
@@ -45,7 +46,7 @@ import java.util.UUID;
  * - 建立到无线主站的网格连接。
  */
 @Mixin(value = PatternProviderLogic.class, priority = 900, remap = false)
-public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge, PatternProviderLogicVirtualCompatBridge {
+public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge, PatternProviderLogicVirtualCompatBridge, PatternProviderLogicUpgradeCompatBridge {
 
     @Unique
     private IUpgradeInventory eap$compatUpgrades = UpgradeInventories.empty();
@@ -84,17 +85,14 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             at = @At("TAIL"))
     private void eap$compatInit(IManagedGridNode mainNode, PatternProviderLogicHost host, int size, CallbackInfo ci) {
         try {
-            
             if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
                 // 未安装AppliedFlux，我们需要提供升级槽
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
                         host.getTerminalIcon().getItem(), 2, this::eap$compatOnUpgradesChanged);
             } else {
-                // 安装了AppliedFlux，我们不提供升级槽，但保留空的兼容槽用于备用
+                // 安装了AppliedFlux，我们不提供升级槽，保留空的兼容槽用于备用
+                // AppFlux 的升级槽变更会通过 PatternProviderLogicUpgradesMixin 的 bridge 回调到我们
                 this.eap$compatUpgrades = UpgradeInventories.empty();
-                
-                // 尝试监听AppliedFlux的升级变更
-                this.eap$tryHookAppliedFluxUpgradeChanges();
             }
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 初始化兼容升级槽失败", t);
@@ -116,20 +114,12 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     /**
-     * 尝试监听AppliedFlux的升级变更
+     * 实现 PatternProviderLogicUpgradeCompatBridge 接口
+     * 由 PatternProviderLogicUpgradesMixin 在升级槽变更时调用
      */
-    @Unique
-    private void eap$tryHookAppliedFluxUpgradeChanges() {
-        try {
-            if (this instanceof IUpgradeableObject upgradeableObject) {
-                IUpgradeInventory afUpgrades = upgradeableObject.getUpgrades();
-                if (afUpgrades != null) {
-                    // 我们不能直接修改AppliedFlux的升级槽回调，但我们可以定期检查
-                    // 这里我们先记录一下，实际的检查会在tick中进行
-                }
-            }
-        } catch (Throwable t) {
-        }
+    @Override
+    public void eap$onCompatUpgradesChangedHook() {
+        this.eap$compatOnUpgradesChanged();
     }
 
 
@@ -236,45 +226,16 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Override
     public void eap$handleDelayedInit() {
-        // 如果还未初始化，或者需要重新检查AppliedFlux升级槽
+        // 只负责初始化/恢复逻辑，不再承担"发现升级槽变更"的任务
+        // 升级槽变更现在由回调 + bridge 触发
         if (!this.eap$compatHasInitialized) {
             this.eap$compatInitializeChannelLink();
-        } else if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-            // 安装了AppliedFlux时，定期检查升级槽变化
-            try {
-                IUpgradeInventory afUpgrades = this.eap$getAppliedFluxUpgrades();
-                if (afUpgrades != null && this.eap$hasChannelCard(afUpgrades)) {
-                    // 检查频道是否发生变化
-                    for (ItemStack stack : afUpgrades) {
-                        if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                            long newChannel = ChannelCardItem.getChannel(stack);
-                            if (newChannel != this.eap$compatLastChannel) {
-                                this.eap$compatLastChannel = -1; // 强制重新初始化
-                                this.eap$compatLastOwner = null;
-                                this.eap$compatHasInitialized = false;
-                                this.eap$compatInitializeChannelLink();
-                                this.eap$compatSyncVirtualCraftingState();
-                            }
-                            break;
-                        }
-                    }
-                } else if (this.eap$compatLastChannel != 0L) {
-                    // 频道卡被移除
-                    if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                        this.eap$compatLastChannel = -1;
-                        this.eap$compatLastOwner = null;
-                        this.eap$compatHasInitialized = false;
-                        this.eap$compatInitializeChannelLink();
-                        this.eap$compatSyncVirtualCraftingState();
-                    }
-                }
-            } catch (Throwable t) {
-            }
         }
     }
 
     /**
-     * 指示 PatternProviderLogic 的 Ticker 是否需要保持慢速 tick 以轮询频道卡或维持无线连接。
+     * 指示 PatternProviderLogic 的 Ticker 是否需要保持慢速 tick 以维持无线连接。
+     * 不再用于轮询升级槽变更（现在由回调处理）
      */
     @Override
     public boolean eap$shouldKeepTicking() {
@@ -287,31 +248,16 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (!this.eap$compatHasInitialized) {
                 return true;
             }
-            // 安装了 AppliedFlux：根据连接状态与频道卡存在性决定是否维持慢速tick
-            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                // 若曾经设置过频道或者当前存在未连通的链接，则保持tick
-                if (this.eap$compatLastChannel != 0L) {
-                    return true;
-                }
-                if (this.eap$compatLink != null && !this.eap$compatLink.isConnected()) {
-                    return true;
-                }
-                try {
-                    IUpgradeInventory afUpgrades = this.eap$getAppliedFluxUpgrades();
-                    if (afUpgrades != null && this.eap$hasChannelCard(afUpgrades)) {
-                        // 槽中有频道卡，保持tick以尽快完成连接
-                        return true;
-                    }
-                } catch (Throwable ignored) {
-                }
-                // 否则可以休眠
-                return false;
-            }
-            // 未安装 AppliedFlux：当存在频道卡但连接尚未建立时保持tick
-            if (this.eap$compatUpgrades != null && this.eap$hasChannelCard(this.eap$compatUpgrades)) {
+            // 有频道卡但链接未连上：保持tick
+            IUpgradeInventory upgrades = this.eap$compatGetEffectiveUpgrades();
+            if (upgrades != null && this.eap$hasChannelCard(upgrades)) {
                 if (this.eap$compatLink == null || !this.eap$compatLink.isConnected()) {
                     return true;
                 }
+            }
+            // 链接存在但未连接：保持tick
+            if (this.eap$compatLink != null && !this.eap$compatLink.isConnected()) {
+                return true;
             }
         } catch (Throwable ignored) {
         }

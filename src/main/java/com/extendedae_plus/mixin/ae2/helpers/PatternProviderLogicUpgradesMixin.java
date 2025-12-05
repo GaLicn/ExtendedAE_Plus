@@ -167,6 +167,12 @@ public abstract class PatternProviderLogicUpgradesMixin {
                 }
             }
             
+            // 通过 Bridge 接口通知 CompatMixin 升级槽已变更
+            // 这样无论是否安装 AppFlux，所有升级槽变更都会触发频道卡/虚拟合成卡的重新检测
+            if ((Object) this instanceof com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge bridge) {
+                bridge.eap$onCompatUpgradesChangedHook();
+            }
+            
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器][升级槽] onUpgradesChanged 处理失败", t);
         }
