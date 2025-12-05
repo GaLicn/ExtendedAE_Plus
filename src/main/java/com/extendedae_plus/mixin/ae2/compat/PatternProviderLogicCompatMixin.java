@@ -119,6 +119,11 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             return;
         }
 
+        var be = this.host.getBlockEntity();
+        if (be == null || be.getLevel() == null || be.getLevel().isClientSide) {
+            return;
+        }
+
         var grid = getGrid();
         if (grid == null) {
             return;
@@ -140,7 +145,12 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                         var tasks = accessor.extendedae_plus$getTasks();
                         var progress = tasks.get(patternDetails);
                         if (progress != null && progress.extendedae_plus$getValue() <= 1) {
-                            cluster.cancelJob();
+                            cluster.updateOutput(null);
+                            try {
+                                logicAccessor.extendedae_plus$invokeFinishJob(true);
+                            } catch (Throwable ignored) {
+                                cluster.cancelJob();
+                            }
                             break;
                         }
                     }
