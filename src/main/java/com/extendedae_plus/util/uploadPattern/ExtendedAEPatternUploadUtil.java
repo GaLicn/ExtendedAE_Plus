@@ -23,11 +23,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.loading.FMLPaths;
@@ -577,6 +580,11 @@ public class ExtendedAEPatternUploadUtil {
 
     private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
         if (grid == null || pattern == null || pattern.isEmpty()) return false;
+        CustomData defaultData = CustomData.of(new CompoundTag());
+        ItemStack patternCopy = pattern.copy();
+        CompoundTag newTag= patternCopy.getOrDefault(DataComponents.CUSTOM_DATA,defaultData).copyTag();
+        newTag.remove("encodePlayer");
+        patternCopy.set(DataComponents.CUSTOM_DATA, CustomData.of(newTag));
         try {
             // 先检查提供外部插入视图的内部库存
             List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
@@ -584,7 +592,13 @@ public class ExtendedAEPatternUploadUtil {
                 if (inv == null) continue;
                 for (int i = 0; i < inv.size(); i++) {
                     ItemStack s = inv.getStackInSlot(i);
-                    if (!s.isEmpty() && net.minecraft.world.item.ItemStack.isSameItemSameComponents(s, pattern)) {
+
+                    ItemStack sCopy=s.copy();
+                    CompoundTag sNewTag=sCopy.getOrDefault(DataComponents.CUSTOM_DATA,defaultData).copyTag();
+                    sNewTag.remove("encodePlayer");
+                    sCopy.set(DataComponents.CUSTOM_DATA, CustomData.of(sNewTag));
+
+                    if (!sCopy.isEmpty() && ItemStack.isSameItemSameComponents(sCopy, patternCopy)) {
                         return true;
                     }
                 }

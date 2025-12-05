@@ -28,3 +28,4 @@ repo
 othermods
 crashreport
 .cursor
+/src/generated/resources/.cache

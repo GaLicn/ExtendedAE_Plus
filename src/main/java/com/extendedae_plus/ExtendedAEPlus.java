@@ -32,12 +32,9 @@ import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(ExtendedAEPlus.MODID)
 public class ExtendedAEPlus {
-    // Define mod id in a common place for everything to reference
     public static final String MODID = "extendedae_plus";
-    // Directly reference a slf4j logger
     public static final Logger LOGGER = LogUtils.getLogger();
     // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
     @Nullable
@@ -45,10 +42,7 @@ public class ExtendedAEPlus {
     @Nullable
     private static MinecraftServer storageManagerServer;
 
-    // The constructor for the mod class is the first code that is run when your mod is loaded.
-    // FML will recognize some parameter types like IEventBus or ModContainer and pass them in automatically.
     public ExtendedAEPlus(IEventBus modEventBus, ModContainer modContainer) {
-        // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
         // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
         modEventBus.addListener(ModNetwork::registerPayloadHandlers);
@@ -60,13 +54,9 @@ public class ExtendedAEPlus {
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
-        // Register the Deferred Register to the mod event bus so menu types get registered
         ModMenuTypes.MENUS.register(modEventBus);
 
         EAPComponents.DR.register(modEventBus);
-        // Register ourselves for server and other game events we are interested in.
-        // Note that this is necessary if and only if we want *this* class (ExtendedAEPlus) to respond directly to events.
-        // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
@@ -75,7 +65,6 @@ public class ExtendedAEPlus {
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
         modContainer.registerConfig(ModConfig.Type.SERVER, ModConfigs.SERVER_SPEC, "extendedae_plus-server.toml");
     }
-
     // 便捷 ResourceLocation 工具
     public static ResourceLocation id(String path) {
         return ResourceLocation.fromNamespaceAndPath(MODID, path);
@@ -99,7 +88,6 @@ public class ExtendedAEPlus {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
         // 示例日志，避免引用不存在的模板 Config 字段
         LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
@@ -182,11 +170,8 @@ public class ExtendedAEPlus {
         });
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
         LOGGER.info("HELLO from server starting");
     }
 }
-
