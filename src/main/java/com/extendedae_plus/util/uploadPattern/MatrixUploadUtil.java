@@ -147,9 +147,17 @@ public final class MatrixUploadUtil {
     private static boolean matrixContainsPattern(@NotNull List<InternalInventory> inventories, @NotNull ItemStack pattern) {
         for (InternalInventory inv : inventories) {
             if (inv == null) continue;
+            ItemStack patternCopy = pattern.copy();
+            if (patternCopy.getTag() != null) {
+                patternCopy.getTag().remove("encodePlayer");
+            }
             for (int i = 0; i < inv.size(); i++) {
                 ItemStack s = inv.getStackInSlot(i);
-                if (!s.isEmpty() && ItemStack.isSameItemSameTags(s, pattern)) {
+                ItemStack sCopy = s.copy();
+                if (sCopy.getTag() != null) {
+                    sCopy.getTag().remove("encodePlayer");
+                }
+                if (!s.isEmpty() && ItemStack.isSameItemSameTags(sCopy, patternCopy)) {
                     return true;
                 }
             }
