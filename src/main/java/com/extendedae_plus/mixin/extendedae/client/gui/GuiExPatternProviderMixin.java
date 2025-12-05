@@ -54,8 +54,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     private ActionEPPButton divideBy2Button;
     private ActionEPPButton x5Button;
     private ActionEPPButton divideBy5Button;
-    private ActionEPPButton x10Button;
-    private ActionEPPButton divideBy10Button;
     public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
     }
@@ -210,18 +208,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         }, NewIcon.DIVIDE2);
         this.divideBy2Button.setVisibility(true);
 
-        this.x10Button = new ActionEPPButton((b) -> {
-            var conn = Minecraft.getInstance().getConnection();
-            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.MUL10));
-        }, NewIcon.MULTIPLY10);
-        this.x10Button.setVisibility(true);
-
-        this.divideBy10Button = new ActionEPPButton((b) -> {
-            var conn = Minecraft.getInstance().getConnection();
-            if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.DIV10));
-        }, NewIcon.DIVIDE10);
-        this.divideBy10Button.setVisibility(true);
-
         this.divideBy5Button = new ActionEPPButton((b) -> {
             var conn = Minecraft.getInstance().getConnection();
             if (conn != null) conn.send(new ScalePatternsC2SPacket(ScalePatternsC2SPacket.Operation.DIV5));
@@ -239,8 +225,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addRenderableWidget(this.x2Button);
         this.addRenderableWidget(this.divideBy5Button);
         this.addRenderableWidget(this.x5Button);
-        this.addRenderableWidget(this.divideBy10Button);
-        this.addRenderableWidget(this.x10Button);
     }
 
     @Override
@@ -265,12 +249,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         if (this.divideBy2Button != null) {
             this.divideBy2Button.setVisibility(true);
         }
-        if (this.x10Button != null) {
-            this.x10Button.setVisibility(true);
-        }
-        if (this.divideBy10Button != null) {
-            this.divideBy10Button.setVisibility(true);
-        }
         if (this.divideBy5Button != null) {
             this.divideBy5Button.setVisibility(true);
         }
@@ -292,12 +270,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             }
             if (this.x5Button != null && !this.renderables.contains(this.x5Button)) {
                 this.addRenderableWidget(this.x5Button);
-            }
-            if (this.divideBy10Button != null && !this.renderables.contains(this.divideBy10Button)) {
-                this.addRenderableWidget(this.divideBy10Button);
-            }
-            if (this.x10Button != null && !this.renderables.contains(this.x10Button)) {
-                this.addRenderableWidget(this.x10Button);
             }
         } catch (Throwable ignored) {}
 
@@ -322,14 +294,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                     this.removeWidget(this.x5Button);
                     this.addRenderableWidget(this.x5Button);
                 }
-                if (this.divideBy10Button != null) {
-                    this.removeWidget(this.divideBy10Button);
-                    this.addRenderableWidget(this.divideBy10Button);
-                }
-                if (this.x10Button != null) {
-                    this.removeWidget(this.x10Button);
-                    this.addRenderableWidget(this.x10Button);
-                }
             } catch (Throwable ignored) {}
         }
 
@@ -353,14 +317,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         if (this.x5Button != null) {
             this.x5Button.setX(bx);
             this.x5Button.setY(by + spacing * 3);
-        }
-        if (this.divideBy10Button != null) {
-            this.divideBy10Button.setX(bx);
-            this.divideBy10Button.setY(by + spacing * 4);
-        }
-        if (this.x10Button != null) {
-            this.x10Button.setX(bx);
-            this.x10Button.setY(by + spacing * 5);
         }
 
         // 每帧确保当前页槽位处于启用状态，非当前页禁用
