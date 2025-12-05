@@ -58,6 +58,7 @@
   "extendedae_plus.upload_to_matrix.fail_full": "Assembly Matrix Pattern Storage Is Full or Cannot Be Inserted",
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.add_mapping": "Add Mapping",
+  "extendedae_plus.screen.remove_mapping": "Remove Mapping",
   "extendedae_plus.screen.cn_name": "Chinese Name",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
   "extendedae_plus.pattern.hovertext.player": "Encoded by %s",

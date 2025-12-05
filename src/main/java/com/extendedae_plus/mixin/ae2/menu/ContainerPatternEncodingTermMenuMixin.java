@@ -104,7 +104,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 return; // 仅服务器执行
             }
             if (this.eap$consumeShiftUploadFlag()) {
-                return; // 未按下 Shift，不自动上传
+                return; // 按下 Shift，不自动上传
             }
             var menu = (PatternEncodingTermMenu) (Object) this;
             if (menu.getMode() != EncodingMode.CRAFTING

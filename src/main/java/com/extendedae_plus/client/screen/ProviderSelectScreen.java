@@ -273,7 +273,7 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(addMap);
 
         // 删除映射（按中文值精确匹配删除）按钮
-        Button delByCn = Button.builder(Component.literal("删除映射"), b -> this.deleteMappingByCnFromUI())
+        Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.remove_mapping"), b -> this.deleteMappingByCnFromUI())
                 .bounds(centerX + 240, navY + 30, 60, 20)
                 .build();
         this.addRenderableWidget(delByCn);

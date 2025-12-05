@@ -19,7 +19,7 @@ license = "LGPL-3.0-or-later"
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]]
 modId = "extendedae_plus"
-version = "1.21.1-1.4.4"
+version = "1.21.1-1.5.0"
 displayName = "ExtendedAE-Plus"
 issueTrackerURL = "https://github.com/GaLicn/ExtendedAE_Plus/issues"
 displayURL = "https://github.com/GaLicn/ExtendedAE_Plus"

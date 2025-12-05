@@ -58,6 +58,7 @@
   "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入",
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.add_mapping": "增加映射",
+  "extendedae_plus.screen.remove_mapping": "删除映射",
   "extendedae_plus.screen.cn_name": "中文名",
   "extendedae_plus.button.choose_provider":"上传样板",
   "extendedae_plus.pattern.hovertext.player": "由 %s 编码",
