@@ -33,12 +33,9 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V",
             at = @At("TAIL"))
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
-        this.eap$toolbox = new ToolboxMenu(this);
-
-        // 当未安装 AppliedFlux 时，我们负责注入升级槽；安装了 AF 则由 AF 的菜单 Mixin 负责，避免重复渲染
         if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            this.eap$toolbox = new ToolboxMenu(this);
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
-        } else {
         }
     }
 
