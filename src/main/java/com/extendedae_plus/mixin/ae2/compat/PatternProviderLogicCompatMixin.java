@@ -490,6 +490,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                     }
                 } else {
                     eap$compatInitializeChannelLink();
+                    eap$compatSyncVirtualCraftingState();
                 }
             }
         } catch (Exception e) {
