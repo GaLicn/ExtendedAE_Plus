@@ -54,6 +54,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private final List<LabelEntry> filtered = new ArrayList<>();
     private int scrollOffset = 0;
     private int selectedIndex = -1;
+    private String lastSelectedLabel = "";
     private String currentLabel = "";
     private long currentChannel = 0L;
 
@@ -153,6 +154,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             int idx = scrollOffset + row;
             if (idx >= 0 && idx < filtered.size()) {
                 selectedIndex = idx;
+                lastSelectedLabel = filtered.get(idx).label();
             }
             return true;
         }
@@ -245,6 +247,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     private void applyFilter() {
+        String prevSelected = lastSelectedLabel;
         String q = searchBox.getValue() == null ? "" : searchBox.getValue().trim().toLowerCase();
         filtered.clear();
         if (q.isEmpty()) {
@@ -257,7 +260,16 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
             }
         }
         scrollOffset = 0;
-        selectedIndex = filtered.isEmpty() ? -1 : Math.min(selectedIndex, filtered.size() - 1);
+        selectedIndex = -1;
+        if (prevSelected != null && !prevSelected.isEmpty()) {
+            for (int i = 0; i < filtered.size(); i++) {
+                if (filtered.get(i).label().equals(prevSelected)) {
+                    selectedIndex = i;
+                    ensureSelectionVisible();
+                    break;
+                }
+            }
+        }
     }
 
     private void requestList() {
@@ -267,6 +279,8 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private void sendSet(String label) {
         if (label == null) label = "";
         ModNetwork.CHANNEL.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.SET));
+        this.lastSelectedLabel = label;
+        this.searchBox.setValue("");
         requestList();
     }
 
@@ -277,11 +291,13 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
         if (label == null) label = "";
         ModNetwork.CHANNEL.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.DELETE));
+        this.lastSelectedLabel = "";
         requestList();
     }
 
     private void sendDisconnect() {
         ModNetwork.CHANNEL.sendToServer(new LabelNetworkActionC2SPacket(bePos, "", LabelNetworkActionC2SPacket.Action.DISCONNECT));
+        this.lastSelectedLabel = "";
         requestList();
     }
 
@@ -293,12 +309,20 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     public void updateList(List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, long currentChannel) {
+        String prevSelected = getSelectedLabel();
         this.entries.clear();
         for (LabelNetworkRegistry.LabelNetworkSnapshot s : list) {
             this.entries.add(new LabelEntry(s.label(), s.channel()));
         }
         this.currentLabel = currentLabel == null ? "" : currentLabel;
         this.currentChannel = currentChannel;
+        if (prevSelected != null && !prevSelected.isEmpty()) {
+            this.lastSelectedLabel = prevSelected;
+        } else if (this.currentLabel != null && !this.currentLabel.isEmpty()) {
+            this.lastSelectedLabel = this.currentLabel;
+        } else {
+            this.lastSelectedLabel = "";
+        }
         applyFilter();
     }
 
@@ -328,5 +352,16 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         int tx = x + (BTN_W - this.font.width(s)) / 2;
         int ty = y + (BTN_H - this.font.lineHeight) / 2 + 1;
         gfx.drawString(this.font, s, tx, ty, 0xFFFFFF, false);
+    }
+
+    private void ensureSelectionVisible() {
+        if (selectedIndex < 0) return;
+        int maxOffset = Math.max(0, filtered.size() - VISIBLE_ROWS);
+        int targetRow = selectedIndex;
+        if (targetRow < scrollOffset) {
+            scrollOffset = targetRow;
+        } else if (targetRow >= scrollOffset + VISIBLE_ROWS) {
+            scrollOffset = Math.min(maxOffset, targetRow - VISIBLE_ROWS + 1);
+        }
     }
 }

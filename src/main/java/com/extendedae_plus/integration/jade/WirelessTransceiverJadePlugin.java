@@ -2,6 +2,8 @@ package com.extendedae_plus.integration.jade;
 
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
+import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
+import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
 import snownee.jade.api.IWailaPlugin;
@@ -14,6 +16,7 @@ public class WirelessTransceiverJadePlugin implements IWailaPlugin {
 	public void register(IWailaCommonRegistration registration) {
 		// 注册服务端数据提供者（用于同步数据）
 		registration.registerBlockDataProvider(WirelessTransceiverProvider.INSTANCE, WirelessTransceiverBlockEntity.class);
+		registration.registerBlockDataProvider(com.extendedae_plus.integration.jade.LabeledWirelessTransceiverProvider.INSTANCE, LabeledWirelessTransceiverBlockEntity.class);
 	}
 
 	@Override
@@ -22,5 +25,6 @@ public class WirelessTransceiverJadePlugin implements IWailaPlugin {
 		for (var component : WirelessTransceiverJadePluginComponents.values()) {
 			registration.registerBlockComponent(component, WirelessTransceiverBlock.class);
 		}
+		registration.registerBlockComponent(com.extendedae_plus.integration.jade.LabeledWirelessTransceiverComponents.LABEL_AND_CHANNEL, LabeledWirelessTransceiverBlock.class);
 	}
 }

@@ -214,10 +214,12 @@
   "extendedae_plus.jade.unlocked": "未锁定",
   "extendedae_plus.jade.online": "设备在线",
   "extendedae_plus.jade.offline": "设备离线",
+  "extendedae_plus.jade.label": "标签: %s",
   "extendedae_plus.jade.channels": "频道: %s",
   "extendedae_plus.jade.channels_of": "频道: %s/%s",
   "extendedae_plus.jade.owner": "所有者: %s",
   "extendedae_plus.jade.owner.public": "所有者: 公共",
+  "config.jade.plugin_extendedae_plus.labeled_wireless_component": "标签无线收发器信息",
 
   "extendedae_plus.command.server_side_only": "此命令必须在服务器端执行",
   "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager未初始化",

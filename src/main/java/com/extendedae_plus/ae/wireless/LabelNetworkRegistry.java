@@ -105,24 +105,17 @@ public class LabelNetworkRegistry extends SavedData {
     }
 
     /**
-     * 注销端点；若网络无端点则清理。
+     * 注销端点；不再自动删除网络，网络的移除需显式调用 removeNetwork。
      */
     public synchronized void unregister(IWirelessEndpoint endpoint) {
         ServerLevel level = endpoint.getServerLevel();
         if (level == null) return;
         ResourceKey<Level> dimKey = ModConfig.INSTANCE.wirelessCrossDimEnable ? null : level.dimension();
         BlockPos pos = endpoint.getBlockPos();
-        Iterator<Map.Entry<Key, LabelNetwork>> it = networks.entrySet().iterator();
-        while (it.hasNext()) {
-            var entry = it.next();
-            LabelNetwork net = entry.getValue();
+        for (LabelNetwork net : networks.values()) {
             net.endpoints.removeIf(ref -> ref.matches(dimKey, pos));
-            if (net.endpoints.isEmpty()) {
-                net.destroyVirtualNode();
-                it.remove();
-                setDirty();
-            }
         }
+        setDirty();
     }
 
     public synchronized LabelNetwork getNetwork(ServerLevel level, String rawLabel, @Nullable UUID placerId) {
@@ -132,6 +125,24 @@ public class LabelNetworkRegistry extends SavedData {
         ResourceKey<Level> dimKey = ModConfig.INSTANCE.wirelessCrossDimEnable ? null : level.dimension();
         Key key = new Key(dimKey, label, owner);
         return networks.get(key);
+    }
+
+    /**
+     * 显式删除一个网络（销毁虚拟节点），仅在 UI “删除” 时调用。
+     */
+    public synchronized boolean removeNetwork(ServerLevel level, String rawLabel, @Nullable UUID placerId) {
+        String label = normalizeLabel(rawLabel);
+        if (label == null) return false;
+        UUID owner = placerId == null ? WirelessMasterRegistry.PUBLIC_NETWORK_UUID : WirelessTeamUtil.getNetworkOwnerUUID(level, placerId);
+        ResourceKey<Level> dimKey = ModConfig.INSTANCE.wirelessCrossDimEnable ? null : level.dimension();
+        Key key = new Key(dimKey, label, owner);
+        LabelNetwork net = networks.remove(key);
+        if (net != null) {
+            net.destroyVirtualNode();
+            setDirty();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -147,7 +158,7 @@ public class LabelNetworkRegistry extends SavedData {
             if (!Objects.equals(key.dim(), dimKey)) continue;
             list.add(new LabelNetworkSnapshot(key.label(), entry.getValue().channel()));
         }
-        list.sort(Comparator.comparing(LabelNetworkSnapshot::label));
+        list.sort(Comparator.comparingLong(LabelNetworkSnapshot::channel));
         return list;
     }
 
@@ -190,7 +201,12 @@ public class LabelNetworkRegistry extends SavedData {
     }
 
     private long allocateChannel() {
-        return nextChannel++;
+        // 全局递增，不复用历史频道，从 1_000_000 起
+        if (nextChannel < CHANNEL_START) {
+            nextChannel = CHANNEL_START;
+        }
+        long ch = nextChannel++;
+        return ch;
     }
 
     /* 内部类型 */

@@ -52,7 +52,15 @@ public class LabelNetworkActionC2SPacket {
 
             switch (packet.action) {
                 case SET -> te.applyLabel(packet.label);
-                case DELETE, DISCONNECT -> te.clearLabel();
+                case DELETE -> {
+                    String target = packet.label == null || packet.label.isEmpty() ? te.getLabelForDisplay() : packet.label;
+                    if (target != null && !target.isEmpty()) {
+                        com.extendedae_plus.ae.wireless.LabelNetworkRegistry.get(level)
+                                .removeNetwork(level, target, te.getPlacerId());
+                    }
+                    te.clearLabel();
+                }
+                case DISCONNECT -> te.clearLabel();
             }
         });
         ctx.get().setPacketHandled(true);

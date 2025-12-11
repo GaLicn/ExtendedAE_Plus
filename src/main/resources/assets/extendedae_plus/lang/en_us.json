@@ -215,10 +215,12 @@
   "extendedae_plus.jade.unlocked": "Unlocked",
   "extendedae_plus.jade.online": "Device Online",
   "extendedae_plus.jade.offline": "Device Offline",
+  "extendedae_plus.jade.label": "Label: %s",
   "extendedae_plus.jade.channels": "Channels: %s",
   "extendedae_plus.jade.channels_of": "Channels: %s/%s",
   "extendedae_plus.jade.owner": "Owner: %s",
   "extendedae_plus.jade.owner.public": "Owner: Public",
+  "config.jade.plugin_extendedae_plus.labeled_wireless_component": "Labeled Wireless Info",
 
   "extendedae_plus.command.server_side_only": "This command must be run on server side",
   "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager is not initialized",
