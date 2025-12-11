@@ -21,12 +21,12 @@ import java.util.List;
 
 /**
  * 标签无线收发器屏幕（UI 占位，等待按钮布局）。
- * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 194x156。
+ * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 256x156。
  */
 public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<LabeledWirelessTransceiverMenu> {
     private static final ResourceLocation TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
-    private static final int BTN_U = 197;
-    private static final int BTN_V = 54;
+    private static final int BTN_U = 2;
+    private static final int BTN_V = 159;
     private static final int BTN_W = 28;
     private static final int BTN_H = 16;
     private static final int TEX_W = 256;
@@ -34,14 +34,15 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private static final int LIST_X = 8;
     private static final int LIST_Y = 21;
-    private static final int LIST_W = 100;
+    private static final int LIST_W = 112; // 119-8+1
     private static final int LIST_H = 121; // 141-21+1
     private static final int ROW_H = 12;
     private static final int VISIBLE_ROWS = LIST_H / ROW_H; // 10
-    private static final int SCROLL_X = 111;
+    private static final int SCROLL_X = 123;
     private static final int SCROLL_Y = 21;
     private static final int SCROLL_W = 6;
     private static final int SCROLL_H = LIST_H;
+    private static final int INFO_MAX_WIDTH = 116; // 信息区实际宽度(249-134+1=116)
 
     private EditBox searchBox;
     private ImageButton newBtn;
@@ -62,7 +63,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     public LabeledWirelessTransceiverScreen(LabeledWirelessTransceiverMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
-        this.imageWidth = 194;
+        this.imageWidth = 256;
         this.imageHeight = 156;
         this.inventoryLabelY = this.imageHeight; // 不显示玩家物品栏标签
         this.bePos = menu.getBlockEntityPos();
@@ -71,10 +72,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     @Override
     protected void init() {
         super.init();
-        // 搜索框：起点(78,4) 终点(189,15) => 宽112 高12
-        int sx = this.leftPos + 78;
-        int sy = this.topPos + 4;
-        this.searchBox = new EditBox(this.font, sx, sy, 112, 12, Component.empty());
+        // 搜索框：起点(134,23) 终点(249,31) => 宽116 高9（取整为9）
+        int sx = this.leftPos + 134;
+        int sy = this.topPos + 23;
+        this.searchBox = new EditBox(this.font, sx, sy, 116, 9, Component.empty());
         this.searchBox.setBordered(false);
         this.searchBox.setMaxLength(64);
         this.searchBox.setVisible(true);
@@ -84,10 +85,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         });
         this.addRenderableWidget(this.searchBox);
 
-        int startX = this.leftPos + 124;
-        int startY = this.topPos + 91;
-        int hGap = 8;
-        int vGap = 10;
+        int startX = this.leftPos + 145;
+        int startY = this.topPos + 101;
+        int hGap = 30;
+        int vGap = 8;
         int secondColX = startX + BTN_W + hGap;
         int secondRowY = startY + BTN_H + vGap;
 
@@ -124,7 +125,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         // 左上角标题
         gfx.drawString(this.font, this.title, 8, 8, 0x404040, false);
         // 右侧信息区标题
-        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 124, 24, 0x404040, false);
+        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 134, 8, 0x404040, false);
     }
 
     @Override
@@ -134,11 +135,11 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
         // 占位绘制：列表和信息区内的内容框线
         // 标签列表区域
-        gfx.fill(this.leftPos + 8, this.topPos + 21, this.leftPos + 107 + 1, this.topPos + 141 + 1, 0x20FFFFFF);
+        gfx.fill(this.leftPos + 8, this.topPos + 21, this.leftPos + 119 + 1, this.topPos + 141 + 1, 0x20FFFFFF);
         // 滚动条区域
-        gfx.fill(this.leftPos + 111, this.topPos + 21, this.leftPos + 116 + 1, this.topPos + 141 + 1, 0x20000000);
+        gfx.fill(this.leftPos + 123, this.topPos + 21, this.leftPos + 128 + 1, this.topPos + 141 + 1, 0x20000000);
         // 当前收发器信息区域
-        gfx.fill(this.leftPos + 121, this.topPos + 21, this.leftPos + 189 + 1, this.topPos + 76 + 1, 0x10FFFFFF);
+        gfx.fill(this.leftPos + 134, this.topPos + 41, this.leftPos + 249 + 1, this.topPos + 92 + 1, 0x10FFFFFF);
 
         renderList(gfx);
         renderScrollBar(gfx);
@@ -201,16 +202,16 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
 
         // 信息显示
-        int infoX = this.leftPos + 124;
-        int infoY = this.topPos + 36;
+        int infoX = this.leftPos + 134;
+        int infoY = this.topPos + 41;
         String labelLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_label").getString() + ": " + (currentLabel == null || currentLabel.isEmpty() ? "-" : currentLabel);
         String ownerLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_owner").getString() + ": " + (currentOwner == null || currentOwner.isEmpty() ? Component.translatable("extendedae_plus.jade.owner.public").getString() : currentOwner);
         Component channelComp = maxChannels <= 0
                 ? Component.translatable("extendedae_plus.jade.channels", usedChannels)
                 : Component.translatable("extendedae_plus.jade.channels_of", usedChannels, maxChannels);
-        gfx.drawString(this.font, labelLine, infoX, infoY, 0x404040, false);
-        gfx.drawString(this.font, ownerLine, infoX, infoY + 12, 0x404040, false);
-        gfx.drawString(this.font, channelComp, infoX, infoY + 24, 0x404040, false);
+        gfx.drawString(this.font, trimInfo(labelLine), infoX, infoY, 0x404040, false);
+        gfx.drawString(this.font, trimInfo(ownerLine), infoX, infoY + 12, 0x404040, false);
+        gfx.drawString(this.font, trimInfo(channelComp.getString()), infoX, infoY + 24, 0x404040, false);
     }
 
     private void renderScrollBar(GuiGraphics gfx) {
@@ -342,10 +343,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private void drawAllButtonText(GuiGraphics gfx) {
         // 按钮文本（24px 内居中，避免溢出）。放在 super.render 之后，确保绘制在按钮纹理之上。
-        int startX = this.leftPos + 124;
-        int startY = this.topPos + 91;
-        int hGap = 8;
-        int vGap = 10;
+        int startX = this.leftPos + 145;
+        int startY = this.topPos + 101;
+        int hGap = 30;
+        int vGap = 8;
         int secondColX = startX + BTN_W + hGap;
         int secondRowY = startY + BTN_H + vGap;
 
@@ -371,5 +372,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         } else if (targetRow >= scrollOffset + VISIBLE_ROWS) {
             scrollOffset = Math.min(maxOffset, targetRow - VISIBLE_ROWS + 1);
         }
+    }
+
+    private String trimInfo(String text) {
+        if (text == null) return "";
+        return this.font.plainSubstrByWidth(text, INFO_MAX_WIDTH);
     }
 }
