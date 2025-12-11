@@ -80,18 +80,6 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
     }
 
     @Override
-    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
-        // 与旧收发器保持一致：锁定时降低挖掘速度
-        float baseProgress = super.getDestroyProgress(state, player, level, pos);
-        if (level.getBlockEntity(pos) instanceof LabeledWirelessTransceiverBlockEntity te) {
-            if (te.isLocked()) {
-                return baseProgress * 0.1f;
-            }
-        }
-        return baseProgress;
-    }
-
-    @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         if (level.isClientSide) return null;
         return type == ModBlockEntities.LABELED_WIRELESS_TRANSCEIVER_BE.get()

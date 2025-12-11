@@ -2,6 +2,7 @@ package com.extendedae_plus.network;
 
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
+import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,8 +40,27 @@ public class LabelNetworkListC2SPacket {
 
             var list = LabelNetworkRegistry.get(level).listNetworks(level, te.getPlacerId());
             String currentLabel = te.getLabelForDisplay();
-            long currentChannel = te.getFrequency();
-            LabelNetworkListS2CPacket rsp = new LabelNetworkListS2CPacket(pkt.pos, list, currentLabel, currentChannel);
+            String ownerName = te.getPlacerId() != null ? WirelessTeamUtil.getNetworkOwnerName(level, te.getPlacerId()).getString() : "";
+
+            // 计算频道占用信息（与 Jade 显示一致）
+            int usedChannels = 0;
+            int maxChannels = 0;
+            var node = te.getGridNode();
+            if (node != null && node.isActive()) {
+                for (var connection : node.getConnections()) {
+                    usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
+                }
+                if (node instanceof appeng.me.GridNode gridNode) {
+                    var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
+                    if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                        maxChannels = -1;
+                    } else {
+                        maxChannels = gridNode.getMaxChannels();
+                    }
+                }
+            }
+
+            LabelNetworkListS2CPacket rsp = new LabelNetworkListS2CPacket(pkt.pos, list, currentLabel, ownerName, usedChannels, maxChannels);
             com.extendedae_plus.init.ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), rsp);
         });
         ctx.get().setPacketHandled(true);

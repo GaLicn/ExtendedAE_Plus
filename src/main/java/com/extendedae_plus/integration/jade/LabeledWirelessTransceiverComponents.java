@@ -12,10 +12,30 @@ public enum LabeledWirelessTransceiverComponents implements IBlockComponentProvi
         @Override
         protected void add(BlockAccessor accessor, ITooltip tooltip, IPluginConfig config, net.minecraft.nbt.CompoundTag data) {
             String label = data.contains("label") ? data.getString("label") : "";
-            long channel = data.contains("channel") ? data.getLong("channel") : 0L;
             tooltip.add(Component.translatable("extendedae_plus.jade.label", label.isEmpty() ? "-" : label));
-            tooltip.add(Component.translatable("extendedae_plus.jade.frequency", channel));
 
+            // 所有者
+            if (data.contains("ownerName")) {
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner", data.getString("ownerName")));
+            } else if (data.contains("placerId")) {
+                java.util.UUID placerId = data.getUUID("placerId");
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner", placerId.toString().substring(0, 8) + "..."));
+            } else {
+                tooltip.add(Component.translatable("extendedae_plus.jade.owner.public"));
+            }
+
+            // 频道占用
+            if (data.contains("usedChannels") && data.contains("maxChannels")) {
+                int used = data.getInt("usedChannels");
+                int max = data.getInt("maxChannels");
+                if (max <= 0) {
+                    tooltip.add(Component.translatable("extendedae_plus.jade.channels", used));
+                } else {
+                    tooltip.add(Component.translatable("extendedae_plus.jade.channels_of", used, max));
+                }
+            }
+
+            // 网络在线
             if (data.contains("networkUsable")) {
                 boolean online = data.getBoolean("networkUsable");
                 tooltip.add(Component.translatable(online ? "extendedae_plus.jade.online" : "extendedae_plus.jade.offline"));

@@ -44,7 +44,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     private long frequency = 0L;
     @Nullable
     private String labelForDisplay;
-    private boolean locked = false;
     private boolean beingRemoved = false;
 
     @Nullable
@@ -129,16 +128,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     @Nullable
     public String getLabelForDisplay() {
         return labelForDisplay;
-    }
-
-    public boolean isLocked() {
-        return locked;
-    }
-
-    public void setLocked(boolean locked) {
-        if (this.locked == locked) return;
-        this.locked = locked;
-        setChanged();
     }
 
     /**
@@ -290,7 +279,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putLong("frequency", frequency);
-        tag.putBoolean("locked", locked);
         if (labelForDisplay != null) {
             tag.putString("label", labelForDisplay);
         }
@@ -309,7 +297,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     public void loadTag(CompoundTag tag) {
         super.loadTag(tag);
         this.frequency = tag.getLong("frequency");
-        this.locked = tag.getBoolean("locked");
         if (tag.contains("label")) {
             this.labelForDisplay = tag.getString("label");
         } else {

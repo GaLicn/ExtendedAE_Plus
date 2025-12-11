@@ -103,7 +103,7 @@
   "gui.extendedae_plus.labeled_wireless.button.set": "设为当前",
   "gui.extendedae_plus.labeled_wireless.button.refresh": "断开连接",
   "gui.extendedae_plus.labeled_wireless.current_label": "当前标签",
-  "gui.extendedae_plus.labeled_wireless.current_channel": "当前频道",
+  "gui.extendedae_plus.labeled_wireless.current_owner": "所有者",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",
