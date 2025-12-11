@@ -13,12 +13,18 @@ import com.extendedae_plus.ae.wireless.LabelLink;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -31,7 +37,7 @@ import java.util.UUID;
  * - 无 UI（占位），仅提供服务端逻辑与状态更新；
  * - 保留频率字段用于状态显示。
  */
-public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost {
+public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost, MenuProvider {
 
     private IManagedGridNode managedNode;
 
@@ -85,6 +91,17 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     @Override
     public boolean isEndpointRemoved() {
         return super.isRemoved();
+    }
+
+    /* ===================== 菜单接口 ===================== */
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.extendedae_plus.labeled_wireless_transceiver");
+    }
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        return new LabeledWirelessTransceiverMenu(id, inv, this.worldPosition);
     }
 
     /* ===================== 公共方法 ===================== */

@@ -70,6 +70,7 @@
   "block.extendedae_plus.assembler_matrix_speed_plus": "超级装配矩阵速度核心",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "超级装配矩阵合成核心",
   "block.extendedae_plus.assembler_matrix_pattern_plus": "超级装配矩阵样板核心",
+  "block.extendedae_plus.labeled_wireless_transceiver": "标签无线收发器",
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
@@ -95,6 +96,14 @@
   "extendedae_plus.gui.redstone_control.title": "红石控制",
   "extendedae_plus.gui.redstone_control.enabled": "使用红石信号控制加速",
   "extendedae_plus.gui.redstone_control.disabled": "忽略红石信号",
+
+  "gui.extendedae_plus.labeled_wireless.info": "收发器信息",
+  "gui.extendedae_plus.labeled_wireless.button.new": "新建标签",
+  "gui.extendedae_plus.labeled_wireless.button.delete": "删除",
+  "gui.extendedae_plus.labeled_wireless.button.set": "设为当前",
+  "gui.extendedae_plus.labeled_wireless.button.refresh": "断开连接",
+  "gui.extendedae_plus.labeled_wireless.current_label": "当前标签",
+  "gui.extendedae_plus.labeled_wireless.current_channel": "当前频道",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",

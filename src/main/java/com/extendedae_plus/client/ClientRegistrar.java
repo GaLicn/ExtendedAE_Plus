@@ -7,6 +7,7 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
+import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -60,6 +61,7 @@ public final class ClientRegistrar {
      */
     public static void registerMenuScreens() {
         MenuScreens.register(ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(), GlobalProviderModesScreen::new);
+        MenuScreens.register(ModMenuTypes.LABELED_WIRELESS_TRANSCEIVER.get(), LabeledWirelessTransceiverScreen::new);
     }
 
     /**

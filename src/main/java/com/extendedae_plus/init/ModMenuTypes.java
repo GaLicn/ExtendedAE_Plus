@@ -4,6 +4,7 @@ import appeng.menu.implementations.MenuTypeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
+import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -21,6 +22,10 @@ public final class ModMenuTypes {
     public static final RegistryObject<MenuType<NetworkPatternControllerMenu>> NETWORK_PATTERN_CONTROLLER =
             MENUS.register("network_pattern_controller",
                     () -> IForgeMenuType.create(NetworkPatternControllerMenu::new));
+
+    public static final RegistryObject<MenuType<LabeledWirelessTransceiverMenu>> LABELED_WIRELESS_TRANSCEIVER =
+            MENUS.register("labeled_wireless_transceiver",
+                    () -> IForgeMenuType.create(LabeledWirelessTransceiverMenu::new));
 
     public static final RegistryObject<MenuType<EntitySpeedTickerMenu>> ENTITY_TICKER_MENU =
             MENUS.register("entity_speed_ticker",

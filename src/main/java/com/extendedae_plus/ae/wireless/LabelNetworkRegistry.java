@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.Comparator;
 
 /**
  * 标签无线网络注册中心（SavedData）。
@@ -46,6 +47,8 @@ public class LabelNetworkRegistry extends SavedData {
         ServerLevel level = server.getLevel(ServerLevel.OVERWORLD);
         return level.getDataStorage().computeIfAbsent(LabelNetworkRegistry::load, LabelNetworkRegistry::new, SAVE_ID);
     }
+
+    public record LabelNetworkSnapshot(String label, long channel) {}
 
     public static LabelNetworkRegistry get(ServerLevel level) {
         return get(level.getServer());
@@ -129,6 +132,23 @@ public class LabelNetworkRegistry extends SavedData {
         ResourceKey<Level> dimKey = ModConfig.INSTANCE.wirelessCrossDimEnable ? null : level.dimension();
         Key key = new Key(dimKey, label, owner);
         return networks.get(key);
+    }
+
+    /**
+     * 获取当前玩家所属网络列表（按标签排序）。
+     */
+    public synchronized List<LabelNetworkSnapshot> listNetworks(ServerLevel level, @Nullable UUID placerId) {
+        UUID owner = placerId == null ? WirelessMasterRegistry.PUBLIC_NETWORK_UUID : WirelessTeamUtil.getNetworkOwnerUUID(level, placerId);
+        ResourceKey<Level> dimKey = ModConfig.INSTANCE.wirelessCrossDimEnable ? null : level.dimension();
+        List<LabelNetworkSnapshot> list = new ArrayList<>();
+        for (Map.Entry<Key, LabelNetwork> entry : networks.entrySet()) {
+            Key key = entry.getKey();
+            if (!Objects.equals(key.owner(), owner)) continue;
+            if (!Objects.equals(key.dim(), dimKey)) continue;
+            list.add(new LabelNetworkSnapshot(key.label(), entry.getValue().channel()));
+        }
+        list.sort(Comparator.comparing(LabelNetworkSnapshot::label));
+        return list;
     }
 
     /* 序列化 */

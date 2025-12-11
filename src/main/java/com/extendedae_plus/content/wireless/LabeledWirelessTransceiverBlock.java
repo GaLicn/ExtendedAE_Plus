@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -56,8 +57,15 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        // UI 暂未实现，直接吞掉交互，防止旧版徒手调频。
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        if (level.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof LabeledWirelessTransceiverBlockEntity te) {
+            NetworkHooks.openScreen((net.minecraft.server.level.ServerPlayer) player, te, buf -> buf.writeBlockPos(pos));
+            return InteractionResult.CONSUME;
+        }
+        return InteractionResult.PASS;
     }
 
     @Override

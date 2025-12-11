@@ -156,6 +156,18 @@ public final class ModNetwork {
                 .decoder(LabelNetworkActionC2SPacket::decode)
                 .consumerNetworkThread(LabelNetworkActionC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(LabelNetworkListC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(LabelNetworkListC2SPacket::encode)
+                .decoder(LabelNetworkListC2SPacket::decode)
+                .consumerNetworkThread(LabelNetworkListC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(LabelNetworkListS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(LabelNetworkListS2CPacket::encode)
+                .decoder(LabelNetworkListS2CPacket::decode)
+                .consumerNetworkThread(LabelNetworkListS2CPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }

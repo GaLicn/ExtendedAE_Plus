@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  */
 public class LabelNetworkActionC2SPacket {
     public enum Action {
-        SET, DELETE, REFRESH
+        SET, DELETE, DISCONNECT
     }
 
     private final BlockPos pos;
@@ -52,8 +52,7 @@ public class LabelNetworkActionC2SPacket {
 
             switch (packet.action) {
                 case SET -> te.applyLabel(packet.label);
-                case DELETE -> te.clearLabel();
-                case REFRESH -> te.refreshLabel();
+                case DELETE, DISCONNECT -> te.clearLabel();
             }
         });
         ctx.get().setPacketHandled(true);
