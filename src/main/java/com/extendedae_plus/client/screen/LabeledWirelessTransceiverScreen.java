@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -32,16 +33,16 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private static final int TEX_W = 256;
     private static final int TEX_H = 256;
 
-    private static final int LIST_X = 8;
-    private static final int LIST_Y = 21;
-    private static final int LIST_W = 112; // 119-8+1
-    private static final int LIST_H = 121; // 141-21+1
+    private static final int LIST_X = 9;
+    private static final int LIST_Y = 25;
+    private static final int LIST_W = 110; // 118-9+1
+    private static final int LIST_H = 116; // 140-25+1
     private static final int ROW_H = 12;
     private static final int VISIBLE_ROWS = LIST_H / ROW_H; // 10
     private static final int SCROLL_X = 123;
     private static final int SCROLL_Y = 21;
     private static final int SCROLL_W = 6;
-    private static final int SCROLL_H = LIST_H;
+    private static final int SCROLL_H = 121; // 141-21+1
     private static final int INFO_MAX_WIDTH = 116; // 信息区实际宽度(249-134+1=116)
 
     private EditBox searchBox;
@@ -122,10 +123,19 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     @Override
     protected void renderLabels(GuiGraphics gfx, int mouseX, int mouseY) {
-        // 左上角标题
-        gfx.drawString(this.font, this.title, 8, 8, 0x404040, false);
-        // 右侧信息区标题
-        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 134, 8, 0x404040, false);
+        float titleScale = getTitleScale();
+        var pose = gfx.pose();
+        pose.pushPose();
+        pose.translate(8, 8, 0);
+        pose.scale(titleScale, titleScale, 1.0f);
+        gfx.drawString(this.font, this.title, 0, 0, 0x404040, false);
+        pose.popPose();
+
+        pose.pushPose();
+        pose.translate(134, 8, 0);
+        pose.scale(titleScale, titleScale, 1.0f);
+        gfx.drawString(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0x404040, false);
+        pose.popPose();
     }
 
     @Override
@@ -135,7 +145,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
         // 占位绘制：列表和信息区内的内容框线
         // 标签列表区域
-        gfx.fill(this.leftPos + 8, this.topPos + 21, this.leftPos + 119 + 1, this.topPos + 141 + 1, 0x20FFFFFF);
+        gfx.fill(this.leftPos + 9, this.topPos + 25, this.leftPos + 118 + 1, this.topPos + 140 + 1, 0x20FFFFFF);
         // 滚动条区域
         gfx.fill(this.leftPos + 123, this.topPos + 21, this.leftPos + 128 + 1, this.topPos + 141 + 1, 0x20000000);
         // 当前收发器信息区域
@@ -204,14 +214,15 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         // 信息显示
         int infoX = this.leftPos + 134;
         int infoY = this.topPos + 41;
+        float infoScale = getInfoScale();
         String labelLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_label").getString() + ": " + (currentLabel == null || currentLabel.isEmpty() ? "-" : currentLabel);
         String ownerLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_owner").getString() + ": " + (currentOwner == null || currentOwner.isEmpty() ? Component.translatable("extendedae_plus.jade.owner.public").getString() : currentOwner);
         Component channelComp = maxChannels <= 0
                 ? Component.translatable("extendedae_plus.jade.channels", usedChannels)
                 : Component.translatable("extendedae_plus.jade.channels_of", usedChannels, maxChannels);
-        gfx.drawString(this.font, trimInfo(labelLine), infoX, infoY, 0x404040, false);
-        gfx.drawString(this.font, trimInfo(ownerLine), infoX, infoY + 12, 0x404040, false);
-        gfx.drawString(this.font, trimInfo(channelComp.getString()), infoX, infoY + 24, 0x404040, false);
+        drawInfoLine(gfx, labelLine, infoX, infoY, infoScale);
+        drawInfoLine(gfx, ownerLine, infoX, infoY + 12, infoScale);
+        drawInfoLine(gfx, channelComp.getString(), infoX, infoY + 24, infoScale);
     }
 
     private void renderScrollBar(GuiGraphics gfx) {
@@ -374,8 +385,33 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
     }
 
-    private String trimInfo(String text) {
+    private String trimInfo(String text, float scale) {
         if (text == null) return "";
-        return this.font.plainSubstrByWidth(text, INFO_MAX_WIDTH);
+        int maxWidth = (int) (INFO_MAX_WIDTH / Math.max(0.0001f, scale));
+        return this.font.plainSubstrByWidth(text, maxWidth);
+    }
+
+    private void drawInfoLine(GuiGraphics gfx, String text, int x, int y, float scale) {
+        String trimmed = trimInfo(text, scale);
+        var pose = gfx.pose();
+        pose.pushPose();
+        pose.translate(x, y, 0);
+        pose.scale(scale, scale, 1.0f);
+        gfx.drawString(this.font, trimmed, 0, 0, 0x404040, false);
+        pose.popPose();
+    }
+
+    private boolean isEnglish() {
+        Minecraft mc = Minecraft.getInstance();
+        var lang = mc.getLanguageManager().getSelected();
+        return lang != null && lang.equalsIgnoreCase("en_us");
+    }
+
+    private float getInfoScale() {
+        return isEnglish() ? 0.75f : 1.0f;
+    }
+
+    private float getTitleScale() {
+        return isEnglish() ? 0.75f : 1.0f;
     }
 }
