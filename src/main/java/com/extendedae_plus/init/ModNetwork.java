@@ -150,6 +150,12 @@ public final class ModNetwork {
                 .decoder(SetWirelessFrequencyC2SPacket::decode)
                 .consumerNetworkThread(SetWirelessFrequencyC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(LabelNetworkActionC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(LabelNetworkActionC2SPacket::encode)
+                .decoder(LabelNetworkActionC2SPacket::decode)
+                .consumerNetworkThread(LabelNetworkActionC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }

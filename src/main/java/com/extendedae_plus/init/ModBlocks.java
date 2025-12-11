@@ -9,6 +9,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
+import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -25,6 +26,16 @@ public final class ModBlocks {
     public static final RegistryObject<Block> WIRELESS_TRANSCEIVER = BLOCKS.register(
             "wireless_transceiver",
             () -> new WirelessTransceiverBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(2F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final RegistryObject<Block> LABELED_WIRELESS_TRANSCEIVER = BLOCKS.register(
+            "labeled_wireless_transceiver",
+            () -> new LabeledWirelessTransceiverBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
                             .strength(2F, 6.0F)

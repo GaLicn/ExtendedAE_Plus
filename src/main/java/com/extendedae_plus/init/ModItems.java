@@ -26,6 +26,11 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.WIRELESS_TRANSCEIVER.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> LABELED_WIRELESS_TRANSCEIVER = ITEMS.register(
+            "labeled_wireless_transceiver",
+            () -> new BlockItem(ModBlocks.LABELED_WIRELESS_TRANSCEIVER.get(), new Item.Properties())
+    );
+
     public static final RegistryObject<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
