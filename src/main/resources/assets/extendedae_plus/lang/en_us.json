@@ -108,6 +108,7 @@
   "extendedae_plus.configuration.wirelessMaxRange": "Wireless Maximum Range",
   "extendedae_plus.configuration.wirelessMaxRange_with_range": "Wireless Maximum Range (1-4096)",
   "extendedae_plus.configuration.wirelessCrossDimEnable": "Enable Wireless Cross-Dimensional Connection",
+  "extendedae_plus.configuration.wirelessIdlePower": "Wireless Transceiver Idle Power (AE/t)",
   "extendedae_plus.configuration.entitySpeedTicker": "Entity Speed Ticker",
   "extendedae_plus.configuration.entityTickerCost": "Entity Ticker Base Energy Cost",
   "extendedae_plus.configuration.entityTickerBlackList": "Entity Ticker Blacklist",

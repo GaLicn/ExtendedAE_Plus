@@ -11,6 +11,7 @@ import appeng.blockentity.AEBaseBlockEntity;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.LabelLink;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
@@ -55,7 +56,7 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         super(ModBlockEntities.LABELED_WIRELESS_TRANSCEIVER_BE.get(), pos, state);
         this.managedNode = GridHelper.createManagedNode(this, NodeListener.INSTANCE)
                 .setFlags(GridFlags.DENSE_CAPACITY);
-        this.managedNode.setIdlePowerUsage(1.0);
+        this.managedNode.setIdlePowerUsage(ModConfigs.WIRELESS_IDLE_POWER.get());
         this.managedNode.setTagName("labeled_wireless_node");
         this.managedNode.setInWorldNode(true);
         this.managedNode.setExposedOnSides(EnumSet.allOf(Direction.class));

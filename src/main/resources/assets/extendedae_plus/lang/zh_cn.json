@@ -105,6 +105,7 @@
   "extendedae_plus.configuration.wirelessMaxRange": "无线最大距离",
   "extendedae_plus.configuration.wirelessMaxRange_with_range": "无线最大距离 (1-4096)",
   "extendedae_plus.configuration.wirelessCrossDimEnable": "无线收发器允许跨维度连接",
+  "extendedae_plus.configuration.wirelessIdlePower": "无线收发器待机能耗（AE/t）",
   "extendedae_plus.configuration.entitySpeedTicker": "实体加速器",
   "extendedae_plus.configuration.entityTickerCost": "实体加速器能量消耗基础值",
   "extendedae_plus.configuration.entityTickerBlackList": "实体加速器黑名单",

@@ -22,6 +22,7 @@ public final class ModConfigs {
     public static final ModConfigSpec.IntValue CRAFTING_PAUSE_THRESHOLD;
     public static final ModConfigSpec.DoubleValue WIRELESS_MAX_RANGE;
     public static final ModConfigSpec.BooleanValue WIRELESS_CROSS_DIM_ENABLE;
+    public static final ModConfigSpec.DoubleValue WIRELESS_IDLE_POWER;
     public static final ModConfigSpec.IntValue ENTITY_TICKER_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_BLACK_LIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_MULTIPLIERS;
@@ -95,6 +96,12 @@ public final class ModConfigs {
                         "开启后，从端可连接到不同维度的主端（忽略距离限制）"
                 )
                 .define("wirelessCrossDimEnable", true);
+        WIRELESS_IDLE_POWER = serverBuilder
+                .comment(
+                        "无线收发器待机能耗",
+                        "无线收发器的基础待机能耗（AE/t），同时作用于普通与标签无线收发器"
+                )
+                .defineInRange("wirelessIdlePower", 100.0D, 0.0D, Double.MAX_VALUE);
         serverBuilder.pop();
 
         serverBuilder.push("entitySpeedTicker");
