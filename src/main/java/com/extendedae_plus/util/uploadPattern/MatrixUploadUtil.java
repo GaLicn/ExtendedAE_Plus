@@ -11,6 +11,7 @@ import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
@@ -97,6 +98,8 @@ public final class MatrixUploadUtil {
         try {
             // 获取网络中所有 Pattern Tile
             Set<TileAssemblerMatrixPattern> allTiles = grid.getMachines(TileAssemblerMatrixPattern.class);
+            Set<PatternCorePlusBlockEntity> myAllTiles = grid.getMachines(PatternCorePlusBlockEntity.class);
+
             // 用 Set 记录已经扫描过的集群，避免重复调用 clusterHasSingleUploadCore
             Set<ClusterAssemblerMatrix> scannedClusters = new HashSet<>();
 
@@ -116,6 +119,24 @@ public final class MatrixUploadUtil {
                     }
                 }
             }
+
+            for (PatternCorePlusBlockEntity myTile : myAllTiles) {
+                if (myTile == null || !myTile.isFormed() || !myTile.getMainNode().isActive()) continue;
+
+                ClusterAssemblerMatrix cluster = myTile.getCluster();
+                if (cluster == null) continue;
+
+                // 如果该集群已经扫描过，或者该集群含 UploadCore，则处理 tile
+                if (scannedClusters.contains(cluster) || clusterHasSingleUploadCore(cluster)) {
+                    scannedClusters.add(cluster); // 标记为已扫描
+
+                    InternalInventory inv = myTile.getExposedInventory();
+                    if (inv != null) {
+                        result.add(inv);
+                    }
+                }
+            }
+
         } catch (Throwable ignored) {}
         return result;
     }
@@ -126,9 +147,17 @@ public final class MatrixUploadUtil {
     private static boolean matrixContainsPattern(@NotNull List<InternalInventory> inventories, @NotNull ItemStack pattern) {
         for (InternalInventory inv : inventories) {
             if (inv == null) continue;
+            ItemStack patternCopy = pattern.copy();
+            if (patternCopy.getTag() != null) {
+                patternCopy.getTag().remove("encodePlayer");
+            }
             for (int i = 0; i < inv.size(); i++) {
                 ItemStack s = inv.getStackInSlot(i);
-                if (!s.isEmpty() && ItemStack.isSameItemSameTags(s, pattern)) {
+                ItemStack sCopy = s.copy();
+                if (sCopy.getTag() != null) {
+                    sCopy.getTag().remove("encodePlayer");
+                }
+                if (!s.isEmpty() && ItemStack.isSameItemSameTags(sCopy, patternCopy)) {
                     return true;
                 }
             }
