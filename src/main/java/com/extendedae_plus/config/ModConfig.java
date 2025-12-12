@@ -65,6 +65,15 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "无线收发器待机能耗",
+            "无线收发器的基础待机能耗（AE/t），同时作用于普通与标签无线收发器"
+    })
+    @Configurable.Synchronized
+    @Configurable.DecimalRange(min = 0, max = Double.MAX_VALUE)
+    public double wirelessTransceiverIdlePower = 100.0;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "智能倍增时是否对样板供应器轮询分配",
             "仅多个供应器有相同样板时生效，开启后请求会均分到所有可用供应器，关闭则全部分配给单一供应器",
             "注意：所有相关供应器需开启智能倍增，否则可能失效"

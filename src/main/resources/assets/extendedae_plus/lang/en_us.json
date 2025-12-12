@@ -159,6 +159,7 @@
   "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold",
   "config.extendedae_plus.option.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
+  "config.extendedae_plus.option.wirelessTransceiverIdlePower": "Wireless Transceiver Idle Power",
 
   "item.extendedae_plus.channel_card": "Channel Card",
   "item.extendedae_plus.channel_card.channel": "Frequency: %s",

@@ -6,6 +6,7 @@ import appeng.blockentity.AEBaseBlockEntity;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessMasterLink;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import net.minecraft.core.BlockPos;
@@ -53,7 +54,7 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         // 创建 AE2 管理节点
         this.managedNode = GridHelper.createManagedNode(this, NodeListener.INSTANCE)
                 .setFlags(GridFlags.DENSE_CAPACITY);
-        this.managedNode.setIdlePowerUsage(1.0); // 可按需调整基础待机功耗
+        this.managedNode.setIdlePowerUsage(ModConfig.INSTANCE.wirelessTransceiverIdlePower); // 可配置基础待机功耗
         this.managedNode.setTagName("wireless_node");
         this.managedNode.setInWorldNode(true);
         this.managedNode.setExposedOnSides(EnumSet.allOf(Direction.class));
