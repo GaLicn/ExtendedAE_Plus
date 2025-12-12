@@ -9,16 +9,18 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<LabeledWirelessTransceiverMenu> {
     private static final ResourceLocation TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
@@ -42,10 +44,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private static final int INFO_MAX_WIDTH = 116; // 信息区实际宽度(249-134+1=116)
 
     private EditBox searchBox;
-    private Button newBtn;
-    private Button deleteBtn;
-    private Button setBtn;
-    private Button disconnectBtn;
+    private AbstractWidget newBtn;
+    private AbstractWidget deleteBtn;
+    private AbstractWidget setBtn;
+    private AbstractWidget disconnectBtn;
 
     private final BlockPos bePos;
     private final List<LabelEntry> entries = new ArrayList<>();
@@ -90,14 +92,14 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         int secondColX = startX + BTN_W + hGap;
         int secondRowY = startY + BTN_H + vGap;
 
-        this.newBtn = Button.builder(Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"), b -> sendSet(searchBox.getValue()))
-                .bounds(startX, startY, BTN_W, BTN_H).build();
-        this.deleteBtn = Button.builder(Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"), b -> sendDelete())
-                .bounds(secondColX, startY, BTN_W, BTN_H).build();
-        this.setBtn = Button.builder(Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"), b -> sendSet(getSelectedLabel()))
-                .bounds(startX, secondRowY, BTN_W, BTN_H).build();
-        this.disconnectBtn = Button.builder(Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"), b -> sendDisconnect())
-                .bounds(secondColX, secondRowY, BTN_W, BTN_H).build();
+        this.newBtn = new StateButton(startX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendSet(searchBox.getValue()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"));
+        this.deleteBtn = new StateButton(secondColX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendDelete(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"));
+        this.setBtn = new StateButton(startX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendSet(getSelectedLabel()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"));
+        this.disconnectBtn = new StateButton(secondColX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendDisconnect(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"));
 
         this.addRenderableWidget(this.newBtn);
         this.addRenderableWidget(this.deleteBtn);
@@ -354,7 +356,26 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private record LabelEntry(String label, long channel) {}
 
-    private void drawAllButtonText(GuiGraphics gfx) {}
+    private void drawAllButtonText(GuiGraphics gfx) {
+        int startX = this.leftPos + 145;
+        int startY = this.topPos + 101;
+        int hGap = 30;
+        int vGap = 8;
+        int secondColX = startX + BTN_W + hGap;
+        int secondRowY = startY + BTN_H + vGap;
+
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"), startX, startY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"), secondColX, startY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"), startX, secondRowY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"), secondColX, secondRowY);
+    }
+
+    private void drawButtonText(GuiGraphics gfx, Component text, int x, int y) {
+        String s = this.font.plainSubstrByWidth(text.getString(), BTN_W - 4);
+        int tx = x + (BTN_W - this.font.width(s)) / 2;
+        int ty = y + (BTN_H - this.font.lineHeight) / 2 + 1;
+        gfx.drawString(this.font, s, tx, ty, 0xFFFFFF, false);
+    }
 
     private void ensureSelectionVisible() {
         if (selectedIndex < 0) return;
@@ -397,4 +418,66 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         return isEnglish() ? 0.75f : 1.0f;
     }
 
+    private static class StateButton extends AbstractWidget {
+        private final ResourceLocation tex;
+        private final int texW;
+        private final int texH;
+        private final int baseU;
+        private final int baseV;
+        private final int hoverU;
+        private final int hoverV;
+        private final int pressU;
+        private final int pressV;
+        private final Consumer<StateButton> onPress;
+        private boolean pressedVisual = false;
+
+        public StateButton(int x, int y, int w, int h, int baseU, int baseV, int hoverU, int hoverV, int pressU, int pressV,
+                           ResourceLocation tex, int texW, int texH, Consumer<StateButton> onPress, Component tooltip) {
+            super(x, y, w, h, tooltip);
+            this.tex = tex;
+            this.texW = texW;
+            this.texH = texH;
+            this.baseU = baseU;
+            this.baseV = baseV;
+            this.hoverU = hoverU;
+            this.hoverV = hoverV;
+            this.pressU = pressU;
+            this.pressV = pressV;
+            this.onPress = onPress;
+            this.setTooltip(Tooltip.create(tooltip));
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
+            boolean hovered = this.isHoveredOrFocused();
+            boolean pressed = pressedVisual;
+            int u = baseU;
+            int v = baseV;
+            if (pressed) {
+                u = pressU;
+                v = pressV;
+            } else if (hovered) {
+                u = hoverU;
+                v = hoverV;
+            }
+            gfx.blit(tex, this.getX(), this.getY(), u, v, this.getWidth(), this.getHeight(), texW, texH);
+        }
+
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            this.pressedVisual = true;
+            this.onPress.accept(this);
+            this.playDownSound(Minecraft.getInstance().getSoundManager());
+        }
+
+        @Override
+        public void onRelease(double mouseX, double mouseY) {
+            this.pressedVisual = false;
+        }
+
+        @Override
+        protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput narration) {
+            defaultButtonNarrationText(narration);
+        }
+    }
 }

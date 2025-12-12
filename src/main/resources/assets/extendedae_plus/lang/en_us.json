@@ -130,9 +130,12 @@
   "gui.extendedae_plus.labeled_wireless.online_count": "Online",
 
   "extendedae_plus.jade.label": "Label: %s",
+  "extendedae_plus.jade.owner": "Owner: %s",
   "extendedae_plus.jade.owner.public": "Owner: Public",
   "extendedae_plus.jade.channels": "Channels: %s",
   "extendedae_plus.jade.channels_of": "Channels: %s/%s",
+  "extendedae_plus.jade.online": "Online",
+  "extendedae_plus.jade.offline": "Offline",
 
   "extendedae_plus.tooltip.owner": "Owner: %s",
   "extendedae_plus.tooltip.owner.public": "Owner: Public",
