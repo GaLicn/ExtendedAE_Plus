@@ -23,14 +23,16 @@ public class LabelNetworkListS2CPacket {
     private final String ownerName;
     private final int usedChannels;
     private final int maxChannels;
+    private final int onlineCount;
 
-    public LabelNetworkListS2CPacket(BlockPos pos, List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, String ownerName, int usedChannels, int maxChannels) {
+    public LabelNetworkListS2CPacket(BlockPos pos, List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, String ownerName, int usedChannels, int maxChannels, int onlineCount) {
         this.pos = pos;
         this.list = list;
         this.currentLabel = currentLabel;
         this.ownerName = ownerName;
         this.usedChannels = usedChannels;
         this.maxChannels = maxChannels;
+        this.onlineCount = onlineCount;
     }
 
     public static void encode(LabelNetworkListS2CPacket pkt, FriendlyByteBuf buf) {
@@ -39,6 +41,7 @@ public class LabelNetworkListS2CPacket {
         buf.writeUtf(pkt.ownerName == null ? "" : pkt.ownerName, 128);
         buf.writeVarInt(pkt.usedChannels);
         buf.writeVarInt(pkt.maxChannels);
+        buf.writeVarInt(pkt.onlineCount);
         buf.writeVarInt(pkt.list.size());
         for (LabelNetworkRegistry.LabelNetworkSnapshot s : pkt.list) {
             buf.writeUtf(s.label(), 128);
@@ -52,6 +55,7 @@ public class LabelNetworkListS2CPacket {
         String ownerName = buf.readUtf(128);
         int usedChannels = buf.readVarInt();
         int maxChannels = buf.readVarInt();
+        int onlineCount = buf.readVarInt();
         int size = buf.readVarInt();
         List<LabelNetworkRegistry.LabelNetworkSnapshot> list = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -59,7 +63,7 @@ public class LabelNetworkListS2CPacket {
             long channel = buf.readLong();
             list.add(new LabelNetworkRegistry.LabelNetworkSnapshot(label, channel));
         }
-        return new LabelNetworkListS2CPacket(pos, list, curLabel, ownerName, usedChannels, maxChannels);
+        return new LabelNetworkListS2CPacket(pos, list, curLabel, ownerName, usedChannels, maxChannels, onlineCount);
     }
 
     public static void handle(LabelNetworkListS2CPacket pkt, Supplier<NetworkEvent.Context> ctx) {
@@ -71,7 +75,7 @@ public class LabelNetworkListS2CPacket {
     private static void handleClient(LabelNetworkListS2CPacket pkt) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.screen instanceof LabeledWirelessTransceiverScreen screen && screen.isFor(pkt.pos)) {
-            screen.updateList(pkt.list, pkt.currentLabel, pkt.ownerName, pkt.usedChannels, pkt.maxChannels);
+            screen.updateList(pkt.list, pkt.currentLabel, pkt.ownerName, pkt.usedChannels, pkt.maxChannels, pkt.onlineCount);
         }
     }
 }

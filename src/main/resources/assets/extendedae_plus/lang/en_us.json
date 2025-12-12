@@ -105,6 +105,7 @@
   "gui.extendedae_plus.labeled_wireless.button.refresh": "Disconnect",
   "gui.extendedae_plus.labeled_wireless.current_label": "Current Label",
   "gui.extendedae_plus.labeled_wireless.current_owner": "Owner",
+  "gui.extendedae_plus.labeled_wireless.online_count": "Online",
 
   "extendedae_plus.screen.reload_mapping": "Reload Mapping",
   "extendedae_plus.screen.reload_mapping_success": "Overloading mapping successful",

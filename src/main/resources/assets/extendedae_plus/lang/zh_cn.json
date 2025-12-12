@@ -104,6 +104,7 @@
   "gui.extendedae_plus.labeled_wireless.button.refresh": "断开连接",
   "gui.extendedae_plus.labeled_wireless.current_label": "当前标签",
   "gui.extendedae_plus.labeled_wireless.current_owner": "所有者",
+  "gui.extendedae_plus.labeled_wireless.online_count": "在线数",
 
   "extendedae_plus.screen.reload_mapping": "重载映射",
   "extendedae_plus.screen.reload_mapping_success": "重载映射成功",

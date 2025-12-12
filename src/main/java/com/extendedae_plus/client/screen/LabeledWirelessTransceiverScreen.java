@@ -56,6 +56,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private String lastSelectedLabel = "";
     private String currentLabel = "";
     private String currentOwner = "";
+    private int onlineCount = 0;
     private int usedChannels = 0;
     private int maxChannels = 0;
 
@@ -215,12 +216,14 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         float infoScale = getInfoScale();
         String labelLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_label").getString() + ": " + (currentLabel == null || currentLabel.isEmpty() ? "-" : currentLabel);
         String ownerLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_owner").getString() + ": " + (currentOwner == null || currentOwner.isEmpty() ? Component.translatable("extendedae_plus.jade.owner.public").getString() : currentOwner);
+        String onlineLine = Component.translatable("gui.extendedae_plus.labeled_wireless.online_count").getString() + ": " + onlineCount;
         Component channelComp = maxChannels <= 0
                 ? Component.translatable("extendedae_plus.jade.channels", usedChannels)
                 : Component.translatable("extendedae_plus.jade.channels_of", usedChannels, maxChannels);
         drawInfoLine(gfx, labelLine, infoX, infoY, infoScale);
         drawInfoLine(gfx, ownerLine, infoX, infoY + 12, infoScale);
-        drawInfoLine(gfx, channelComp.getString(), infoX, infoY + 24, infoScale);
+        drawInfoLine(gfx, onlineLine, infoX, infoY + 24, infoScale);
+        drawInfoLine(gfx, channelComp.getString(), infoX, infoY + 36, infoScale);
     }
 
     private void renderScrollBar(GuiGraphics gfx) {
@@ -324,7 +327,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         return "";
     }
 
-    public void updateList(List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, String ownerName, int usedChannels, int maxChannels) {
+    public void updateList(List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, String ownerName, int usedChannels, int maxChannels, int onlineCount) {
         String prevSelected = getSelectedLabel();
         this.entries.clear();
         for (LabelNetworkRegistry.LabelNetworkSnapshot s : list) {
@@ -332,8 +335,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
         this.currentLabel = currentLabel == null ? "" : currentLabel;
         this.currentOwner = ownerName == null ? "" : ownerName;
+        this.onlineCount = onlineCount;
         this.usedChannels = usedChannels;
         this.maxChannels = maxChannels;
+
         if (prevSelected != null && !prevSelected.isEmpty()) {
             this.lastSelectedLabel = prevSelected;
         } else if (this.currentLabel != null && !this.currentLabel.isEmpty()) {

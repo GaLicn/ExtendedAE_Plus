@@ -103,7 +103,7 @@ public class LabelNetworkRegistry extends SavedData {
     }
 
     /**
-     * 注销端点；不再自动删除网络，网络的移除需显式调用 removeNetwork。
+     * 注销端点；不自动删除网络，网络的移除需显式调用 removeNetwork。
      */
     public synchronized void unregister(IWirelessEndpoint endpoint) {
         ServerLevel level = endpoint.getServerLevel();
@@ -256,8 +256,8 @@ public class LabelNetworkRegistry extends SavedData {
             this.virtualHost = new VirtualLabelNodeHost();
             this.managedNode = GridHelper.createManagedNode(virtualHost, NodeListener.INSTANCE);
             this.virtualHost.setManagedNode(this.managedNode);
-            // 虚拟节点不占用频道
-            this.managedNode.setFlags();
+            // 虚拟节点不占用频道，且提供致密（32）频道能力
+            this.managedNode.setFlags(GridFlags.DENSE_CAPACITY);
             this.managedNode.setIdlePowerUsage(0.0);
             this.managedNode.setInWorldNode(false);
             this.managedNode.setVisualRepresentation(com.extendedae_plus.init.ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
@@ -287,6 +287,10 @@ public class LabelNetworkRegistry extends SavedData {
             for (int i = 0; i < list.size(); i++) {
                 endpoints.add(EndpointRef.load(list.getCompound(i)));
             }
+        }
+
+        public int endpointCount() {
+            return endpoints.size();
         }
     }
 

@@ -42,6 +42,14 @@ public class LabelNetworkListC2SPacket {
             String currentLabel = te.getLabelForDisplay();
             String ownerName = te.getPlacerId() != null ? WirelessTeamUtil.getNetworkOwnerName(level, te.getPlacerId()).getString() : "";
 
+            int onlineCount = 0;
+            if (currentLabel != null && !currentLabel.isEmpty()) {
+                var network = LabelNetworkRegistry.get(level).getNetwork(level, currentLabel, te.getPlacerId());
+                if (network != null) {
+                    onlineCount = network.endpointCount();
+                }
+            }
+
             // 计算频道占用信息（与 Jade 显示一致）
             int usedChannels = 0;
             int maxChannels = 0;
@@ -60,7 +68,7 @@ public class LabelNetworkListC2SPacket {
                 }
             }
 
-            LabelNetworkListS2CPacket rsp = new LabelNetworkListS2CPacket(pkt.pos, list, currentLabel, ownerName, usedChannels, maxChannels);
+            LabelNetworkListS2CPacket rsp = new LabelNetworkListS2CPacket(pkt.pos, list, currentLabel, ownerName, usedChannels, maxChannels, onlineCount);
             com.extendedae_plus.init.ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), rsp);
         });
         ctx.get().setPacketHandled(true);
