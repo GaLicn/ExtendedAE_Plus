@@ -59,5 +59,14 @@ public class CrafterRecipe extends RecipeProvider {
                 .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
                 .save(output);
 
+        //标签无线收发器
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
+                .define('A', Items.PAPER)
+                .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                .save(output);
     }
 }
