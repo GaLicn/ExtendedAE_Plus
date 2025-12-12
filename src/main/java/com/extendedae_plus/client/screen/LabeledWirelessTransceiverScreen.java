@@ -21,12 +21,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 标签无线收发器屏幕（UI 占位，等待按钮布局).
- * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 256x156.
- * 标签无线收发器屏幕（UI 占位，等待按钮布局）。
- * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 256x156。
- */
 public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<LabeledWirelessTransceiverMenu> {
     private static final ResourceLocation TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
     private static final int BTN_U = 2;

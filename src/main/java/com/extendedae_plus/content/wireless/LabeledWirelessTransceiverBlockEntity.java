@@ -31,12 +31,6 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * 标签无线收发器方块实体：
- * - 无主从区分，通过标签映射频道并连接至虚拟节点；
- * - 无 UI（占位），仅提供服务端逻辑与状态更新；
- * - 保留频率字段用于状态显示。
- */
 public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost, MenuProvider {
 
     private IManagedGridNode managedNode;
@@ -64,13 +58,11 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         this.managedNode.setVisualRepresentation(ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
     }
 
-    /* ===================== IInWorldGridNodeHost ===================== */
     @Override
     public @Nullable IGridNode getGridNode(Direction dir) {
         return getGridNode();
     }
 
-    /* ===================== IWirelessEndpoint ===================== */
     @Override
     public ServerLevel getServerLevel() {
         Level lvl = super.getLevel();
@@ -92,7 +84,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         return super.isRemoved();
     }
 
-    /* ===================== 菜单接口 ===================== */
     @Override
     public Component getDisplayName() {
         return Component.translatable("block.extendedae_plus.labeled_wireless_transceiver");
@@ -102,8 +93,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
         return new LabeledWirelessTransceiverMenu(id, inv, this.worldPosition);
     }
-
-    /* ===================== 公共方法 ===================== */
 
     public void setPlacerId(@Nullable UUID placerId, @Nullable String placerName) {
         this.placerId = placerId;
@@ -130,9 +119,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         return labelForDisplay;
     }
 
-    /**
-     * 应用/切换标签。空或非法标签将清空并断开。
-     */
     public void applyLabel(@Nullable String rawLabel) {
         ServerLevel sl = getServerLevel();
         if (sl == null) return;
@@ -153,9 +139,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         setChanged();
     }
 
-    /**
-     * 清空标签并断开连接。
-     */
     public void clearLabel() {
         ServerLevel sl = getServerLevel();
         if (sl != null) {
@@ -168,10 +151,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         setChanged();
     }
 
-    /**
-     * 在加载或跨区块迁移后重新获取网络并重连。
-     * @param ensureRegister 为 true 时，如果保存的标签不存在网络则尝试重新注册。
-     */
     public void refreshLabel(boolean ensureRegister) {
         ServerLevel sl = getServerLevel();
         if (sl == null) return;
@@ -215,16 +194,12 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         }
     }
 
-    /* ===================== Tick ===================== */
     public static void serverTick(Level level, BlockPos pos, BlockState state, LabeledWirelessTransceiverBlockEntity be) {
         if (!(level instanceof ServerLevel)) return;
         be.labelLink.updateStatus();
         be.updateState();
     }
 
-    /**
-     * 根据连接状态更新方块状态。
-     */
     private void updateState() {
         if (this.level == null || this.level.isClientSide) return;
         if (this.beingRemoved || this.isRemoved()) return;
@@ -249,7 +224,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         }
     }
 
-    /* ===================== AECableType 展示 ===================== */
     @Override
     public AECableType getCableConnectionType(Direction dir) {
         if (this.level == null) return AECableType.GLASS;
@@ -263,7 +237,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         return AECableType.GLASS;
     }
 
-    /* ===================== 生命周期 ===================== */
     @Override
     public void onLoad() {
         super.onLoad();
@@ -277,7 +250,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         });
     }
 
-    /* ===================== NBT ===================== */
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -316,7 +288,6 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         }
     }
 
-    /* ===================== AE2 节点监听 ===================== */
     enum NodeListener implements IGridNodeListener<LabeledWirelessTransceiverBlockEntity> {
         INSTANCE;
         @Override

@@ -30,8 +30,6 @@ import java.util.Comparator;
  * - 负责标签到频道（频率）的分配与复用；
  * - 创建/销毁虚拟节点，所有收发器连接到同一虚拟节点；
  * - 记录在线端点集合，端点卸载后需调用 unregister。
- *
- * UI 未实现，仅提供服务端逻辑。
  */
 public class LabelNetworkRegistry extends SavedData {
     public static final String SAVE_ID = ExtendedAEPlus.MODID + "_label_networks";
