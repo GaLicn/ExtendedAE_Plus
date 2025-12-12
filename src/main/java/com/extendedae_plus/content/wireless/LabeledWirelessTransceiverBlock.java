@@ -1,6 +1,7 @@
 package com.extendedae_plus.content.wireless;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
@@ -16,6 +17,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import com.extendedae_plus.init.ModBlockEntities;
@@ -59,6 +62,17 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
     }
 
     @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (!level.isClientSide && placer instanceof Player player) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof LabeledWirelessTransceiverBlockEntity te) {
+                te.setPlacerId(player.getUUID(), player.getName().getString());
+            }
+        }
+    }
+
+    @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (level.isClientSide) {
             return InteractionResult.SUCCESS;
@@ -67,7 +81,9 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
         if (!(be instanceof LabeledWirelessTransceiverBlockEntity te)) {
             return InteractionResult.PASS;
         }
-        player.openMenu(te, pos);
+        if (player instanceof ServerPlayer sp) {
+            sp.openMenu(te, pos);
+        }
         return InteractionResult.CONSUME;
     }
 

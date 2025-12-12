@@ -21,9 +21,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
@@ -109,6 +112,14 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     @Nullable
     public String getPlacerName() {
         return placerName;
+    }
+
+    public void setPlacerIdFrom(ItemStack stack, @Nullable LivingEntity placer) {
+        if (placer instanceof Player player) {
+            this.setPlacerId(player.getUUID(), player.getName().getString());
+        } else if (stack.has(DataComponents.CUSTOM_NAME)) {
+            this.setPlacerId(null, stack.getHoverName().getString());
+        }
     }
 
     public long getFrequency() {

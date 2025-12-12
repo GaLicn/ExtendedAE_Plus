@@ -34,9 +34,8 @@ public record LabelNetworkActionC2SPacket(BlockPos pos, String label, Action act
 
     public static void handle(LabelNetworkActionC2SPacket packet, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            var player = ctx.player();
-            if (player == null) return;
-            var level = (net.minecraft.server.level.ServerLevel) player.level();
+            if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            var level = player.serverLevel();
             if (!level.hasChunkAt(packet.pos)) return;
             var be = level.getBlockEntity(packet.pos);
             if (!(be instanceof LabeledWirelessTransceiverBlockEntity te)) return;

@@ -17,6 +17,12 @@ public final class ModCapabilities {
                 ModBlockEntities.WIRELESS_TRANSCEIVER_BE.get(),
                 (be, ctx) -> (IInWorldGridNodeHost) be
         );
+        // 标签无线收发器
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.LABELED_WIRELESS_TRANSCEIVER_BE.get(),
+                (be, ctx) -> (IInWorldGridNodeHost) be
+        );
 
         // 供应器状态控制器（实现了 IInWorldGridNodeHost）
         event.registerBlockEntity(
