@@ -161,11 +161,12 @@ public class CraftingRecipes extends RecipeProvider {
                 .save(consumer, ExtendedAEPlus.id("network/crafting/" + ModItems.CRAFTING_ACCELERATOR_1024x.get().toString().toLowerCase()));
 
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
-                .pattern("AAA")
+                .pattern("CAC")
                 .pattern("ABA")
-                .pattern("AAA")
+                .pattern("CAC")
                 .define('A', Items.PAPER)
                 .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                .define('C',Items.EMERALD)
                 .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
                 .save( consumer)
         ;
