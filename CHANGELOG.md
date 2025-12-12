@@ -1,6 +1,22 @@
 # Changelog
 
-## [Unreleased]
+## [1.5.1]
+
+### Added / 新增
+- 标签无线收发器
+  - Added Labeled Wireless Transceiver
+- JEI 标签中键下单后，若该物品不可自动合成，会自动将物品名称写入 AE 搜索栏
+  - When middle-click ordering from JEI and the item cannot be autocrafted, the item name is now written into the AE search bar automatically
+
+### Changed / 变更
+- 反转 Shift 上传样板的操作逻辑
+  - Reversed the Shift pattern-upload behavior
+- 虚拟合成卡改为完成任务而非取消任务，以便收到计划完成通知
+  - Virtual Crafting Card now completes the task instead of cancelling it, so completion notifications are delivered
+
+### Fixed / 修复
+- 修复虚拟合成卡进入世界时的初始化异常问题
+  - Fixed initialization errors when Virtual Crafting Cards load into the world
 
 ## [1.5.0]
 
