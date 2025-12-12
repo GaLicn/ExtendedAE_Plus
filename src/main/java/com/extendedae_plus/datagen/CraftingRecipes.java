@@ -159,6 +159,16 @@ public class CraftingRecipes extends RecipeProvider {
                 .define('C', ModItems.CRAFTING_ACCELERATOR_256x.get())
                 .unlockedBy("has_256x", has(ModItems.CRAFTING_ACCELERATOR_256x.get()))
                 .save(consumer, ExtendedAEPlus.id("network/crafting/" + ModItems.CRAFTING_ACCELERATOR_1024x.get().toString().toLowerCase()));
+
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .define('A', Items.PAPER)
+                .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
+                .save( consumer)
+        ;
     }
 
     private void addCardRecipes(Consumer<FinishedRecipe> consumer) {

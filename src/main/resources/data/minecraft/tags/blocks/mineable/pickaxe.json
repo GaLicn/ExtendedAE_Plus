@@ -11,6 +11,7 @@
     "extendedae_plus:256x_crafting_accelerator",
     "extendedae_plus:1024x_crafting_accelerator",
     "extendedae_plus:assembler_matrix_crafter_plus",
-    "extendedae_plus:assembler_matrix_pattern_plus"
+    "extendedae_plus:assembler_matrix_pattern_plus",
+    "extendedae_plus:labeled_wireless_transceiver"
   ]
 }
