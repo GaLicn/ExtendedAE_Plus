@@ -61,12 +61,13 @@ public class CrafterRecipe extends RecipeProvider {
 
         //标签无线收发器
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
-                .pattern("AAA")
+                .pattern("CAC")
                 .pattern("ABA")
-                .pattern("AAA")
+                .pattern("CAC")
                 .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
                 .define('A', Items.PAPER)
                 .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                .define('C',Items.EMERALD)
                 .save(output);
     }
 }

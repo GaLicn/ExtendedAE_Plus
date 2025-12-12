@@ -7,12 +7,15 @@
     },
     "B": {
       "item": "extendedae_plus:wireless_transceiver"
+    },
+    "C": {
+      "item": "minecraft:emerald"
     }
   },
   "pattern": [
-    "AAA",
+    "CAC",
     "ABA",
-    "AAA"
+    "CAC"
   ],
   "result": {
     "count": 1,
