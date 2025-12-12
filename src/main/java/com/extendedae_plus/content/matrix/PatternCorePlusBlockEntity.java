@@ -15,7 +15,6 @@ import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
-import appeng.util.inv.InternalInventoryHost;
 import appeng.util.inv.filter.AEItemFilters;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.init.ModBlockEntities;
@@ -42,12 +41,14 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern {
     public static final int INV_SIZE = 72;
 
     private final AppEngInternalInventory patternInventory;
+    private final FilteredInternalInventory insertOnlyInventory;
     private final List<IPatternDetails> patterns = new ArrayList<>();
 
     public PatternCorePlusBlockEntity(BlockPos pos, BlockState blockState) {
         super(pos, blockState);
         this.patternInventory = new AppEngInternalInventory(this, INV_SIZE, 1);
         this.patternInventory.setFilter(new Filter(this::getLevel));
+        this.insertOnlyInventory = new FilteredInternalInventory(this.patternInventory, AEItemFilters.INSERT_ONLY);
         this.getMainNode().addService(ICraftingProvider.class, this);
     }
 
@@ -70,6 +71,11 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern {
     @Override
     public AppEngInternalInventory getExposedInventory() {
         return this.patternInventory;
+    }
+
+
+    public InternalInventory getInsertOnlyInventory() {
+        return this.insertOnlyInventory;
     }
 
     public long getLocateID() {
@@ -106,6 +112,11 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern {
         cluster.addPattern(this);
     }
 
+    public void onChangeInventory(InternalInventory inv, int slot) {
+        this.saveChanges();
+        this.updatePatterns();
+    }
+
     @Override
     public void saveChangedInventory(AppEngInternalInventory inv) {
         this.saveChanges();
@@ -115,12 +126,6 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern {
     @Override
     public void onReady() {
         super.onReady();
-        this.updatePatterns();
-    }
-
-    @Override
-    public void onChangeInventory(AppEngInternalInventory inv, int slot) {
-        this.saveChanges();
         this.updatePatterns();
     }
 

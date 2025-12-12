@@ -6,6 +6,10 @@ import net.minecraft.world.item.Item;
 
 public class PatternCorePlusBlock extends BlockAssemblerMatrixBase<PatternCorePlusBlockEntity> {
 
+    public PatternCorePlusBlock() {
+        super();
+    }
+
     public PatternCorePlusBlock(Properties props) {
         super(props);
     }
