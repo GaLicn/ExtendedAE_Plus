@@ -223,28 +223,18 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         }
 
         IGridNode node = this.getGridNode();
-        int newState = 5; // 默认无连接
-
+        boolean online = false;
         if (node != null && node.isActive()) {
-            int usedChannels = 0;
-            for (var connection : node.getConnections()) {
-                usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
-            }
-            if (usedChannels >= 32) {
-                newState = 4;
-            } else if (usedChannels >= 24) {
-                newState = 3;
-            } else if (usedChannels >= 16) {
-                newState = 2;
-            } else if (usedChannels >= 8) {
-                newState = 1;
-            } else if (usedChannels >= 0) {
-                newState = 0;
+            try {
+                var grid = node.getGrid();
+                online = grid != null && grid.getEnergyService().isNetworkPowered();
+            } catch (Throwable ignored) {
+                online = false;
             }
         }
 
-        if (currentState.getValue(LabeledWirelessTransceiverBlock.STATE) != newState) {
-            this.level.setBlock(this.worldPosition, currentState.setValue(LabeledWirelessTransceiverBlock.STATE, newState), 3);
+        if (currentState.getValue(LabeledWirelessTransceiverBlock.STATE) != online) {
+            this.level.setBlock(this.worldPosition, currentState.setValue(LabeledWirelessTransceiverBlock.STATE, online), 3);
         }
     }
 

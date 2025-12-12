@@ -266,13 +266,13 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private void applyFilter() {
         String prevSelected = lastSelectedLabel;
-        String q = searchBox.getValue() == null ? "" : searchBox.getValue().trim().toLowerCase();
+        String q = searchBox.getValue() == null ? "" : searchBox.getValue().trim();
         filtered.clear();
         if (q.isEmpty()) {
             filtered.addAll(entries);
         } else {
             for (LabelEntry e : entries) {
-                if (e.label().toLowerCase().contains(q)) {
+                if (e.label().contains(q)) {
                     filtered.add(e);
                 }
             }

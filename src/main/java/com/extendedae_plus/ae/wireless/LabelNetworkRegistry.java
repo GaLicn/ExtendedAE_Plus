@@ -55,11 +55,11 @@ public class LabelNetworkRegistry extends SavedData {
     }
 
     /**
-     * 规范化标签：trim + toLowerCase。
+     * 规范化标签：trim；保持大小写敏感。
      */
     public static String normalizeLabel(String raw) {
         if (raw == null) return null;
-        String t = raw.trim().toLowerCase(Locale.ROOT);
+        String t = raw.trim();
         if (t.isEmpty()) return null;
         if (t.length() > 64) {
             t = t.substring(0, 64);

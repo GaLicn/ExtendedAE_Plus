@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
@@ -26,11 +26,11 @@ import org.jetbrains.annotations.Nullable;
  * 取消所有徒手/道具调节，只允许右键打开后续 UI（当前仅占位返回 SUCCESS）。
  */
 public class LabeledWirelessTransceiverBlock extends Block implements EntityBlock {
-    public static final IntegerProperty STATE = IntegerProperty.create("state", 0, 5);
+    public static final BooleanProperty STATE = BooleanProperty.create("state");
 
     public LabeledWirelessTransceiverBlock(Properties props) {
         super(props);
-        this.registerDefaultState(this.stateDefinition.any().setValue(STATE, 5));
+        this.registerDefaultState(this.stateDefinition.any().setValue(STATE, false));
     }
 
     @Override
