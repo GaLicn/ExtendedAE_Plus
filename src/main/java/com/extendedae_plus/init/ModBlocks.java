@@ -6,6 +6,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
+import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import appeng.block.crafting.CraftingUnitBlock;
@@ -25,6 +26,16 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> WIRELESS_TRANSCEIVER = BLOCKS.register(
             "wireless_transceiver",
             () -> new WirelessTransceiverBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
+    );
+
+    public static final DeferredBlock<Block> LABELED_WIRELESS_TRANSCEIVER = BLOCKS.register(
+            "labeled_wireless_transceiver",
+            () -> new LabeledWirelessTransceiverBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
                             .strength(1.5F, 6.0F)

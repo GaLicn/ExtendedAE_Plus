@@ -5,6 +5,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
+import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import appeng.blockentity.crafting.CraftingBlockEntity;
@@ -24,6 +25,11 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("wireless_transceiver",
                     () -> BlockEntityType.Builder.of(WirelessTransceiverBlockEntity::new,
                             ModBlocks.WIRELESS_TRANSCEIVER.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LabeledWirelessTransceiverBlockEntity>> LABELED_WIRELESS_TRANSCEIVER_BE =
+            BLOCK_ENTITY_TYPES.register("labeled_wireless_transceiver",
+                    () -> BlockEntityType.Builder.of(LabeledWirelessTransceiverBlockEntity::new,
+                            ModBlocks.LABELED_WIRELESS_TRANSCEIVER.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NetworkPatternControllerBlockEntity>> NETWORK_PATTERN_CONTROLLER_BE =
             BLOCK_ENTITY_TYPES.register("network_pattern_controller",

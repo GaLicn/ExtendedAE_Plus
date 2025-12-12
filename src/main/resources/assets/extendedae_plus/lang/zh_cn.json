@@ -114,6 +114,26 @@
   "extendedae_plus.configuration.state_on": "开",
   "extendedae_plus.configuration.state_off": "关",
 
+  "block.extendedae_plus.labeled_wireless_transceiver": "标签无线收发器",
+  "item.extendedae_plus.labeled_wireless_transceiver": "标签无线收发器",
+
+  "gui.extendedae_plus.labeled_wireless.info": "收发器信息",
+  "gui.extendedae_plus.labeled_wireless.button.new": "新建标签",
+  "gui.extendedae_plus.labeled_wireless.button.delete": "删除",
+  "gui.extendedae_plus.labeled_wireless.button.set": "设为当前",
+  "gui.extendedae_plus.labeled_wireless.button.refresh": "断开连接",
+  "gui.extendedae_plus.labeled_wireless.current_label": "当前标签",
+  "gui.extendedae_plus.labeled_wireless.current_owner": "所有者",
+  "gui.extendedae_plus.labeled_wireless.online_count": "在线数",
+
+  "extendedae_plus.jade.label": "标签: %s",
+  "extendedae_plus.jade.owner": "所有者: %s",
+  "extendedae_plus.jade.owner.public": "所有者: 公共",
+  "extendedae_plus.jade.channels": "频道: %s",
+  "extendedae_plus.jade.channels_of": "频道: %s/%s",
+  "extendedae_plus.jade.online": "设备在线",
+  "extendedae_plus.jade.offline": "设备离线",
+
   "extendedae_plus.tooltip.owner": "所有者: %s",
   "extendedae_plus.tooltip.owner.public": "所有者: 公共",
   "extendedae_plus.tooltip.channels": "频道: %d",

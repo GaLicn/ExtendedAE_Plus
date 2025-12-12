@@ -20,6 +20,7 @@ public final class ModCreativeTabs {
                     .displayItems((params, output) -> {
                         List.of(
                                 ModItems.WIRELESS_TRANSCEIVER.get().getDefaultInstance(),
+                                ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance(),
                                 ModItems.NETWORK_PATTERN_CONTROLLER.get().getDefaultInstance(),
                                 ModItems.ACCELERATOR_4x.get().getDefaultInstance(),
                                 ModItems.ACCELERATOR_16x.get().getDefaultInstance(),

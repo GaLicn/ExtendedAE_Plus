@@ -42,6 +42,17 @@ public class ModNetwork {
                 com.extendedae_plus.network.SetWirelessFrequencyC2SPacket.STREAM_CODEC,
                 com.extendedae_plus.network.SetWirelessFrequencyC2SPacket::handle);
 
+        // 标签无线收发器：请求列表 / 操作 / 列表下发
+        registrar.playToServer(com.extendedae_plus.network.LabelNetworkListC2SPacket.TYPE,
+                com.extendedae_plus.network.LabelNetworkListC2SPacket.STREAM_CODEC,
+                com.extendedae_plus.network.LabelNetworkListC2SPacket::handle);
+        registrar.playToServer(com.extendedae_plus.network.LabelNetworkActionC2SPacket.TYPE,
+                com.extendedae_plus.network.LabelNetworkActionC2SPacket.STREAM_CODEC,
+                com.extendedae_plus.network.LabelNetworkActionC2SPacket::handle);
+        registrar.playToClient(com.extendedae_plus.network.LabelNetworkListS2CPacket.TYPE,
+                com.extendedae_plus.network.LabelNetworkListS2CPacket.STREAM_CODEC,
+                com.extendedae_plus.network.LabelNetworkListS2CPacket::handle);
+
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
     }
 }

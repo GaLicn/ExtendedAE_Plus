@@ -18,6 +18,10 @@ public final class ModItems {
             "wireless_transceiver",
             () -> new BlockItem(ModBlocks.WIRELESS_TRANSCEIVER.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> LABELED_WIRELESS_TRANSCEIVER = ITEMS.register(
+            "labeled_wireless_transceiver",
+            () -> new BlockItem(ModBlocks.LABELED_WIRELESS_TRANSCEIVER.get(), new Item.Properties())
+    );
     // Crafting Accelerators
     public static final DeferredItem<Item> ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",

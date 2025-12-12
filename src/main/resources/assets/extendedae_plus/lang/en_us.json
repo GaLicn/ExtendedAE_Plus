@@ -117,6 +117,23 @@
   "extendedae_plus.configuration.state_on": "On",
   "extendedae_plus.configuration.state_off": "Off",
 
+  "block.extendedae_plus.labeled_wireless_transceiver": "Labeled Wireless Transceiver",
+  "item.extendedae_plus.labeled_wireless_transceiver": "Labeled Wireless Transceiver",
+
+  "gui.extendedae_plus.labeled_wireless.info": "Transceiver Info",
+  "gui.extendedae_plus.labeled_wireless.button.new": "New Label",
+  "gui.extendedae_plus.labeled_wireless.button.delete": "Delete",
+  "gui.extendedae_plus.labeled_wireless.button.set": "Set Current",
+  "gui.extendedae_plus.labeled_wireless.button.refresh": "Disconnect",
+  "gui.extendedae_plus.labeled_wireless.current_label": "Current Label",
+  "gui.extendedae_plus.labeled_wireless.current_owner": "Owner",
+  "gui.extendedae_plus.labeled_wireless.online_count": "Online",
+
+  "extendedae_plus.jade.label": "Label: %s",
+  "extendedae_plus.jade.owner.public": "Owner: Public",
+  "extendedae_plus.jade.channels": "Channels: %s",
+  "extendedae_plus.jade.channels_of": "Channels: %s/%s",
+
   "extendedae_plus.tooltip.owner": "Owner: %s",
   "extendedae_plus.tooltip.owner.public": "Owner: Public",
   "extendedae_plus.tooltip.channels": "Channels: %d",
