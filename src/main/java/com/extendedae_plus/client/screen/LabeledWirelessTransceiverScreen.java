@@ -7,20 +7,23 @@ import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
 import com.extendedae_plus.network.LabelNetworkListC2SPacket;
 import com.extendedae_plus.init.ModNetwork;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ImageButton;
+
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.core.BlockPos;
-
+import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 标签无线收发器屏幕（UI 占位，等待按钮布局).
+ * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 256x156.
  * 标签无线收发器屏幕（UI 占位，等待按钮布局）。
  * 纹理：textures/gui/lable_wireless_transceiver_gui.png，尺寸 256x156。
  */
@@ -93,13 +96,13 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         int secondColX = startX + BTN_W + hGap;
         int secondRowY = startY + BTN_H + vGap;
 
-        this.newBtn = new ImageButton(startX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 0, TEX, TEX_W, TEX_H,
+        this.newBtn = new StateImageButton(startX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
                 b -> sendSet(searchBox.getValue()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"));
-        this.deleteBtn = new ImageButton(secondColX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 0, TEX, TEX_W, TEX_H,
+        this.deleteBtn = new StateImageButton(secondColX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
                 b -> sendDelete(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"));
-        this.setBtn = new ImageButton(startX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 0, TEX, TEX_W, TEX_H,
+        this.setBtn = new StateImageButton(startX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
                 b -> sendSet(getSelectedLabel()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"));
-        this.disconnectBtn = new ImageButton(secondColX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 0, TEX, TEX_W, TEX_H,
+        this.disconnectBtn = new StateImageButton(secondColX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
                 b -> sendDisconnect(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"));
 
         this.addRenderableWidget(this.newBtn);
@@ -413,5 +416,62 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     private float getTitleScale() {
         return isEnglish() ? 0.75f : 1.0f;
+    }
+
+    private static class StateImageButton extends ImageButton {
+        private final ResourceLocation tex;
+        private final int texW;
+        private final int texH;
+        private final int baseU;
+        private final int baseV;
+        private final int hoverU;
+        private final int hoverV;
+        private final int pressU;
+        private final int pressV;
+        private boolean pressedVisual = false;
+
+        public StateImageButton(int x, int y, int w, int h, int baseU, int baseV, int hoverU, int hoverV, int pressU, int pressV,
+                                ResourceLocation tex, int texW, int texH, OnPress onPress, Component tooltip) {
+            super(x, y, w, h, baseU, baseV, 0, tex, texW, texH, onPress, tooltip);
+            this.tex = tex;
+            this.texW = texW;
+            this.texH = texH;
+            this.baseU = baseU;
+            this.baseV = baseV;
+            this.hoverU = hoverU;
+            this.hoverV = hoverV;
+            this.pressU = pressU;
+            this.pressV = pressV;
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
+            boolean hovered = this.isMouseOver(mouseX, mouseY);
+            boolean pressed = pressedVisual || (hovered && GLFW.glfwGetMouseButton(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS);
+            int u = baseU;
+            int v = baseV;
+            if (pressed) {
+                u = pressU;
+                v = pressV;
+            } else if (hovered) {
+                u = hoverU;
+                v = hoverV;
+            }
+            gfx.blit(tex, this.getX(), this.getY(), u, v, this.width, this.height, texW, texH);
+        }
+
+        @Override
+        public void onClick(double mouseX, double mouseY) {
+            this.pressedVisual = true;
+            super.onClick(mouseX, mouseY);
+            this.setFocused(false);
+        }
+
+        @Override
+        public void onRelease(double mouseX, double mouseY) {
+            this.pressedVisual = false;
+            super.onRelease(mouseX, mouseY);
+            this.setFocused(false);
+        }
     }
 }

@@ -258,7 +258,8 @@ public class LabelNetworkRegistry extends SavedData {
             this.virtualHost = new VirtualLabelNodeHost();
             this.managedNode = GridHelper.createManagedNode(virtualHost, NodeListener.INSTANCE);
             this.virtualHost.setManagedNode(this.managedNode);
-            this.managedNode.setFlags(GridFlags.REQUIRE_CHANNEL);
+            // 虚拟节点不占用频道
+            this.managedNode.setFlags();
             this.managedNode.setIdlePowerUsage(0.0);
             this.managedNode.setInWorldNode(false);
             this.managedNode.setVisualRepresentation(com.extendedae_plus.init.ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
