@@ -5,8 +5,8 @@ import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
 import com.extendedae_plus.network.LabelNetworkListC2SPacket;
-import com.extendedae_plus.init.ModNetwork;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -109,7 +109,6 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     @Override
     public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(gfx);
         super.render(gfx, mouseX, mouseY, partialTicks);
         drawAllButtonText(gfx);
         this.renderTooltip(gfx, mouseX, mouseY);
@@ -184,13 +183,13 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
         if (isMouseInList(mouseX, mouseY) || isMouseInScrollbar(mouseX, mouseY)) {
             int maxOffset = Math.max(0, filtered.size() - VISIBLE_ROWS);
-            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(delta)));
+            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(scrollDeltaY)));
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     private void renderList(GuiGraphics gfx) {

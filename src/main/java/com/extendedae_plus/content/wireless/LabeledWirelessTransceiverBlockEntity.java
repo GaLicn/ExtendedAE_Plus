@@ -250,7 +250,7 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+    public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.putLong("frequency", frequency);
         if (labelForDisplay != null) {

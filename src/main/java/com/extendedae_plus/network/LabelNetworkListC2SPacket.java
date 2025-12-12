@@ -33,7 +33,7 @@ public record LabelNetworkListC2SPacket(BlockPos pos) implements CustomPacketPay
         ctx.enqueueWork(() -> {
             var player = ctx.player();
             if (player == null) return;
-            var level = player.serverLevel();
+            var level = (net.minecraft.server.level.ServerLevel) player.level();
             if (!level.hasChunkAt(pkt.pos)) return;
             var be = level.getBlockEntity(pkt.pos);
             if (!(be instanceof LabeledWirelessTransceiverBlockEntity te)) return;

@@ -16,7 +16,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.network.MenuHooks;
 import org.jetbrains.annotations.Nullable;
 
 import com.extendedae_plus.init.ModBlockEntities;
@@ -68,7 +67,7 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
         if (!(be instanceof LabeledWirelessTransceiverBlockEntity te)) {
             return InteractionResult.PASS;
         }
-        MenuHooks.openMenu((net.minecraft.server.level.ServerPlayer) player, te, pos);
+        player.openMenu(te, pos);
         return InteractionResult.CONSUME;
     }
 

@@ -15,7 +15,7 @@ import snownee.jade.api.IServerDataProvider;
 public enum LabeledWirelessTransceiverProvider implements IServerDataProvider<BlockAccessor> {
     INSTANCE;
 
-    private static final ResourceLocation UID = new ResourceLocation("extendedae_plus", "labeled_wireless_info");
+    private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath("extendedae_plus", "labeled_wireless_info");
 
     @Override
     public ResourceLocation getUid() {
