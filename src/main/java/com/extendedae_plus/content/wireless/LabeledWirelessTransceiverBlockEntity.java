@@ -170,8 +170,9 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
 
     /**
      * 在加载或跨区块迁移后重新获取网络并重连。
+     * @param ensureRegister 为 true 时，如果保存的标签不存在网络则尝试重新注册。
      */
-    public void refreshLabel() {
+    public void refreshLabel(boolean ensureRegister) {
         ServerLevel sl = getServerLevel();
         if (sl == null) return;
         if (labelForDisplay == null || labelForDisplay.isEmpty()) {
@@ -180,16 +181,26 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
             updateState();
             return;
         }
-        var network = LabelNetworkRegistry.get(sl).getNetwork(sl, labelForDisplay, placerId);
+        var registry = LabelNetworkRegistry.get(sl);
+        var network = registry.getNetwork(sl, labelForDisplay, placerId);
+        if (network == null && ensureRegister) {
+            network = registry.register(sl, labelForDisplay, placerId, this);
+        }
         if (network == null) {
             this.frequency = 0L;
             this.labelLink.clearTarget();
         } else {
+            // 确保虚拟节点重建（网络从存档恢复时 managedNode 为空）
+            network.ensureVirtualNode(sl);
             this.frequency = network.channel();
             this.labelLink.setTarget(network);
         }
         updateState();
         setChanged();
+    }
+
+    public void refreshLabel() {
+        refreshLabel(false);
     }
 
     public void onRemoved() {
@@ -260,7 +271,9 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         if (sl == null) return;
         GridHelper.onFirstTick(this, be -> {
             be.managedNode.create(be.getLevel(), be.getBlockPos());
-            be.refreshLabel();
+            be.refreshLabel(true);
+            be.labelLink.updateStatus();
+            be.updateState();
         });
     }
 

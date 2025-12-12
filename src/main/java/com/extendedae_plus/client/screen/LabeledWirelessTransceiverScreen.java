@@ -37,10 +37,10 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
     private static final int TEX_H = 256;
 
     private static final int LIST_X = 9;
-    private static final int LIST_Y = 25;
+    private static final int LIST_Y = 27;
     private static final int LIST_W = 110; // 118-9+1
-    private static final int LIST_H = 116; // 140-25+1
-    private static final int ROW_H = 12;
+    private static final int LIST_H = 114; // 140-27+1
+    private static final int ROW_H = 11; // 10px text height + 1px 分隔
     private static final int VISIBLE_ROWS = LIST_H / ROW_H; // 10
     private static final int SCROLL_X = 123;
     private static final int SCROLL_Y = 21;
@@ -148,7 +148,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
         // 占位绘制：列表和信息区内的内容框线
         // 标签列表区域
-        gfx.fill(this.leftPos + 9, this.topPos + 25, this.leftPos + 118 + 1, this.topPos + 140 + 1, 0x20FFFFFF);
+        gfx.fill(this.leftPos + 9, this.topPos + 27, this.leftPos + 118 + 1, this.topPos + 140 + 1, 0x20FFFFFF);
         // 滚动条区域
         gfx.fill(this.leftPos + 123, this.topPos + 21, this.leftPos + 128 + 1, this.topPos + 141 + 1, 0x20000000);
         // 当前收发器信息区域
@@ -210,8 +210,9 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
                 gfx.fill(baseX, y, baseX + LIST_W, y + ROW_H, 0x40FFFFFF);
             }
             LabelEntry e = filtered.get(idx);
-            String text = this.font.plainSubstrByWidth(e.label(), LIST_W - 4);
-            gfx.drawString(this.font, text, baseX + 2, y + 2, 0x404040, false);
+            String text = this.font.plainSubstrByWidth(e.label(), LIST_W - 2);
+            int ty = y + (ROW_H - this.font.lineHeight) / 2;
+            gfx.drawString(this.font, text, baseX + 2, ty, 0x404040, false);
         }
 
         // 信息显示
