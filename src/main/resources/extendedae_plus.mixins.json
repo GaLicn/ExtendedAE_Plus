@@ -54,6 +54,8 @@
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileExPatternProviderMixin",
+    "extendedae.common.matrix.ClusterAssemblerMatrixMixin",
+    "extendedae.common.matrix.ClusterAssemblerMatrixMixin",
     "extendedae.container.ContainerAssemblerMatrixPatternSlotTrackerMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",

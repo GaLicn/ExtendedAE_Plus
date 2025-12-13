@@ -3,6 +3,10 @@ package com.extendedae_plus.init;
 import appeng.api.AECapabilities;
 import appeng.api.networking.IInWorldGridNodeHost;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 
 /**
  * 注册 AE2 能力给本模组的方块实体，确保 AE 电缆能识别并连接到我们的 In-World Grid Node。
@@ -38,6 +42,28 @@ public final class ModCapabilities {
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get(),
                 (be, ctx) -> (IInWorldGridNodeHost) be
+        );
+
+        // 装配矩阵核心方块（均实现了 IInWorldGridNodeHost）
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
+                (be, ctx) -> (CrafterCorePlusBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                (be, ctx) -> (PatternCorePlusBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                (be, ctx) -> (SpeedCorePlusBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.UPLOAD_CORE_BE.get(),
+                (be, ctx) -> (UploadCoreBlockEntity) be
         );
 
         // 如果还有其他实现了 IInWorldGridNodeHost 的方块实体，也在这里一并注册

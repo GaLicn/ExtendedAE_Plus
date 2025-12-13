@@ -8,8 +8,10 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
+    import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.CombinedInternalInventory;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.glodblock.github.extendedae.common.me.CraftingMatrixThread;
 import com.glodblock.github.extendedae.common.me.CraftingThread;
@@ -73,6 +75,7 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
         }
     }
 
+    @Override
     public int usedThread() {
         int cnt = 0;
         for (var t : this.plusThreads) {
@@ -82,15 +85,17 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
                 cnt++;
             }
         }
-        // 向集群汇报时仍然受原版 8 线程上限限制，避免破坏 Cluster 逻辑
-        double scale = (double) TileAssemblerMatrixCrafter.MAX_THREAD / MAX_THREAD;
-        int reported = (int) Math.ceil(cnt * scale);
-        return Math.min(TileAssemblerMatrixCrafter.MAX_THREAD, reported);
+        return cnt;
     }
 
+    @Override
     public boolean pushJob(IPatternDetails patternDetails, KeyCounter[] inputHolder) {
-        for (var thread : this.plusThreads) {
+        for (int i = 0; i < this.plusThreads.length; i++) {
+            var thread = this.plusThreads[i];
+            
             if (thread.acceptJob(patternDetails, inputHolder, Direction.DOWN)) {
+                this.getMainNode().ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
+                
                 if (this.cluster != null) {
                     this.cluster.updateCrafter(this);
                 }
@@ -159,7 +164,8 @@ public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter {
             return TickRateModulation.SLEEP;
         }
         var rate = TickRateModulation.SLEEP;
-        for (var t : this.plusThreads) {
+        for (int i = 0; i < this.plusThreads.length; i++) {
+            var t = this.plusThreads[i];
             if (t.isAwake()) {
                 var tr = t.tick(this.cluster.getSpeedCore(), ticksSinceLastCall);
                 if (tr.ordinal() > rate.ordinal()) {
