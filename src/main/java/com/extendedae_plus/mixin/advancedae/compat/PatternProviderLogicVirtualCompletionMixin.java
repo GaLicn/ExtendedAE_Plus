@@ -55,7 +55,22 @@ public abstract class PatternProviderLogicVirtualCompletionMixin {
                         var progress = tasks.get(patternDetails);
                         if (progress instanceof AdvExecutingCraftingJobTaskProgressAccessor advProgressAccessor) {
                             if (advProgressAccessor.eap$getAdvValue() <= 1) {
-                                advCpu.cancelJob();
+                                boolean finished = false;
+                                try {
+                                    advCpu.updateOutput(null);
+                                } catch (Throwable ignored) {
+                                }
+                                try {
+                                    advLogicAccessor.eap$invokeAdvFinishJob(true);
+                                    finished = true;
+                                } catch (Throwable ignored) {
+                                }
+                                if (!finished) {
+                                    try {
+                                        advCpu.cancelJob();
+                                    } catch (Throwable ignored) {
+                                    }
+                                }
                                 break;
                             }
                         }

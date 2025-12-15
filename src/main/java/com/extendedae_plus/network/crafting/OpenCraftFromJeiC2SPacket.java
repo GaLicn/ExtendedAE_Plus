@@ -12,6 +12,7 @@ import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,6 +58,40 @@ public class OpenCraftFromJeiC2SPacket {
             String curiosSlotId = located.getCuriosSlotId();
             int curiosIndex = located.getCuriosIndex();
             if (curiosSlotId != null && curiosIndex >= 0) {
+                // Curios 也需要先检查是否可合成，否则写入搜索框并返回
+                var craftingService = (appeng.api.networking.crafting.ICraftingService) null;
+                try {
+                    String current = WUTHandler.getCurrentTerminal(located.stack);
+                    var def = WUTHandler.wirelessTerminals.get(current);
+                    var wtHost = def == null ? null : def.wTMenuHostFactory().create(player, null, located.stack, (p, sub) -> {});
+                    var node = wtHost == null ? null : wtHost.getActionableNode();
+                    var grid = node == null ? null : node.getGrid();
+                    craftingService = grid == null ? null : grid.getCraftingService();
+                } catch (Throwable ignored) {
+                }
+
+                if (craftingService != null && !craftingService.isCraftable(what)) {
+                    String name = what.getDisplayName().getString();
+                    if (name == null || name.isEmpty()) return;
+
+                    var screen = Minecraft.getInstance().screen;
+                    if (screen instanceof MEStorageScreen<?> me) {
+                        try {
+                            MEStorageScreenAccessor acc = (MEStorageScreenAccessor) me;
+                            acc.eap$getSearchField().setValue(name);
+                            acc.eap$setSearchText(name);
+                        } catch (Throwable ignored) {
+                        }
+                    } else if (screen instanceof GuiExPatternTerminal<?> gpt) {
+                        try {
+                            GuiExPatternTerminalAccessor acc = (GuiExPatternTerminalAccessor) gpt;
+                            acc.getSearchOutField().setValue(name);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                    return;
+                }
+
                 int initial = 1;
                 CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
                 return;
