@@ -66,7 +66,7 @@ public abstract class HighlightButtonMixin {
 								// 提示玩家已选择供应器
 								if (minecraft.player != null) {
 									minecraft.player.displayClientMessage(
-										Component.literal("ExtendedAE Plus: 已选择样板供应器 (ID=" + serverId + ")，可按住Shift左键快速上传样板"),
+										Component.translatable("extendedae_plus.message.provider.selected", serverId),
 										true
 									);
 								}

@@ -106,13 +106,13 @@ public class ProviderSelectScreen extends Screen {
             ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
             var player = Minecraft.getInstance().player;
             if (player != null) {
-                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 已重载映射表"));
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.reload_success"));
             }
             // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
         } catch (Throwable t) {
             var player = Minecraft.getInstance().player;
             if (player != null) {
-                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 重载映射表失败: " + t.getClass().getSimpleName()));
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.reload_fail", t.getClass().getSimpleName()));
             }
         }
     }
@@ -335,16 +335,16 @@ public class ProviderSelectScreen extends Screen {
         String val = this.cnInput == null ? "" : this.cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (key.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入搜索关键字后再添加映射"));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.search_required"));
             return;
         }
         if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称"));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.cn_required"));
             return;
         }
         boolean ok = ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
         if (ok) {
-            if (player != null) player.sendSystemMessage(Component.literal("已添加/更新映射: " + key + " -> " + val));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_success", key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
             this.query = val;
             if (this.searchBox != null) {
@@ -356,7 +356,7 @@ public class ProviderSelectScreen extends Screen {
             this.page = 0;
             this.needsRefresh = true;
         } else {
-            if (player != null) player.sendSystemMessage(Component.literal("写入映射失败"));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_fail"));
         }
     }
 
@@ -365,16 +365,16 @@ public class ProviderSelectScreen extends Screen {
         String val = this.cnInput == null ? "" : this.cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.literal("请输入中文名称后再删除映射"));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_cn_required"));
             return;
         }
         int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
         if (removed > 0) {
-            if (player != null) player.sendSystemMessage(Component.literal("已删除 " + removed + " 条映射，中文= " + val));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_success", removed, val));
             this.applyFilter();
             this.needsRefresh = true;
         } else {
-            if (player != null) player.sendSystemMessage(Component.literal("未找到中文为 '" + val + "' 的映射"));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_not_found", val));
         }
     }
 

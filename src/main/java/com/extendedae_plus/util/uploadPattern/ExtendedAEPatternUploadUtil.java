@@ -51,10 +51,9 @@ public class ExtendedAEPatternUploadUtil {
     // --------------------------- 配置：RecipeType 中文名称映射 ---------------------------
     private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
     private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
-    // 允许使用最终搜索关键字（通常为 path 或自定义短语）作为键，例如："assembler": "组装机"
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...）
+    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...)
     public static volatile String lastProcessingName = null;
 
     static {
@@ -413,7 +412,7 @@ public class ExtendedAEPatternUploadUtil {
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            sendMessage(player, "ExtendedAE Plus: 没有可上传的编码样板");
+            sendMessage(player, "extendedae_plus.message.upload.no_pattern");
             return false;
         }
 
@@ -437,7 +436,7 @@ public class ExtendedAEPatternUploadUtil {
             }
         } catch (Throwable ignored) {}
         if (grid == null) {
-            sendMessage(player, "ExtendedAE Plus: 当前不在有效的 AE 网络中");
+            sendMessage(player, "extendedae_plus.message.network.invalid");
             return false;
         }
 
@@ -445,7 +444,7 @@ public class ExtendedAEPatternUploadUtil {
         if (matrixContainsPattern(grid, stack)) {
             // 直接提醒并跳过上传，并将同等数量的空白样板放回空白样板槽，否则退回玩家背包
             if (player != null) {
-                player.sendSystemMessage(Component.literal("ExtendedAE Plus: 装配矩阵已存在相同样板，已跳过上传并返还空白样板"));
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.matrix.duplicate"));
             }
             try {
                 var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
@@ -644,34 +643,34 @@ public class ExtendedAEPatternUploadUtil {
         // 1. 验证玩家是否打开了样板访问终端
         PatternAccessTermMenu menu = getPatternAccessMenu(player);
         if (menu == null) {
-            sendMessage(player, "ExtendedAE Plus: 请先打开样板访问终端或扩展样板管理终端");
+            sendMessage(player, "extendedae_plus.message.open_terminal_first");
             return false;
         }
 
         // 2. 获取玩家背包中的物品
         ItemStack playerItem = player.getInventory().getItem(playerSlotIndex);
         if (playerItem.isEmpty()) {
-            sendMessage(player, "ExtendedAE Plus: 背包槽位为空");
+            sendMessage(player, "extendedae_plus.message.inventory_slot_empty");
             return false;
         }
 
         // 3. 验证是否是编码样板
         if (!PatternDetailsHelper.isEncodedPattern(playerItem)) {
-            sendMessage(player, "ExtendedAE Plus: 该物品不是有效的编码样板");
+            sendMessage(player, "extendedae_plus.message.invalid_pattern_item");
             return false;
         }
 
         // 4. 获取目标样板供应器
         PatternContainer patternContainer = getPatternContainerById(menu, providerId);
         if (patternContainer == null) {
-            sendMessage(player, "ExtendedAE Plus: 找不到指定的样板供应器 (ID: " + providerId + ")");
+            sendMessage(player, "extendedae_plus.message.provider.not_found", providerId);
             return false;
         }
 
         // 5. 获取样板供应器的库存
         InternalInventory patternInventory = patternContainer.getTerminalPatternInventory();
         if (patternInventory == null) {
-            sendMessage(player, "ExtendedAE Plus: 无法访问样板供应器的库存");
+            sendMessage(player, "extendedae_plus.message.provider.inventory_unavailable");
             return false;
         }
 
@@ -681,22 +680,24 @@ public class ExtendedAEPatternUploadUtil {
 
         // 7. 尝试插入样板
         ItemStack itemToInsert = playerItem.copy();
-        ItemStack remaining = filteredInventory.addItems(itemToInsert);
-
-        if (remaining.getCount() < itemToInsert.getCount()) {
-            // 插入成功（部分或全部）
-            int insertedCount = itemToInsert.getCount() - remaining.getCount();
+        ItemStack remain = filteredInventory.addItems(itemToInsert);
+        int insertedCount = itemToInsert.getCount() - remain.getCount();
+        if (insertedCount > 0) {
             playerItem.shrink(insertedCount);
-            
             if (playerItem.isEmpty()) {
                 player.getInventory().setItem(playerSlotIndex, ItemStack.EMPTY);
+            } else {
+                player.getInventory().setItem(playerSlotIndex, playerItem);
             }
-            
-            String terminalType = isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
-            sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
+
+            String terminalTypeKey = isExtendedAETerminal(player)
+                    ? "extendedae_plus.terminal.expattern"
+                    : "extendedae_plus.terminal.pattern_access";
+            sendMessage(player, "extendedae_plus.message.upload.success_single",
+                    Component.translatable(terminalTypeKey), insertedCount);
             return true;
         } else {
-            sendMessage(player, "ExtendedAE Plus: 上传失败 - 样板供应器已满或样板无效");
+            sendMessage(player, "extendedae_plus.message.upload.fail");
             return false;
         }
     }
@@ -718,8 +719,11 @@ public class ExtendedAEPatternUploadUtil {
             }
         }
         
-        String terminalType = isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
-        sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "批量上传完成，成功上传 " + successCount + " 个样板");
+        String terminalTypeKey = isExtendedAETerminal(player)
+                ? "extendedae_plus.terminal.expattern"
+                : "extendedae_plus.terminal.pattern_access";
+        sendMessage(player, "extendedae_plus.message.upload.success_batch",
+                Component.translatable(terminalTypeKey), successCount);
         return successCount;
     }
 
@@ -796,7 +800,7 @@ public class ExtendedAEPatternUploadUtil {
             // 通过反射访问byId字段（ExtendedAE继承了这个字段）
             Field byIdField = findByIdField(menu.getClass());
             if (byIdField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到byId字段");
+                System.err.println("ExtendedAE Plus: Unable to find byId field");
                 return null;
             }
             
@@ -813,7 +817,7 @@ public class ExtendedAEPatternUploadUtil {
             // 从ContainerTracker中获取PatternContainer
             Field containerField = findContainerField(containerTracker.getClass());
             if (containerField == null) {
-                System.err.println("ExtendedAE Plus: 无法找到container字段");
+                System.err.println("ExtendedAE Plus: Unable to find container field");
                 return null;
             }
             
@@ -821,7 +825,7 @@ public class ExtendedAEPatternUploadUtil {
             return (PatternContainer) containerField.get(containerTracker);
             
         } catch (Exception e) {
-            System.err.println("ExtendedAE Plus: 无法获取PatternContainer，错误: " + e.getMessage());
+            System.err.println("ExtendedAE Plus: Failed to get PatternContainer, error: " + e.getMessage());
             return null;
         }
     }
@@ -860,13 +864,14 @@ public class ExtendedAEPatternUploadUtil {
      * 发送消息给玩家
      * 
      * @param player 玩家
-     * @param message 消息内容
+     * @param key 翻译键
+     * @param args 参数
      */
-    private static void sendMessage(ServerPlayer player, String message) {
+    private static void sendMessage(ServerPlayer player, String key, Object... args) {
         // 静默：不再向玩家左下角发送任何提示信息
         // 如需恢复，取消下面注释即可：
         // if (player != null) {
-        //     player.sendSystemMessage(Component.literal(message));
+        //     player.sendSystemMessage(Component.translatable(key, args));
         // }
         // 如果玩家为null，静默忽略（用于测试环境）
     }
@@ -881,7 +886,7 @@ public class ExtendedAEPatternUploadUtil {
     public static String getProviderDisplayName(long providerId, PatternAccessTermMenu menu) {
         PatternContainer container = getPatternContainerById(menu, providerId);
         if (container == null) {
-            return "未知供应器";
+            return Component.translatable("extendedae_plus.provider.unknown").getString();
         }
 
         try {
@@ -894,7 +899,7 @@ public class ExtendedAEPatternUploadUtil {
             // 忽略异常，使用默认名称
         }
 
-        return "样板供应器 #" + providerId;
+        return Component.translatable("extendedae_plus.provider.named_id", providerId).getString();
     }
 
     /**
@@ -927,11 +932,11 @@ public class ExtendedAEPatternUploadUtil {
      */
     public static String getTerminalTypeDescription(ServerPlayer player) {
         if (isExtendedAETerminal(player)) {
-            return "ExtendedAE扩展样板管理终端";
+            return Component.translatable("extendedae_plus.terminal.expattern").getString();
         } else if (getPatternAccessMenu(player) != null) {
-            return "AE2样板访问终端";
+            return Component.translatable("extendedae_plus.terminal.pattern_access").getString();
         } else {
-            return "未知终端类型";
+            return Component.translatable("extendedae_plus.terminal.unknown").getString();
         }
     }
 

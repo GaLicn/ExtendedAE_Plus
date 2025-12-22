@@ -170,5 +170,65 @@
   "gui.tooltips.extendedae_plus.AdvancedBlockingDisabled": "Use vanilla blocking logic",
   "gui.tooltips.extendedae_plus.SmartDoubling": "Smart Doubling",
   "gui.tooltips.extendedae_plus.SmartDoublingEnabled": "Intelligently double processing patterns based on request quantity",
-  "gui.tooltips.extendedae_plus.SmartDoublingDisabled": "Distribute according to original pattern quantity"
+  "gui.tooltips.extendedae_plus.SmartDoublingDisabled": "Distribute according to original pattern quantity",
+
+  "extendedae_plus.message.mapping.reload_success": "Mapping reloaded.",
+  "extendedae_plus.message.mapping.reload_fail": "Failed to reload mapping (%s).",
+  "extendedae_plus.message.mapping.search_required": "Please enter a search keyword.",
+  "extendedae_plus.message.mapping.cn_required": "Please enter a Chinese name.",
+  "extendedae_plus.message.mapping.add_success": "Added mapping: %s -> %s.",
+  "extendedae_plus.message.mapping.add_fail": "Failed to add mapping.",
+  "extendedae_plus.message.mapping.delete_cn_required": "Please enter the Chinese name to delete.",
+  "extendedae_plus.message.mapping.delete_success": "Deleted %d mapping(s) for \"%s\".",
+  "extendedae_plus.message.mapping.delete_not_found": "No mapping found for \"%s\".",
+
+  "extendedae_plus.message.upload.no_pattern": "No encoded pattern found.",
+  "extendedae_plus.message.network.invalid": "Unable to access AE network.",
+  "extendedae_plus.message.matrix.duplicate": "Assembly matrix already contains this pattern.",
+  "extendedae_plus.message.open_terminal_first": "Please open a pattern terminal first.",
+  "extendedae_plus.message.inventory_slot_empty": "The selected inventory slot is empty.",
+  "extendedae_plus.message.invalid_pattern_item": "Item is not an encoded pattern.",
+  "extendedae_plus.message.provider.not_found": "Pattern provider %s not found.",
+  "extendedae_plus.message.provider.inventory_unavailable": "Provider inventory is unavailable.",
+  "extendedae_plus.message.upload.success_single": "Uploaded to %s: %d pattern(s).",
+  "extendedae_plus.message.upload.fail": "Pattern upload failed.",
+  "extendedae_plus.message.upload.success_batch": "Batch uploaded to %s: %d patterns.",
+  "extendedae_plus.message.upload.quick_success": "✅ Pattern quick-upload succeeded!",
+  "extendedae_plus.message.upload.quick_fail": "❌ Pattern quick-upload failed. Check provider status.",
+  "extendedae_plus.message.upload.client_fail": "❌ Failed to send upload request from client.",
+  "extendedae_plus.message.upload.invalid_item": "❌ Invalid pattern item.",
+  "extendedae_plus.message.provider.select_first": "Select a pattern provider first (use the button beside GroupHeader).",
+  "extendedae_plus.message.provider.location_missing": "Location info for this provider not found; cannot open UI.",
+  "extendedae_plus.message.provider.selected": "Selected pattern provider (ID=%s). Hold Shift+Left Click to quick upload.",
+  "extendedae_plus.message.global_toggle_applied": "Applied mode toggle to %d provider(s).",
+
+  "extendedae_plus.provider.unknown": "Unknown provider",
+  "extendedae_plus.provider.named_id": "Provider #%s",
+
+  "extendedae_plus.terminal.expattern": "ExtendedAE Pattern Terminal",
+  "extendedae_plus.terminal.pattern_access": "AE2 Pattern Access Terminal",
+  "extendedae_plus.terminal.unknown": "Unknown terminal",
+
+  "extendedae_plus.tooltip.provider.open_ui": "Open this provider's target container UI",
+
+  "extendedae_plus.message.transceiver.bound": "Transceiver bound to: %s",
+  "extendedae_plus.message.transceiver.card_unbound_use_self": "Channel card unbound; using current player.",
+  "extendedae_plus.message.transceiver.locked_change_channel": "Transceiver is locked; cannot change channel.",
+  "extendedae_plus.message.transceiver.locked_toggle_mode": "Transceiver is locked; cannot toggle mode.",
+  "extendedae_plus.message.transceiver.channel": "Channel: %d",
+  "extendedae_plus.message.transceiver.mode_master": "Mode: Master",
+  "extendedae_plus.message.transceiver.mode_slave": "Mode: Slave",
+
+  "extendedae_plus.state.master": "Master",
+  "extendedae_plus.state.slave": "Slave",
+  "extendedae_plus.state.locked": "Locked",
+  "extendedae_plus.state.unlocked": "Unlocked",
+
+  "extendedae_plus.jade.master_named": "Master Node: %s (%d, %d, %d)",
+  "extendedae_plus.jade.master_pos": "Master Node: (%d, %d, %d)",
+  "extendedae_plus.jade.dimension": "Dimension: %s",
+  "extendedae_plus.jade.network.online": "Online",
+  "extendedae_plus.jade.network.offline": "Offline",
+
+  "extendedae_plus.screen.global_controller_title": "Pattern Provider Status Controller"
 }

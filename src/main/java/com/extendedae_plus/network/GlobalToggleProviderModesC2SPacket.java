@@ -75,6 +75,7 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
 
             var level = player.serverLevel();
             var blockEntity = level.getBlockEntity(message.controllerBlockPos);
+
             if (!(blockEntity instanceof IInWorldGridNodeHost gridNodeHost)) return;
 
             var gridNode = gridNodeHost.getGridNode(null);
@@ -87,7 +88,7 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
 
             // 给发起者一个短暂的行动条提示，方便知道本次操作实际影响了多少个供应器
             player.displayClientMessage(
-                    Component.literal("E+ 全局切换已应用到 " + affectedCount + " 个样板供应器"),
+                    Component.translatable("extendedae_plus.message.global_toggle_applied", affectedCount),
                     true);
         });
     }

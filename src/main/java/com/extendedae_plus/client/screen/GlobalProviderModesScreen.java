@@ -9,7 +9,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GlobalProviderModesScreen extends AbstractContainerScreen<NetworkPatternControllerMenu> {
-    private static final Component CUSTOM_TITLE = Component.literal("样板供应器状态控制器");
+    private static final Component CUSTOM_TITLE = Component.translatable("extendedae_plus.screen.global_controller_title");
     public GlobalProviderModesScreen(NetworkPatternControllerMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 240;

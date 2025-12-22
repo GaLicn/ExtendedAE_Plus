@@ -121,7 +121,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                         // 显示提示消息：请先选择一个样板供应器
                         if (this.minecraft.player != null) {
                             this.minecraft.player.displayClientMessage(
-                                    Component.literal("ExtendedAE Plus: 请先选择一个样板供应器（点击GroupHeader旁的按钮）"),
+                                    Component.translatable("extendedae_plus.message.provider.select_first"),
                                     true
                             );
                         }
@@ -150,13 +150,13 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 } catch (Throwable t) {
                     // 理论上不会失败，若失败则给出简要提示
                     this.minecraft.player.displayClientMessage(
-                            Component.literal("❌ ExtendedAE Plus: 客户端发送上传请求失败"),
+                            Component.translatable("extendedae_plus.message.upload.client_fail"),
                             true
                     );
                 }
             } else {
                 this.minecraft.player.displayClientMessage(
-                        Component.literal("❌ ExtendedAE Plus: 无效的样板物品"),
+                        Component.translatable("extendedae_plus.message.upload.invalid_item"),
                         true
                 );
             }
@@ -209,7 +209,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             if (info == null) {
                 // 无位置信息，提示
                 if (this.minecraft != null && this.minecraft.player != null) {
-                    this.minecraft.player.displayClientMessage(Component.literal("未找到该供应器的位置信息，无法打开UI"), true);
+                    this.minecraft.player.displayClientMessage(Component.translatable("extendedae_plus.message.provider.location_missing"), true);
                 }
                 return;
             }
@@ -534,7 +534,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                     btn = Button.builder(Component.literal("UI"), (b) -> {
                         eap$tryOpenProviderUI(rowIndex);
                     }).size(14, 12).build();
-                    btn.setTooltip(Tooltip.create(Component.literal("打开该供应器目标容器的界面")));
+                    btn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.tooltip.provider.open_ui")));
                     eap$openUIButtons.put(rowIndex, btn);
                     this.addRenderableWidget(btn);
                 }

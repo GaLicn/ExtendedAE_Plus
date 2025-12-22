@@ -76,13 +76,13 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             String teamName = ChannelCardItem.getTeamName(channelCard);
             te.setPlacerId(cardOwner, teamName);
             player.displayClientMessage(
-                Component.literal("已将收发器绑定至：" + (teamName != null ? teamName : cardOwner.toString().substring(0, 8))), 
+                Component.translatable("extendedae_plus.message.transceiver.bound", teamName != null ? teamName : cardOwner.toString().substring(0, 8)),
                 true
             );
         } else {
             // 频道卡未绑定所有者，使用当前玩家
             te.setPlacerId(player.getUUID(), player.getName().getString());
-            player.displayClientMessage(Component.literal("频道卡未绑定，已使用当前玩家"), true);
+            player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.card_unbound_use_self"), true);
         }
     }
 
@@ -107,7 +107,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         if (sneaking) {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.locked_change_channel"), true);
                 }
             } else {
                 long f = te.getFrequency();
@@ -115,20 +115,22 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                 f += 1;
                 te.setFrequency(f);
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.channel", te.getFrequency()), true);
                 }
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         } else {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.locked_toggle_mode"), true);
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
             te.setMasterMode(!te.isMasterMode());
             if (!level.isClientSide) {
-                player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
+                player.displayClientMessage(Component.translatable(te.isMasterMode()
+                        ? "extendedae_plus.message.transceiver.mode_master"
+                        : "extendedae_plus.message.transceiver.mode_slave"), true);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
@@ -147,7 +149,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
         if (sneaking) {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.locked_change_channel"), true);
                 }
             } else {
                 int step = 1;
@@ -163,20 +165,22 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                 }
                 te.setFrequency(f);
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.channel", te.getFrequency()), true);
                 }
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         } else {
             if (te.isLocked()) {
                 if (!level.isClientSide) {
-                    player.displayClientMessage(Component.literal("收发器已锁定，无法切换模式"), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.locked_toggle_mode"), true);
                 }
                 return ItemInteractionResult.sidedSuccess(level.isClientSide);
             }
             te.setMasterMode(!te.isMasterMode());
             if (!level.isClientSide) {
-                player.displayClientMessage(Component.literal(te.isMasterMode() ? "模式：主端" : "模式：从端"), true);
+                player.displayClientMessage(Component.translatable(te.isMasterMode()
+                        ? "extendedae_plus.message.transceiver.mode_master"
+                        : "extendedae_plus.message.transceiver.mode_slave"), true);
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
@@ -199,7 +203,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                 // 潜行左键（其他物品）：减频（-1 或 -10）
                 if (player.isShiftKeyDown()) {
                     if (te.isLocked()) {
-                        player.displayClientMessage(Component.literal("收发器已锁定，无法修改频道"), true);
+                        player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.locked_change_channel"), true);
                         super.attack(state, level, pos, player);
                         return;
                     }
@@ -210,7 +214,7 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
                     f -= step;
                     if (f < 0) f = 0;
                     te.setFrequency(f);
-                    player.displayClientMessage(Component.literal("频道：" + te.getFrequency()), true);
+                    player.displayClientMessage(Component.translatable("extendedae_plus.message.transceiver.channel", te.getFrequency()), true);
                 }
             }
         }
