@@ -34,6 +34,10 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("cn.dancingsnow.bigger_ae2.BiggerAE2Mod");
 	}
 
+	private static boolean isExpandedAePresent() {
+		return isClassPresent("lu.kolja.expandedae.ExpandedAE");
+	}
+
 	@Override
 	public void onLoad(String mixinPackage) { }
 
@@ -54,6 +58,12 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		}
 		if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.CraftingCPUClusterMixin")) {
 			if (isUfoPresent() || isBiggerAePresent()) {
+				return false;
+			}
+		}
+		if (isExpandedAePresent()) {
+			if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.autopattern.PatternProviderLogicContainsRedirectMixin") ||
+				mixinClassName.equals("com.extendedae_plus.mixin.ae2.autopattern.AdvPatternProviderLogicContainsRedirectMixin")) {
 				return false;
 			}
 		}
