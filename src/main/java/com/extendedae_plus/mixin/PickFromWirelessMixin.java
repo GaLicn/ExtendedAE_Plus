@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-// no client-side WCT gating; server will check presence (including Curios)
 
+//TODO废弃功能，暂时不再启用
 @Mixin(Minecraft.class)
 public class PickFromWirelessMixin {
     @Shadow public LocalPlayer player;
@@ -33,7 +33,6 @@ public class PickFromWirelessMixin {
         if (type == null || type.isCreative()) {
             return;
         }
-        // 若背包已有该物品，让原版逻辑处理（将该物品切换到主手）
         BlockHitResult bhr = (BlockHitResult) this.hitResult;
         var level = Minecraft.getInstance().level;
         if (level != null) {
@@ -45,7 +44,6 @@ public class PickFromWirelessMixin {
                         picked = state.getBlock().asItem().getDefaultInstance();
                     }
                     if (!picked.isEmpty()) {
-                        // 若主手已拿同一物品（含标签），则仍然走 AE 拉取逻辑进行补充/合并
                         if (!ItemStack.isSameItemSameComponents(picked, this.player.getMainHandItem())) {
                             int slot = this.player.getInventory().findSlotMatchingItem(picked);
                             if (slot != -1) {
@@ -55,13 +53,10 @@ public class PickFromWirelessMixin {
                     }
                 }
             } catch (Throwable t) {
-                // 若其它模组导致 getCloneItemStack 出异常，放弃拦截，保持原版行为，确保健壮性
                 return;
             }
         }
 
-        // 不在客户端检查是否持有无线合成终端，由服务端权威校验（含 Curios 支持），以避免整合包环境下的软依赖与槽位问题
-        // 背包没有：发送到服务端处理（从 AE2 网络拉取）并拦截原版
         Vec3 loc = bhr.getLocation();
         PacketDistributor.sendToServer(new PickFromWirelessC2SPacket(bhr.getBlockPos(), bhr.getDirection(), loc));
         ci.cancel();

@@ -62,7 +62,6 @@
     "extendedae.container.ContainerWirelessExPatternTerminalMixin"
   ],
   "client": [
-    "PickFromWirelessMixin",
     "accessor.AbstractContainerScreenAccessor",
     "accessor.ScreenAccessor",
     "advancedae.client.gui.AdvPatternProviderSmartFeaturesMixin",
