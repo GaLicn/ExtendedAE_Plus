@@ -6,6 +6,7 @@ import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.network.provider.*;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -167,6 +168,12 @@ public final class ModNetwork {
                 .encoder(LabelNetworkListS2CPacket::encode)
                 .decoder(LabelNetworkListS2CPacket::decode)
                 .consumerNetworkThread(LabelNetworkListS2CPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(CreateCtrlQPatternC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CreateCtrlQPatternC2SPacket::encode)
+                .decoder(CreateCtrlQPatternC2SPacket::decode)
+                .consumerNetworkThread(CreateCtrlQPatternC2SPacket::handle)
                 .add();
     }
 

@@ -227,5 +227,15 @@
   "extendedae_plus.command.server_side_only": "This command must be run on server side",
   "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager is not initialized",
   "extendedae_plus.command.gave_infinity_disks": "Gave %s infinity disks",
-  "extendedae_plus.command.error": "Error: %s"
+  "extendedae_plus.command.error": "Error: %s",
+
+  "message.extendedae_plus.hover_item_first": "Please hover over an item first",
+  "message.extendedae_plus.no_recipes_found": "No recipes found for this item",
+  "message.extendedae_plus.no_blank_pattern": "No blank pattern in inventory",
+  "message.extendedae_plus.recipe_not_found": "Recipe not found",
+  "message.extendedae_plus.pattern_creation_failed": "Pattern creation failed",
+  "message.extendedae_plus.pattern_created": "Created pattern: %s",
+
+  "key.extendedae_plus.create_pattern": "Create Pattern from JEI",
+  "key.categories.extendedae_plus": "ExtendedAE Plus"
 }
