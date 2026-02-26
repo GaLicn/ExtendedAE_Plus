@@ -21,8 +21,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Mod.EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public class CtrlQPatternKeyHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAE Plus - CtrlQKeyHandler");
 
     @SubscribeEvent
     public static void onScreenKeyPressed(ScreenEvent.KeyPressed event) {
@@ -59,7 +56,6 @@ public class CtrlQPatternKeyHandler {
 
         // JEI 必须可用
         if (JeiRuntimeProxy.get() == null) {
-            LOGGER.warn("[CtrlQKeyHandler] JEI not available");
             return;
         }
 
@@ -67,7 +63,6 @@ public class CtrlQPatternKeyHandler {
         Optional<ITypedIngredient<?>> ingredient = JeiRuntimeProxy.getIngredientUnderMouse();
 
         if (ingredient.isEmpty()) {
-            LOGGER.warn("[CtrlQKeyHandler] No ingredient under mouse");
             Minecraft mc = Minecraft.getInstance();
             if (mc.player != null) {
                 mc.player.displayClientMessage(
@@ -86,7 +81,6 @@ public class CtrlQPatternKeyHandler {
         );
 
         if (recipes.isEmpty()) {
-            LOGGER.warn("[CtrlQKeyHandler] No recipes found");
             if (mc.player != null) {
                 mc.player.displayClientMessage(
                     Component.translatable("message.extendedae_plus.no_recipes_found"),
@@ -99,7 +93,6 @@ public class CtrlQPatternKeyHandler {
         // 自动选择最佳配方（优先CraftingRecipe）
         Recipe<?> selectedRecipe = RecipeFinderUtil.selectBestRecipe(recipes);
         if (selectedRecipe == null) {
-            LOGGER.error("[CtrlQKeyHandler] selectBestRecipe returned null");
             return;
         }
 

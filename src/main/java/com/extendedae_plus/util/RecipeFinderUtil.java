@@ -48,24 +48,19 @@ public class RecipeFinderUtil {
      */
     private static List<Recipe<?>> findRecipesByItem(ItemStack item, Level level) {
         List<Recipe<?>> results = new ArrayList<>();
-        int totalRecipes = level.getRecipeManager().getRecipes().size();
 
         // 1. 查找以该物品为输出的配方
-        int outputMatches = 0;
         for (Recipe<?> recipe : level.getRecipeManager().getRecipes()) {
-            if (matchesOutput(recipe, item)) {
+            if (matchesOutput(recipe, item, level)) {
                 results.add(recipe);
-                outputMatches++;
             }
         }
 
         // 2. 如果按住Shift，也查找以该物品为输入的配方
         if (Screen.hasShiftDown()) {
-            int inputMatches = 0;
             for (Recipe<?> recipe : level.getRecipeManager().getRecipes()) {
                 if (matchesInput(recipe, item) && !results.contains(recipe)) {
                     results.add(recipe);
-                    inputMatches++;
                 }
             }
         }
@@ -107,11 +102,13 @@ public class RecipeFinderUtil {
     /**
      * 检查配方输出是否匹配目标物品
      */
-    private static boolean matchesOutput(Recipe<?> recipe, ItemStack target) {
+    private static boolean matchesOutput(Recipe<?> recipe, ItemStack target, Level level) {
         try {
-            ItemStack result = recipe.getResultItem(null);
-            boolean matches = ItemStack.isSameItemSameTags(result, target);
-            return matches;
+            ItemStack result = recipe.getResultItem(level.registryAccess());
+            if (result.isEmpty()) {
+                return false;
+            }
+            return ItemStack.isSameItemSameTags(result, target);
         } catch (Exception e) {
             LOGGER.warn("[RecipeFinder] Exception in matchesOutput for recipe {}: {}", recipe.getId(), e.getMessage());
             return false;
@@ -123,9 +120,8 @@ public class RecipeFinderUtil {
      */
     private static boolean matchesInput(Recipe<?> recipe, ItemStack target) {
         try {
-            boolean matches = recipe.getIngredients().stream()
+            return recipe.getIngredients().stream()
                 .anyMatch(ingredient -> ingredient.test(target));
-            return matches;
         } catch (Exception e) {
             LOGGER.warn("[RecipeFinder] Exception in matchesInput for recipe {}: {}", recipe.getId(), e.getMessage());
             return false;

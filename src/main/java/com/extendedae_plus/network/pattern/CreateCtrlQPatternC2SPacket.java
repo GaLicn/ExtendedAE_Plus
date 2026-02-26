@@ -1,5 +1,11 @@
 package com.extendedae_plus.network.pattern;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
+
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.energy.IEnergyService;
@@ -11,7 +17,6 @@ import appeng.core.definitions.AEItems;
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
-import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
 import de.mari_023.ae2wtlib.wut.WTDefinition;
 import de.mari_023.ae2wtlib.wut.WUTHandler;
@@ -26,14 +31,11 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
-
 /**
  * C2S: Ctrl+Q快速创建样板数据包
  *
- * <p>从客户端发送配方ID和选择的材料到服务器，服务器消耗空白样板并创建编码样板掉落到玩家脚下</p>
+ * <p>
+ * 从客户端发送配方ID和选择的材料到服务器，服务器消耗空白样板并创建编码样板掉落到玩家脚下</p>
  */
 public class CreateCtrlQPatternC2SPacket {
 
@@ -75,15 +77,14 @@ public class CreateCtrlQPatternC2SPacket {
                 return;
             }
 
-
             // 1. 验证配方存在
             RecipeManager recipeManager = player.level().getRecipeManager();
             var recipeOpt = recipeManager.byKey(msg.recipeId);
 
             if (recipeOpt.isEmpty()) {
                 player.displayClientMessage(
-                    Component.translatable("message.extendedae_plus.recipe_not_found"),
-                    false
+                        Component.translatable("message.extendedae_plus.recipe_not_found"),
+                        false
                 );
                 return;
             }
@@ -93,8 +94,8 @@ public class CreateCtrlQPatternC2SPacket {
             // 2. 消耗空白样板
             if (!consumeBlankPattern(player)) {
                 player.displayClientMessage(
-                    Component.translatable("message.extendedae_plus.no_blank_pattern"),
-                    false
+                        Component.translatable("message.extendedae_plus.no_blank_pattern"),
+                        false
                 );
                 return;
             }
@@ -106,26 +107,17 @@ public class CreateCtrlQPatternC2SPacket {
                 // 创建失败，退还空白样板
                 player.getInventory().add(AEItems.BLANK_PATTERN.stack());
                 player.displayClientMessage(
-                    Component.translatable("message.extendedae_plus.pattern_creation_failed"),
-                    false
+                        Component.translatable("message.extendedae_plus.pattern_creation_failed"),
+                        false
                 );
                 return;
             }
 
-            // 4. 根据样板类型选择交付方式
-            if (msg.isCraftingPattern) {
-                // 合成样板：始终掉落到玩家脚下
+            // 4. 交付样板：优先放入背包，满了再掉落
+            if (!player.getInventory().add(pattern)) {
                 player.drop(pattern, false);
-            } else {
-                // 处理样板：优先放入背包，满了再掉落
-                boolean added = player.getInventory().add(pattern);
-                if (added) {
-                } else {
-                    player.drop(pattern, false);
-                }
             }
 
-            // 5. 移除成功消息（仅失败时提示）
         });
         ctx.setPacketHandled(true);
     }
@@ -169,8 +161,8 @@ public class CreateCtrlQPatternC2SPacket {
             return false; // 没有无线终端
         }
 
-        IGrid grid = null;
-        boolean usedWtHost = false;
+        IGrid grid;
+        boolean usedWtHost;
 
         // 若来自 Curios：优先通过 ae2wtlib 的 WTMenuHost 获取量子桥网络
         String curiosSlotId = located.getCuriosSlotId();
@@ -181,7 +173,8 @@ public class CreateCtrlQPatternC2SPacket {
                 String current = WUTHandler.getCurrentTerminal(terminal);
                 WTDefinition def = WUTHandler.wirelessTerminals.get(current);
                 if (def != null) {
-                    WTMenuHost wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {});
+                    WTMenuHost wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {
+                    });
                     if (wtHost != null) {
                         var node = wtHost.getActionableNode();
                         if (node != null) {
@@ -217,6 +210,7 @@ public class CreateCtrlQPatternC2SPacket {
             if (!wt.hasPower(player, 0.5, terminal)) {
                 return false; // 能量不足
             }
+            usedWtHost = false;
         }
 
         // 从网络提取空白样板
@@ -225,11 +219,11 @@ public class CreateCtrlQPatternC2SPacket {
         MEStorage storage = grid.getStorageService().getInventory();
 
         long extracted = StorageHelper.poweredExtraction(
-            energy,
-            storage,
-            blankPatternKey,
-            1, // 只提取1个
-            new PlayerSource(player)
+                energy,
+                storage,
+                blankPatternKey,
+                1, // 只提取1个
+                new PlayerSource(player)
         );
 
         if (extracted > 0) {
@@ -282,11 +276,11 @@ public class CreateCtrlQPatternC2SPacket {
                 // 使用 encodeCraftingPattern 创建合成样板
                 // 直接传递 CraftingRecipe 对象而非 RecipeHolder
                 ItemStack encodedPattern = PatternDetailsHelper.encodeCraftingPattern(
-                    craftingRecipe,
-                    inputs,
-                    output,
-                    true,  // allowSubstitutes - 允许替代材料
-                    false  // allowFluidSubstitutes - 不允许流体替代
+                        craftingRecipe,
+                        inputs,
+                        output,
+                        true, // allowSubstitutes - 允许替代材料
+                        false // allowFluidSubstitutes - 不允许流体替代
                 );
 
                 // 添加编码玩家信息到NBT
@@ -304,8 +298,8 @@ public class CreateCtrlQPatternC2SPacket {
                 for (ItemStack item : selectedIngredients) {
                     if (!item.isEmpty()) {
                         inputs.add(new GenericStack(
-                            AEItemKey.of(item),
-                            item.getCount()
+                                AEItemKey.of(item),
+                                item.getCount()
                         ));
                     }
                 }
@@ -314,15 +308,15 @@ public class CreateCtrlQPatternC2SPacket {
                 ItemStack result = recipe.getResultItem(player.level().registryAccess());
                 if (!result.isEmpty()) {
                     outputs.add(new GenericStack(
-                        AEItemKey.of(result),
-                        result.getCount()
+                            AEItemKey.of(result),
+                            result.getCount()
                     ));
                 }
 
                 // 使用 encodeProcessingPattern 创建处理样板
                 ItemStack encodedPattern = PatternDetailsHelper.encodeProcessingPattern(
-                    inputs.toArray(new GenericStack[inputs.size()]),
-                    outputs.toArray(new GenericStack[outputs.size()])
+                        inputs.toArray(new GenericStack[0]),
+                        outputs.toArray(new GenericStack[0])
                 );
 
                 // 添加编码玩家信息到NBT
