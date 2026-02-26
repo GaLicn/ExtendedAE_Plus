@@ -231,7 +231,7 @@
 
   "message.extendedae_plus.hover_item_first": "Please hover over an item first",
   "message.extendedae_plus.no_recipes_found": "No recipes found for this item",
-  "message.extendedae_plus.no_blank_pattern": "No blank pattern in inventory",
+  "message.extendedae_plus.no_blank_pattern": "No available blank pattern found",
   "message.extendedae_plus.recipe_not_found": "Recipe not found",
   "message.extendedae_plus.pattern_creation_failed": "Pattern creation failed",
   "message.extendedae_plus.pattern_created": "Created pattern: %s",

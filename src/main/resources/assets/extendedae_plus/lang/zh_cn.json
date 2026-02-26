@@ -230,7 +230,7 @@
 
   "message.extendedae_plus.hover_item_first": "请先将鼠标悬浮在物品上",
   "message.extendedae_plus.no_recipes_found": "未找到该物品的配方",
-  "message.extendedae_plus.no_blank_pattern": "背包中没有空白样板",
+  "message.extendedae_plus.no_blank_pattern": "未查找到可用的空白样板",
   "message.extendedae_plus.recipe_not_found": "配方未找到",
   "message.extendedae_plus.pattern_creation_failed": "样板创建失败",
   "message.extendedae_plus.pattern_created": "已创建样板: %s",

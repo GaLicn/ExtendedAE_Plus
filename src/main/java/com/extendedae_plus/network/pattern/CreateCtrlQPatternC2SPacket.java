@@ -1,9 +1,20 @@
 package com.extendedae_plus.network.pattern;
 
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.networking.IGrid;
+import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import appeng.api.storage.MEStorage;
+import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
+import appeng.items.tools.powered.WirelessTerminalItem;
+import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
+import de.mari_023.ae2wtlib.terminal.WTMenuHost;
+import de.mari_023.ae2wtlib.wut.WTDefinition;
+import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -14,8 +25,6 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraftforge.network.NetworkEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +36,6 @@ import java.util.function.Supplier;
  * <p>从客户端发送配方ID和选择的材料到服务器，服务器消耗空白样板并创建编码样板掉落到玩家脚下</p>
  */
 public class CreateCtrlQPatternC2SPacket {
-    private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAE Plus - CtrlQPattern");
 
     private final ResourceLocation recipeId;
     private final boolean isCraftingPattern;
@@ -64,7 +72,6 @@ public class CreateCtrlQPatternC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) {
-                LOGGER.warn("[CtrlQPattern] No sender found");
                 return;
             }
 
@@ -74,7 +81,6 @@ public class CreateCtrlQPatternC2SPacket {
             var recipeOpt = recipeManager.byKey(msg.recipeId);
 
             if (recipeOpt.isEmpty()) {
-                LOGGER.error("[CtrlQPattern] Recipe not found: {}", msg.recipeId);
                 player.displayClientMessage(
                     Component.translatable("message.extendedae_plus.recipe_not_found"),
                     false
@@ -86,7 +92,6 @@ public class CreateCtrlQPatternC2SPacket {
 
             // 2. 消耗空白样板
             if (!consumeBlankPattern(player)) {
-                LOGGER.warn("[CtrlQPattern] No blank pattern found in inventory");
                 player.displayClientMessage(
                     Component.translatable("message.extendedae_plus.no_blank_pattern"),
                     false
@@ -98,7 +103,6 @@ public class CreateCtrlQPatternC2SPacket {
             ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, player);
 
             if (pattern.isEmpty()) {
-                LOGGER.error("[CtrlQPattern] Pattern creation failed");
                 // 创建失败，退还空白样板
                 player.getInventory().add(AEItems.BLANK_PATTERN.stack());
                 player.displayClientMessage(
@@ -127,24 +131,125 @@ public class CreateCtrlQPatternC2SPacket {
     }
 
     /**
-     * 消耗玩家背包中的一个空白样板
+     * 消耗空白样板：优先从AE网络提取，网络无货才从玩家背包消耗
      *
      * @param player 玩家
      * @return 是否成功消耗
      */
     private static boolean consumeBlankPattern(ServerPlayer player) {
-        Inventory inventory = player.getInventory();
+        // 1. 尝试从AE网络提取（需要玩家持有无线终端）
+        if (tryExtractFromNetwork(player)) {
+            return true;
+        }
 
-        // 遍历背包查找空白样板
+        // 2. 网络提取失败，从背包消耗
+        Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
             ItemStack stack = inventory.getItem(i);
             if (stack.is(AEItems.BLANK_PATTERN.asItem())) {
-                stack.shrink(1); // 消耗一个
+                stack.shrink(1);
                 return true;
             }
         }
 
         return false; // 未找到
+    }
+
+    /**
+     * 尝试从AE网络提取空白样板
+     *
+     * @param player 玩家
+     * @return 是否成功提取
+     */
+    private static boolean tryExtractFromNetwork(ServerPlayer player) {
+        // 定位玩家身上的无线终端
+        WirelessTerminalLocator.LocatedTerminal located = WirelessTerminalLocator.find(player);
+        ItemStack terminal = located.stack;
+        if (terminal.isEmpty()) {
+            return false; // 没有无线终端
+        }
+
+        IGrid grid = null;
+        boolean usedWtHost = false;
+
+        // 若来自 Curios：优先通过 ae2wtlib 的 WTMenuHost 获取量子桥网络
+        String curiosSlotId = located.getCuriosSlotId();
+        int curiosIndex = located.getCuriosIndex();
+
+        if (curiosSlotId != null && curiosIndex >= 0) {
+            try {
+                String current = WUTHandler.getCurrentTerminal(terminal);
+                WTDefinition def = WUTHandler.wirelessTerminals.get(current);
+                if (def != null) {
+                    WTMenuHost wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {});
+                    if (wtHost != null) {
+                        var node = wtHost.getActionableNode();
+                        if (node != null) {
+                            grid = node.getGrid();
+                            if (grid != null && wtHost.drainPower()) {
+                                usedWtHost = true;
+                            } else {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        } else {
+            // 非 Curios：按 AE2 原生路径处理
+            WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
+            WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
+            if (wt == null) {
+                return false;
+            }
+            grid = wt.getLinkedGrid(terminal, player.serverLevel(), player);
+            if (grid == null) {
+                return false;
+            }
+            if (!wt.hasPower(player, 0.5, terminal)) {
+                return false; // 能量不足
+            }
+        }
+
+        // 从网络提取空白样板
+        AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
+        IEnergyService energy = grid.getEnergyService();
+        MEStorage storage = grid.getStorageService().getInventory();
+
+        long extracted = StorageHelper.poweredExtraction(
+            energy,
+            storage,
+            blankPatternKey,
+            1, // 只提取1个
+            new PlayerSource(player)
+        );
+
+        if (extracted > 0) {
+            // 提取成功，消耗无线终端能量
+            if (usedWtHost) {
+                // WTMenuHost 已在 drainPower 中处理能量消耗
+            } else {
+                // 原生 AE2 扣能
+                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
+                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
+                if (wt2 != null) {
+                    wt2.usePower(player, 0.5, terminal);
+                }
+            }
+            // 确保写回终端（若位于 Curios 等需要显式写回的容器）
+            located.commit();
+            return true;
+        }
+
+        return false; // 网络中没有空白样板
     }
 
     /**
@@ -184,6 +289,9 @@ public class CreateCtrlQPatternC2SPacket {
                     false  // allowFluidSubstitutes - 不允许流体替代
                 );
 
+                // 添加编码玩家信息到NBT
+                encodedPattern.getOrCreateTag().putString("encodePlayer", player.getName().getString());
+
                 return encodedPattern;
 
             } else {
@@ -213,15 +321,17 @@ public class CreateCtrlQPatternC2SPacket {
 
                 // 使用 encodeProcessingPattern 创建处理样板
                 ItemStack encodedPattern = PatternDetailsHelper.encodeProcessingPattern(
-                    inputs.toArray(new GenericStack[0]),
-                    outputs.toArray(new GenericStack[0])
+                    inputs.toArray(new GenericStack[inputs.size()]),
+                    outputs.toArray(new GenericStack[outputs.size()])
                 );
+
+                // 添加编码玩家信息到NBT
+                encodedPattern.getOrCreateTag().putString("encodePlayer", player.getName().getString());
 
                 return encodedPattern;
             }
 
         } catch (Exception e) {
-            LOGGER.error("[CtrlQPattern] Exception during pattern creation", e);
             return ItemStack.EMPTY;
         }
     }

@@ -170,25 +170,4 @@ public final class ModConfig {
             ConfigParsingUtils.reload();
         }
     }
-
-    // ==================== Ctrl+Q 快速样板配置 ====================
-
-    @Configurable
-    @Configurable.Comment(value = {
-            "Ctrl+Q创建样板是否消耗空白样板",
-            "true: 从玩家背包或AE网络消耗空白样板",
-            "false: 不消耗空白样板，直接创建（整合包/服务器管理员可配置）"
-    })
-    @Configurable.Synchronized
-    public boolean ctrlQConsumeBlankPattern = true;
-
-    @Configurable
-    @Configurable.Comment(value = {
-            "Ctrl+Q创建样板是否优先从AE网络提取空白样板",
-            "true: 优先从AE网络提取，网络无货才从背包消耗",
-            "false: 仅从玩家背包消耗",
-            "注意：需要玩家持有或装备无线终端才能访问AE网络"
-    })
-    @Configurable.Synchronized
-    public boolean ctrlQExtractFromNetwork = true;
 }
