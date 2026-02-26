@@ -44,13 +44,8 @@ public class CtrlQPatternKeyHandler {
         int keyCode = event.getKeyCode();
         int scanCode = event.getScanCode();
 
-        // 使用 KeyMapping 检测按键（而非硬编码）
+        // 使用 KeyMapping 检测按键（包含修饰键）
         if (!ModKeybindings.CREATE_PATTERN_KEY.matches(keyCode, scanCode)) {
-            return;
-        }
-
-        // 检查 Ctrl 修饰键
-        if (!Screen.hasControlDown()) {
             return;
         }
 

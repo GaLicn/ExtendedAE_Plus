@@ -42,6 +42,9 @@ public class ExtendedAEPlus {
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
 
+        // 注册按键绑定（客户端）
+        modEventBus.addListener(com.extendedae_plus.client.ModKeybindings::register);
+
         // 注册方块与方块实体
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
