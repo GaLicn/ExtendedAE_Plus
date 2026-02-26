@@ -226,5 +226,15 @@
   "extendedae_plus.command.server_side_only": "此命令必须在服务器端执行",
   "extendedae_plus.command.storage_manager_not_initialized": "InfinityStorageManager未初始化",
   "extendedae_plus.command.gave_infinity_disks": "已发放 %s 个无限磁盘",
-  "extendedae_plus.command.error": "错误: %s"
+  "extendedae_plus.command.error": "错误: %s",
+
+  "message.extendedae_plus.hover_item_first": "请先将鼠标悬浮在物品上",
+  "message.extendedae_plus.no_recipes_found": "未找到该物品的配方",
+  "message.extendedae_plus.no_blank_pattern": "背包中没有空白样板",
+  "message.extendedae_plus.recipe_not_found": "配方未找到",
+  "message.extendedae_plus.pattern_creation_failed": "样板创建失败",
+  "message.extendedae_plus.pattern_created": "已创建样板: %s",
+
+  "key.extendedae_plus.create_pattern": "从JEI创建样板",
+  "key.categories.extendedae_plus": "ExtendedAE Plus"
 }
