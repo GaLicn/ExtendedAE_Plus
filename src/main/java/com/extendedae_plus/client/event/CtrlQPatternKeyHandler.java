@@ -88,12 +88,16 @@ public class CtrlQPatternKeyHandler {
 
         // 应用JEI书签优先级选择材料
         List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(selectedRecipeInfo);
+        
+        // 获取输出材料（转换为 ItemStack，流体会被包装）
+        List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selectedRecipeInfo);
 
         // 发送网络包到服务器
         ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
             selectedRecipeInfo.getRecipe().getId(),
             selectedRecipeInfo.isCraftingRecipe(),
-            selectedIngredients
+            selectedIngredients,
+            selectedOutputs
         ));
 
         // 消耗事件，防止传播
@@ -124,5 +128,26 @@ public class CtrlQPatternKeyHandler {
 
         // 使用 RecipeInfo 的方法选择最佳输入
         return recipeInfo.selectBestInputs(priorities);
+    }
+
+    /**
+     * 将配方输出转换为 ItemStack 列表（用于网络传输）
+     *
+     * <p>物品直接转换，流体会被包装为 GenericStack.wrapInItemStack</p>
+     *
+     * @param recipeInfo 配方信息
+     * @return ItemStack 列表（流体已包装）
+     */
+    private static List<ItemStack> convertOutputsToItemStacks(RecipeInfo recipeInfo) {
+        return recipeInfo.getOutputs().stream()
+            .map(genericStack -> {
+                if (genericStack.what() instanceof appeng.api.stacks.AEItemKey itemKey) {
+                    return itemKey.toStack((int) genericStack.amount());
+                } else {
+                    // 流体或其他类型，使用包装
+                    return appeng.api.stacks.GenericStack.wrapInItemStack(genericStack);
+                }
+            })
+            .toList();
     }
 }

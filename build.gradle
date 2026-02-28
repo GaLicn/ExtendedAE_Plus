@@ -131,6 +131,9 @@ dependencies {
     modCompileOnly "curse.maven:ftb-library-forge-404465:6807424"
     modRuntimeOnly "curse.maven:ftb-teams-forge-404468:6130786"
     modRuntimeOnly "curse.maven:ftb-library-forge-404465:6807424"
+
+    //MEK
+    modImplementation "curse.maven:mekanism-268560:6552911"
 }
 
 compileJava {

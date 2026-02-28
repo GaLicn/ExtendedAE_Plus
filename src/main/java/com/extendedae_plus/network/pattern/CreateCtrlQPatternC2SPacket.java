@@ -35,18 +35,20 @@ import net.minecraftforge.network.NetworkEvent;
  * C2S: Ctrl+Q快速创建样板数据包
  *
  * <p>
- * 从客户端发送配方ID和选择的材料到服务器，服务器消耗空白样板并创建编码样板掉落到玩家脚下</p>
+ * 从客户端发送配方ID、选择的材料和输出到服务器，服务器消耗空白样板并创建编码样板掉落到玩家脚下</p>
  */
 public class CreateCtrlQPatternC2SPacket {
 
     private final ResourceLocation recipeId;
     private final boolean isCraftingPattern;
     private final List<ItemStack> selectedIngredients;
+    private final List<ItemStack> outputs;  // 输出材料（物品或包装的流体）
 
-    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients) {
+    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs) {
         this.recipeId = recipeId;
         this.isCraftingPattern = isCraftingPattern;
         this.selectedIngredients = selectedIngredients;
+        this.outputs = outputs;
     }
 
     public static void encode(CreateCtrlQPatternC2SPacket msg, FriendlyByteBuf buf) {
@@ -56,17 +58,26 @@ public class CreateCtrlQPatternC2SPacket {
         for (ItemStack stack : msg.selectedIngredients) {
             buf.writeItem(stack);
         }
+        buf.writeInt(msg.outputs.size());
+        for (ItemStack stack : msg.outputs) {
+            buf.writeItem(stack);
+        }
     }
 
     public static CreateCtrlQPatternC2SPacket decode(FriendlyByteBuf buf) {
         ResourceLocation recipeId = buf.readResourceLocation();
         boolean isCraftingPattern = buf.readBoolean();
-        int count = buf.readInt();
+        int ingredientCount = buf.readInt();
         List<ItemStack> ingredients = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < ingredientCount; i++) {
             ingredients.add(buf.readItem());
         }
-        return new CreateCtrlQPatternC2SPacket(recipeId, isCraftingPattern, ingredients);
+        int outputCount = buf.readInt();
+        List<ItemStack> outputs = new ArrayList<>();
+        for (int i = 0; i < outputCount; i++) {
+            outputs.add(buf.readItem());
+        }
+        return new CreateCtrlQPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs);
     }
 
     public static void handle(CreateCtrlQPatternC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -101,7 +112,7 @@ public class CreateCtrlQPatternC2SPacket {
             }
 
             // 3. 创建样板
-            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, player);
+            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs, player);
 
             if (pattern.isEmpty()) {
                 // 创建失败，退还空白样板
@@ -247,15 +258,16 @@ public class CreateCtrlQPatternC2SPacket {
     }
 
     /**
-     * 从配方创建样板
+     * 从配方创建样板（支持物品和流体）
      *
      * @param recipe 配方
      * @param isCrafting 是否为合成样板
-     * @param selectedIngredients 客户端选择的材料（应用JEI优先级后）
+     * @param selectedIngredients 客户端选择的材料（应用JEI优先级后，流体已包装为 GenericStack.wrapInItemStack）
+     * @param selectedOutputs 客户端传递的输出材料（物品或包装的流体）
      * @param player 玩家
      * @return 编码的样板物品
      */
-    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, ServerPlayer player) {
+    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, List<ItemStack> selectedOutputs, ServerPlayer player) {
         try {
             if (isCrafting && recipe instanceof CraftingRecipe craftingRecipe) {
                 // ===== 合成样板创建路径 =====
@@ -289,28 +301,45 @@ public class CreateCtrlQPatternC2SPacket {
                 return encodedPattern;
 
             } else {
-                // ===== 处理样板创建路径 =====
+                // ===== 处理样板创建路径（支持物品和流体）=====
 
                 List<GenericStack> inputs = new ArrayList<>();
                 List<GenericStack> outputs = new ArrayList<>();
 
-                // 处理输入 - 使用客户端传入的材料选择
+                // 处理输入 - 使用客户端传入的材料选择（支持流体）
                 for (ItemStack item : selectedIngredients) {
                     if (!item.isEmpty()) {
-                        inputs.add(new GenericStack(
-                                AEItemKey.of(item),
-                                item.getCount()
-                        ));
+                        // 尝试解包 GenericStack（流体会被包装在特殊的 ItemStack 中）
+                        GenericStack genericStack = GenericStack.unwrapItemStack(item);
+                        if (genericStack != null) {
+                            // 这是一个包装的 GenericStack（可能是流体）
+                            inputs.add(genericStack);
+                        } else {
+                            // 普通物品
+                            AEItemKey itemKey = AEItemKey.of(item);
+                            if (itemKey != null) {
+                                inputs.add(new GenericStack(itemKey, item.getCount()));
+                            }
+                        }
                     }
                 }
 
-                // 处理输出
-                ItemStack result = recipe.getResultItem(player.level().registryAccess());
-                if (!result.isEmpty()) {
-                    outputs.add(new GenericStack(
-                            AEItemKey.of(result),
-                            result.getCount()
-                    ));
+                // 处理输出 - 使用客户端传入的输出（支持流体）
+                for (ItemStack item : selectedOutputs) {
+                    if (!item.isEmpty()) {
+                        // 尝试解包 GenericStack（流体会被包装在特殊的 ItemStack 中）
+                        GenericStack genericStack = GenericStack.unwrapItemStack(item);
+                        if (genericStack != null) {
+                            // 这是一个包装的 GenericStack（可能是流体）
+                            outputs.add(genericStack);
+                        } else {
+                            // 普通物品
+                            AEItemKey itemKey = AEItemKey.of(item);
+                            if (itemKey != null) {
+                                outputs.add(new GenericStack(itemKey, item.getCount()));
+                            }
+                        }
+                    }
                 }
 
                 // 使用 encodeProcessingPattern 创建处理样板
