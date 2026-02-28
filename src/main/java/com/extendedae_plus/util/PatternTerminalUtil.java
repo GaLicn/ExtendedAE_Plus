@@ -158,13 +158,20 @@ public final class PatternTerminalUtil {
      * 返回顺序稳定：按 grid 的 machineClasses 顺序，再按 activeMachines 迭代顺序。
      */
     public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
-        List<PatternContainer> list = new ArrayList<>();
-        if (menu == null) return list;
+        if (menu == null) return new ArrayList<>();
         try {
             IGridNode node = menu.getNetworkNode();
-            if (node == null) return list;
-            IGrid grid = node.getGrid();
-            if (grid == null) return list;
+            if (node == null) return new ArrayList<>();
+            return listAvailableProvidersFromGrid(node.getGrid());
+        } catch (Throwable ignored) {
+            return new ArrayList<>();
+        }
+    }
+
+    public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
+        List<PatternContainer> list = new ArrayList<>();
+        if (grid == null) return list;
+        try {
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
                     @SuppressWarnings("unchecked")
@@ -175,7 +182,10 @@ public final class PatternTerminalUtil {
                         if (inv == null || inv.size() <= 0) continue;
                         boolean hasEmpty = false;
                         for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
+                            if (inv.getStackInSlot(i).isEmpty()) {
+                                hasEmpty = true;
+                                break;
+                            }
                         }
                         if (hasEmpty) list.add(container);
                     }

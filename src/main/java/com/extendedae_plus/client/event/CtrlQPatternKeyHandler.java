@@ -5,8 +5,10 @@ import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
+import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -15,6 +17,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -273,7 +276,112 @@ public class CtrlQPatternKeyHandler {
      * @param recipeBookmark 配方书签对象
      */
     private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
-        System.out.println("chuli");
+        try {
+            var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
+            net.minecraft.resources.ResourceLocation recipeId =
+                (net.minecraft.resources.ResourceLocation) getRecipeUidMethod.invoke(recipeBookmark);
+            if (recipeId == null) {
+                return;
+            }
+
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) {
+                return;
+            }
+
+            var recipeManager = mc.level.getRecipeManager();
+            var recipeOpt = recipeManager.byKey(recipeId);
+            if (recipeOpt.isEmpty()) {
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.recipe_not_found"),
+                        true
+                    );
+                }
+                return;
+            }
+
+            Object recipeBase = null;
+            try {
+                var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
+                recipeBase = getRecipeMethod.invoke(recipeBookmark);
+            } catch (Throwable ignored) {
+            }
+            setLastProcessingNameFromRecipe(recipeBase != null ? recipeBase : recipeOpt.get());
+
+            List<RecipeInfo> recipeInfos = RecipeFinderUtil.findRecipesByIngredient(
+                JeiRuntimeProxy.getIngredientUnderMouse().orElse(null)
+            );
+
+            if (recipeInfos.isEmpty()) {
+                var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
+                Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
+                if (recipeOutput instanceof ITypedIngredient<?> typedIngredient) {
+                    recipeInfos = RecipeFinderUtil.findRecipesByIngredient(typedIngredient);
+                }
+            }
+
+            if (recipeInfos.isEmpty()) {
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.no_recipes_found"),
+                        true
+                    );
+                }
+                return;
+            }
+
+            RecipeInfo matchingRecipeInfo = null;
+            for (RecipeInfo info : recipeInfos) {
+                if (info.getRecipe().getId().equals(recipeId)) {
+                    matchingRecipeInfo = info;
+                    break;
+                }
+            }
+            if (matchingRecipeInfo == null) {
+                matchingRecipeInfo = recipeInfos.get(0);
+            }
+
+            List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matchingRecipeInfo);
+            List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matchingRecipeInfo);
+
+            ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
+                recipeId,
+                matchingRecipeInfo.isCraftingRecipe(),
+                selectedIngredients,
+                selectedOutputs,
+                true
+            ));
+
+            ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void setLastProcessingNameFromRecipe(Object recipeBase) {
+        String name = null;
+        if (recipeBase instanceof Recipe<?> recipe) {
+            name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
+        } else if (recipeBase != null
+            && "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
+            name = RecipeTypeNameConfig.mapGTCEuRecipeToSearchKey(recipeBase);
+        } else if (recipeBase != null
+            && "com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
+            try {
+                var field = recipeBase.getClass().getField("recipe");
+                Object inner = field.get(recipeBase);
+                name = RecipeTypeNameConfig.mapGTCEuRecipeToSearchKey(inner);
+            } catch (Throwable ignored) {
+            }
+        }
+
+        if (name == null || name.isBlank()) {
+            name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipeBase);
+        }
+        if (name != null && !name.isBlank()) {
+            RecipeTypeNameConfig.setLastProcessingName(name);
+        }
     }
 
     /**

@@ -9,7 +9,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
- * C2S: 请求将图样编码终端的已编码样板上传到指定的样板供应器（由客户端选择）。
+ * C2S: Request uploading an encoded pattern to a selected provider.
  */
 public class UploadEncodedPatternToProviderC2SPacket {
     private final long providerId;
@@ -31,15 +31,23 @@ public class UploadEncodedPatternToProviderC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
-            if (!(player.containerMenu instanceof PatternEncodingTermMenu menu)) return;
-            // 支持两种模式：
-            // 1) providerId >= 0: 访问终端 byId 模式
-            // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId
-            if (msg.providerId >= 0) {
-                ProviderUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
-            } else {
-                int index = (int) (-1L - msg.providerId);
-                ProviderUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
+
+            // Prefer pending Ctrl+Q pattern upload when present.
+            if (ProviderUploadUtil.hasPendingCtrlQPattern(player)) {
+                if (ProviderUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId)) {
+                    return;
+                }
+            }
+
+            if (player.containerMenu instanceof PatternEncodingTermMenu menu) {
+                // 1) providerId >= 0: byId mode from access terminal
+                // 2) providerId < 0: index mode, index = -1 - providerId
+                if (msg.providerId >= 0) {
+                    ProviderUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
+                } else {
+                    int index = (int) (-1L - msg.providerId);
+                    ProviderUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
+                }
             }
         });
         ctx.setPacketHandled(true);

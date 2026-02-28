@@ -6,6 +6,7 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
@@ -29,6 +30,27 @@ public class RequestProvidersListC2SPacket {
         ctx.enqueueWork(() -> {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
+
+            // Ctrl+Q pending 模式：不依赖编码终端，直接基于玩家网络给出列表（负数索引 ID）
+            if (ProviderUploadUtil.hasPendingCtrlQPattern(player)) {
+                List<PatternContainer> containers = ProviderUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
+                List<Long> idxIds = new ArrayList<>();
+                List<String> names = new ArrayList<>();
+                List<Integer> slots = new ArrayList<>();
+                for (int i = 0; i < containers.size(); i++) {
+                    var c = containers.get(i);
+                    if (c == null) continue;
+                    int empty = PatternProviderDataUtil.getAvailableSlots(c);
+                    if (empty <= 0) continue;
+                    long encodedId = -1L - i;
+                    idxIds.add(encodedId);
+                    names.add(PatternProviderDataUtil.getProviderDisplayName(c));
+                    slots.add(empty);
+                }
+                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                return;
+            }
+
             if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
