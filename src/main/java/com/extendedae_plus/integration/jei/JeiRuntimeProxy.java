@@ -167,6 +167,23 @@ public final class JeiRuntimeProxy {
         }
     }
 
+    /**
+     * 获取鼠标下的配方书签（如果存在）
+     * 
+     * @return 配方书签对象（RecipeBookmark<?, ?>），如果不是配方书签则返回空
+     */
+    public static Optional<?> getRecipeBookmarkUnderMouse() {
+        try {
+            Class<?> bridge = Class.forName("com.extendedae_plus.integration.jei.JeiBookmarkBridge");
+            var m = bridge.getMethod("getRecipeBookmarkUnderMouse");
+            @SuppressWarnings("unchecked")
+            Optional<?> result = (Optional<?>) m.invoke(null);
+            return result == null ? Optional.empty() : result;
+        } catch (Throwable ignored) {
+            return Optional.empty();
+        }
+    }
+
     // Note: helper methods moved to bridge to avoid referencing JEI GUI at class load time.
 
     /**

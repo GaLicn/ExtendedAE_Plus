@@ -161,6 +161,46 @@ public final class JeiBookmarkBridge {
     }
 
     /**
+     * 获取鼠标下的配方书签（如果存在）
+     * 
+     * @return 配方书签对象（RecipeBookmark<?, ?>），如果不是配方书签则返回空
+     */
+    public static Optional<?> getRecipeBookmarkUnderMouse() {
+        IJeiRuntime rt = getRuntime();
+        if (rt == null) return Optional.empty();
+        
+        IBookmarkOverlay bookmarkOverlay = rt.getBookmarkOverlay();
+        if (!(bookmarkOverlay instanceof BookmarkOverlayAccessor accessor)) {
+            return Optional.empty();
+        }
+        
+        // 获取鼠标下的元素
+        Optional<ITypedIngredient<?>> ingredientOpt = bookmarkOverlay.getIngredientUnderMouse();
+        if (ingredientOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        // 遍历书签列表，查找匹配的配方书签
+        BookmarkList bookmarkList = accessor.eap$getBookmarkList();
+        for (IElement<?> element : bookmarkList.getElements()) {
+            // 检查元素的 TypedIngredient 是否匹配
+            if (element.getTypedIngredient().equals(ingredientOpt.get())) {
+                // 检查是否有关联的书签
+                Optional<?> bookmarkOpt = element.getBookmark();
+                if (bookmarkOpt.isPresent()) {
+                    Object bookmark = bookmarkOpt.get();
+                    // 判断是否为 RecipeBookmark（而非 IngredientBookmark）
+                    if (bookmark.getClass().getSimpleName().equals("RecipeBookmark")) {
+                        return Optional.of(bookmark);
+                    }
+                }
+            }
+        }
+        
+        return Optional.empty();
+    }
+
+    /**
      * 从 JEI 书签移除物品
      */
     public static void removeBookmark(ItemStack stack) {

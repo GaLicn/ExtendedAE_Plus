@@ -7,6 +7,7 @@ import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
@@ -28,7 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Ctrl+Q键快速创建样板事件监听器
  *
- * <p>监听 Ctrl+Q 组合键，自动创建样板并掉落到玩家脚下</p>
  * <p>应用 JEI 书签优先级选择材料，优先选择工作台配方</p>
  */
 @Mod.EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
@@ -50,6 +50,17 @@ public class CtrlQPatternKeyHandler {
             return;
         }
 
+        // 检查鼠标下是否为配方书签
+        Optional<?> recipeBookmark = JeiRuntimeProxy.getRecipeBookmarkUnderMouse();
+
+        if (recipeBookmark.isPresent()) {
+            // 配方书签分支：处理带有配方类型的书签
+            handleRecipeBookmark(recipeBookmark.get());
+            event.setCanceled(true);
+            return;
+        }
+
+        // 普通书签分支：保持原有逻辑
         // 获取鼠标悬浮的物品
         Optional<ITypedIngredient<?>> ingredient = JeiRuntimeProxy.getIngredientUnderMouse();
 
@@ -88,7 +99,7 @@ public class CtrlQPatternKeyHandler {
 
         // 应用JEI书签优先级选择材料
         List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(selectedRecipeInfo);
-        
+
         // 获取输出材料（转换为 ItemStack，流体会被包装）
         List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selectedRecipeInfo);
 
@@ -102,6 +113,64 @@ public class CtrlQPatternKeyHandler {
 
         // 消耗事件，防止传播
         event.setCanceled(true);
+    }
+
+    /**
+     * 处理配方书签的逻辑
+     *
+     * @param recipeBookmark 配方书签对象（RecipeBookmark<?, ?>）
+     */
+    private static void handleRecipeBookmark(Object recipeBookmark) {
+        // 判断配方类型
+        if (isCraftingRecipe(recipeBookmark)) {
+            // 合成配方分支
+            handleCraftingRecipeBookmark(recipeBookmark);
+        } else {
+            // 其他配方分支（加工配方等）
+            handleProcessingRecipeBookmark(recipeBookmark);
+        }
+    }
+
+    /**
+     * 判断配方书签是否为合成配方
+     *
+     * @param recipeBookmark 配方书签对象
+     * @return true 如果是合成配方
+     */
+    private static boolean isCraftingRecipe(Object recipeBookmark) {
+        try {
+            // 通过反射获取 RecipeBookmark 的 recipeCategory
+            var getRecipeCategoryMethod = recipeBookmark.getClass().getMethod("getRecipeCategory");
+            Object recipeCategory = getRecipeCategoryMethod.invoke(recipeBookmark);
+
+            // 获取 recipeCategory 的 recipeType
+            var getRecipeTypeMethod = recipeCategory.getClass().getMethod("getRecipeType");
+            Object recipeType = getRecipeTypeMethod.invoke(recipeCategory);
+
+            // 判断是否为 RecipeTypes.CRAFTING
+            return RecipeTypes.CRAFTING.equals(recipeType);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * 处理合成配方书签
+     *
+     * @param recipeBookmark 配方书签对象
+     */
+    private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
+        System.out.println("合成书签");
+    }
+
+    /**
+     * 处理加工配方书签
+     *
+     * @param recipeBookmark 配方书签对象
+     */
+    private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
+        System.out.println("处理书签");
     }
 
     /**
