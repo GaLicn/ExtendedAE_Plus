@@ -161,7 +161,110 @@ public class CtrlQPatternKeyHandler {
      * @param recipeBookmark 配方书签对象
      */
     private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
-        System.out.println("hecheng");
+        try {
+            // 1. 获取配方ID
+            var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
+            net.minecraft.resources.ResourceLocation recipeId = 
+                (net.minecraft.resources.ResourceLocation) getRecipeUidMethod.invoke(recipeBookmark);
+            
+            if (recipeId == null) {
+                return;
+            }
+            
+            // 2. 获取Minecraft实例
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) {
+                return;
+            }
+            
+            // 3. 验证配方存在
+            var recipeManager = mc.level.getRecipeManager();
+            var recipeOpt = recipeManager.byKey(recipeId);
+            
+            if (recipeOpt.isEmpty()) {
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.recipe_not_found"),
+                        true
+                    );
+                }
+                return;
+            }
+            
+            // 4. 从JEI获取配方的详细信息（输入输出槽位）
+            // 使用RecipeBookmark的getRecipe方法获取配方对象
+            var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
+            Object recipe = getRecipeMethod.invoke(recipeBookmark);
+            
+            if (recipe == null) {
+                return;
+            }
+            
+            // 5. 通过JEI的RecipeManager获取配方布局信息
+            mezz.jei.api.runtime.IJeiRuntime jeiRuntime = JeiRuntimeProxy.get();
+            if (jeiRuntime == null) {
+                return;
+            }
+            
+            // 6. 获取配方类别
+            var getRecipeCategoryMethod = recipeBookmark.getClass().getMethod("getRecipeCategory");
+            Object recipeCategory = getRecipeCategoryMethod.invoke(recipeBookmark);
+            
+            // 7. 创建RecipeInfo来应用JEI书签优先级
+            List<RecipeInfo> recipeInfos = RecipeFinderUtil.findRecipesByIngredient(
+                JeiRuntimeProxy.getIngredientUnderMouse().orElse(null)
+            );
+            
+            // 如果找不到，尝试通过配方输出物品查找
+            if (recipeInfos.isEmpty()) {
+                var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
+                Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
+                
+                if (recipeOutput instanceof mezz.jei.api.ingredients.ITypedIngredient<?> typedIngredient) {
+                    recipeInfos = RecipeFinderUtil.findRecipesByIngredient(typedIngredient);
+                }
+            }
+            
+            if (recipeInfos.isEmpty()) {
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.no_recipes_found"),
+                        true
+                    );
+                }
+                return;
+            }
+            
+            // 8. 找到匹配的RecipeInfo
+            RecipeInfo matchingRecipeInfo = null;
+            for (RecipeInfo info : recipeInfos) {
+                if (info.getRecipe().getId().equals(recipeId)) {
+                    matchingRecipeInfo = info;
+                    break;
+                }
+            }
+            
+            if (matchingRecipeInfo == null) {
+                matchingRecipeInfo = recipeInfos.get(0);
+            }
+            
+            // 9. 应用JEI书签优先级选择材料
+            List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matchingRecipeInfo);
+            
+            // 10. 获取输出材料
+            List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matchingRecipeInfo);
+            
+            // 11. 发送网络包创建样板并上传到装配矩阵
+            ModNetwork.CHANNEL.sendToServer(new com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket(
+                recipeId,
+                matchingRecipeInfo.isCraftingRecipe(),
+                selectedIngredients,
+                selectedOutputs
+            ));
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

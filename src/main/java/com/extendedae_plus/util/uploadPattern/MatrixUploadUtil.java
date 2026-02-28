@@ -87,6 +87,61 @@ public final class MatrixUploadUtil {
             }
         }
     }
+    /**
+     * 直接上传已创建的样板到装配矩阵（不从菜单读取）
+     *
+     * @param player 服务器玩家
+     * @param pattern 已编码的样板
+     * @param grid AE网络
+     * @return 是否上传成功
+     */
+    public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid) {
+        if (player == null || pattern.isEmpty() || grid == null) {
+            return false;
+        }
+
+        // 验证是否为已编码的样板
+        if (!PatternDetailsHelper.isEncodedPattern(pattern)) {
+            return false;
+        }
+
+        // 仅允许"合成/锻造台/切石机样板"
+        IPatternDetails details = PatternDetailsHelper.decodePattern(pattern, player.level());
+        if (!(details instanceof AECraftingPattern
+                || details instanceof AESmithingTablePattern
+                || details instanceof AEStonecuttingPattern)) {
+            return false;
+        }
+
+        ItemStack toInsert = pattern.copy();
+
+        // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
+        List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+
+        // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
+        if (matrixContainsPattern(inventories, pattern)) {
+            // 直接提醒并跳过上传
+            sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.repetition"));
+            return false;
+        }
+
+        // 尝试插入
+        for (InternalInventory inv : inventories) {
+            if (inv == null) continue;
+            ItemStack remain = inv.addItems(toInsert);
+            if (remain.getCount() < pattern.getCount()) {
+                // 上传成功
+                sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
+                return true;
+            }
+        }
+
+        // 所有矩阵都满了
+        sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.full"));
+        return false;
+    }
+
+
 
     /**
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“样板核心”的用于外部插入的内部库存
