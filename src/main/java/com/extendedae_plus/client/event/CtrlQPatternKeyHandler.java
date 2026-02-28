@@ -132,7 +132,7 @@ public class CtrlQPatternKeyHandler {
     }
 
     /**
-     * 判断配方书签是否为合成配方
+     * 判断配方书签是否为能上传到装配矩阵的配方类型
      *
      * @param recipeBookmark 配方书签对象
      * @return true 如果是合成配方
@@ -147,8 +147,8 @@ public class CtrlQPatternKeyHandler {
             var getRecipeTypeMethod = recipeCategory.getClass().getMethod("getRecipeType");
             Object recipeType = getRecipeTypeMethod.invoke(recipeCategory);
 
-            // 判断是否为 RecipeTypes.CRAFTING
-            return RecipeTypes.CRAFTING.equals(recipeType);
+            // 判断是否为能上传到装配矩阵的配方类型
+            return RecipeTypes.CRAFTING.equals(recipeType) || RecipeTypes.STONECUTTING.equals(recipeType) || RecipeTypes.SMITHING.equals(recipeType);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -161,7 +161,7 @@ public class CtrlQPatternKeyHandler {
      * @param recipeBookmark 配方书签对象
      */
     private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
-        System.out.println("合成书签");
+        System.out.println("hecheng");
     }
 
     /**
@@ -170,7 +170,7 @@ public class CtrlQPatternKeyHandler {
      * @param recipeBookmark 配方书签对象
      */
     private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
-        System.out.println("处理书签");
+        System.out.println("chuli");
     }
 
     /**
