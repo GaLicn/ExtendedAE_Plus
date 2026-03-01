@@ -123,6 +123,10 @@ public final class CtrlQPatternKeyHandler {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.player != null) {
+					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
+				}
 				return;
 			}
 
@@ -164,6 +168,10 @@ public final class CtrlQPatternKeyHandler {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.player != null) {
+					mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.recipe_not_found"), true);
+				}
 				return;
 			}
 
@@ -221,6 +229,18 @@ public final class CtrlQPatternKeyHandler {
 		}
 
 		try {
+			var getDisplayIngredientMethod = recipeBookmark.getClass().getMethod("getDisplayIngredient");
+			Object displayIngredient = getDisplayIngredientMethod.invoke(recipeBookmark);
+			if (displayIngredient instanceof ITypedIngredient<?> typed) {
+				List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(typed);
+				if (!infos.isEmpty()) {
+					return infos;
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+
+		try {
 			var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
 			Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
 			if (recipeOutput instanceof ITypedIngredient<?> typed) {
@@ -241,6 +261,11 @@ public final class CtrlQPatternKeyHandler {
 	}
 
 	private static ResourceLocation getRecipeId(Object recipeBookmark) {
+		if (recipeBookmark == null) {
+			return null;
+		}
+
+		// JEI 1.20 兼容分支
 		try {
 			var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
 			Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
@@ -249,6 +274,43 @@ public final class CtrlQPatternKeyHandler {
 			}
 		} catch (Throwable ignored) {
 		}
+
+		// JEI 1.21+：从 recipeCategory.getRegistryName(recipe) 获取
+		try {
+			Object recipe = recipeBookmark.getClass().getMethod("getRecipe").invoke(recipeBookmark);
+			Object recipeCategory = recipeBookmark.getClass().getMethod("getRecipeCategory").invoke(recipeBookmark);
+			if (recipe != null && recipeCategory != null) {
+				try {
+					Object recipeId = recipeCategory.getClass().getMethod("getRegistryName", Object.class).invoke(recipeCategory, recipe);
+					if (recipeId instanceof ResourceLocation rl) {
+						return rl;
+					}
+				} catch (Throwable ignored) {
+					for (var m : recipeCategory.getClass().getMethods()) {
+						if (!"getRegistryName".equals(m.getName()) || m.getParameterCount() != 1) {
+							continue;
+						}
+						Object recipeId = m.invoke(recipeCategory, recipe);
+						if (recipeId instanceof ResourceLocation rl) {
+							return rl;
+						}
+					}
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+
+		// 反射字段兜底（JEI 内部 RecipeBookmark 存在 recipeUid 字段）
+		try {
+			var f = recipeBookmark.getClass().getDeclaredField("recipeUid");
+			f.setAccessible(true);
+			Object recipeId = f.get(recipeBookmark);
+			if (recipeId instanceof ResourceLocation rl) {
+				return rl;
+			}
+		} catch (Throwable ignored) {
+		}
+
 		return null;
 	}
 
@@ -316,4 +378,3 @@ public final class CtrlQPatternKeyHandler {
 			.toList();
 	}
 }
-

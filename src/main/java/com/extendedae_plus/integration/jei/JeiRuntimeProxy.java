@@ -151,6 +151,32 @@ public final class JeiRuntimeProxy {
 			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
 			if (overlay == null) return Optional.empty();
 
+			// JEI 1.21 优先路径：直接拿鼠标下 clickable element 的 bookmark
+			try {
+				double mouseX = getGuiMouseX();
+				double mouseY = getGuiMouseY();
+				Object clickableStream = overlay.getClass()
+					.getMethod("getIngredientUnderMouse", double.class, double.class)
+					.invoke(overlay, mouseX, mouseY);
+				if (clickableStream instanceof java.util.stream.Stream<?> stream) {
+					Object firstClickable = stream.findFirst().orElse(null);
+					if (firstClickable != null) {
+						Object element = firstClickable.getClass().getMethod("getElement").invoke(firstClickable);
+						if (element != null) {
+							Object bookmarkOpt = element.getClass().getMethod("getBookmark").invoke(element);
+							if (bookmarkOpt instanceof Optional<?> b && b.isPresent()) {
+								Object bookmark = b.get();
+								if (bookmark != null && "RecipeBookmark".equals(bookmark.getClass().getSimpleName())) {
+									return Optional.of(bookmark);
+								}
+							}
+						}
+					}
+				}
+			} catch (Throwable ignored) {
+			}
+
+			// 兼容回退：基于 typed ingredient 匹配 bookmarkList 元素
 			Object ingredientOpt = overlay.getClass().getMethod("getIngredientUnderMouse").invoke(overlay);
 			if (!(ingredientOpt instanceof Optional<?> opt) || opt.isEmpty()) return Optional.empty();
 			Object hoveredIngredient = opt.get();
@@ -187,6 +213,40 @@ public final class JeiRuntimeProxy {
 		} catch (Throwable ignored) {
 		}
 		return Optional.empty();
+	}
+
+	private static double getGuiMouseX() {
+		try {
+			Class<?> mcCls = Class.forName("net.minecraft.client.Minecraft");
+			Object mc = mcCls.getMethod("getInstance").invoke(null);
+			Object mouseHandler = mcCls.getField("mouseHandler").get(mc);
+			Object window = mcCls.getMethod("getWindow").invoke(mc);
+
+			double xpos = (double) mouseHandler.getClass().getMethod("xpos").invoke(mouseHandler);
+			int guiW = (int) window.getClass().getMethod("getGuiScaledWidth").invoke(window);
+			int screenW = (int) window.getClass().getMethod("getScreenWidth").invoke(window);
+			if (screenW <= 0) return xpos;
+			return xpos * ((double) guiW / (double) screenW);
+		} catch (Throwable ignored) {
+			return 0.0D;
+		}
+	}
+
+	private static double getGuiMouseY() {
+		try {
+			Class<?> mcCls = Class.forName("net.minecraft.client.Minecraft");
+			Object mc = mcCls.getMethod("getInstance").invoke(null);
+			Object mouseHandler = mcCls.getField("mouseHandler").get(mc);
+			Object window = mcCls.getMethod("getWindow").invoke(mc);
+
+			double ypos = (double) mouseHandler.getClass().getMethod("ypos").invoke(mouseHandler);
+			int guiH = (int) window.getClass().getMethod("getGuiScaledHeight").invoke(window);
+			int screenH = (int) window.getClass().getMethod("getScreenHeight").invoke(window);
+			if (screenH <= 0) return ypos;
+			return ypos * ((double) guiH / (double) screenH);
+		} catch (Throwable ignored) {
+			return 0.0D;
+		}
 	}
 
 	public static void addBookmark(ItemStack stack) {
