@@ -518,6 +518,67 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
+     * 将给定的已编码样板直接上传到装配矩阵（不依赖编码终端槽位）。
+     *
+     * @param player 服务器玩家
+     * @param pattern 已编码样板
+     * @param grid AE 网络
+     * @return 是否成功插入矩阵
+     */
+    public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid) {
+        if (player == null || grid == null || pattern == null || pattern.isEmpty() || !PatternDetailsHelper.isEncodedPattern(pattern)) {
+            return false;
+        }
+
+        IPatternDetails details = PatternDetailsHelper.decodePattern(pattern, player.level());
+        if (!(details instanceof AECraftingPattern
+                || details instanceof AESmithingTablePattern
+                || details instanceof AEStonecuttingPattern)) {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
+            return false;
+        }
+
+        if (matrixContainsPattern(grid, pattern)) {
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.matrix.duplicate"));
+            }
+            return false;
+        }
+
+        List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+        if (!inventories.isEmpty()) {
+            for (InternalInventory inv : inventories) {
+                if (inv == null) continue;
+                ItemStack toInsert = pattern.copy();
+                ItemStack remain = inv.addItems(toInsert);
+                if (remain.getCount() < toInsert.getCount()) {
+                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    return true;
+                }
+            }
+        }
+
+        List<?> handlers = findAllMatrixPatternHandlers(grid);
+        if (!handlers.isEmpty()) {
+            for (Object cap : handlers) {
+                ItemStack toInsert = pattern.copy();
+                ItemStack remain = insertIntoAnySlot(cap, toInsert);
+                if (remain.getCount() < toInsert.getCount()) {
+                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    return true;
+                }
+            }
+        }
+
+        if (inventories.isEmpty() && handlers.isEmpty()) {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
+        } else {
+            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+        }
+        return false;
+    }
+
+    /**
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“图样模块”的用于外部插入的内部库存。
      * 优先使用 TileAssemblerMatrixPattern#getExposedInventory（仅允许插入，且已带AE过滤规则）。
      */

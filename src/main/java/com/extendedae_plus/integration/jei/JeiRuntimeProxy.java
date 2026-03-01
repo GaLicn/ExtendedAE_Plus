@@ -141,6 +141,54 @@ public final class JeiRuntimeProxy {
 		return Collections.emptyList();
 	}
 
+	/**
+	 * 获取鼠标下的配方书签（RecipeBookmark），用于 Ctrl+Q 直接识别“配方书签”而非普通配料。
+	 */
+	public static Optional<?> getRecipeBookmarkUnderMouse() {
+		Object rt = RUNTIME;
+		if (rt == null) return Optional.empty();
+		try {
+			Object overlay = rt.getClass().getMethod("getBookmarkOverlay").invoke(rt);
+			if (overlay == null) return Optional.empty();
+
+			Object ingredientOpt = overlay.getClass().getMethod("getIngredientUnderMouse").invoke(overlay);
+			if (!(ingredientOpt instanceof Optional<?> opt) || opt.isEmpty()) return Optional.empty();
+			Object hoveredIngredient = opt.get();
+
+			Field f = overlay.getClass().getDeclaredField("bookmarkList");
+			f.setAccessible(true);
+			Object bookmarkList = f.get(overlay);
+			if (bookmarkList == null) return Optional.empty();
+
+			Object elementsObj = bookmarkList.getClass().getMethod("getElements").invoke(bookmarkList);
+			if (!(elementsObj instanceof List<?> elements)) return Optional.empty();
+
+			for (Object element : elements) {
+				if (element == null) continue;
+				Object typedIngredient = null;
+				try {
+					typedIngredient = element.getClass().getMethod("getTypedIngredient").invoke(element);
+				} catch (Throwable ignored) {
+				}
+				if (typedIngredient == null || !typedIngredient.equals(hoveredIngredient)) continue;
+
+				Object bookmarkOpt = null;
+				try {
+					bookmarkOpt = element.getClass().getMethod("getBookmark").invoke(element);
+				} catch (Throwable ignored) {
+				}
+				if (bookmarkOpt instanceof Optional<?> b && b.isPresent()) {
+					Object bookmark = b.get();
+					if (bookmark != null && "RecipeBookmark".equals(bookmark.getClass().getSimpleName())) {
+						return Optional.of(bookmark);
+					}
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+		return Optional.empty();
+	}
+
 	public static void addBookmark(ItemStack stack) {
 		Object rt = RUNTIME;
 		if (rt == null || stack == null || stack.isEmpty()) return;

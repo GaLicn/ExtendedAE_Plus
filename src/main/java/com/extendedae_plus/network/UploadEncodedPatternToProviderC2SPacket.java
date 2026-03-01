@@ -1,6 +1,7 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -29,6 +30,14 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
     public static void handle(final UploadEncodedPatternToProviderC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
+
+            // 优先处理 Ctrl+Q pending 上传
+            if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
+                if (CtrlQPendingUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId)) {
+                    return;
+                }
+            }
+
             if (!(player.containerMenu instanceof PatternEncodingTermMenu menu)) return;
             // 支持两种模式：
             // 1) providerId >= 0: 访问终端 byId 模式

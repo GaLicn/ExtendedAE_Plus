@@ -1,0 +1,39 @@
+package com.extendedae_plus.client;
+
+import com.extendedae_plus.ExtendedAEPlus;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
+import net.neoforged.neoforge.client.settings.KeyModifier;
+import org.lwjgl.glfw.GLFW;
+
+/**
+ * ExtendedAE Plus 快捷键定义
+ */
+@EventBusSubscriber(modid = ExtendedAEPlus.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+public final class ModKeybindings {
+	private ModKeybindings() {
+	}
+
+	/**
+	 * Ctrl+Q 快速创建样板快捷键
+	 */
+	public static final KeyMapping CREATE_PATTERN_KEY = new KeyMapping(
+		"key.extendedae_plus.create_pattern",
+		KeyConflictContext.GUI,
+		KeyModifier.CONTROL,
+		InputConstants.Type.KEYSYM,
+		GLFW.GLFW_KEY_Q,
+		"key.categories.extendedae_plus"
+	);
+
+	@SubscribeEvent
+	public static void register(RegisterKeyMappingsEvent event) {
+		event.register(CREATE_PATTERN_KEY);
+	}
+}
+

@@ -6,5 +6,6 @@ public final class JeiClientBootstrap {
 	public static void register() {
 		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.InputEvents::onMouseButtonPre);
 		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.InputEvents::onKeyPressedPre);
+		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.event.CtrlQPatternKeyHandler::onScreenKeyPressed);
 	}
 } 
