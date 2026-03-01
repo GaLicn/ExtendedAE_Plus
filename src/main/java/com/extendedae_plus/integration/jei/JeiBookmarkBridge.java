@@ -9,6 +9,7 @@ import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.gui.bookmarks.BookmarkList;
 import mezz.jei.gui.bookmarks.IngredientBookmark;
+import mezz.jei.gui.input.MouseUtil;
 import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -172,6 +173,30 @@ public final class JeiBookmarkBridge {
         IBookmarkOverlay bookmarkOverlay = rt.getBookmarkOverlay();
         if (!(bookmarkOverlay instanceof BookmarkOverlayAccessor accessor)) {
             return Optional.empty();
+        }
+
+        // 优先路径：直接从鼠标下 clickable 元素提取 bookmark（避免 typedIngredient equals 误判）
+        try {
+            var overlayObj = (Object) bookmarkOverlay;
+            var streamObj = overlayObj.getClass()
+                .getMethod("getIngredientUnderMouse", double.class, double.class)
+                .invoke(overlayObj, MouseUtil.getX(), MouseUtil.getY());
+            if (streamObj instanceof java.util.stream.Stream<?> stream) {
+                Object clickable = stream.findFirst().orElse(null);
+                if (clickable != null) {
+                    Object element = clickable.getClass().getMethod("getElement").invoke(clickable);
+                    if (element != null) {
+                        Object bookmarkOpt = element.getClass().getMethod("getBookmark").invoke(element);
+                        if (bookmarkOpt instanceof Optional<?> b && b.isPresent()) {
+                            Object bookmark = b.get();
+                            if (bookmark != null && "RecipeBookmark".equals(bookmark.getClass().getSimpleName())) {
+                                return Optional.of(bookmark);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
         }
         
         // 获取鼠标下的元素

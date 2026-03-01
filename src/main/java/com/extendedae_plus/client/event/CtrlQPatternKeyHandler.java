@@ -166,11 +166,16 @@ public class CtrlQPatternKeyHandler {
     private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
         try {
             // 1. 获取配方ID
-            var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
-            net.minecraft.resources.ResourceLocation recipeId = 
-                (net.minecraft.resources.ResourceLocation) getRecipeUidMethod.invoke(recipeBookmark);
+            net.minecraft.resources.ResourceLocation recipeId = getRecipeIdCompat(recipeBookmark);
             
             if (recipeId == null) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.recipe_not_found"),
+                        true
+                    );
+                }
                 return;
             }
             
@@ -219,6 +224,17 @@ public class CtrlQPatternKeyHandler {
             );
             
             // 如果找不到，尝试通过配方输出物品查找
+            if (recipeInfos.isEmpty()) {
+                try {
+                    var getDisplayIngredientMethod = recipeBookmark.getClass().getMethod("getDisplayIngredient");
+                    Object displayIngredient = getDisplayIngredientMethod.invoke(recipeBookmark);
+                    if (displayIngredient instanceof ITypedIngredient<?> typedIngredient) {
+                        recipeInfos = RecipeFinderUtil.findRecipesByIngredient(typedIngredient);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+
             if (recipeInfos.isEmpty()) {
                 var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
                 Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
@@ -277,10 +293,15 @@ public class CtrlQPatternKeyHandler {
      */
     private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
         try {
-            var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
-            net.minecraft.resources.ResourceLocation recipeId =
-                (net.minecraft.resources.ResourceLocation) getRecipeUidMethod.invoke(recipeBookmark);
+            net.minecraft.resources.ResourceLocation recipeId = getRecipeIdCompat(recipeBookmark);
             if (recipeId == null) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                        Component.translatable("message.extendedae_plus.recipe_not_found"),
+                        true
+                    );
+                }
                 return;
             }
 
@@ -312,6 +333,17 @@ public class CtrlQPatternKeyHandler {
             List<RecipeInfo> recipeInfos = RecipeFinderUtil.findRecipesByIngredient(
                 JeiRuntimeProxy.getIngredientUnderMouse().orElse(null)
             );
+
+            if (recipeInfos.isEmpty()) {
+                try {
+                    var getDisplayIngredientMethod = recipeBookmark.getClass().getMethod("getDisplayIngredient");
+                    Object displayIngredient = getDisplayIngredientMethod.invoke(recipeBookmark);
+                    if (displayIngredient instanceof ITypedIngredient<?> typedIngredient) {
+                        recipeInfos = RecipeFinderUtil.findRecipesByIngredient(typedIngredient);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
 
             if (recipeInfos.isEmpty()) {
                 var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
@@ -357,6 +389,59 @@ public class CtrlQPatternKeyHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static net.minecraft.resources.ResourceLocation getRecipeIdCompat(Object recipeBookmark) {
+        if (recipeBookmark == null) {
+            return null;
+        }
+
+        // JEI 1.20 分支
+        try {
+            var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
+            Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
+            if (recipeId instanceof net.minecraft.resources.ResourceLocation rl) {
+                return rl;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // JEI 1.21+ 分支
+        try {
+            Object recipe = recipeBookmark.getClass().getMethod("getRecipe").invoke(recipeBookmark);
+            Object recipeCategory = recipeBookmark.getClass().getMethod("getRecipeCategory").invoke(recipeBookmark);
+            if (recipe != null && recipeCategory != null) {
+                try {
+                    Object recipeId = recipeCategory.getClass().getMethod("getRegistryName", Object.class).invoke(recipeCategory, recipe);
+                    if (recipeId instanceof net.minecraft.resources.ResourceLocation rl) {
+                        return rl;
+                    }
+                } catch (Throwable ignored) {
+                    for (var m : recipeCategory.getClass().getMethods()) {
+                        if (!"getRegistryName".equals(m.getName()) || m.getParameterCount() != 1) {
+                            continue;
+                        }
+                        Object recipeId = m.invoke(recipeCategory, recipe);
+                        if (recipeId instanceof net.minecraft.resources.ResourceLocation rl) {
+                            return rl;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // 字段兜底
+        try {
+            var f = recipeBookmark.getClass().getDeclaredField("recipeUid");
+            f.setAccessible(true);
+            Object recipeId = f.get(recipeBookmark);
+            if (recipeId instanceof net.minecraft.resources.ResourceLocation rl) {
+                return rl;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     private static void setLastProcessingNameFromRecipe(Object recipeBase) {
