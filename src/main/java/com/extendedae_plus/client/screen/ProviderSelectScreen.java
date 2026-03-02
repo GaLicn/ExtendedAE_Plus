@@ -3,12 +3,17 @@ package com.extendedae_plus.client.screen;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
+import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraftforge.fml.loading.FMLPaths;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +42,20 @@ public class ProviderSelectScreen extends Screen {
     private final List<String> fNames = new ArrayList<>();
     private final List<Integer> fTotalSlots = new ArrayList<>();
     private final List<Integer> fCount = new ArrayList<>();
+
+    // 置顶的供应器名称集合（静态变量，持久化到配置文件）
+    private static final Set<String> pinnedProviders = new HashSet<>();
+    private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    // 静态初始化块：加载置顶配置
+    static {
+        try {
+            loadPinnedProviders();
+        } catch (Throwable t) {
+            // 加载失败时静默处理，不影响界面使用
+        }
+    }
 
     // 搜索框
     private EditBox searchBox;
@@ -245,8 +264,11 @@ public class ProviderSelectScreen extends Screen {
         int totalSlots = fTotalSlots.get(idx);
         int count = fCount.get(idx);
 
+        // 如果是置顶条目，在最左侧添加星星标志
+        String prefix = pinnedProviders.contains(name) ? "★ " : "";
+
         // 不显示具体 id，显示合并统计：名称（总空位）x数量
-        return name + "  (" + totalSlots + ")  x" + count;
+        return prefix + name + "  (" + totalSlots + ")  x" + count;
     }
 
     private void onChoose(int idx) {
@@ -322,9 +344,22 @@ public class ProviderSelectScreen extends Screen {
         }
 
         // 对 fNames 进行自然排序，同时同步其它列表
+        // 置顶的条目排在前面，然后按自然排序
         List<Integer> indices = new ArrayList<>();
         for (int i = 0; i < fNames.size(); i++) indices.add(i);
-        indices.sort((i1, i2) -> compareNatural(fNames.get(i1), fNames.get(i2)));
+        indices.sort((i1, i2) -> {
+            String name1 = fNames.get(i1);
+            String name2 = fNames.get(i2);
+            boolean pinned1 = pinnedProviders.contains(name1);
+            boolean pinned2 = pinnedProviders.contains(name2);
+
+            // 置顶的排在前面
+            if (pinned1 && !pinned2) return -1;
+            if (!pinned1 && pinned2) return 1;
+
+            // 都置顶或都不置顶，按自然排序
+            return compareNatural(name1, name2);
+        });
 
         List<Long> sortedIds = new ArrayList<>();
         List<String> sortedNames = new ArrayList<>();
@@ -439,6 +474,27 @@ public class ProviderSelectScreen extends Screen {
                 return true;
             }
         }
+
+        // 右键点击条目按钮时，切换置顶状态
+        if (button == 1) {
+            for (int i = 0; i < entryButtons.size(); i++) {
+                Button btn = entryButtons.get(i);
+                if (btn.visible && btn.active) {
+                    int x = btn.getX();
+                    int y = btn.getY();
+                    int w = btn.getWidth();
+                    int h = btn.getHeight();
+                    if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+                        int actualIdx = buttonIndexMap[i];
+                        if (actualIdx >= 0 && actualIdx < fNames.size()) {
+                            togglePin(actualIdx);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -505,6 +561,78 @@ public class ProviderSelectScreen extends Screen {
             refreshButtons();
         } else {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_not_found", val));
+        }
+    }
+
+    // 切换供应器的置顶状态
+    private void togglePin(int idx) {
+        if (idx < 0 || idx >= fNames.size()) return;
+        String name = fNames.get(idx);
+
+        if (pinnedProviders.contains(name)) {
+            pinnedProviders.remove(name);
+        } else {
+            pinnedProviders.add(name);
+        }
+
+        // 保存到配置文件
+        savePinnedProviders();
+
+        // 重新应用过滤和排序
+        applyFilter();
+        refreshButtons();
+    }
+
+    /**
+     * 从配置文件加载置顶的供应器名称列表
+     */
+    private static synchronized void loadPinnedProviders() {
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(PINNED_CONFIG_PATH);
+            if (!Files.exists(cfgPath)) {
+                return; // 文件不存在时不做处理
+            }
+
+            String json = Files.readString(cfgPath);
+            JsonObject obj = GSON.fromJson(json, JsonObject.class);
+            if (obj == null) return;
+
+            JsonElement pinnedElement = obj.get("pinned");
+            if (pinnedElement != null && pinnedElement.isJsonArray()) {
+                JsonArray arr = pinnedElement.getAsJsonArray();
+                pinnedProviders.clear();
+                for (JsonElement elem : arr) {
+                    if (elem.isJsonPrimitive()) {
+                        String name = elem.getAsString();
+                        if (name != null && !name.isBlank()) {
+                            pinnedProviders.add(name);
+                        }
+                    }
+                }
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            // 加载失败时静默处理
+        }
+    }
+
+    /**
+     * 保存置顶的供应器名称列表到配置文件
+     */
+    private static synchronized void savePinnedProviders() {
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(PINNED_CONFIG_PATH);
+            Files.createDirectories(cfgPath.getParent());
+
+            JsonObject obj = new JsonObject();
+            JsonArray arr = new JsonArray();
+            for (String name : pinnedProviders) {
+                arr.add(name);
+            }
+            obj.add("pinned", arr);
+
+            Files.writeString(cfgPath, GSON.toJson(obj));
+        } catch (IOException e) {
+            // 保存失败时静默处理
         }
     }
     
