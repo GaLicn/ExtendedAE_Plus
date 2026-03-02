@@ -2,13 +2,20 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.neoforged.fml.loading.FMLPaths;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 简单的供应器选择弹窗。
@@ -19,6 +26,21 @@ public class ProviderSelectScreen extends Screen {
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
     private static Boolean JEC_AVAILABLE = null;
     private static java.lang.reflect.Method JEC_CONTAINS = null;
+
+    // 置顶的供应器名称集合（静态变量，持久化到配置文件）
+    private static final Set<String> pinnedProviders = new HashSet<>();
+    private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    // 静态初始化块：加载置顶配置
+    static {
+        try {
+            loadPinnedProviders();
+        } catch (Throwable t) {
+            // 加载失败时静默处理，不影响界面使用
+        }
+    }
+
     private final Screen parent;
     // 原始数据
     private final List<Long> ids;
@@ -121,8 +143,12 @@ public class ProviderSelectScreen extends Screen {
         String name = this.fNames.get(idx);
         int totalSlots = this.fTotalSlots.get(idx);
         int count = this.fCount.get(idx);
+
+        // 如果是置顶条目，在最左侧添加星星标志
+        String prefix = pinnedProviders.contains(name) ? "★ " : "";
+
         // 不显示具体 id，显示合并统计：名称（总空位）x数量
-        return name + "  (" + totalSlots + ")  x" + count;
+        return prefix + name + "  (" + totalSlots + ")  x" + count;
     }
 
     private void onChoose(int idx) {
@@ -176,6 +202,44 @@ public class ProviderSelectScreen extends Screen {
                 this.fCount.add(this.gCount.get(i));
             }
         }
+
+        // 对 fNames 进行排序，置顶的条目排在前面，然后按自然排序
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < this.fNames.size(); i++) indices.add(i);
+        indices.sort((i1, i2) -> {
+            String name1 = this.fNames.get(i1);
+            String name2 = this.fNames.get(i2);
+            boolean pinned1 = pinnedProviders.contains(name1);
+            boolean pinned2 = pinnedProviders.contains(name2);
+
+            // 置顶的排在前面
+            if (pinned1 && !pinned2) return -1;
+            if (!pinned1 && pinned2) return 1;
+
+            // 都置顶或都不置顶，按自然排序
+            return compareNatural(name1, name2);
+        });
+
+        List<Long> sortedIds = new ArrayList<>();
+        List<String> sortedNames = new ArrayList<>();
+        List<Integer> sortedSlots = new ArrayList<>();
+        List<Integer> sortedCount = new ArrayList<>();
+
+        for (int idx : indices) {
+            sortedIds.add(this.fIds.get(idx));
+            sortedNames.add(this.fNames.get(idx));
+            sortedSlots.add(this.fTotalSlots.get(idx));
+            sortedCount.add(this.fCount.get(idx));
+        }
+
+        this.fIds.clear();
+        this.fIds.addAll(sortedIds);
+        this.fNames.clear();
+        this.fNames.addAll(sortedNames);
+        this.fTotalSlots.clear();
+        this.fTotalSlots.addAll(sortedSlots);
+        this.fCount.clear();
+        this.fCount.addAll(sortedCount);
     }
 
     @Override
@@ -319,6 +383,29 @@ public class ProviderSelectScreen extends Screen {
                 return true;
             }
         }
+
+        // 右键点击条目按钮时，切换置顶状态
+        if (button == 1) {
+            for (int i = 0; i < this.entryButtons.size(); i++) {
+                Button btn = this.entryButtons.get(i);
+                if (btn.visible && btn.active) {
+                    int x = btn.getX();
+                    int y = btn.getY();
+                    int w = btn.getWidth();
+                    int h = btn.getHeight();
+                    if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+                        // 计算实际索引
+                        int start = this.page * PAGE_SIZE;
+                        int actualIdx = start + i;
+                        if (actualIdx >= 0 && actualIdx < this.fNames.size()) {
+                            togglePin(actualIdx);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -376,6 +463,101 @@ public class ProviderSelectScreen extends Screen {
         } else {
             if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_not_found", val));
         }
+    }
+
+    // 切换供应器的置顶状态
+    private void togglePin(int idx) {
+        if (idx < 0 || idx >= this.fNames.size()) return;
+        String name = this.fNames.get(idx);
+
+        if (pinnedProviders.contains(name)) {
+            pinnedProviders.remove(name);
+        } else {
+            pinnedProviders.add(name);
+        }
+
+        // 保存到配置文件
+        savePinnedProviders();
+
+        // 重新应用过滤和排序
+        this.applyFilter();
+        this.needsRefresh = true;
+    }
+
+    /**
+     * 从配置文件加载置顶的供应器名称列表
+     */
+    private static synchronized void loadPinnedProviders() {
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(PINNED_CONFIG_PATH);
+            if (!Files.exists(cfgPath)) {
+                return; // 文件不存在时不做处理
+            }
+
+            String json = Files.readString(cfgPath);
+            JsonObject obj = GSON.fromJson(json, JsonObject.class);
+            if (obj == null) return;
+
+            JsonElement pinnedElement = obj.get("pinned");
+            if (pinnedElement != null && pinnedElement.isJsonArray()) {
+                JsonArray arr = pinnedElement.getAsJsonArray();
+                pinnedProviders.clear();
+                for (JsonElement elem : arr) {
+                    if (elem.isJsonPrimitive()) {
+                        String name = elem.getAsString();
+                        if (name != null && !name.isBlank()) {
+                            pinnedProviders.add(name);
+                        }
+                    }
+                }
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            // 加载失败时静默处理
+        }
+    }
+
+    /**
+     * 保存置顶的供应器名称列表到配置文件
+     */
+    private static synchronized void savePinnedProviders() {
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(PINNED_CONFIG_PATH);
+            Files.createDirectories(cfgPath.getParent());
+
+            JsonObject obj = new JsonObject();
+            JsonArray arr = new JsonArray();
+            for (String name : pinnedProviders) {
+                arr.add(name);
+            }
+            obj.add("pinned", arr);
+
+            Files.writeString(cfgPath, GSON.toJson(obj));
+        } catch (IOException e) {
+            // 保存失败时静默处理
+        }
+    }
+
+    // 自然排序比较方法
+    private static final Pattern NATURAL_PATTERN = Pattern.compile("(\\D*)(\\d*)");
+    private static int compareNatural(String s1, String s2) {
+        Matcher m1 = NATURAL_PATTERN.matcher(s1);
+        Matcher m2 = NATURAL_PATTERN.matcher(s2);
+
+        while (m1.find() && m2.find()) {
+            // 比较非数字部分
+            int cmp = m1.group(1).compareTo(m2.group(1));
+            if (cmp != 0) return cmp;
+
+            // 比较数字部分
+            String num1 = m1.group(2);
+            String num2 = m2.group(2);
+            if (!num1.isEmpty() || !num2.isEmpty()) {
+                int n1 = num1.isEmpty() ? 0 : Integer.parseInt(num1);
+                int n2 = num2.isEmpty() ? 0 : Integer.parseInt(num2);
+                if (n1 != n2) return Integer.compare(n1, n2);
+            }
+        }
+        return s1.length() - s2.length();
     }
 
     private static class Group {
