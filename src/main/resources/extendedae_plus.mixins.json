@@ -49,6 +49,7 @@
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
     "ae2.menu.PatternProviderMenuUpgradesMixin",
+    "ae2.network.PatternAccessTerminalPacketMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
     "ae2.parts.storagebus.StorageBusPartChannelCardMixin",
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
