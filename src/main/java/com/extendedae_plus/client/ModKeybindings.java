@@ -3,10 +3,6 @@ package com.extendedae_plus.client;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.client.settings.KeyModifier;
 import org.lwjgl.glfw.GLFW;
@@ -14,7 +10,6 @@ import org.lwjgl.glfw.GLFW;
 /**
  * ExtendedAE Plus 快捷键定义
  */
-@EventBusSubscriber(modid = ExtendedAEPlus.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ModKeybindings {
 	private ModKeybindings() {
 	}
@@ -41,11 +36,5 @@ public final class ModKeybindings {
 		GLFW.GLFW_KEY_F,
 		"key.categories.extendedae_plus"
 	);
-
-	@SubscribeEvent
-	public static void register(RegisterKeyMappingsEvent event) {
-		event.register(CREATE_PATTERN_KEY);
-		event.register(FILL_SEARCH_KEY);
-	}
 }
 
