@@ -237,5 +237,6 @@
   "message.extendedae_plus.pattern_created": "Created pattern: %s",
 
   "key.extendedae_plus.create_pattern": "Create Pattern from JEI",
+  "key.extendedae_plus.fill_search": "Fill Search Field from JEI",
   "key.categories.extendedae_plus": "ExtendedAE Plus"
 }

@@ -25,11 +25,23 @@ public final class ModKeybindings {
     );
 
     /**
+     * 填充JEI物品名称到搜索框快捷键
+     */
+    public static final KeyMapping FILL_SEARCH_KEY = new KeyMapping(
+        "key.extendedae_plus.fill_search",         // 翻译键
+        KeyConflictContext.GUI,                     // 仅在GUI中生效
+        InputConstants.Type.KEYSYM,                 // 键盘按键类型
+        GLFW.GLFW_KEY_F,                           // F 键（默认）
+        "key.categories.extendedae_plus"           // 分类
+    );
+
+    /**
      * 注册所有快捷键
      *
      * @param event Forge快捷键注册事件
      */
     public static void register(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
         event.register(CREATE_PATTERN_KEY);
+        event.register(FILL_SEARCH_KEY);
     }
 }

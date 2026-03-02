@@ -236,5 +236,6 @@
   "message.extendedae_plus.pattern_created": "已创建样板: %s",
 
   "key.extendedae_plus.create_pattern": "从JEI创建样板",
+  "key.extendedae_plus.fill_search": "从JEI填充搜索框",
   "key.categories.extendedae_plus": "ExtendedAE Plus"
 }
