@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.2]
+
+### Added / 新增
+- 添加 Ctrl+Q 快捷键从 JEI 编写样板功能（普通书签直接进入背包，带有配方类型的书签会触发样板自动上传）
+  - Added Ctrl+Q shortcut to create patterns from JEI (regular bookmarks go directly to inventory, bookmarks with recipe types trigger automatic pattern upload)
+- 虚拟合成卡适配量子计算机
+  - Virtual Crafting Card now supports Quantum Computer
+- 上传样板供应器选择界面新增右键置顶供应器条目功能
+  - Added right-click to pin provider entries in the pattern upload provider selection screen
+
+### Changed / 变更
+- F 键搜索改为按键配置
+  - F-key search is now configurable in keybindings
+- 移除实体加速器的配方
+  - Removed Entity Accelerator recipe
+
 ## [1.5.1]
 
 ### Added / 新增
