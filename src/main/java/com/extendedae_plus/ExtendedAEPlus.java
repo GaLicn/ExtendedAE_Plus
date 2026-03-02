@@ -94,6 +94,58 @@ public class ExtendedAEPlus {
         StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
 
         // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
+        try {
+            AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b256 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_256x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b1024 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_1024x.get();
+
+            // 使用我们自定义的 CraftingBlockEntity 类型，它的有效方块列表包含自定义加速器
+            var type = ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get();
+            // 不提供专用 ticker（AE2 会在其注册时按接口注入），此处传 null 即可
+            b4.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b16.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b64.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b256.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b1024.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            LOGGER.info("Bound AE2 CraftingBlockEntity to ExtendedAE Plus accelerators.");
+
+            // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
+            ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
+                com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                ModBlockEntities.UPLOAD_CORE_BE.get(),
+                null,
+                null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
+                    SpeedCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().setBlockEntity(
+                    CrafterCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
+                    PatternCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");
+        } catch (Throwable t) {
+            LOGGER.error("Failed to bind block entities: {}", t.toString());
+            throw new RuntimeException("Critical error: Failed to bind block entities", t);
+        }
+
         event.enqueueWork(() -> {
             try {
                 // 注册升级卡
@@ -117,55 +169,8 @@ public class ExtendedAEPlus {
                 } catch (Throwable t) {
                     LOGGER.warn("Failed to register CuriosItemLocator with AE2 MenuLocators: {}", t.toString());
                 }
-
-                AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b256 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_256x.get();
-                AEBaseEntityBlock<CraftingBlockEntity> b1024 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_1024x.get();
-
-                // 使用我们自定义的 CraftingBlockEntity 类型，它的有效方块列表包含自定义加速器
-                var type = ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get();
-                // 不提供专用 ticker（AE2 会在其注册时按接口注入），此处传 null 即可
-                b4.setBlockEntity(CraftingBlockEntity.class, type, null, null);
-                b16.setBlockEntity(CraftingBlockEntity.class, type, null, null);
-                b64.setBlockEntity(CraftingBlockEntity.class, type, null, null);
-                b256.setBlockEntity(CraftingBlockEntity.class, type, null, null);
-                b1024.setBlockEntity(CraftingBlockEntity.class, type, null, null);
-                LOGGER.info("Bound AE2 CraftingBlockEntity to ExtendedAE Plus accelerators.");
-
-                // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
-                ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
-                    com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
-                    ModBlockEntities.UPLOAD_CORE_BE.get(),
-                    null,
-                    null
-                );
-
-                ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
-                        SpeedCorePlusBlockEntity.class,
-                        ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
-                        null,
-                        null
-                );
-
-                ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().setBlockEntity(
-                        CrafterCorePlusBlockEntity.class,
-                        ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
-                        null,
-                        null
-                );
-
-                ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
-                        PatternCorePlusBlockEntity.class,
-                        ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
-                        null,
-                        null
-                );
-
-                LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");
             } catch (Throwable t) {
-                LOGGER.warn("Failed to bind block entities: {}", t.toString());
+                LOGGER.warn("Failed to complete enqueued setup work: {}", t.toString());
             }
         });
     }
