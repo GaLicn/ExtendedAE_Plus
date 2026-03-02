@@ -62,6 +62,7 @@
   "extendedae_plus.screen.cn_name": "Chinese Name",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
   "key.extendedae_plus.create_pattern": "Create Pattern (Ctrl+Q)",
+  "key.extendedae_plus.fill_search": "Fill Search Field from JEI",
   "key.categories.extendedae_plus": "ExtendedAE Plus",
   "message.extendedae_plus.hover_item_first": "Hover an item first.",
   "message.extendedae_plus.no_recipes_found": "No related recipes found.",

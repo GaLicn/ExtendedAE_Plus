@@ -62,6 +62,7 @@
   "extendedae_plus.screen.cn_name": "中文名",
   "extendedae_plus.button.choose_provider":"上传样板",
   "key.extendedae_plus.create_pattern": "快速创建样板 (Ctrl+Q)",
+  "key.extendedae_plus.fill_search": "从JEI填充搜索框",
   "key.categories.extendedae_plus": "扩展AE Plus",
   "message.extendedae_plus.hover_item_first": "请先将鼠标悬停在物品上。",
   "message.extendedae_plus.no_recipes_found": "未找到相关配方。",

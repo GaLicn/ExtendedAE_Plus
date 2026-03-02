@@ -31,9 +31,21 @@ public final class ModKeybindings {
 		"key.categories.extendedae_plus"
 	);
 
+	/**
+	 * 填充JEI物品名称到搜索框快捷键
+	 */
+	public static final KeyMapping FILL_SEARCH_KEY = new KeyMapping(
+		"key.extendedae_plus.fill_search",
+		KeyConflictContext.GUI,
+		InputConstants.Type.KEYSYM,
+		GLFW.GLFW_KEY_F,
+		"key.categories.extendedae_plus"
+	);
+
 	@SubscribeEvent
 	public static void register(RegisterKeyMappingsEvent event) {
 		event.register(CREATE_PATTERN_KEY);
+		event.register(FILL_SEARCH_KEY);
 	}
 }
 

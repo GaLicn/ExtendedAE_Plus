@@ -139,7 +139,10 @@ public final class InputEvents {
 
 	@SubscribeEvent
 	public static void onKeyPressedPre(ScreenEvent.KeyPressed.Pre event) {
-		if (event.getKeyCode() != GLFW.GLFW_KEY_F) return;
+		// 检查是否按下了填充搜索框的快捷键
+		if (!ModKeybindings.FILL_SEARCH_KEY.matches(event.getKeyCode(), event.getScanCode())) {
+			return;
+		}
 
 		var screen = Minecraft.getInstance().screen;
 		if (!(screen instanceof MEStorageScreen<?> || screen instanceof GuiExPatternTerminal<?>)) {
