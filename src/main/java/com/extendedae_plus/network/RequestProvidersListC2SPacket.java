@@ -38,7 +38,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
                 List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
                 List<Long> idxIds = new ArrayList<>();
-                List<String> names = new ArrayList<>();
+                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
                 for (int i = 0; i < containers.size(); i++) {
                     var c = containers.get(i);
@@ -47,7 +47,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     if (empty <= 0) continue;
                     long encodedId = -1L - i;
                     idxIds.add(encodedId);
-                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(c));
+                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
                     slots.add(empty);
                 }
                 player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
@@ -61,7 +61,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (accessMenu != null) {
                 List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
                 List<Long> filteredIds = new ArrayList<>();
-                List<String> names = new ArrayList<>();
+                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
 
                 for (Long id : ids) {
@@ -70,7 +70,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(id, accessMenu);
                     if (empty <= 0) continue; // 只列出有空位的
                     filteredIds.add(id);
-                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(id, accessMenu));
+                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(id, accessMenu));
                     slots.add(empty);
                 }
 
@@ -81,7 +81,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
             List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
-            List<String> names = new ArrayList<>();
+            List<net.minecraft.network.chat.Component> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);
@@ -90,7 +90,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                 if (empty <= 0) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
-                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayName(c));
+                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
                 slots.add(empty);
             }
             player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));

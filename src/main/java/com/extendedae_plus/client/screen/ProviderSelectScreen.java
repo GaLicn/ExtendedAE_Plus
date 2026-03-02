@@ -22,11 +22,11 @@ public class ProviderSelectScreen extends Screen {
     private final Screen parent;
     // 原始数据
     private final List<Long> ids;
-    private final List<String> names;
+    private final List<Component> names; // 改为 Component
     private final List<Integer> emptySlots;
     // 分组后的数据（同名合并）
     private final List<Long> gIds = new ArrayList<>();           // 代表条目使用的 providerId：选择空位数最多的那个
-    private final List<String> gNames = new ArrayList<>();        // 分组名（供应器名称）
+    private final List<String> gNames = new ArrayList<>();        // 分组名（供应器名称）- 转换为 String 用于显示和匹配
     private final List<Integer> gTotalSlots = new ArrayList<>();  // 该名称下供应器空位总和
     private final List<Integer> gCount = new ArrayList<>();       // 该名称下供应器数量
     // 过滤后的数据（由查询生成）
@@ -43,7 +43,7 @@ public class ProviderSelectScreen extends Screen {
     private boolean needsRefresh = false;
     private int page = 0;
 
-    public ProviderSelectScreen(Screen parent, List<Long> ids, List<String> names, List<Integer> emptySlots) {
+    public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
         this.parent = parent;
         this.ids = ids;
@@ -139,7 +139,7 @@ public class ProviderSelectScreen extends Screen {
         // 使用 LinkedHashMap 保持首次出现顺序
         Map<String, Group> map = new LinkedHashMap<>();
         for (int i = 0; i < this.names.size(); i++) {
-            String name = this.names.get(i);
+            String name = this.names.get(i).getString(); // 将 Component 转换为 String
             long id = this.ids.get(i);
             int slots = this.emptySlots.get(i);
             Group g = map.computeIfAbsent(name, k -> new Group());

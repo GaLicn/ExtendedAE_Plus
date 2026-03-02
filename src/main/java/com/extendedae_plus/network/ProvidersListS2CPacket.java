@@ -4,6 +4,8 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -26,18 +28,18 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
                 buf.writeVarInt(pkt.ids.size());
                 for (int i = 0; i < pkt.ids.size(); i++) {
                     buf.writeLong(pkt.ids.get(i));
-                    buf.writeUtf(pkt.names.get(i));
+                    ComponentSerialization.TRUSTED_STREAM_CODEC.encode(buf, pkt.names.get(i)); // 使用 Component 序列化
                     buf.writeVarInt(pkt.emptySlots.get(i));
                 }
             },
             buf -> {
                 int size = buf.readVarInt();
                 List<Long> ids = new ArrayList<>(size);
-                List<String> names = new ArrayList<>(size);
+                List<Component> names = new ArrayList<>(size);
                 List<Integer> slots = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
                     ids.add(buf.readLong());
-                    names.add(buf.readUtf());
+                    names.add(ComponentSerialization.TRUSTED_STREAM_CODEC.decode(buf)); // 使用 Component 反序列化
                     slots.add(buf.readVarInt());
                 }
                 return new ProvidersListS2CPacket(ids, names, slots);
@@ -45,10 +47,10 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
     );
 
     private final List<Long> ids;
-    private final List<String> names;
+    private final List<Component> names; // 改为 Component
     private final List<Integer> emptySlots;
 
-    ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots) {
+    ProvidersListS2CPacket(List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;

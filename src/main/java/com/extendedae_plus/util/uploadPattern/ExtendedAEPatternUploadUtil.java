@@ -929,12 +929,6 @@ public class ExtendedAEPatternUploadUtil {
      * @param args 参数
      */
     private static void sendMessage(ServerPlayer player, String key, Object... args) {
-        // 静默：不再向玩家左下角发送任何提示信息
-        // 如需恢复，取消下面注释即可：
-        // if (player != null) {
-        //     player.sendSystemMessage(Component.translatable(key, args));
-        // }
-        // 如果玩家为null，静默忽略（用于测试环境）
     }
 
     /**
@@ -944,23 +938,32 @@ public class ExtendedAEPatternUploadUtil {
      * @param menu 样板访问终端菜单
      * @return 显示名称，如果无法获取则返回"未知供应器"
      */
-    public static String getProviderDisplayName(long providerId, PatternAccessTermMenu menu) {
+    public static Component getProviderDisplayNameComponent(long providerId, PatternAccessTermMenu menu) {
         PatternContainer container = getPatternContainerById(menu, providerId);
         if (container == null) {
-            return Component.translatable("extendedae_plus.provider.unknown").getString();
+            return Component.translatable("extendedae_plus.provider.unknown");
         }
 
         try {
             // 尝试获取供应器的组信息来构建显示名称
             var group = container.getTerminalGroup();
             if (group != null) {
-                return group.name().getString();
+                return group.name(); // 直接返回 Component，不转换为 String
             }
         } catch (Exception e) {
             // 忽略异常，使用默认名称
         }
 
-        return Component.translatable("extendedae_plus.provider.named_id", providerId).getString();
+        return Component.translatable("extendedae_plus.provider.named_id", providerId);
+    }
+
+    /**
+     * 获取供应器显示名称（已弃用，请使用 getProviderDisplayNameComponent）
+     * 注意：此方法在服务端调用时会使用服务端语言，不推荐用于客户端显示
+     */
+    @Deprecated
+    public static String getProviderDisplayName(long providerId, PatternAccessTermMenu menu) {
+        return getProviderDisplayNameComponent(providerId, menu).getString();
     }
 
     /**
@@ -1199,15 +1202,26 @@ public class ExtendedAEPatternUploadUtil {
         return list;
     }
 
-    /** 获取供应器显示名（优先组名） */
-    public static String getProviderDisplayName(PatternContainer container) {
-        if (container == null) return "未知供应器";
+    /** 获取供应器显示名（优先组名）- 返回 Component 以支持客户端翻译 */
+    public static Component getProviderDisplayNameComponent(PatternContainer container) {
+        if (container == null) {
+            return Component.translatable("extendedae_plus.provider.unknown");
+        }
         try {
             var group = container.getTerminalGroup();
-            if (group != null) return group.name().getString();
+            if (group != null) return group.name(); // 直接返回 Component
         } catch (Throwable ignored) {
         }
-        return "样板供应器";
+        return Component.translatable("extendedae_plus.provider.default");
+    }
+
+    /** 
+     * 获取供应器显示名（优先组名）- 已弃用
+     * 注意：此方法在服务端调用时会使用服务端语言，不推荐用于客户端显示
+     */
+    @Deprecated
+    public static String getProviderDisplayName(PatternContainer container) {
+        return getProviderDisplayNameComponent(container).getString();
     }
 
     /** 计算供应器空槽位数量 */
