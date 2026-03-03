@@ -24,6 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
@@ -157,12 +158,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 			}
 
 			if (msg.openProviderSelector) {
-				String pendingId = CtrlQPendingUploadUtil.beginPendingCtrlQUpload(player, pattern);
-				if (pendingId == null) {
-					if (!player.getInventory().add(pattern)) {
-						player.drop(pattern, false);
-					}
-				}
+				CtrlQPendingUploadUtil.beginPendingCtrlQUpload(player, pattern);
+				PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
 				return;
 			}
 

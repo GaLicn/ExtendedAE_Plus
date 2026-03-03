@@ -222,7 +222,6 @@ public final class CtrlQPatternKeyHandler {
 				isAllowSubstitutes,
 				isFluidSubstitutes
 			));
-			PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
 		} catch (Throwable ignored) {
 		}
 	}

@@ -1,5 +1,6 @@
 package com.extendedae_plus.client.screen;
 
+import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.google.gson.*;
@@ -9,6 +10,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -252,6 +254,7 @@ public class ProviderSelectScreen extends Screen {
 
     @Override
     public void onClose() {
+        PacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
         Minecraft.getInstance().setScreen(this.parent);
     }
 
