@@ -145,8 +145,10 @@ public class CreateAndUploadPatternC2SPacket {
             boolean uploaded = MatrixUploadUtil.uploadPatternToMatrix(player, pattern, grid);
 
             if (!uploaded) {
-                // 上传失败，退还空白样板到网络
-                refundBlankPattern(player, grid);
+                // 上传失败，将样板塞到背包。
+                if (!(player.getInventory().add(pattern))) {
+                    player.drop(pattern.copy(),false);
+                }
             }
         });
         ctx.setPacketHandled(true);

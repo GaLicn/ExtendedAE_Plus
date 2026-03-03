@@ -282,6 +282,21 @@ public final class ProviderUploadUtil {
     }
 
     /**
+     * 将 pending Ctrl+Q 样板回退到玩家背包；若背包已满则掉落在地上。
+     */
+    public static boolean returnPendingCtrlQPatternToInventory(ServerPlayer player) {
+        if (player == null) return false;
+        ItemStack pending = getPendingCtrlQPattern(player);
+        if (pending.isEmpty()) return false;
+
+        clearPendingCtrlQUpload(player);
+        if (!player.getInventory().add(pending.copy())) {
+            player.drop(pending.copy(), false);
+        }
+        return true;
+    }
+
+    /**
      * 列出玩家无线终端网络中的可用 provider，顺序与负数索引上传保持一致。
      */
     public static List<PatternContainer> listAvailableProvidersFromPlayerNetwork(ServerPlayer player) {

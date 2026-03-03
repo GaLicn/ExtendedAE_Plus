@@ -32,16 +32,15 @@ public class UploadEncodedPatternToProviderC2SPacket {
             ServerPlayer player = ctx.getSender();
             if (player == null) return;
 
-            // Prefer pending Ctrl+Q pattern upload when present.
             if (ProviderUploadUtil.hasPendingCtrlQPattern(player)) {
                 if (ProviderUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId)) {
                     return;
                 }
+                ProviderUploadUtil.returnPendingCtrlQPatternToInventory(player);
+                return;
             }
 
             if (player.containerMenu instanceof PatternEncodingTermMenu menu) {
-                // 1) providerId >= 0: byId mode from access terminal
-                // 2) providerId < 0: index mode, index = -1 - providerId
                 if (msg.providerId >= 0) {
                     ProviderUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
                 } else {
