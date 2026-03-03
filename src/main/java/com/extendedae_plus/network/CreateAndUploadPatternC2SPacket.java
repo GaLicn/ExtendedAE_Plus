@@ -41,13 +41,24 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 			buf.writeBoolean(pkt.isCraftingPattern);
 			ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, pkt.selectedIngredients);
 			ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, pkt.outputs);
+			buf.writeBoolean(pkt.isAllowSubstitutes);
+			buf.writeBoolean(pkt.isFluidSubstitutes);
 		},
 		buf -> {
 			ResourceLocation recipeId = buf.readResourceLocation();
 			boolean isCraftingPattern = buf.readBoolean();
 			List<ItemStack> ingredients = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
 			List<ItemStack> outputs = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
-			return new CreateAndUploadPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs);
+			boolean isAllowSubstitutes = buf.readBoolean();
+			boolean isFluidSubstitutes = buf.readBoolean();
+			return new CreateAndUploadPatternC2SPacket(
+				recipeId,
+				isCraftingPattern,
+				ingredients,
+				outputs,
+				isAllowSubstitutes,
+				isFluidSubstitutes
+			);
 		}
 	);
 
@@ -55,6 +66,8 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 	private final boolean isCraftingPattern;
 	private final List<ItemStack> selectedIngredients;
 	private final List<ItemStack> outputs;
+	private final boolean isAllowSubstitutes;
+	private final boolean isFluidSubstitutes;
 
 	public CreateAndUploadPatternC2SPacket(
 		ResourceLocation recipeId,
@@ -62,10 +75,23 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		List<ItemStack> selectedIngredients,
 		List<ItemStack> outputs
 	) {
+		this(recipeId, isCraftingPattern, selectedIngredients, outputs, true, false);
+	}
+
+	public CreateAndUploadPatternC2SPacket(
+		ResourceLocation recipeId,
+		boolean isCraftingPattern,
+		List<ItemStack> selectedIngredients,
+		List<ItemStack> outputs,
+		boolean isAllowSubstitutes,
+		boolean isFluidSubstitutes
+	) {
 		this.recipeId = recipeId;
 		this.isCraftingPattern = isCraftingPattern;
 		this.selectedIngredients = selectedIngredients;
 		this.outputs = outputs;
+		this.isAllowSubstitutes = isAllowSubstitutes;
+		this.isFluidSubstitutes = isFluidSubstitutes;
 	}
 
 	public static void handle(final CreateAndUploadPatternC2SPacket msg, final IPayloadContext ctx) {
@@ -92,7 +118,15 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 				return;
 			}
 
-			ItemStack pattern = createPattern(recipeHolder, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs, player);
+			ItemStack pattern = createPattern(
+				recipeHolder,
+				msg.isCraftingPattern,
+				msg.selectedIngredients,
+				msg.outputs,
+				msg.isAllowSubstitutes,
+				msg.isFluidSubstitutes,
+				player
+			);
 			if (pattern.isEmpty()) {
 				refundBlankPattern(player, grid);
 				player.displayClientMessage(Component.translatable("message.extendedae_plus.pattern_creation_failed"), false);
@@ -101,7 +135,9 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 
 			boolean uploaded = ExtendedAEPatternUploadUtil.uploadPatternToMatrix(player, pattern, grid);
 			if (!uploaded) {
-				refundBlankPattern(player, grid);
+				if(!player.getInventory().add(pattern)){
+					player.drop(pattern.copy(),false);
+				}
 			}
 		});
 	}
@@ -144,6 +180,8 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		boolean isCrafting,
 		List<ItemStack> selectedIngredients,
 		List<ItemStack> selectedOutputs,
+		boolean isAllowSubstitutes,
+		boolean isFluidSubstitutes,
 		ServerPlayer player
 	) {
 		try {
@@ -172,8 +210,8 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 					craftingHolder,
 					inputs,
 					output,
-					true,
-					false
+					isAllowSubstitutes,
+					isFluidSubstitutes
 				);
 				CustomData.update(DataComponents.CUSTOM_DATA, encodedPattern, tag -> tag.putString("encodePlayer", player.getGameProfile().getName()));
 				return encodedPattern;

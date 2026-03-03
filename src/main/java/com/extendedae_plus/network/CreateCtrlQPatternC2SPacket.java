@@ -42,6 +42,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 			buf.writeBoolean(pkt.isCraftingPattern);
 			ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, pkt.selectedIngredients);
 			ItemStack.OPTIONAL_LIST_STREAM_CODEC.encode(buf, pkt.outputs);
+			buf.writeBoolean(pkt.isAllowSubstitutes);
+			buf.writeBoolean(pkt.isFluidSubstitutes);
 			buf.writeBoolean(pkt.openProviderSelector);
 		},
 		buf -> {
@@ -50,8 +52,18 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 			List<ItemStack> ingredients = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
 			List<ItemStack> outputs = ItemStack.OPTIONAL_LIST_STREAM_CODEC.decode(buf);
 
+			boolean isAllowSubstitutes = buf.readBoolean();
+			boolean isFluidSubstitutes = buf.readBoolean();
 			boolean openProviderSelector = buf.readableBytes() > 0 && buf.readBoolean();
-			return new CreateCtrlQPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs, openProviderSelector);
+			return new CreateCtrlQPatternC2SPacket(
+				recipeId,
+				isCraftingPattern,
+				ingredients,
+				outputs,
+				openProviderSelector,
+				isAllowSubstitutes,
+				isFluidSubstitutes
+			);
 		}
 	);
 
@@ -60,6 +72,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 	private final List<ItemStack> selectedIngredients;
 	private final List<ItemStack> outputs;
 	private final boolean openProviderSelector;
+	private final boolean isAllowSubstitutes;
+	private final boolean isFluidSubstitutes;
 
 	public CreateCtrlQPatternC2SPacket(
 		ResourceLocation recipeId,
@@ -67,7 +81,7 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 		List<ItemStack> selectedIngredients,
 		List<ItemStack> outputs
 	) {
-		this(recipeId, isCraftingPattern, selectedIngredients, outputs, false);
+		this(recipeId, isCraftingPattern, selectedIngredients, outputs, false, true, false);
 	}
 
 	public CreateCtrlQPatternC2SPacket(
@@ -77,11 +91,36 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 		List<ItemStack> outputs,
 		boolean openProviderSelector
 	) {
+		this(recipeId, isCraftingPattern, selectedIngredients, outputs, openProviderSelector, true, false);
+	}
+
+	public CreateCtrlQPatternC2SPacket(
+		ResourceLocation recipeId,
+		boolean isCraftingPattern,
+		List<ItemStack> selectedIngredients,
+		List<ItemStack> outputs,
+		boolean isAllowSubstitutes,
+		boolean isFluidSubstitutes
+	) {
+		this(recipeId, isCraftingPattern, selectedIngredients, outputs, false, isAllowSubstitutes, isFluidSubstitutes);
+	}
+
+	public CreateCtrlQPatternC2SPacket(
+		ResourceLocation recipeId,
+		boolean isCraftingPattern,
+		List<ItemStack> selectedIngredients,
+		List<ItemStack> outputs,
+		boolean openProviderSelector,
+		boolean isAllowSubstitutes,
+		boolean isFluidSubstitutes
+	) {
 		this.recipeId = recipeId;
 		this.isCraftingPattern = isCraftingPattern;
 		this.selectedIngredients = selectedIngredients;
 		this.outputs = outputs;
 		this.openProviderSelector = openProviderSelector;
+		this.isAllowSubstitutes = isAllowSubstitutes;
+		this.isFluidSubstitutes = isFluidSubstitutes;
 	}
 
 	public static void handle(final CreateCtrlQPatternC2SPacket msg, final IPayloadContext ctx) {
@@ -102,7 +141,15 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 				return;
 			}
 
-			ItemStack pattern = createPattern(recipeHolder, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs, player);
+			ItemStack pattern = createPattern(
+				recipeHolder,
+				msg.isCraftingPattern,
+				msg.selectedIngredients,
+				msg.outputs,
+				msg.isAllowSubstitutes,
+				msg.isFluidSubstitutes,
+				player
+			);
 			if (pattern.isEmpty()) {
 				player.getInventory().add(AEItems.BLANK_PATTERN.stack());
 				player.displayClientMessage(Component.translatable("message.extendedae_plus.pattern_creation_failed"), false);
@@ -188,6 +235,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 		boolean isCrafting,
 		List<ItemStack> selectedIngredients,
 		List<ItemStack> selectedOutputs,
+		boolean isAllowSubstitutes,
+		boolean isFluidSubstitutes,
 		ServerPlayer player
 	) {
 		try {
@@ -216,8 +265,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 					craftingHolder,
 					inputs,
 					output,
-					true,
-					false
+					isAllowSubstitutes,
+					isFluidSubstitutes
 				);
 				CustomData.update(DataComponents.CUSTOM_DATA, encodedPattern, tag -> tag.putString("encodePlayer", player.getGameProfile().getName()));
 				return encodedPattern;

@@ -36,6 +36,7 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
                 if (CtrlQPendingUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId)) {
                     return;
                 }
+                CtrlQPendingUploadUtil.returnPendingCtrlQPatternToInventory(player);
             }
 
             if (!(player.containerMenu instanceof PatternEncodingTermMenu menu)) return;

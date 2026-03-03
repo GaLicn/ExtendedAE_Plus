@@ -46,6 +46,8 @@ public final class CtrlQPatternKeyHandler {
 
 		int keyCode = event.getKeyCode();
 		int scanCode = event.getScanCode();
+		boolean isAllowSubstitutes = Screen.hasShiftDown();
+		boolean isFluidSubstitutes = Screen.hasAltDown();
 		if (!ModKeybindings.CREATE_PATTERN_KEY.matches(keyCode, scanCode)) {
 			return;
 		}
@@ -56,7 +58,7 @@ public final class CtrlQPatternKeyHandler {
 
 		Optional<?> recipeBookmark = JeiRuntimeProxy.getRecipeBookmarkUnderMouse();
 		if (recipeBookmark.isPresent()) {
-			handleRecipeBookmark(recipeBookmark.get());
+			handleRecipeBookmark(recipeBookmark.get(), isAllowSubstitutes, isFluidSubstitutes);
 			event.setCanceled(true);
 			return;
 		}
@@ -91,16 +93,18 @@ public final class CtrlQPatternKeyHandler {
 			selected.getRecipeId(),
 			selected.isCraftingRecipe(),
 			selectedIngredients,
-			selectedOutputs
+			selectedOutputs,
+			isAllowSubstitutes,
+			isFluidSubstitutes
 		));
 		event.setCanceled(true);
 	}
 
-	private static void handleRecipeBookmark(Object recipeBookmark) {
+	private static void handleRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		if (isCraftingRecipe(recipeBookmark)) {
-			handleCraftingRecipeBookmark(recipeBookmark);
+			handleCraftingRecipeBookmark(recipeBookmark, isAllowSubstitutes, isFluidSubstitutes);
 		} else {
-			handleProcessingRecipeBookmark(recipeBookmark);
+			handleProcessingRecipeBookmark(recipeBookmark, isAllowSubstitutes, isFluidSubstitutes);
 		}
 	}
 
@@ -119,7 +123,7 @@ public final class CtrlQPatternKeyHandler {
 		}
 	}
 
-	private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
+	private static void handleCraftingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
@@ -158,13 +162,15 @@ public final class CtrlQPatternKeyHandler {
 				recipeId,
 				matching.isCraftingRecipe(),
 				selectedIngredients,
-				selectedOutputs
+				selectedOutputs,
+				isAllowSubstitutes,
+				isFluidSubstitutes
 			));
 		} catch (Throwable ignored) {
 		}
 	}
 
-	private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
+	private static void handleProcessingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
@@ -212,7 +218,9 @@ public final class CtrlQPatternKeyHandler {
 				matching.isCraftingRecipe(),
 				selectedIngredients,
 				selectedOutputs,
-				true
+				true,
+				isAllowSubstitutes,
+				isFluidSubstitutes
 			));
 			PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
 		} catch (Throwable ignored) {

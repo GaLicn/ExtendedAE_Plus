@@ -71,6 +71,18 @@ public final class CtrlQPendingUploadUtil {
 		return true;
 	}
 
+	public static boolean returnPendingCtrlQPatternToInventory(ServerPlayer player){
+		if (player == null) return false;
+		ItemStack pending = getPendingCtrlQPattern(player);
+		if(pending.isEmpty()) return false;
+
+		clearPendingCtrlQUpload(player);
+		if (!(player.getInventory().add(pending))) {
+			player.drop(pending.copy(),false);
+		}
+		return true;
+	}
+
 	public static List<PatternContainer> listAvailableProvidersFromPlayerNetwork(ServerPlayer player) {
 		return listAvailableProvidersFromGrid(findPlayerGrid(player));
 	}
