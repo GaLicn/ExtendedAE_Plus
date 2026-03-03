@@ -458,6 +458,19 @@ public class CtrlQPatternKeyHandler {
 
     private static void setLastProcessingNameFromRecipe(Object recipeBase) {
         String name = null;
+        
+        // 处理 RecipeHolder 包装（Minecraft 1.20+）
+        if (recipeBase != null && "net.minecraft.world.item.crafting.RecipeHolder".equals(recipeBase.getClass().getName())) {
+            try {
+                var valueMethod = recipeBase.getClass().getMethod("value");
+                Object actualRecipe = valueMethod.invoke(recipeBase);
+                if (actualRecipe != null) {
+                    recipeBase = actualRecipe;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        
         if (recipeBase instanceof Recipe<?> recipe) {
             name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
         } else if (recipeBase != null

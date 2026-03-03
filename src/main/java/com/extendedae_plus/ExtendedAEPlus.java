@@ -4,6 +4,7 @@ import appeng.api.storage.StorageCells;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
+import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
@@ -14,6 +15,7 @@ import com.extendedae_plus.util.storage.InfinityStorageManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -41,9 +43,6 @@ public class ExtendedAEPlus {
 
         // 注册mod初始化事件
         modEventBus.addListener(this::commonSetup);
-
-        // 注册按键绑定（客户端）
-        modEventBus.addListener(com.extendedae_plus.client.ModKeybindings::register);
 
         // 注册方块与方块实体
         ModBlocks.BLOCKS.register(modEventBus);
@@ -147,6 +146,11 @@ public class ExtendedAEPlus {
                 // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法
                 ModItems.registerPartModels();
             } catch (Exception ignored) {}
+        }
+
+        @SubscribeEvent
+        public static void onRegisterKeyMappings(final RegisterKeyMappingsEvent event) {
+            ModKeybindings.register(event);
         }
     }
 
