@@ -41,17 +41,21 @@ public class CreateCtrlQPatternC2SPacket {
     private final List<ItemStack> selectedIngredients;
     private final List<ItemStack> outputs;
     private final boolean openProviderSelector;
+    private final boolean isAllowSubstitutes;
+    private final boolean isFluidSubstitutes;
 
-    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs) {
-        this(recipeId, isCraftingPattern, selectedIngredients, outputs, false);
+    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs,boolean isAllowSubstitutes,boolean isFluidSubstitutes) {
+        this(recipeId, isCraftingPattern, selectedIngredients, outputs, false, isAllowSubstitutes, isFluidSubstitutes);
     }
 
-    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs, boolean openProviderSelector) {
+    public CreateCtrlQPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs, boolean openProviderSelector,boolean isAllowSubstitutes,boolean isFluidSubstitutes) {
         this.recipeId = recipeId;
         this.isCraftingPattern = isCraftingPattern;
         this.selectedIngredients = selectedIngredients;
         this.outputs = outputs;
         this.openProviderSelector = openProviderSelector;
+        this.isAllowSubstitutes = isAllowSubstitutes;
+        this.isFluidSubstitutes = isFluidSubstitutes;
     }
 
     public static void encode(CreateCtrlQPatternC2SPacket msg, FriendlyByteBuf buf) {
@@ -65,6 +69,8 @@ public class CreateCtrlQPatternC2SPacket {
         for (ItemStack stack : msg.outputs) {
             buf.writeItem(stack);
         }
+        buf.writeBoolean(msg.isAllowSubstitutes);
+        buf.writeBoolean(msg.isFluidSubstitutes);
         buf.writeBoolean(msg.openProviderSelector);
     }
 
@@ -84,8 +90,10 @@ public class CreateCtrlQPatternC2SPacket {
             outputs.add(buf.readItem());
         }
 
+        boolean isAllowSubstitutes = buf.readBoolean();
+        boolean isFluidSubstitutes = buf.readBoolean();
         boolean openProviderSelector = buf.readableBytes() > 0 && buf.readBoolean();
-        return new CreateCtrlQPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs, openProviderSelector);
+        return new CreateCtrlQPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs, openProviderSelector,isAllowSubstitutes,isFluidSubstitutes);
     }
 
     public static void handle(CreateCtrlQPatternC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -110,7 +118,7 @@ public class CreateCtrlQPatternC2SPacket {
                 return;
             }
 
-            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs, player);
+            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs,msg.isAllowSubstitutes,msg.isFluidSubstitutes, player);
             if (pattern.isEmpty()) {
                 player.getInventory().add(AEItems.BLANK_PATTERN.stack());
                 player.displayClientMessage(Component.translatable("message.extendedae_plus.pattern_creation_failed"), false);
@@ -235,7 +243,7 @@ public class CreateCtrlQPatternC2SPacket {
         return false;
     }
 
-    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, List<ItemStack> selectedOutputs, ServerPlayer player) {
+    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, List<ItemStack> selectedOutputs, boolean isAllowSubstitutes,boolean isFluidSubstitutes, ServerPlayer player) {
         try {
             if (isCrafting && recipe instanceof CraftingRecipe craftingRecipe) {
                 ItemStack[] inputs = new ItemStack[9];
@@ -252,8 +260,8 @@ public class CreateCtrlQPatternC2SPacket {
                     craftingRecipe,
                     inputs,
                     output,
-                    true,
-                    false
+                    isAllowSubstitutes,
+                    isFluidSubstitutes
                 );
 
                 encodedPattern.getOrCreateTag().putString("encodePlayer", player.getName().getString());

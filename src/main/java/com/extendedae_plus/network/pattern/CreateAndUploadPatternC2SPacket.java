@@ -42,12 +42,16 @@ public class CreateAndUploadPatternC2SPacket {
     private final boolean isCraftingPattern;
     private final List<ItemStack> selectedIngredients;
     private final List<ItemStack> outputs;
+    private final boolean isAllowSubstitutes;
+    private final boolean isFluidSubstitutes;
 
-    public CreateAndUploadPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs) {
+    public CreateAndUploadPatternC2SPacket(ResourceLocation recipeId, boolean isCraftingPattern, List<ItemStack> selectedIngredients, List<ItemStack> outputs, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
         this.recipeId = recipeId;
         this.isCraftingPattern = isCraftingPattern;
         this.selectedIngredients = selectedIngredients;
         this.outputs = outputs;
+        this.isAllowSubstitutes = isAllowSubstitutes;
+        this.isFluidSubstitutes = isFluidSubstitutes;
     }
 
     public static void encode(CreateAndUploadPatternC2SPacket msg, FriendlyByteBuf buf) {
@@ -61,6 +65,8 @@ public class CreateAndUploadPatternC2SPacket {
         for (ItemStack stack : msg.outputs) {
             buf.writeItem(stack);
         }
+        buf.writeBoolean(msg.isAllowSubstitutes);
+        buf.writeBoolean(msg.isFluidSubstitutes);
     }
 
     public static CreateAndUploadPatternC2SPacket decode(FriendlyByteBuf buf) {
@@ -76,7 +82,9 @@ public class CreateAndUploadPatternC2SPacket {
         for (int i = 0; i < outputCount; i++) {
             outputs.add(buf.readItem());
         }
-        return new CreateAndUploadPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs);
+        boolean isAllowSubstitutes = buf.readBoolean();
+        boolean isFluidSubstitutes = buf.readBoolean();
+        return new CreateAndUploadPatternC2SPacket(recipeId, isCraftingPattern, ingredients, outputs,isAllowSubstitutes,isFluidSubstitutes);
     }
 
     public static void handle(CreateAndUploadPatternC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -121,7 +129,7 @@ public class CreateAndUploadPatternC2SPacket {
             }
 
             // 4. 创建样板
-            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs, player);
+            ItemStack pattern = createPattern(recipe, msg.isCraftingPattern, msg.selectedIngredients, msg.outputs,msg.isAllowSubstitutes,msg.isFluidSubstitutes, player);
 
             if (pattern.isEmpty()) {
                 // 创建失败，退还空白样板到网络
@@ -222,7 +230,7 @@ public class CreateAndUploadPatternC2SPacket {
     /**
      * 从配方创建样板
      */
-    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, List<ItemStack> selectedOutputs, ServerPlayer player) {
+    private static ItemStack createPattern(Recipe<?> recipe, boolean isCrafting, List<ItemStack> selectedIngredients, List<ItemStack> selectedOutputs, boolean isAllowSubstitutes, boolean isFluidSubstitutes, ServerPlayer player) {
         try {
             if (isCrafting && recipe instanceof CraftingRecipe craftingRecipe) {
                 // 合成样板
@@ -241,8 +249,8 @@ public class CreateAndUploadPatternC2SPacket {
                         craftingRecipe,
                         inputs,
                         output,
-                        true,
-                        false
+                        isAllowSubstitutes,
+                        isFluidSubstitutes
                 );
 
                 encodedPattern.getOrCreateTag().putString("encodePlayer", player.getName().getString());

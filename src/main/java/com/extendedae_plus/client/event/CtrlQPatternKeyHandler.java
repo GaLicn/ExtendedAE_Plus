@@ -4,6 +4,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
@@ -22,7 +23,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
 
+import java.sql.SQLOutput;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +45,10 @@ public class CtrlQPatternKeyHandler {
         Screen screen = event.getScreen();
         int keyCode = event.getKeyCode();
         int scanCode = event.getScanCode();
+        boolean isAllowSubstitutes = Screen.hasShiftDown();
+        boolean isFluidSubstitutes = Screen.hasAltDown();
 
-        // 使用 KeyMapping 检测按键（包含修饰键）
+        // 使用 KeyMapping
         if (!ModKeybindings.CREATE_PATTERN_KEY.matches(keyCode, scanCode)) {
             return;
         }
@@ -58,7 +63,7 @@ public class CtrlQPatternKeyHandler {
 
         if (recipeBookmark.isPresent()) {
             // 配方书签分支：处理带有配方类型的书签
-            handleRecipeBookmark(recipeBookmark.get());
+            handleRecipeBookmark(recipeBookmark.get(),isAllowSubstitutes,isFluidSubstitutes);
             event.setCanceled(true);
             return;
         }
@@ -106,12 +111,17 @@ public class CtrlQPatternKeyHandler {
         // 获取输出材料（转换为 ItemStack，流体会被包装）
         List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selectedRecipeInfo);
 
+
+        System.out.println("sendPackage");
         // 发送网络包到服务器
         ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
             selectedRecipeInfo.getRecipe().getId(),
             selectedRecipeInfo.isCraftingRecipe(),
             selectedIngredients,
-            selectedOutputs
+            selectedOutputs,
+            false,
+            isAllowSubstitutes,
+            isFluidSubstitutes
         ));
 
         // 消耗事件，防止传播
@@ -123,14 +133,14 @@ public class CtrlQPatternKeyHandler {
      *
      * @param recipeBookmark 配方书签对象（RecipeBookmark<?, ?>）
      */
-    private static void handleRecipeBookmark(Object recipeBookmark) {
+    private static void handleRecipeBookmark(Object recipeBookmark,boolean isAllowSubstitutes,boolean isFluidSubstitutes) {
         // 判断配方类型
         if (isCraftingRecipe(recipeBookmark)) {
             // 合成配方分支
-            handleCraftingRecipeBookmark(recipeBookmark);
+            handleCraftingRecipeBookmark(recipeBookmark,isAllowSubstitutes,isFluidSubstitutes);
         } else {
             // 其他配方分支（加工配方等）
-            handleProcessingRecipeBookmark(recipeBookmark);
+            handleProcessingRecipeBookmark(recipeBookmark,isAllowSubstitutes,isFluidSubstitutes);
         }
     }
 
@@ -163,7 +173,7 @@ public class CtrlQPatternKeyHandler {
      *
      * @param recipeBookmark 配方书签对象
      */
-    private static void handleCraftingRecipeBookmark(Object recipeBookmark) {
+    private static void handleCraftingRecipeBookmark(Object recipeBookmark,boolean isAllowSubstitutes,boolean isFluidSubstitutes) {
         try {
             // 1. 获取配方ID
             net.minecraft.resources.ResourceLocation recipeId = getRecipeIdCompat(recipeBookmark);
@@ -274,11 +284,13 @@ public class CtrlQPatternKeyHandler {
             List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matchingRecipeInfo);
             
             // 11. 发送网络包创建样板并上传到装配矩阵
-            ModNetwork.CHANNEL.sendToServer(new com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket(
+            ModNetwork.CHANNEL.sendToServer(new CreateAndUploadPatternC2SPacket(
                 recipeId,
                 matchingRecipeInfo.isCraftingRecipe(),
                 selectedIngredients,
-                selectedOutputs
+                selectedOutputs,
+                isAllowSubstitutes,
+                isFluidSubstitutes
             ));
             
         } catch (Exception e) {
@@ -291,7 +303,7 @@ public class CtrlQPatternKeyHandler {
      *
      * @param recipeBookmark 配方书签对象
      */
-    private static void handleProcessingRecipeBookmark(Object recipeBookmark) {
+    private static void handleProcessingRecipeBookmark(Object recipeBookmark,boolean isAllowSubstitutes,boolean isFluidSubstitutes) {
         try {
             net.minecraft.resources.ResourceLocation recipeId = getRecipeIdCompat(recipeBookmark);
             if (recipeId == null) {
@@ -382,7 +394,9 @@ public class CtrlQPatternKeyHandler {
                 matchingRecipeInfo.isCraftingRecipe(),
                 selectedIngredients,
                 selectedOutputs,
-                true
+                true,
+                isAllowSubstitutes,
+                isFluidSubstitutes
             ));
 
             ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
@@ -396,7 +410,6 @@ public class CtrlQPatternKeyHandler {
             return null;
         }
 
-        // JEI 1.20 分支
         try {
             var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
             Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
@@ -406,7 +419,6 @@ public class CtrlQPatternKeyHandler {
         } catch (Throwable ignored) {
         }
 
-        // JEI 1.21+ 分支
         try {
             Object recipe = recipeBookmark.getClass().getMethod("getRecipe").invoke(recipeBookmark);
             Object recipeCategory = recipeBookmark.getClass().getMethod("getRecipeCategory").invoke(recipeBookmark);
