@@ -11,6 +11,8 @@ import appeng.core.definitions.AEItems;
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.init.ModNetwork;
+import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
@@ -126,12 +128,8 @@ public class CreateCtrlQPatternC2SPacket {
             }
 
             if (msg.openProviderSelector) {
-                String pendingId = ProviderUploadUtil.beginPendingCtrlQUpload(player, pattern);
-                if (pendingId == null) {
-                    if (!player.getInventory().add(pattern)) {
-                        player.drop(pattern, false);
-                    }
-                }
+                ProviderUploadUtil.beginPendingCtrlQUpload(player, pattern);
+                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
                 return;
             }
 

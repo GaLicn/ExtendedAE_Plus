@@ -398,8 +398,6 @@ public class CtrlQPatternKeyHandler {
                 isAllowSubstitutes,
                 isFluidSubstitutes
             ));
-
-            ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
         } catch (Exception e) {
             e.printStackTrace();
         }

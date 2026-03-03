@@ -6,6 +6,7 @@ import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.pattern.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.provider.*;
@@ -181,6 +182,12 @@ public final class ModNetwork {
                 .encoder(CreateAndUploadPatternC2SPacket::encode)
                 .decoder(CreateAndUploadPatternC2SPacket::decode)
                 .consumerNetworkThread(CreateAndUploadPatternC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(CancelPendingPatternC2SPacket.class,nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(CancelPendingPatternC2SPacket::encode)
+                .decoder(CancelPendingPatternC2SPacket::decode)
+                .consumerNetworkThread(CancelPendingPatternC2SPacket::handle)
                 .add();
     }
 

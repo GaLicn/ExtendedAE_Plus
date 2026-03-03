@@ -9,6 +9,7 @@ import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class RequestProvidersListC2SPacket {
                     names.add(PatternProviderDataUtil.getProviderDisplayName(c));
                     slots.add(empty);
                 }
-                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
 

@@ -2,6 +2,7 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
+import com.extendedae_plus.network.pattern.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
@@ -280,6 +281,7 @@ public class ProviderSelectScreen extends Screen {
 
     @Override
     public void onClose() {
+        ModNetwork.CHANNEL.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
         Minecraft.getInstance().setScreen(parent);
     }
 
