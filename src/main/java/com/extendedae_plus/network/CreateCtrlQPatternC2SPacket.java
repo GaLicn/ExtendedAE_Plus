@@ -178,10 +178,7 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 	}
 
 	private static boolean consumeBlankPattern(ServerPlayer player) {
-		if (tryExtractFromNetwork(player)) {
-			return true;
-		}
-
+		//优先从背包消耗
 		Inventory inventory = player.getInventory();
 		for (int i = 0; i < inventory.getContainerSize(); i++) {
 			ItemStack stack = inventory.getItem(i);
@@ -189,6 +186,10 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 				stack.shrink(1);
 				return true;
 			}
+		}
+		//没有再从终端消耗
+		if (tryExtractFromNetwork(player)) {
+			return true;
 		}
 		return false;
 	}
