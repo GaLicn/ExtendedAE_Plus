@@ -125,6 +125,7 @@
 
   "extendedae_plus.screen.open_provider_ui": "打开该供应器目标容器的界面",
   "extendedae_plus.button.choose_provider":"上传样板",
+  "extendedae_plus.button.return_last_pattern":"取回上一个上传样板",
   "extendedae_plus.pattern.hovertext.player": "由 %s 编码",
 
   "item.extendedae_plus.entity_speed_ticker": "实体加速器",

@@ -35,6 +35,7 @@ import java.util.UUID;
 public final class ProviderUploadUtil {
     private static final String PENDING_DATA_KEY = "eap_ctrlq_pending_provider_upload_id";
     private static final String PENDING_STACK_KEY = "eap_ctrlq_pending_provider_upload_stack";
+    private static final String LAST_UPLOADED_PROVIDER_KEY = "eap_last_uploaded_provider_id";
 
     private ProviderUploadUtil() {}
 
@@ -114,6 +115,8 @@ public final class ProviderUploadUtil {
                 player.getInventory().setItem(playerSlotIndex, ItemStack.EMPTY);
             }
 
+            player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, providerId);
+
             String terminalType = PatternTerminalUtil.isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
             sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
             return true;
@@ -175,6 +178,7 @@ public final class ProviderUploadUtil {
                 } else {
                     encodedSlot.set(stack);
                 }
+                player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, id);
                 return true;
             }
         }
@@ -227,6 +231,15 @@ public final class ProviderUploadUtil {
                 } else {
                     encodedSlot.set(stack);
                 }
+                
+                // For index-based, we can store the negative index to let the return logic resolve it
+                player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, index == 0 && c == list.get(0) ? (-1L - index) : -1000000L); // store specifically if logic allows, but to be sure let's store the index format
+                // actually we know `c` might be from tryList, let's find the true index of `c` in `list`
+                int trueIndex = list.indexOf(c);
+                if (trueIndex >= 0) {
+                    player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, -1L - trueIndex);
+                }
+
                 return true;
             }
         }
@@ -278,6 +291,8 @@ public final class ProviderUploadUtil {
         } else {
             player.getPersistentData().put(PENDING_STACK_KEY, remain.save(new CompoundTag()));
         }
+
+        player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, providerId);
         return true;
     }
 
@@ -405,6 +420,15 @@ public final class ProviderUploadUtil {
         }
 
         return null;
+    }
+
+    public static long getLastUploadedProviderId(ServerPlayer player) {
+        if (player == null) return Long.MIN_VALUE;
+        CompoundTag data = player.getPersistentData();
+        if (data.contains(LAST_UPLOADED_PROVIDER_KEY)) {
+            return data.getLong(LAST_UPLOADED_PROVIDER_KEY);
+        }
+        return Long.MIN_VALUE;
     }
 
     /**

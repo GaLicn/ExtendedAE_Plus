@@ -125,6 +125,7 @@
 
   "extendedae_plus.screen.open_provider_ui": "開啟該供應器目標容器的介面",
   "extendedae_plus.button.choose_provider": "上傳樣板",
+  "extendedae_plus.button.return_last_pattern": "取回上一個上傳樣板",
   "extendedae_plus.pattern.hovertext.player": "由 %s 編碼",
 
   "item.extendedae_plus.entity_speed_ticker": "實體加速器",

@@ -12,6 +12,7 @@ import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.provider.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,9 +67,13 @@ public abstract class PatternEncodingTermScreenMixin {
 
     @Unique
     private IconButton createUploadButton() {
-        IconButton btn = new IconButton(button ->
-                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket())
-        ) {
+        IconButton btn = new IconButton(button -> {
+            if (Screen.hasShiftDown()) {
+                ModNetwork.CHANNEL.sendToServer(new ReturnLastPatternC2SPacket());
+            } else {
+                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
+            }
+        }) {
             private final float eap$scale = 0.75f;
 
             @Override
@@ -99,7 +104,19 @@ public abstract class PatternEncodingTermScreenMixin {
                 if (!this.isDisableBackground()) {
                     Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
                 }
-                blitter.dest(0, 0).blit(guiGraphics);
+
+                if (Screen.hasShiftDown()) {
+                    pose.pushPose();
+                    // Rotate around the center of the 16x16 icon
+                    pose.translate(8.0f, 8.0f, 0.0f);
+                    pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180.0f));
+                    pose.translate(-8.0f, -8.0f, 0.0f);
+                    blitter.dest(0, 0).blit(guiGraphics);
+                    pose.popPose();
+                } else {
+                    blitter.dest(0, 0).blit(guiGraphics);
+                }
+
                 pose.popPose();
 
                 RenderSystem.enableDepthTest();
@@ -108,6 +125,16 @@ public abstract class PatternEncodingTermScreenMixin {
             @Override
             public Rect2i getTooltipArea() {
                 return new Rect2i(getX(), getY(), Math.round(16 * eap$scale), Math.round(16 * eap$scale));
+            }
+
+            @Override
+            public void render(GuiGraphics p_281670_, int p_282682_, int p_281714_, float p_282542_) {
+                if (Screen.hasShiftDown()) {
+                    this.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.return_last_pattern")));
+                } else {
+                    this.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
+                }
+                super.render(p_281670_, p_282682_, p_281714_, p_282542_);
             }
 
             @Override
