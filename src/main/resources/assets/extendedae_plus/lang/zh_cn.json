@@ -2,6 +2,8 @@
   "gui.expatternprovider.toggle_slots": "切换槽位显示",
   "gui.expatternprovider.hide_slots": "隐藏槽位",
   "gui.expatternprovider.show_slots": "显示槽位",
+  "gui.expatternprovider.merge_empty_slots": "合并空槽位",
+  "gui.expatternprovider.unmerge_empty_slots": "取消合并空槽位",
   "gui.expatternprovider.clear_selection": "取消选择",
   "gui.extendedae_plus.global.toggle_blocking": "切换阻挡模式",
   "gui.extendedae_plus.global.toggle_adv_blocking": "切换高级阻挡",

@@ -2,6 +2,8 @@
   "gui.expatternprovider.toggle_slots": "Toggle Slots",
   "gui.expatternprovider.hide_slots": "Hide Slots",
   "gui.expatternprovider.show_slots": "Show Slots",
+  "gui.expatternprovider.merge_empty_slots": "Merge Empty Slots",
+  "gui.expatternprovider.unmerge_empty_slots": "Unmerge Empty Slots",
   "gui.expatternprovider.clear_selection": "Clear Selection",
   "gui.extendedae_plus.global.toggle_blocking": "Toggle Blocking Mode",
   "gui.extendedae_plus.global.toggle_adv_blocking": "Toggle Advanced Blocking",
