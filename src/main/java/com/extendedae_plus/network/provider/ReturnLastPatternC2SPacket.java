@@ -2,17 +2,23 @@ package com.extendedae_plus.network.provider;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
+import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
+
+import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -36,6 +42,39 @@ public class ReturnLastPatternC2SPacket {
             long lastProviderId = ProviderUploadUtil.getLastUploadedProviderId(player);
             if (lastProviderId == Long.MIN_VALUE) {
                 return; // Nothing to return
+            }
+            
+            // Special ID for Assembly Matrix
+            if (lastProviderId == -999999L) {
+                if (player.containerMenu instanceof PatternEncodingTermMenu encMenu) {
+                    IGridNode node = encMenu.getNetworkNode();
+                    if (node != null && node.getGrid() != null) {
+                        IGrid grid = node.getGrid();
+                        // Get all matrix pattern inventories
+                        try {
+                            Set<TileAssemblerMatrixPattern> allTiles = grid.getMachines(TileAssemblerMatrixPattern.class);
+                            for (TileAssemblerMatrixPattern tile : allTiles) {
+                                if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
+                                    InternalInventory inv = tile.getTerminalPatternInventory();
+                                    if (inv != null && returnPatternFromInventory(player, inv)) {
+                                        return;
+                                    }
+                                }
+                            }
+                            
+                            Set<PatternCorePlusBlockEntity> myAllTiles = grid.getMachines(PatternCorePlusBlockEntity.class);
+                            for (PatternCorePlusBlockEntity tile : myAllTiles) {
+                                if (tile != null && tile.isFormed() && tile.getMainNode().isActive()) {
+                                    InternalInventory inv = tile.getTerminalPatternInventory();
+                                    if (inv != null && returnPatternFromInventory(player, inv)) {
+                                        return;
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+                return;
             }
 
             PatternContainer targetContainer = null;
@@ -73,22 +112,27 @@ public class ReturnLastPatternC2SPacket {
             }
 
             InternalInventory inv = targetContainer.getTerminalPatternInventory();
-            if (inv == null || inv.size() <= 0) return;
-
-            // Find the highest slot with an encoded pattern
-            for (int slot = inv.size() - 1; slot >= 0; slot--) {
-                ItemStack stack = inv.getStackInSlot(slot);
-                if (!stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
-                    ItemStack extracted = inv.extractItem(slot, 1, false);
-                    if (!extracted.isEmpty()) {
-                        if (!player.getInventory().add(extracted)) {
-                            player.drop(extracted, false);
-                        }
-                        return; // Found and returned
-                    }
-                }
+            if (inv != null && inv.size() > 0) {
+                returnPatternFromInventory(player, inv);
             }
         });
         ctx.setPacketHandled(true);
+    }
+    
+    private static boolean returnPatternFromInventory(ServerPlayer player, InternalInventory inv) {
+        // Find the highest slot with an encoded pattern
+        for (int slot = inv.size() - 1; slot >= 0; slot--) {
+            ItemStack stack = inv.getStackInSlot(slot);
+            if (!stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
+                ItemStack extracted = inv.extractItem(slot, 1, false);
+                if (!extracted.isEmpty()) {
+                    if (!player.getInventory().add(extracted)) {
+                        player.drop(extracted, false);
+                    }
+                    return true; // Found and returned
+                }
+            }
+        }
+        return false;
     }
 }
