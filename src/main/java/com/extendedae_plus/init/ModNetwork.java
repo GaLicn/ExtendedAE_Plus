@@ -189,6 +189,12 @@ public final class ModNetwork {
                 .decoder(CancelPendingPatternC2SPacket::decode)
                 .consumerNetworkThread(CancelPendingPatternC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(ReturnLastPatternC2SPacket.class,nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ReturnLastPatternC2SPacket::encode)
+                .decoder(ReturnLastPatternC2SPacket::decode)
+                .consumerNetworkThread(ReturnLastPatternC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }
