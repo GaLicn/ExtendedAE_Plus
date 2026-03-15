@@ -5,6 +5,7 @@ import com.extendedae_plus.config.ModConfigs;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -27,6 +28,12 @@ public class EncodedPatternItemMixin {
             if (tag.contains("encodePlayer")) {
                 String name = tag.getString("encodePlayer");
                 lines.add(Component.translatable("extendedae_plus.pattern.hovertext.player", name).withStyle(ChatFormatting.GRAY));
+            }
+            if (tag.contains("recipeId")) {
+                String id = tag.getString("recipeId");
+                ResourceLocation location = ResourceLocation.tryParse(id);
+                if (location == null) return;
+                lines.add(Component.translatable("extendedae_plus.pattern.hovertext.player", Component.translatable("recipe." + location.getNamespace() + "." + location.getPath())).withStyle(ChatFormatting.GRAY));
             }
         }
     }

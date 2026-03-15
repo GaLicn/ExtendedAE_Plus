@@ -1,14 +1,20 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.stacks.GenericStack;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
+import com.extendedae_plus.api.upload.IPatternEncodingIdSync;
 import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
+import com.extendedae_plus.util.RecipeFinderUtilEMI;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
+import dev.emi.emi.api.recipe.EmiRecipe;
+import dev.emi.emi.api.stack.EmiStack;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -22,13 +28,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
+
 /**
  * 给 AE2 的 PatternEncodingTermMenu 增加一个通用动作持有者，实现接收 EPP 的 CGenericPacket 动作。
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync {
-
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync, IPatternEncodingIdSync {
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
 
@@ -37,6 +44,9 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
 
     @Unique
     private boolean eap$pendingShiftUpload;
+
+    @Unique
+    private ResourceLocation eap$pendingRecipeIdUpload;
 
     @Shadow(remap = false)
     private RestrictedInputSlot encodedPatternSlot;
@@ -55,6 +65,11 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         return flag;
     }
 
+    @Unique
+    @Override
+    public void eap$clientRecipeIdUpload(ResourceLocation id) {
+        this.eap$pendingRecipeIdUpload = id;
+    }
     @Unique
     private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
         sp.server.execute(() -> {
@@ -140,7 +155,24 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         if (itemStack != null && !itemStack.isEmpty()) {
             CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> {
                 tag.putString("encodePlayer", this.epp$player.getGameProfile().getName());
+                if (this.eap$pendingRecipeIdUpload !=null) {
+                    EmiRecipe recipe = RecipeFinderUtilEMI.findRecipeById(this.eap$pendingRecipeIdUpload);
+                    // 检查样板与配方是否对应
+                    List<GenericStack> stacks = PatternDetailsHelper.decodePattern(itemStack, this.epp$player.level()).getOutputs();
+                    if (stacks != null && recipe != null) {
+                        List<EmiStack> stacks2 = recipe.getOutputs();
+
+                        List<ResourceLocation> ids1 = stacks.stream().map(s -> s.what().getId()).sorted().toList();
+                        List<ResourceLocation> ids2 = stacks2.stream().map(EmiStack::getId).sorted().toList();
+
+                        if (ids1.equals(ids2)) {
+                            tag.putString("recipeId", this.eap$pendingRecipeIdUpload.toString());
+                        }
+                    }
+                    this.eap$pendingRecipeIdUpload =null;
+                }
             });
+
             cir.setReturnValue(itemStack);
         }
     }
