@@ -2,6 +2,8 @@ package com.extendedae_plus.mixin.ae2;
 
 import appeng.crafting.pattern.EncodedPatternItem;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.integration.jei.EmiRuntimeProxy;
+import com.extendedae_plus.util.RecipeFinderUtilEMI;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -18,7 +20,7 @@ import java.util.List;
 
 @Mixin(EncodedPatternItem.class)
 public class EncodedPatternItemMixin {
-    // 客户端：在 HoverText 显示样板的编码玩家
+    // 客户端：在 HoverText 显示样板的编码玩家 和 加工机器
     @Inject(method = "appendHoverText", at = @At("TAIL"))
     public void epp$appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> lines, TooltipFlag advancedTooltips, CallbackInfo ci){
         if (ModConfigs.SHOW_ENCODER_PATTERN_PLAYER.get()) {
@@ -27,6 +29,12 @@ public class EncodedPatternItemMixin {
             if (tag.contains("encodePlayer")) {
                 String name = tag.getString("encodePlayer");
                 lines.add(Component.translatable("extendedae_plus.pattern.hovertext.player", name).withStyle(ChatFormatting.GRAY));
+            }
+            if (EmiRuntimeProxy.isInstalled && tag.contains("recipeId")) {
+                Component c = RecipeFinderUtilEMI.getWorkstationComponentByRecipeId(tag.getString("recipeId"));
+                if (c != null) {
+                    lines.add(Component.translatable("extendedae_plus.pattern.hovertext.workstation", c).withStyle(ChatFormatting.GRAY));
+                }
             }
         }
     }

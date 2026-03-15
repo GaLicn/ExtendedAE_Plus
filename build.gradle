@@ -185,14 +185,13 @@ dependencies {
 
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
     switch (project.findProperty('use_Xei') ?: 'emi') {
-        case 'emi':
-            runtimeOnly "dev.emi:emi-neoforge:1.1.10+1.21"
-            break
         case 'rei':
             runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
             runtimeOnly "dev.architectury:architectury-neoforge:13.0.1"
             runtimeOnly "curse.maven:cloth-config-348521:5424576"
             break
+        case 'emi':// Allow case fall-through here because emi support jei
+            runtimeOnly "dev.emi:emi-neoforge:1.1.22+1.21.1"
         case 'jei':
             runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
             runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"

@@ -71,6 +71,7 @@
   "message.extendedae_plus.pattern_creation_failed": "创建编码样板失败。",
   "message.extendedae_plus.no_network": "无法访问 AE 网络。",
   "extendedae_plus.pattern.hovertext.player": "由 %s 编码",
+  "extendedae_plus.pattern.hovertext.workstation": "可由 %s 加工",
 
   "item.extendedae_plus.entity_speed_ticker": "实体加速器",
   "screen.extendedae_plus.entity_speed_ticker.enable": "§c§l机器已被禁用",

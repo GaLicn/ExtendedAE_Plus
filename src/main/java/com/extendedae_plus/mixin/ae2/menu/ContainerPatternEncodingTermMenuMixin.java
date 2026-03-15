@@ -4,11 +4,15 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
+import com.extendedae_plus.api.upload.IPatternEncodingIdSync;
 import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
+import com.extendedae_plus.integration.jei.EmiRuntimeProxy;
+import com.extendedae_plus.util.RecipeFinderUtilEMI;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -27,8 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync {
-
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync, IPatternEncodingIdSync {
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
 
@@ -37,6 +40,9 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
 
     @Unique
     private boolean eap$pendingShiftUpload;
+
+    @Unique
+    private ResourceLocation eap$pendingRecipeIdUpload;
 
     @Shadow(remap = false)
     private RestrictedInputSlot encodedPatternSlot;
@@ -55,6 +61,11 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         return flag;
     }
 
+    @Unique
+    @Override
+    public void eap$clientRecipeIdUpload(ResourceLocation id) {
+        this.eap$pendingRecipeIdUpload = id;
+    }
     @Unique
     private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
         sp.server.execute(() -> {
@@ -140,7 +151,14 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         if (itemStack != null && !itemStack.isEmpty()) {
             CustomData.update(DataComponents.CUSTOM_DATA, itemStack, tag -> {
                 tag.putString("encodePlayer", this.epp$player.getGameProfile().getName());
+                if (EmiRuntimeProxy.isInstalled && this.eap$pendingRecipeIdUpload != null) {
+                    if (RecipeFinderUtilEMI.isRecipeEqualToPattern(itemStack, this.eap$pendingRecipeIdUpload, this.epp$player.level())) {
+                        tag.putString("recipeId", this.eap$pendingRecipeIdUpload.toString());
+                    }
+                    this.eap$pendingRecipeIdUpload = null;
+                }
             });
+
             cir.setReturnValue(itemStack);
         }
     }

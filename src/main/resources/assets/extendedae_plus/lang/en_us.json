@@ -71,6 +71,7 @@
   "message.extendedae_plus.pattern_creation_failed": "Failed to create encoded pattern.",
   "message.extendedae_plus.no_network": "Unable to access AE network.",
   "extendedae_plus.pattern.hovertext.player": "Encoded by %s",
+  "extendedae_plus.pattern.hovertext.workstation": "Craftable by %s",
 
   "item.extendedae_plus.entity_speed_ticker": "Entity Accelerator",
   "screen.extendedae_plus.entity_speed_ticker.enable": "§c§lMachine Has Been Disabled",
