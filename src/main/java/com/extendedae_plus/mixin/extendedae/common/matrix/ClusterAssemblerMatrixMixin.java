@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ClusterAssemblerMatrix.class, remap = false)
 public class ClusterAssemblerMatrixMixin {
@@ -37,5 +38,19 @@ public class ClusterAssemblerMatrixMixin {
             ci.cancel();
         }
         // 其他类型的Crafter走原版逻辑
+    }
+
+    @Inject(method = "getBusyCrafterAmount", at = @At("HEAD"), cancellable = true)
+    private void onGetBusyCrafterAmount(CallbackInfoReturnable<Integer> cir) {
+        int cnt = 0;
+        for (var crafter : this.busyCrafters) {
+            cnt += crafter instanceof CrafterCorePlusBlockEntity
+                    ? CrafterCorePlusBlockEntity.MAX_THREAD
+                    : TileAssemblerMatrixCrafter.MAX_THREAD;
+        }
+        for (var crafter : this.availableCrafters) {
+            cnt += crafter.usedThread();
+        }
+        cir.setReturnValue(cnt);
     }
 }
