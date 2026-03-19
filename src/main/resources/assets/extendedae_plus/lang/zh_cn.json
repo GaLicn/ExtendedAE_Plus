@@ -50,6 +50,7 @@
   "block.extendedae_plus.assembler_matrix_speed_plus": "超级装配矩阵速度核心",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "超级装配矩阵合成核心",
   "block.extendedae_plus.assembler_matrix_pattern_plus": "超级装配矩阵样板核心",
+  "gui.extendedae_plus.assembler_matrix.pattern": "超级装配矩阵样板核心",
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
