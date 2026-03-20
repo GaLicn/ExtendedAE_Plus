@@ -1,12 +1,429 @@
 package com.extendedae_plus.content.ae2;
 
+import appeng.api.config.LockCraftingMode;
+import appeng.api.config.Settings;
+import appeng.api.ids.AEComponents;
+import appeng.api.networking.IManagedGridNode;
+import appeng.api.stacks.GenericStack;
+import appeng.block.crafting.PatternProviderBlock;
 import appeng.blockentity.crafting.PatternProviderBlockEntity;
+import appeng.helpers.patternprovider.PatternProviderLogic;
+import appeng.util.SettingsFrom;
+import appeng.util.inv.AppEngInternalInventory;
 import com.extendedae_plus.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Objects;
 
 public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity {
+    private static final String TAG_MASTER = "mirrorMaster";
+    private static final String TAG_MASTER_DIMENSION = "dimension";
+    private static final String TAG_MASTER_POS = "pos";
+    private static final int SYNC_INTERVAL = 2;
+
+    @Nullable
+    private ResourceKey<Level> masterDimension;
+
+    @Nullable
+    private BlockPos masterPos;
+
     public MirrorPatternProviderBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(), pos, blockState);
+    }
+
+    @Override
+    protected PatternProviderLogic createLogic() {
+        return new MirrorLogic(this.getMainNode(), this);
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, MirrorPatternProviderBlockEntity blockEntity) {
+        if (level instanceof ServerLevel serverLevel) {
+            blockEntity.serverTick(serverLevel);
+        }
+    }
+
+    private void serverTick(ServerLevel level) {
+        if (Math.floorMod(level.getGameTime() + this.getBlockPos().asLong(), SYNC_INTERVAL) != 0) {
+            return;
+        }
+
+        this.syncOrRebind(false);
+    }
+
+    @Override
+    public void onReady() {
+        super.onReady();
+        if (this.getLevel() instanceof ServerLevel serverLevel) {
+            this.syncOrRebind(true);
+        }
+    }
+
+    @Override
+    public void saveAdditional(CompoundTag data, HolderLookup.Provider registries) {
+        super.saveAdditional(data, registries);
+
+        if (this.masterDimension != null && this.masterPos != null) {
+            var masterTag = new CompoundTag();
+            masterTag.putString(TAG_MASTER_DIMENSION, this.masterDimension.location().toString());
+            masterTag.putLong(TAG_MASTER_POS, this.masterPos.asLong());
+            data.put(TAG_MASTER, masterTag);
+        } else {
+            data.remove(TAG_MASTER);
+        }
+    }
+
+    @Override
+    public void loadTag(CompoundTag data, HolderLookup.Provider registries) {
+        super.loadTag(data, registries);
+
+        this.masterDimension = null;
+        this.masterPos = null;
+        if (data.contains(TAG_MASTER, Tag.TAG_COMPOUND)) {
+            var masterTag = data.getCompound(TAG_MASTER);
+            if (masterTag.contains(TAG_MASTER_DIMENSION, Tag.TAG_STRING) && masterTag.contains(TAG_MASTER_POS, Tag.TAG_LONG)) {
+                this.masterDimension = ResourceKey.create(
+                        Registries.DIMENSION,
+                        ResourceLocation.parse(masterTag.getString(TAG_MASTER_DIMENSION)));
+                this.masterPos = BlockPos.of(masterTag.getLong(TAG_MASTER_POS));
+            }
+        }
+    }
+
+    @Override
+    public void addAdditionalDrops(Level level, BlockPos pos, List<ItemStack> drops) {
+        var patternInventory = this.getPatternInventory();
+        var mirroredPatterns = patternInventory.toItemContainerContents();
+
+        patternInventory.fromItemContainerContents(ItemContainerContents.EMPTY);
+        this.getLogic().updatePatterns();
+        this.getLogic().addDrops(drops);
+
+        patternInventory.fromItemContainerContents(mirroredPatterns);
+        this.getLogic().updatePatterns();
+    }
+
+    @Override
+    public void clearContent() {
+        this.getLogic().clearContent();
+    }
+
+    public boolean tryBindToAdjacentMaster() {
+        if (!(this.getLevel() instanceof ServerLevel)) {
+            return false;
+        }
+
+        var master = this.findAdjacentMaster();
+        if (master == null) {
+            return false;
+        }
+
+        this.bindToMaster(master);
+        this.syncFromMaster(master);
+        return true;
+    }
+
+    @Nullable
+    public PatternProviderBlockEntity getMaster() {
+        if (this.masterDimension == null || this.masterPos == null || !(this.getLevel() instanceof ServerLevel serverLevel)) {
+            return null;
+        }
+
+        ServerLevel masterLevel;
+        if (serverLevel.dimension() == this.masterDimension) {
+            masterLevel = serverLevel;
+        } else {
+            masterLevel = serverLevel.getServer().getLevel(this.masterDimension);
+        }
+
+        if (masterLevel == null || !masterLevel.hasChunkAt(this.masterPos)) {
+            return null;
+        }
+
+        var blockEntity = masterLevel.getBlockEntity(this.masterPos);
+        return isValidMaster(blockEntity) ? (PatternProviderBlockEntity) blockEntity : null;
+    }
+
+    public Component createBoundMessage() {
+        if (this.masterPos != null) {
+            return Component.translatable(
+                    "extendedae_plus.message.mirror_pattern_provider.bound",
+                    this.masterPos.getX(),
+                    this.masterPos.getY(),
+                    this.masterPos.getZ());
+        }
+
+        return Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master");
+    }
+
+    public Component getStatusMessage() {
+        if (this.masterPos != null) {
+            return Component.translatable(
+                    "extendedae_plus.message.mirror_pattern_provider.following",
+                    this.masterPos.getX(),
+                    this.masterPos.getY(),
+                    this.masterPos.getZ());
+        }
+
+        return Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master");
+    }
+
+    private void syncOrRebind(boolean allowRebind) {
+        var master = this.getMaster();
+        if (master != null) {
+            this.syncFromMaster(master);
+            return;
+        }
+
+        if (allowRebind || this.hasNoBoundMaster()) {
+            if (this.tryBindToAdjacentMaster()) {
+                return;
+            }
+        }
+
+        if (this.shouldClearBrokenBinding()) {
+            this.clearMasterBinding(true);
+        }
+    }
+
+    private boolean hasNoBoundMaster() {
+        return this.masterDimension == null || this.masterPos == null;
+    }
+
+    private boolean shouldClearBrokenBinding() {
+        if (this.masterDimension == null || this.masterPos == null || !(this.getLevel() instanceof ServerLevel serverLevel)) {
+            return true;
+        }
+
+        ServerLevel masterLevel;
+        if (serverLevel.dimension() == this.masterDimension) {
+            masterLevel = serverLevel;
+        } else {
+            masterLevel = serverLevel.getServer().getLevel(this.masterDimension);
+        }
+
+        if (masterLevel == null || !masterLevel.hasChunkAt(this.masterPos)) {
+            return false;
+        }
+
+        return !isValidMaster(masterLevel.getBlockEntity(this.masterPos));
+    }
+
+    private void clearMasterBinding(boolean clearMirroredPatterns) {
+        var hadBinding = this.masterDimension != null || this.masterPos != null;
+
+        this.masterDimension = null;
+        this.masterPos = null;
+
+        var changed = hadBinding;
+        if (clearMirroredPatterns) {
+            changed |= this.clearMirroredPatterns();
+        }
+
+        if (changed) {
+            this.saveChanges();
+            this.markForClientUpdate();
+        }
+    }
+
+    private boolean bindToMaster(PatternProviderBlockEntity master) {
+        var masterLevel = master.getLevel();
+        if (masterLevel == null) {
+            return false;
+        }
+
+        var newDimension = masterLevel.dimension();
+        var newPos = master.getBlockPos().immutable();
+        var changed = !Objects.equals(this.masterDimension, newDimension) || !Objects.equals(this.masterPos, newPos);
+
+        this.masterDimension = newDimension;
+        this.masterPos = newPos;
+
+        if (changed) {
+            this.saveChanges();
+            this.markForClientUpdate();
+        }
+
+        return changed;
+    }
+
+    @Nullable
+    private PatternProviderBlockEntity findAdjacentMaster() {
+        var level = this.getLevel();
+        if (level == null) {
+            return null;
+        }
+
+        for (var direction : Direction.values()) {
+            var adjacent = level.getBlockEntity(this.getBlockPos().relative(direction));
+            if (isValidMaster(adjacent)) {
+                return (PatternProviderBlockEntity) adjacent;
+            }
+        }
+
+        return null;
+    }
+
+    private boolean syncFromMaster(PatternProviderBlockEntity master) {
+        var changed = this.bindToMaster(master);
+        changed |= this.syncMirroredSettings(master);
+        changed |= this.syncMirroredPatterns(master);
+
+        if (changed) {
+            this.saveChanges();
+            this.markForClientUpdate();
+        }
+
+        return changed;
+    }
+
+    private boolean syncMirroredSettings(PatternProviderBlockEntity master) {
+        if (!this.hasDifferentMirroredSettings(master)) {
+            return false;
+        }
+
+        var builder = DataComponentMap.builder();
+        if (master.getCustomName() != null) {
+            builder.set(AEComponents.EXPORTED_CUSTOM_NAME, master.getCustomName());
+        }
+        builder.set(AEComponents.EXPORTED_SETTINGS, master.getConfigManager().exportSettings());
+        builder.set(AEComponents.EXPORTED_PRIORITY, master.getPriority());
+        builder.set(AEComponents.EXPORTED_PUSH_DIRECTION, master.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION));
+        this.importSettings(SettingsFrom.MEMORY_CARD, builder.build(), null);
+        return true;
+    }
+
+    private boolean hasDifferentMirroredSettings(PatternProviderBlockEntity master) {
+        var mirrorLogic = this.getLogic();
+        var masterLogic = master.getLogic();
+
+        return !Objects.equals(this.getCustomName(), master.getCustomName())
+                || mirrorLogic.getPriority() != masterLogic.getPriority()
+                || mirrorLogic.getConfigManager().getSetting(Settings.BLOCKING_MODE)
+                != masterLogic.getConfigManager().getSetting(Settings.BLOCKING_MODE)
+                || mirrorLogic.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL)
+                != masterLogic.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL)
+                || mirrorLogic.getConfigManager().getSetting(Settings.LOCK_CRAFTING_MODE)
+                != masterLogic.getConfigManager().getSetting(Settings.LOCK_CRAFTING_MODE)
+                || this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION)
+                != master.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION);
+    }
+
+    private boolean syncMirroredPatterns(PatternProviderBlockEntity master) {
+        var mirrorInventory = this.getPatternInventory();
+        var masterInventory = asPatternInventory(master.getLogic().getPatternInv());
+
+        if (this.hasSamePatterns(masterInventory, mirrorInventory)) {
+            return false;
+        }
+
+        mirrorInventory.fromItemContainerContents(masterInventory.toItemContainerContents());
+        this.getLogic().updatePatterns();
+        return true;
+    }
+
+    private boolean clearMirroredPatterns() {
+        var patternInventory = this.getPatternInventory();
+        if (this.isPatternInventoryEmpty(patternInventory)) {
+            return false;
+        }
+
+        patternInventory.fromItemContainerContents(ItemContainerContents.EMPTY);
+        this.getLogic().updatePatterns();
+        return true;
+    }
+
+    private boolean hasSamePatterns(AppEngInternalInventory masterInventory, AppEngInternalInventory mirrorInventory) {
+        if (masterInventory.size() != mirrorInventory.size()) {
+            return false;
+        }
+
+        for (int slot = 0; slot < masterInventory.size(); slot++) {
+            if (!sameStack(masterInventory.getStackInSlot(slot), mirrorInventory.getStackInSlot(slot))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isPatternInventoryEmpty(AppEngInternalInventory inventory) {
+        for (int slot = 0; slot < inventory.size(); slot++) {
+            if (!inventory.getStackInSlot(slot).isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private AppEngInternalInventory getPatternInventory() {
+        return asPatternInventory(this.getLogic().getPatternInv());
+    }
+
+    private static AppEngInternalInventory asPatternInventory(Object inventory) {
+        return (AppEngInternalInventory) inventory;
+    }
+
+    private static boolean sameStack(ItemStack left, ItemStack right) {
+        if (left.isEmpty() && right.isEmpty()) {
+            return true;
+        }
+
+        return ItemStack.isSameItemSameComponents(left, right) && left.getCount() == right.getCount();
+    }
+
+    private static boolean isValidMaster(@Nullable BlockEntity blockEntity) {
+        return blockEntity instanceof PatternProviderBlockEntity
+                && !(blockEntity instanceof MirrorPatternProviderBlockEntity)
+                && !blockEntity.isRemoved();
+    }
+
+    private static final class MirrorLogic extends PatternProviderLogic {
+        private final MirrorPatternProviderBlockEntity mirrorHost;
+
+        private MirrorLogic(IManagedGridNode mainNode, MirrorPatternProviderBlockEntity mirrorHost) {
+            super(mainNode, mirrorHost);
+            this.mirrorHost = mirrorHost;
+        }
+
+        @Override
+        public LockCraftingMode getCraftingLockedReason() {
+            var master = this.mirrorHost.getMaster();
+            if (master != null) {
+                var masterReason = master.getLogic().getCraftingLockedReason();
+                if (masterReason != LockCraftingMode.NONE) {
+                    return masterReason;
+                }
+            }
+
+            return super.getCraftingLockedReason();
+        }
+
+        @Override
+        public @Nullable GenericStack getUnlockStack() {
+            var master = this.mirrorHost.getMaster();
+            if (master != null && master.getLogic().getCraftingLockedReason() == LockCraftingMode.LOCK_UNTIL_RESULT) {
+                return master.getLogic().getUnlockStack();
+            }
+
+            return super.getUnlockStack();
+        }
     }
 }

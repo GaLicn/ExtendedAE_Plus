@@ -225,6 +225,10 @@
   "extendedae_plus.message.transceiver.channel": "频道：%d",
   "extendedae_plus.message.transceiver.mode_master": "模式：主端",
   "extendedae_plus.message.transceiver.mode_slave": "模式：从端",
+  "extendedae_plus.message.mirror_pattern_provider.bound": "镜像样板供应器已绑定到主供应器：(%d, %d, %d)",
+  "extendedae_plus.message.mirror_pattern_provider.following": "镜像样板供应器当前跟随主供应器：(%d, %d, %d)",
+  "extendedae_plus.message.mirror_pattern_provider.missing_master": "未找到相邻的主样板供应器。",
+  "extendedae_plus.message.mirror_pattern_provider.readonly": "镜像样板供应器没有独立界面，状态与朝向会跟随主供应器。",
 
   "extendedae_plus.state.master": "主模式",
   "extendedae_plus.state.slave": "从模式",

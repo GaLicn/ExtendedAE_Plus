@@ -145,7 +145,11 @@ public class ExtendedAEPlus {
                     MirrorPatternProviderBlockEntity.class,
                     ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
                     null,
-                    null
+                    (level, pos, state, blockEntity) -> MirrorPatternProviderBlockEntity.serverTick(
+                            level,
+                            pos,
+                            state,
+                            (MirrorPatternProviderBlockEntity) blockEntity)
             );
 
             LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");

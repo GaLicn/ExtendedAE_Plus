@@ -1,3 +1,6 @@
 {
-  "parent": "ae2:block/pattern_provider_oriented"
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_default"
+  }
 }

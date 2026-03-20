@@ -230,6 +230,10 @@
   "extendedae_plus.message.transceiver.channel": "Channel: %d",
   "extendedae_plus.message.transceiver.mode_master": "Mode: Master",
   "extendedae_plus.message.transceiver.mode_slave": "Mode: Slave",
+  "extendedae_plus.message.mirror_pattern_provider.bound": "Mirror pattern provider bound to master provider: (%d, %d, %d)",
+  "extendedae_plus.message.mirror_pattern_provider.following": "Mirror pattern provider is following master provider: (%d, %d, %d)",
+  "extendedae_plus.message.mirror_pattern_provider.missing_master": "No adjacent master pattern provider was found.",
+  "extendedae_plus.message.mirror_pattern_provider.readonly": "Mirror pattern provider has no standalone UI and follows the master's state and direction.",
 
   "extendedae_plus.state.master": "Master",
   "extendedae_plus.state.slave": "Slave",
