@@ -80,6 +80,10 @@ public final class ModItems {
             "assembler_matrix_pattern_plus",
             () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> MIRROR_PATTERN_PROVIDER = ITEMS.register(
+            "mirror_pattern_provider",
+            () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), new Item.Properties())
+    );
     static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())

@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "extendedae_plus:block/mirror_pattern_provider"
+      }
+    }
+  ]
+}

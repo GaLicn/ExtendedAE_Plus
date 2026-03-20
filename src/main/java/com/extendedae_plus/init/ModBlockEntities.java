@@ -1,6 +1,7 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
@@ -77,4 +78,10 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("assembler_matrix_pattern_plus",
                     ()-> BlockEntityType.Builder.of(PatternCorePlusBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get()).build(null));
+
+    //镜像样板供应器
+    public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<MirrorPatternProviderBlockEntity>> MIRROR_PATTERN_PROVIDER_BE=
+            BLOCK_ENTITY_TYPES.register("mirror_pattern_provider",
+                    ()-> BlockEntityType.Builder.of(MirrorPatternProviderBlockEntity::new,
+                            ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get()).build(null));
 }

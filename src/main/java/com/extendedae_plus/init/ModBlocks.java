@@ -1,6 +1,7 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
@@ -124,5 +125,10 @@ public final class ModBlocks {
                             .strength(1.5F, 6.0F)
                             .requiresCorrectToolForDrops()
             )
+    );
+
+    public static final DeferredBlock<MirrorPatternProviderBlock> MIRROR_PATTERN_PROVIDER_BLOCK = BLOCKS.register(
+            "mirror_pattern_provider",
+            MirrorPatternProviderBlock::new
     );
 }

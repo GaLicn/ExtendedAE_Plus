@@ -9,6 +9,7 @@ import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
@@ -136,6 +137,13 @@ public class ExtendedAEPlus {
             ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
                     PatternCorePlusBlockEntity.class,
                     ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ((AEBaseEntityBlock) ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get()).setBlockEntity(
+                    MirrorPatternProviderBlockEntity.class,
+                    ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
                     null,
                     null
             );

@@ -35,6 +35,18 @@ public final class ModCapabilities {
                 (be, ctx) -> (IInWorldGridNodeHost) be
         );
 
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
+                (be, ctx) -> (IInWorldGridNodeHost) be
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.GENERIC_INTERNAL_INV,
+                ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
+                (be, ctx) -> be.getLogic().getReturnInv()
+        );
+
         // 并行处理单元（CraftingUnitBlock -> CraftingBlockEntity 实现了 IInWorldGridNodeHost）
         // 未注册该能力时，AE 电缆通过 GridHelper.getNodeHost(...) 无法发现节点，导致节点不入网，
         // 方块虽然能成型并提供并行度，但 getMainNode().isOnline() 为 false，从而显示“设备离线”。
