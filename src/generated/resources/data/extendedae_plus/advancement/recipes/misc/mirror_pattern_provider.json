@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_mirror_pattern_provider": {
+      "conditions": {
+        "items": [
+          {
+            "items": "extendedae_plus:mirror_pattern_provider"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:mirror_pattern_provider"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_mirror_pattern_provider"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:mirror_pattern_provider"
+    ]
+  }
+}

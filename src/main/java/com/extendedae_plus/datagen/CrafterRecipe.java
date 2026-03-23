@@ -1,6 +1,7 @@
 package com.extendedae_plus.datagen;
 
 import appeng.core.definitions.AEBlocks;
+import appeng.core.definitions.AEItems;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.glodblock.github.extendedae.common.EAESingletons;
@@ -68,6 +69,28 @@ public class CrafterRecipe extends RecipeProvider {
                 .define('A', Items.PAPER)
                 .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
                 .define('C',Items.EMERALD)
+                .save(output);
+
+        //镜像样板供应器
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_PROVIDER.get())
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .unlockedBy("has_mirror_pattern_provider",has(ModItems.MIRROR_PATTERN_PROVIDER.get()))
+                .define('A',Items.GLASS)
+                .define('B',AEBlocks.PATTERN_PROVIDER)
+                .save(output);
+
+        //镜像样板绑定工具
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
+                .pattern("  A")
+                .pattern("BCD")
+                .pattern("BBB")
+                .unlockedBy("has_mirror_pattern_binding_tool",has(ModItems.MIRROR_PATTERN_BINDING_TOOL.get()))
+                .define('A', AEItems.WIRELESS_RECEIVER)
+                .define('B', Items.IRON_INGOT)
+                .define('C', Items.REDSTONE)
+                .define('D', AEItems.CALCULATION_PROCESSOR)
                 .save(output);
     }
 }

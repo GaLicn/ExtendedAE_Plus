@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ae2:wireless_receiver"
+    },
+    "B": {
+      "item": "minecraft:iron_ingot"
+    },
+    "C": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "item": "ae2:calculation_processor"
+    }
+  },
+  "pattern": [
+    "  A",
+    "BCD",
+    "BBB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:mirror_pattern_binding_tool"
+  }
+}
