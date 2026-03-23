@@ -1,10 +1,9 @@
 package com.extendedae_plus.content.ae2;
 
-import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
 import appeng.api.ids.AEComponents;
+import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IManagedGridNode;
-import appeng.api.stacks.GenericStack;
 import appeng.block.crafting.PatternProviderBlock;
 import appeng.blockentity.crafting.PatternProviderBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
@@ -38,6 +37,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     private static final String TAG_MASTER_DIMENSION = "dimension";
     private static final String TAG_MASTER_POS = "pos";
     private static final int SYNC_INTERVAL = 2;
+    private static final InternalInventory DISABLED_PATTERN_INVENTORY = new AppEngInternalInventory(0);
 
     @Nullable
     private ResourceKey<Level> masterDimension;
@@ -47,6 +47,16 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
     public MirrorPatternProviderBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(), pos, blockState);
+    }
+
+    @Override
+    public boolean isVisibleInTerminal() {
+        return false;
+    }
+
+    @Override
+    public InternalInventory getTerminalPatternInventory() {
+        return DISABLED_PATTERN_INVENTORY;
     }
 
     @Override
@@ -393,7 +403,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private AppEngInternalInventory getPatternInventory() {
-        return asPatternInventory(this.getLogic().getPatternInv());
+        return ((MirrorLogic) this.getLogic()).getActualPatternInventory();
     }
 
     private static AppEngInternalInventory asPatternInventory(Object inventory) {
@@ -423,26 +433,12 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         @Override
-        public LockCraftingMode getCraftingLockedReason() {
-            var master = this.mirrorHost.getMaster();
-            if (master != null) {
-                var masterReason = master.getLogic().getCraftingLockedReason();
-                if (masterReason != LockCraftingMode.NONE) {
-                    return masterReason;
-                }
-            }
-
-            return super.getCraftingLockedReason();
+        public InternalInventory getPatternInv() {
+            return DISABLED_PATTERN_INVENTORY;
         }
 
-        @Override
-        public @Nullable GenericStack getUnlockStack() {
-            var master = this.mirrorHost.getMaster();
-            if (master != null && master.getLogic().getCraftingLockedReason() == LockCraftingMode.LOCK_UNTIL_RESULT) {
-                return master.getLogic().getUnlockStack();
-            }
-
-            return super.getUnlockStack();
+        private AppEngInternalInventory getActualPatternInventory() {
+            return (AppEngInternalInventory) super.getPatternInv();
         }
     }
 }
