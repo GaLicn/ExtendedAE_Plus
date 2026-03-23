@@ -31,7 +31,7 @@
   "item.extendedae_plus.channel_card.owner.bound": "已绑定到: %s",
   "item.extendedae_plus.channel_card.owner.cleared": "已清除绑定",
   "item.extendedae_plus.mirror_pattern_binding_tool.tip.select": "潜行右键主样板供应器：选中主供应器",
-  "item.extendedae_plus.mirror_pattern_binding_tool.tip.bind": "右键镜像样板供应器：绑定到当前选中的主供应器",
+  "item.extendedae_plus.mirror_pattern_binding_tool.tip.bind": "潜行右键镜像样板供应器：绑定到当前选中的主供应器",
   "item.extendedae_plus.mirror_pattern_binding_tool.selected": "当前选中主供应器：(%d, %d, %d)",
   "item.extendedae_plus.mirror_pattern_binding_tool.dimension": "维度：%s",
   "item.extendedae_plus.mirror_pattern_binding_tool.unset": "当前未选中主供应器",
