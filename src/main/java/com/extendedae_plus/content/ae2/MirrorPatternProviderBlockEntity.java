@@ -13,6 +13,7 @@ import appeng.util.inv.AppEngInternalInventory;
 import com.extendedae_plus.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.Registries;
@@ -64,14 +65,14 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             return;
         }
 
-        this.syncOrRebind(false);
+        this.syncBoundMaster();
     }
 
     @Override
     public void onReady() {
         super.onReady();
         if (this.getLevel() instanceof ServerLevel serverLevel) {
-            this.syncOrRebind(true);
+            this.syncBoundMaster();
         }
     }
 
@@ -139,6 +140,34 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return true;
     }
 
+    public boolean bindToMaster(GlobalPos master) {
+        if (!(this.getLevel() instanceof ServerLevel serverLevel)) {
+            return false;
+        }
+
+        if (master.pos().equals(this.getBlockPos()) && master.dimension().equals(serverLevel.dimension())) {
+            return false;
+        }
+
+        var masterLevel = serverLevel.getServer().getLevel(master.dimension());
+        if (masterLevel != null && masterLevel.hasChunkAt(master.pos())) {
+            var blockEntity = masterLevel.getBlockEntity(master.pos());
+            if (isValidMaster(blockEntity)) {
+                return this.syncFromMaster((PatternProviderBlockEntity) blockEntity);
+            }
+            return false;
+        }
+
+        var changed = !Objects.equals(this.masterDimension, master.dimension()) || !Objects.equals(this.masterPos, master.pos());
+        this.masterDimension = master.dimension();
+        this.masterPos = master.pos().immutable();
+        if (changed) {
+            this.saveChanges();
+            this.markForClientUpdate();
+        }
+        return true;
+    }
+
     @Nullable
     public PatternProviderBlockEntity getMaster() {
         if (this.masterDimension == null || this.masterPos == null || !(this.getLevel() instanceof ServerLevel serverLevel)) {
@@ -184,26 +213,16 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master");
     }
 
-    private void syncOrRebind(boolean allowRebind) {
+    private void syncBoundMaster() {
         var master = this.getMaster();
         if (master != null) {
             this.syncFromMaster(master);
             return;
         }
 
-        if (allowRebind || this.hasNoBoundMaster()) {
-            if (this.tryBindToAdjacentMaster()) {
-                return;
-            }
-        }
-
         if (this.shouldClearBrokenBinding()) {
             this.clearMasterBinding(true);
         }
-    }
-
-    private boolean hasNoBoundMaster() {
-        return this.masterDimension == null || this.masterPos == null;
     }
 
     private boolean shouldClearBrokenBinding() {

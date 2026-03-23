@@ -8,7 +8,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -20,26 +19,6 @@ public class MirrorPatternProviderBlock extends PatternProviderBlock {
 
     public MirrorPatternProviderBlock() {
         super();
-    }
-
-    @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        super.setPlacedBy(level, pos, state, placer, stack);
-
-        if (level.isClientSide) {
-            return;
-        }
-
-        var mirror = this.getMirror(level, pos);
-        if (mirror == null) {
-            return;
-        }
-
-        if (mirror.tryBindToAdjacentMaster()) {
-            this.notifyPlayer(placer, mirror.createBoundMessage());
-        } else {
-            this.notifyPlayer(placer, Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master"));
-        }
     }
 
     @Override
@@ -91,11 +70,5 @@ public class MirrorPatternProviderBlock extends PatternProviderBlock {
     private MirrorPatternProviderBlockEntity getMirror(Level level, BlockPos pos) {
         var blockEntity = this.getBlockEntity(level, pos);
         return blockEntity instanceof MirrorPatternProviderBlockEntity mirror ? mirror : null;
-    }
-
-    private void notifyPlayer(@Nullable LivingEntity entity, Component message) {
-        if (entity instanceof Player player) {
-            player.displayClientMessage(message, true);
-        }
     }
 }

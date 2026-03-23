@@ -35,7 +35,8 @@ public final class ModCreativeTabs {
                                 ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get().getDefaultInstance(),
-                                ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance()
+                                ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance(),
+                                ModItems.MIRROR_PATTERN_BINDING_TOOL.get().getDefaultInstance()
                         ).forEach(output::accept);
 
                         // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建

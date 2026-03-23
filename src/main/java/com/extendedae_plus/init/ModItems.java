@@ -6,6 +6,7 @@ import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
+import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -83,6 +84,10 @@ public final class ModItems {
     public static final DeferredItem<Item> MIRROR_PATTERN_PROVIDER = ITEMS.register(
             "mirror_pattern_provider",
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), new Item.Properties())
+    );
+    public static final DeferredItem<MirrorPatternBindingToolItem> MIRROR_PATTERN_BINDING_TOOL = ITEMS.register(
+            "mirror_pattern_binding_tool",
+            () -> new MirrorPatternBindingToolItem(new Item.Properties())
     );
     static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",
