@@ -151,7 +151,7 @@ dependencies {
     compileOnly "curse.maven:framedblocks-441647:6127891"
     compileOnly "curse.maven:advancedae-1084104:6225993"
     compileOnly "curse.maven:functional-storage-556861:6467726"
-    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
     compileOnly "curse.maven:ae2-jei-integration-1074338:5748513"
 
     // runtime test
@@ -194,7 +194,7 @@ dependencies {
             runtimeOnly "curse.maven:cloth-config-348521:5424576"
             break
         case 'jei':
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.21.0.247"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
             runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
             break
     }
