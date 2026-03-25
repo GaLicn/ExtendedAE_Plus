@@ -198,6 +198,8 @@
   "extendedae_plus.message.mapping.delete_cn_required": "请输入要删除的中文名称。",
   "extendedae_plus.message.mapping.delete_success": "已删除 \"%s\" 的映射，共 %d 条。",
   "extendedae_plus.message.mapping.delete_not_found": "未找到 \"%s\" 的映射。",
+  "extendedae_plus.screen.upload.auto_upload_success": "已自动上传到唯一匹配的样板供应器：%s",
+  "extendedae_plus.screen.upload.auto_upload_failed": "自动上传到样板供应器失败：%s",
 
   "extendedae_plus.message.upload.no_pattern": "未找到已编码样板。",
   "extendedae_plus.message.network.invalid": "无法访问 AE 网络。",

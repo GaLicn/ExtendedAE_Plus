@@ -5,6 +5,7 @@ import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -18,38 +19,68 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
             ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "upload_pattern_to_provider"));
 
     public static final StreamCodec<FriendlyByteBuf, UploadEncodedPatternToProviderC2SPacket> STREAM_CODEC = StreamCodec.of(
-            (buf, pkt) -> buf.writeLong(pkt.providerId),
-            buf -> new UploadEncodedPatternToProviderC2SPacket(buf.readLong())
+            (buf, pkt) -> {
+                buf.writeLong(pkt.providerId);
+                buf.writeBoolean(pkt.showStatusMessage);
+                buf.writeUtf(pkt.providerName, 256);
+            },
+            buf -> new UploadEncodedPatternToProviderC2SPacket(buf.readLong(), buf.readBoolean(), buf.readUtf(256))
     );
     private final long providerId;
+    private final boolean showStatusMessage;
+    private final String providerName;
 
     public UploadEncodedPatternToProviderC2SPacket(long providerId) {
+        this(providerId, false, "");
+    }
+
+    public UploadEncodedPatternToProviderC2SPacket(long providerId, boolean showStatusMessage, String providerName) {
         this.providerId = providerId;
+        this.showStatusMessage = showStatusMessage;
+        this.providerName = providerName == null ? "" : providerName;
     }
 
     public static void handle(final UploadEncodedPatternToProviderC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
+            boolean uploaded = false;
 
             // 优先处理 Ctrl+Q pending 上传
             if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
-                if (CtrlQPendingUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId)) {
-                    return;
+                uploaded = CtrlQPendingUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId);
+                if (!uploaded) {
+                    CtrlQPendingUploadUtil.returnPendingCtrlQPatternToInventory(player);
                 }
-                CtrlQPendingUploadUtil.returnPendingCtrlQPatternToInventory(player);
+                sendAutoUploadStatus(player, msg, uploaded);
+                return;
             }
 
-            if (!(player.containerMenu instanceof PatternEncodingTermMenu menu)) return;
-            // 支持两种模式：
-            // 1) providerId >= 0: 访问终端 byId 模式
-            // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId
-            if (msg.providerId >= 0) {
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
-            } else {
-                int index = (int) (-1L - msg.providerId);
-                ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
+            if (player.containerMenu instanceof PatternEncodingTermMenu menu) {
+                // 支持两种模式：
+                // 1) providerId >= 0: 访问终端 byId 模式
+                // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId
+                if (msg.providerId >= 0) {
+                    uploaded = ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
+                } else {
+                    int index = (int) (-1L - msg.providerId);
+                    uploaded = ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProviderByIndex(player, menu, index);
+                }
             }
+            sendAutoUploadStatus(player, msg, uploaded);
         });
+    }
+
+    private static void sendAutoUploadStatus(ServerPlayer player, UploadEncodedPatternToProviderC2SPacket msg, boolean uploaded) {
+        if (player == null || !msg.showStatusMessage) {
+            return;
+        }
+        String providerDisplayName = msg.providerName.isBlank() ? "#" + msg.providerId : msg.providerName;
+        player.sendSystemMessage(Component.translatable(
+                uploaded
+                        ? "extendedae_plus.screen.upload.auto_upload_success"
+                        : "extendedae_plus.screen.upload.auto_upload_failed",
+                providerDisplayName
+        ));
     }
 
     @Override

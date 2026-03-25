@@ -66,6 +66,9 @@ public class ProviderSelectScreen extends Screen {
     private String query = "";
     private boolean needsRefresh = false;
     private int page = 0;
+    private boolean autoUploadRequestedFromProcessingName = false;
+    private boolean autoUploadAttempted = false;
+    private int lastExactMatchCount = 0;
 
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
@@ -78,6 +81,7 @@ public class ProviderSelectScreen extends Screen {
             String recent = ExtendedAEPatternUploadUtil.lastProcessingName;
             if (recent != null && !recent.isBlank()) {
                 this.query = recent;
+                this.autoUploadRequestedFromProcessingName = true;
                 // 用后即清空，避免污染下次
                 ExtendedAEPatternUploadUtil.lastProcessingName = null;
             }
@@ -154,12 +158,14 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private void onChoose(int idx) {
+        this.onChoose(idx, false);
+    }
+
+    private void onChoose(int idx, boolean showStatusMessage) {
         if (idx < 0 || idx >= this.fIds.size()) return;
         long providerId = this.fIds.get(idx);
-        var conn = Minecraft.getInstance().getConnection();
-        if (conn != null) {
-            conn.send(new UploadEncodedPatternToProviderC2SPacket(providerId));
-        }
+        String providerName = this.fNames.get(idx);
+        PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
         this.onClose();
     }
 
@@ -194,6 +200,7 @@ public class ProviderSelectScreen extends Screen {
         this.fNames.clear();
         this.fTotalSlots.clear();
         this.fCount.clear();
+        this.lastExactMatchCount = 0;
         String q = this.query == null ? "" : this.query.trim();
         for (int i = 0; i < this.gIds.size(); i++) {
             String name = this.gNames.get(i);
@@ -202,6 +209,7 @@ public class ProviderSelectScreen extends Screen {
                 this.fNames.add(name);
                 this.fTotalSlots.add(this.gTotalSlots.get(i));
                 this.fCount.add(this.gCount.get(i));
+                this.lastExactMatchCount++;
             }
         }
 
@@ -242,6 +250,17 @@ public class ProviderSelectScreen extends Screen {
         this.fTotalSlots.addAll(sortedSlots);
         this.fCount.clear();
         this.fCount.addAll(sortedCount);
+    }
+
+    private void tryAutoUploadIfUniqueMatch() {
+        if (!this.autoUploadRequestedFromProcessingName || this.autoUploadAttempted) {
+            return;
+        }
+        this.autoUploadAttempted = true;
+        if (this.query == null || this.query.isBlank() || this.lastExactMatchCount != 1 || this.fIds.size() != 1) {
+            return;
+        }
+        this.onChoose(0, true);
     }
 
     @Override
@@ -350,6 +369,8 @@ public class ProviderSelectScreen extends Screen {
                 .bounds(centerX - 40, navY + 30, 80, 20)
                 .build();
         this.addRenderableWidget(close);
+
+        this.tryAutoUploadIfUniqueMatch();
     }
 
     @Override

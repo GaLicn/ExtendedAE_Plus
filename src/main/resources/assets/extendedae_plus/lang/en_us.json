@@ -199,6 +199,8 @@
   "extendedae_plus.message.mapping.delete_cn_required": "Please enter the Chinese name to delete.",
   "extendedae_plus.message.mapping.delete_success": "Deleted %d mapping(s) for \"%s\".",
   "extendedae_plus.message.mapping.delete_not_found": "No mapping found for \"%s\".",
+  "extendedae_plus.screen.upload.auto_upload_success": "Automatically uploaded to the only matching pattern provider: %s",
+  "extendedae_plus.screen.upload.auto_upload_failed": "Automatic upload to the pattern provider failed: %s",
 
   "extendedae_plus.message.upload.no_pattern": "No encoded pattern found.",
   "extendedae_plus.message.network.invalid": "Unable to access AE network.",
