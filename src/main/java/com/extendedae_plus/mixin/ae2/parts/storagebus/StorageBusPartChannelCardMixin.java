@@ -2,15 +2,15 @@ package com.extendedae_plus.mixin.ae2.parts.storagebus;
 
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.parts.storagebus.StorageBusPart;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
-import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
 import net.minecraft.nbt.CompoundTag;
 import java.util.UUID;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * 给 AE2 的存储总线注入频道卡联动：在升级变更时读取频道并更新无线链接。
@@ -63,6 +64,19 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
         }
     }
 
+    @Inject(method = "tickingRequest", at = @At("TAIL"), cancellable = true)
+    private void eap$afterTick(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
+                               CallbackInfoReturnable<TickRateModulation> cir) {
+        if (((appeng.parts.AEBasePart) (Object) this).isClientSide()) {
+            return;
+        }
+
+        this.eap$updateWirelessLink();
+        if (this.eap$shouldKeepTicking() && cir.getReturnValue() == TickRateModulation.SLEEP) {
+            cir.setReturnValue(TickRateModulation.SLOWER);
+        }
+    }
+
     @Override
     public void eap$updateWirelessLink() {
         if (this.eap$link != null) {
@@ -85,6 +99,11 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
     }
 
     @Override
+    public boolean eap$shouldKeepTicking() {
+        return ChannelCardLinkHelper.shouldKeepTicking(this.getUpgrades(), this.eap$link, true);
+    }
+
+    @Override
     @Unique
     public void eap$initializeChannelLink() {
         // 防止重复调用
@@ -94,38 +113,23 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
 
         try {
             IUpgradeInventory inv = this.getUpgrades();
-            long channel = 0L;
-            boolean found = false;
-            UUID owner = null;
-            for (var stack : inv) {
-                if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                    channel = ChannelCardItem.getChannel(stack);
-                    owner = ChannelCardItem.getOwnerUUID(stack);
-                    if (owner == null) {
-                        owner = this.eap$getFallbackOwner();
-                    }
-                    found = true;
-                    break;
-                }
-            }
+            var boundChannel = ChannelCardLinkHelper.findBoundChannel(inv, this::eap$getFallbackOwner);
+            long channel = boundChannel != null ? boundChannel.channel() : 0L;
+            boolean found = boundChannel != null;
+            UUID owner = boundChannel != null ? boundChannel.owner() : null;
 
             // 频道没有变化则跳过
-            boolean sameOwner = (this.eap$lastOwner == null && owner == null)
-                    || (this.eap$lastOwner != null && this.eap$lastOwner.equals(owner));
-            if (this.eap$link != null && this.eap$lastChannel == channel && sameOwner) {
+            if (this.eap$link != null
+                    && ChannelCardLinkHelper.sameTarget(this.eap$lastChannel, this.eap$lastOwner, boundChannel)) {
                 return;
             }
             this.eap$lastChannel = channel;
 
 
             if (!found) {
-                if (this.eap$link != null) {
-                    this.eap$link.setPlacerId(null);
-                    this.eap$link.setFrequency(0L);
-                    this.eap$link.updateStatus();
-                    // 通知客户端状态变化
-                    ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
-                }
+                ChannelCardLinkHelper.disconnect(this.eap$link);
+                // 通知客户端状态变化
+                ((appeng.parts.AEBasePart)(Object)this).getHost().markForUpdate();
                 this.eap$lastChannel = 0L;
                 this.eap$lastOwner = null;
                 return;

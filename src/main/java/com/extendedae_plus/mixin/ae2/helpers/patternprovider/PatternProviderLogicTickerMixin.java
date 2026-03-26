@@ -1,6 +1,7 @@
 package com.extendedae_plus.mixin.ae2.helpers.patternprovider;
 
 import appeng.helpers.patternprovider.PatternProviderLogic;
+import appeng.api.networking.ticking.TickRateModulation;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -41,8 +42,8 @@ public abstract class PatternProviderLogicTickerMixin {
         }
         if (this.this$0 instanceof InterfaceWirelessLinkBridge bridge) {
             bridge.eap$updateWirelessLink();
-            if (bridge.eap$shouldKeepTicking()) {
-                cir.setReturnValue(appeng.api.networking.ticking.TickRateModulation.SLOWER);
+            if (bridge.eap$shouldKeepTicking() && cir.getReturnValue() == TickRateModulation.SLEEP) {
+                cir.setReturnValue(TickRateModulation.SLOWER);
             }
         }
     }

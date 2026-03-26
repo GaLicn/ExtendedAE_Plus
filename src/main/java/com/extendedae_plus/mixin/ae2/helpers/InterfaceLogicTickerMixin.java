@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.helpers;
 
+import appeng.api.networking.ticking.TickRateModulation;
 import appeng.helpers.InterfaceLogic;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import org.spongepowered.asm.mixin.Final;
@@ -32,11 +33,17 @@ public abstract class InterfaceLogicTickerMixin {
         }
     }
 
-    @Inject(method = "tickingRequest", at = @At("TAIL"), remap = false)
+    @Inject(method = "tickingRequest", at = @At("TAIL"), remap = false, cancellable = true)
     private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
                               CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+        if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
+            return;
+        }
         if (this.this$0 instanceof InterfaceWirelessLinkBridge bridge) {
             bridge.eap$updateWirelessLink();
+            if (bridge.eap$shouldKeepTicking() && cir.getReturnValue() == TickRateModulation.SLEEP) {
+                cir.setReturnValue(TickRateModulation.SLOWER);
+            }
         }
     }
 }

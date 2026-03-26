@@ -9,6 +9,7 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
+import appeng.blockentity.AEBaseBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -20,11 +21,11 @@ import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -102,7 +103,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private void eap$compatOnUpgradesChanged() {
         try {
-            this.host.saveChanges();
+            this.eap$compatNotifyHostChanged();
             this.eap$compatLastChannel = -1;
             this.eap$compatLastOwner = null;
             this.eap$compatHasInitialized = false;
@@ -191,7 +192,11 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public void eap$updateWirelessLink() {
         if (this.eap$compatLink != null) {
+            boolean wasConnected = this.eap$compatLink.isConnected();
             this.eap$compatLink.updateStatus();
+            if (wasConnected != this.eap$compatLink.isConnected()) {
+                this.eap$compatNotifyHostChanged();
+            }
         }
     }
 
@@ -239,21 +244,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (this.host.getBlockEntity() == null || this.host.getBlockEntity().getLevel() == null || this.host.getBlockEntity().getLevel().isClientSide) {
                 return false;
             }
-            // 未初始化：需要继续tick直到初始化完成
-            if (!this.eap$compatHasInitialized) {
-                return true;
-            }
-            // 有频道卡但链接未连上：保持tick
-            IUpgradeInventory upgrades = this.eap$compatGetEffectiveUpgrades();
-            if (upgrades != null && this.eap$hasChannelCard(upgrades)) {
-                if (this.eap$compatLink == null || !this.eap$compatLink.isConnected()) {
-                    return true;
-                }
-            }
-            // 链接存在但未连接：保持tick
-            if (this.eap$compatLink != null && !this.eap$compatLink.isConnected()) {
-                return true;
-            }
+            return ChannelCardLinkHelper.shouldKeepTicking(
+                    this.eap$compatGetEffectiveUpgrades(),
+                    this.eap$compatLink,
+                    this.eap$compatHasInitialized);
         } catch (Throwable ignored) {
         }
         return false;
@@ -300,34 +294,20 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 }
             }
 
-            if (upgrades != null) {
-                for (ItemStack stack : upgrades) {
-                    if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                        channel = ChannelCardItem.getChannel(stack);
-                        owner = ChannelCardItem.getOwnerUUID(stack);
-                        if (owner == null) {
-                            owner = this.eap$getFallbackOwner();
-                        }
-                        found = true;
-                        break;
-                    }
-                }
+            var boundChannel = ChannelCardLinkHelper.findBoundChannel(upgrades, this::eap$getFallbackOwner);
+            if (boundChannel != null) {
+                channel = boundChannel.channel();
+                owner = boundChannel.owner();
+                found = true;
             }
 
             if (!found) {
                 this.eap$compatSyncVirtualCraftingState();
-                if (this.eap$compatLink != null) {
-                    this.eap$compatLink.setPlacerId(null);
-                    this.eap$compatLink.setFrequency(0L);
-                    this.eap$compatLink.updateStatus();
-                }
+                ChannelCardLinkHelper.disconnect(this.eap$compatLink);
                 this.eap$compatLastChannel = 0L;
                 this.eap$compatLastOwner = null;
                 this.eap$compatHasInitialized = true;
-                try {
-                    this.host.saveChanges();
-                } catch (Throwable ignored) {
-                }
+                this.eap$compatNotifyHostChanged();
                 // 唤醒节点，加速 AE2 感知到连接断开
                 this.mainNode.ifPresent((grid, node) -> {
                     try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
@@ -348,9 +328,8 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                 return;
             }
 
-            boolean sameOwner = (this.eap$compatLastOwner == null && owner == null)
-                    || (this.eap$compatLastOwner != null && this.eap$compatLastOwner.equals(owner));
-            if (this.eap$compatLink != null && this.eap$compatLastChannel == channel && sameOwner) {
+            if (this.eap$compatLink != null
+                    && ChannelCardLinkHelper.sameTarget(this.eap$compatLastChannel, this.eap$compatLastOwner, boundChannel)) {
                 if (this.eap$compatLink.isConnected()) {
                     this.eap$compatHasInitialized = true;
                 }
@@ -367,10 +346,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             this.eap$compatLink.updateStatus();
             this.eap$compatLastChannel = channel; // 记录当前频道
             this.eap$compatLastOwner = owner;
-            try {
-                this.host.saveChanges();
-            } catch (Throwable ignored) {
-            }
+            this.eap$compatNotifyHostChanged();
             this.mainNode.ifPresent((grid, node) -> {
                 try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
             });
@@ -399,10 +375,25 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         return null;
     }
 
+    @Unique
+    private void eap$compatNotifyHostChanged() {
+        try {
+            this.host.saveChanges();
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            if (this.host.getBlockEntity() instanceof AEBaseBlockEntity blockEntity) {
+                blockEntity.markForUpdate();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     // CompatUpgradeProvider 实现：仅在未安装 appflux 时由我们提供升级槽
     @Unique
     private boolean eap$hasChannelCard(IUpgradeInventory inventory) {
-        return this.eap$compatInventoryContains(inventory, ModItems.CHANNEL_CARD.get());
+        return ChannelCardLinkHelper.hasChannelCard(inventory);
     }
 
     /**

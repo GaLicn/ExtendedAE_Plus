@@ -6,6 +6,7 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import com.extendedae_plus.api.bridge.PatternProviderLogicAppfluxBridge;
+import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
@@ -113,10 +114,10 @@ public abstract class PatternProviderLogicUpgradesMixin implements PatternProvid
             this.host.saveChanges();
             try {
                 ((PatternProviderLogicAppfluxAccessor) (Object) this).eap$invokeAppfluxUpgradesChanged();
-                return;
             } catch (Throwable ignored) {
             }
-            if ((Object) this instanceof com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge bridge) {
+
+            if ((Object) this instanceof PatternProviderLogicUpgradeCompatBridge bridge) {
                 bridge.eap$onCompatUpgradesChangedHook();
             }
         } catch (Throwable t) {

@@ -6,9 +6,7 @@ import appeng.helpers.InterfaceLogicHost;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.InterfaceNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
-import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.items.materials.ChannelCardItem;
-import net.minecraft.world.item.ItemStack;
+import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
 import java.util.UUID;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -119,6 +117,11 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     }
 
     @Override
+    public boolean eap$shouldKeepTicking() {
+        return ChannelCardLinkHelper.shouldKeepTicking(this.getUpgrades(), this.eap$link, this.eap$hasInitialized);
+    }
+
+    @Override
     @Unique
     public void eap$initializeChannelLink() {
         // 仅在服务端执行，避免在渲染线程/客户端触发任何初始化路径
@@ -137,28 +140,14 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
         }
 
         try {
-            long channel = 0L;
-            boolean found = false;
-            UUID owner = null;
-            for (ItemStack stack : this.getUpgrades()) {
-                if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                    channel = ChannelCardItem.getChannel(stack);
-                    owner = ChannelCardItem.getOwnerUUID(stack);
-                    if (owner == null) {
-                        owner = this.eap$getFallbackOwner();
-                    }
-                    found = true;
-                    break;
-                }
-            }
+            var boundChannel = ChannelCardLinkHelper.findBoundChannel(this.getUpgrades(), this::eap$getFallbackOwner);
+            long channel = boundChannel != null ? boundChannel.channel() : 0L;
+            boolean found = boundChannel != null;
+            UUID owner = boundChannel != null ? boundChannel.owner() : null;
 
             if (!found) {
                 // 无频道卡：断开并视为初始化完成
-                if (this.eap$link != null) {
-                    this.eap$link.setPlacerId(null);
-                    this.eap$link.setFrequency(0L);
-                    this.eap$link.updateStatus();
-                }
+                ChannelCardLinkHelper.disconnect(this.eap$link);
                 this.eap$hasInitialized = true;
                 this.eap$lastChannel = 0L;
                 this.eap$lastOwner = null;
@@ -176,9 +165,8 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
                 return;
             }
 
-            boolean sameOwner = (this.eap$lastOwner == null && owner == null)
-                    || (this.eap$lastOwner != null && this.eap$lastOwner.equals(owner));
-            if (this.eap$link != null && this.eap$lastChannel == channel && sameOwner) {
+            if (this.eap$link != null
+                    && ChannelCardLinkHelper.sameTarget(this.eap$lastChannel, this.eap$lastOwner, boundChannel)) {
                 this.eap$hasInitialized = this.eap$link.isConnected();
                 return;
             }
