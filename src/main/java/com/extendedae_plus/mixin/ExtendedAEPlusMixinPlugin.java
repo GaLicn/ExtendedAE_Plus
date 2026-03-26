@@ -38,6 +38,10 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("lu.kolja.expandedae.ExpandedAE");
 	}
 
+	private static boolean isAppfluxPresent() {
+		return isClassPresent("com.glodblock.github.appflux.AppFlux");
+	}
+
 	@Override
 	public void onLoad(String mixinPackage) { }
 
@@ -46,6 +50,9 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+		if (!isAppfluxPresent() && mixinClassName.startsWith("com.extendedae_plus.mixin.appflux.")) {
+			return false;
+		}
 		if (!isJeiPresent()) {
 			// Disable all JEI package mixins and any mixins that reference JEI-only helpers
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.jei")) return false;

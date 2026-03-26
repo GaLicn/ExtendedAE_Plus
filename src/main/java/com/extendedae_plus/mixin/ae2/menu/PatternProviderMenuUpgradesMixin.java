@@ -7,6 +7,7 @@ import appeng.menu.ToolboxMenu;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.IUpgradableMenu;
+import com.extendedae_plus.api.bridge.PatternProviderLogicAppfluxBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -31,9 +32,19 @@ public abstract class PatternProviderMenuUpgradesMixin extends AEBaseMenu implem
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V",
+            at = @At(value = "INVOKE", target = "Lappeng/menu/implementations/PatternProviderMenu;createPlayerInventorySlots(Lnet/minecraft/world/entity/player/Inventory;)V"),
+            remap = false)
+    private void eap$ensureAppfluxUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
+        if (UpgradeSlotCompat.shouldListenToAppfluxUpgrades()
+                && (Object) this.logic instanceof PatternProviderLogicAppfluxBridge bridge) {
+            bridge.eap$ensureAppfluxUpgradeSlots();
+        }
+    }
+
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/patternprovider/PatternProviderLogicHost;)V",
             at = @At("TAIL"))
     private void eap$initUpgrades(MenuType<?> menuType, int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
             this.eap$toolbox = new ToolboxMenu(this);
             this.setupUpgrades(((CompatUpgradeProvider) this.logic).eap$getCompatUpgrades());
         }

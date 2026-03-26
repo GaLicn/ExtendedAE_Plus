@@ -23,6 +23,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
+import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -41,7 +42,7 @@ import java.util.UUID;
 
 /**
  * 样板供应器频道卡兼容实现：
- * - 未安装 appflux 时，提供 1 个升级槽并读取频道卡；
+ * - 未安装 appflux 时，提供 2 个升级槽并读取频道卡；
  * - 安装 appflux 时，优先从 appflux 提供的升级槽读取频道卡；
  * - 建立到无线主站的网格连接。
  */
@@ -85,13 +86,12 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             at = @At("TAIL"))
     private void eap$compatInit(IManagedGridNode mainNode, PatternProviderLogicHost host, int size, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                // 未安装AppliedFlux，我们需要提供升级槽
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
-                        host.getTerminalIcon().getItem(), 2, this::eap$compatOnUpgradesChanged);
-            } else {
-                // 安装了AppliedFlux，我们不提供升级槽，保留空的兼容槽用于备用
-                // AppFlux 的升级槽变更会通过 PatternProviderLogicUpgradesMixin 的 bridge 回调到我们
+                        host.getTerminalIcon().getItem(),
+                        UpgradeSlotCompat.getPatternProviderLocalUpgradeSlots(),
+                        this::eap$compatOnUpgradesChanged);
+            } else if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
                 this.eap$compatUpgrades = UpgradeInventories.empty();
             }
         } catch (Throwable t) {
@@ -113,20 +113,15 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         }
     }
 
-    /**
-     * 实现 PatternProviderLogicUpgradeCompatBridge 接口
-     * 由 PatternProviderLogicUpgradesMixin 在升级槽变更时调用
-     */
     @Override
     public void eap$onCompatUpgradesChangedHook() {
         this.eap$compatOnUpgradesChanged();
     }
 
-
     @Inject(method = "writeToNBT", at = @At("TAIL"))
     private void eap$compatWrite(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades.writeToNBT(tag, "compat_upgrades", registries);
             }
         } catch (Throwable t) {
@@ -137,7 +132,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Inject(method = "readFromNBT", at = @At("TAIL"))
     private void eap$compatRead(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades", registries);
             }
             // 无论哪种模式都重新初始化
@@ -153,7 +148,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Inject(method = "addDrops", at = @At("TAIL"))
     private void eap$compatDrops(List<ItemStack> drops, CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 for (var s : this.eap$compatUpgrades) {
                     if (!s.isEmpty()) drops.add(s);
                 }
@@ -166,7 +161,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Inject(method = "clearContent", at = @At("TAIL"))
     private void eap$compatClear(CallbackInfo ci) {
         try {
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades.clear();
             }
         } catch (Throwable t) {
@@ -282,33 +277,15 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             boolean found = false;
             UUID owner = null;
 
-            IUpgradeInventory upgrades = null;
-
-            // 优先尝试从AppliedFlux获取升级槽（如果安装了的话）
-            if (!UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                // 安装了appflux：优先使用appflux的升级槽
-                try {
-                    // 更安全的方式获取AppliedFlux升级槽
-                    upgrades = this.eap$getAppliedFluxUpgrades();
-                    if (upgrades != null) {
-                    } else {
-                        ExtendedAELogger.LOGGER.warn("[样板供应器] 无法获取 appflux 升级槽，回退到兼容槽");
-                        upgrades = this.eap$compatUpgrades;
-                    }
-                } catch (Throwable t) {
-                    ExtendedAELogger.LOGGER.error("[样板供应器] 获取 appflux 升级槽失败，回退到兼容槽", t);
-                    upgrades = this.eap$compatUpgrades;
-                }
-            } else {
-                // 未安装appflux：使用我们的兼容升级槽
+            IUpgradeInventory upgrades = UpgradeSlotCompat.shouldListenToAppfluxUpgrades()
+                    ? this.eap$getAppliedFluxUpgrades()
+                    : this.eap$compatUpgrades;
+            if (upgrades == null) {
                 upgrades = this.eap$compatUpgrades;
             }
 
-            // 双重保险：如果主要方式失败，尝试备用方式
             if (upgrades == null || !this.eap$hasChannelCard(upgrades)) {
-
-                if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
-                    // 如果我们的槽无频道卡，尝试检查是否有AppliedFlux的槽
+                if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                     try {
                         IUpgradeInventory backupUpgrades = this.eap$getAppliedFluxUpgrades();
                         if (backupUpgrades != null && this.eap$hasChannelCard(backupUpgrades)) {
@@ -317,7 +294,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                     } catch (Throwable t) {
                     }
                 } else {
-                    // 如果AppliedFlux的槽无频道卡，尝试我们的兼容槽
                     if (this.eap$compatUpgrades != null && this.eap$hasChannelCard(this.eap$compatUpgrades)) {
                         upgrades = this.eap$compatUpgrades;
                     }
@@ -434,21 +410,23 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
      */
     @Unique
     private IUpgradeInventory eap$getAppliedFluxUpgrades() {
+        if (!UpgradeSlotCompat.shouldListenToAppfluxUpgrades()) {
+            return null;
+        }
+
         try {
-            
-            // 检查当前对象是否实现了IUpgradeableObject接口
-            if (this instanceof IUpgradeableObject upgradeableObject) {
+            if ((Object) this instanceof IUpgradeableObject upgradeableObject) {
                 IUpgradeInventory upgrades = upgradeableObject.getUpgrades();
-                
-                // 确保这不是我们自己的兼容升级槽
                 if (upgrades != null && upgrades != this.eap$compatUpgrades) {
                     return upgrades;
-                } else {
                 }
-            } else {
             }
-        } catch (Throwable t) {
-            ExtendedAELogger.LOGGER.error("[样板供应器] 获取AppliedFlux升级槽时出错", t);
+
+            IUpgradeInventory upgrades = ((PatternProviderLogicAppfluxAccessor) (Object) this).eap$getAppfluxUpgrades();
+            if (upgrades != null && upgrades != this.eap$compatUpgrades) {
+                return upgrades;
+            }
+        } catch (Throwable ignored) {
         }
         return null;
     }
@@ -547,7 +525,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private IUpgradeInventory eap$compatGetEffectiveUpgrades() {
         IUpgradeInventory upgrades;
-        if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+        if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
             upgrades = this.eap$compatUpgrades;
         } else {
             upgrades = this.eap$getAppliedFluxUpgrades();

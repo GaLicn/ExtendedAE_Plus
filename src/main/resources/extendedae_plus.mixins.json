@@ -53,6 +53,7 @@
     "ae2.parts.automation.IOBusPartChannelCardMixin",
     "ae2.parts.storagebus.StorageBusPartChannelCardMixin",
     "ae2WTlib.ContainerUWirelessExPatternTerminalMixin",
+    "appflux.accessor.PatternProviderLogicAppfluxAccessor",
     "extendedae.accessor.TileAssemblerMatrixCrafterAccessor",
     "extendedae.accessor.TileAssemblerMatrixPatternAccessor",
     "extendedae.common.PartExPatternProviderMixin",

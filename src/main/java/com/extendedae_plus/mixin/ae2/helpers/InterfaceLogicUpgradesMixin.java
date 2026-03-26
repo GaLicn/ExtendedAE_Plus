@@ -56,7 +56,7 @@ public abstract class InterfaceLogicUpgradesMixin implements CompatUpgradeProvid
             this.upgrades = UpgradeInventories.forMachine(is, targetSlots, this::eap$onUpgradesChanged);
             
             // 设置兼容升级槽
-            if (UpgradeSlotCompat.shouldEnableUpgradeSlots()) {
+            if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades = this.upgrades;
             }
         }
