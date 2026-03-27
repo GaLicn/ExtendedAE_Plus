@@ -1,6 +1,7 @@
 package com.extendedae_plus.ae.wireless;
 
 import appeng.api.networking.GridHelper;
+import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
 import appeng.me.service.helpers.ConnectionWrapper;
 import net.minecraft.resources.ResourceKey;
@@ -88,14 +89,62 @@ public class LabelLink {
     }
 
     public void onUnloadOrRemove() {
+        this.target = null;
         destroyConnection();
     }
 
     private void destroyConnection() {
         var current = connection.getConnection();
         if (current != null) {
+            var a = current.a();
+            var b = current.b();
             current.destroy();
+            try {
+                if (a != null && a.getGrid() != null) {
+                    a.getGrid().getTickManager().wakeDevice(a);
+                }
+            } catch (Throwable ignored) {}
+            try {
+                if (b != null && b.getGrid() != null) {
+                    b.getGrid().getTickManager().wakeDevice(b);
+                }
+            } catch (Throwable ignored) {}
             connection.setConnection(null);
+        } else {
+            try {
+                IGridNode hostNode = this.host.getGridNode();
+                IGridNode targetNode = this.target == null ? null : this.target.node();
+                if (hostNode != null && targetNode != null) {
+                    IGridConnection existing = this.findExistingConnection(hostNode, targetNode);
+                    if (existing != null) {
+                        existing.destroy();
+                        try {
+                            if (hostNode.getGrid() != null) {
+                                hostNode.getGrid().getTickManager().wakeDevice(hostNode);
+                            }
+                        } catch (Throwable ignored) {}
+                        try {
+                            if (targetNode.getGrid() != null) {
+                                targetNode.getGrid().getTickManager().wakeDevice(targetNode);
+                            }
+                        } catch (Throwable ignored) {}
+                    }
+                }
+            } catch (Throwable ignored) {}
         }
+    }
+
+    @Nullable
+    private IGridConnection findExistingConnection(IGridNode a, IGridNode b) {
+        try {
+            for (IGridConnection gc : a.getConnections()) {
+                var ga = gc.a();
+                var gb = gc.b();
+                if ((ga == a || gb == a) && (ga == b || gb == b)) {
+                    return gc;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return null;
     }
 }

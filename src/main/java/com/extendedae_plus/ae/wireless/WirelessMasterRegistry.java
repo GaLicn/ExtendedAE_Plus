@@ -85,6 +85,10 @@ public final class WirelessMasterRegistry {
         return ref == null ? null : ref.get();
     }
 
+    public static synchronized void clear() {
+        MASTERS.clear();
+    }
+
     private static void cleanupIfCleared(Key key) {
         var ref = MASTERS.get(key);
         if (ref != null && ref.get() == null) {

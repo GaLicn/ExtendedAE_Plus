@@ -8,6 +8,7 @@ import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.util.AECableType;
 import appeng.blockentity.AEBaseBlockEntity;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.LabelLink;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
@@ -194,25 +195,49 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
     }
 
     public void onRemoved() {
+        cleanupForRemoval();
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        cleanupForRemoval();
+        super.onChunkUnloaded();
+    }
+
+    @Override
+    public void setRemoved() {
+        cleanupForRemoval();
+        super.setRemoved();
+    }
+
+    private void cleanupForRemoval() {
+        if (this.beingRemoved) {
+            return;
+        }
+
         this.beingRemoved = true;
-        labelLink.onUnloadOrRemove();
+        this.labelLink.onUnloadOrRemove();
+
         ServerLevel sl = getServerLevel();
         if (sl != null) {
             LabelNetworkRegistry.get(sl).unregister(this);
         }
-        if (managedNode != null) {
-            managedNode.destroy();
+
+        if (this.managedNode != null) {
+            this.managedNode.destroy();
         }
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, LabeledWirelessTransceiverBlockEntity be) {
         if (!(level instanceof ServerLevel)) return;
+        if (ExtendedAEPlus.isServerStopping()) return;
         be.labelLink.updateStatus();
         be.updateState();
     }
 
     private void updateState() {
         if (this.level == null || this.level.isClientSide) return;
+        if (ExtendedAEPlus.isServerStopping()) return;
         if (this.beingRemoved || this.isRemoved()) return;
         BlockState currentState = this.getBlockState();
         if (!(currentState.getBlock() instanceof LabeledWirelessTransceiverBlock)) {
@@ -307,15 +332,12 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         }
         @Override
         public void onStateChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node, State state) {
-            host.updateState();
         }
         @Override
         public void onInWorldConnectionChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {
-            host.updateState();
         }
         @Override
         public void onGridChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {
-            host.updateState();
         }
         @Override
         public void onOwnerChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {}

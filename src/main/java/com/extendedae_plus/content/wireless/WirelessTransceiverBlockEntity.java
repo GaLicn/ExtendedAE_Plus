@@ -42,6 +42,8 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     @Nullable
     private String placerName; // 放置者名称，用于显示
 
+    private boolean beingRemoved = false;
+
     private WirelessMasterLink masterLink;
     private WirelessSlaveLink slaveLink;
 
@@ -247,11 +249,33 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     void onRemoved() {
+        cleanupForRemoval();
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        cleanupForRemoval();
+        super.onChunkUnloaded();
+    }
+
+    @Override
+    public void setRemoved() {
+        cleanupForRemoval();
+        super.setRemoved();
+    }
+
+    private void cleanupForRemoval() {
+        if (this.beingRemoved) {
+            return;
+        }
+
+        this.beingRemoved = true;
         if (this.masterMode) {
             this.masterLink.onUnloadOrRemove();
         } else {
             this.slaveLink.onUnloadOrRemove();
         }
+
         if (this.managedNode != null) {
             this.managedNode.destroy();
         }

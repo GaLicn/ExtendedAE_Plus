@@ -8,6 +8,8 @@ import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
+import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
@@ -29,6 +31,7 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -42,6 +45,7 @@ public class ExtendedAEPlus {
     private static InfinityStorageManager storageManager;
     @Nullable
     private static MinecraftServer storageManagerServer;
+    private static volatile boolean serverStopping;
 
     public ExtendedAEPlus(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
@@ -60,6 +64,7 @@ public class ExtendedAEPlus {
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
@@ -72,15 +77,27 @@ public class ExtendedAEPlus {
     }
 
     private static void onServerStarted(ServerStartedEvent event) {
+        serverStopping = false;
         storageManagerServer = event.getServer();
         storageManager = InfinityStorageManager.getInstance(event.getServer());
     }
 
+    private static void onServerStopping(ServerStoppingEvent event) {
+        serverStopping = true;
+        LabelNetworkRegistry.get(event.getServer()).shutdownAllVirtualNodes();
+        WirelessMasterRegistry.clear();
+    }
+
     private static void onServerStopped(ServerStoppedEvent event) {
+        serverStopping = false;
         if (storageManagerServer == event.getServer()) {
             storageManagerServer = null;
             storageManager = null;
         }
+    }
+
+    public static boolean isServerStopping() {
+        return serverStopping;
     }
 
     @Nullable

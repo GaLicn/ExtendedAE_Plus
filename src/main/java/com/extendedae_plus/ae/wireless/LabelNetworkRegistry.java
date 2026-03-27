@@ -111,8 +111,17 @@ public class LabelNetworkRegistry extends SavedData {
         BlockPos pos = endpoint.getBlockPos();
         for (LabelNetwork net : networks.values()) {
             net.endpoints.removeIf(ref -> ref.matches(dimKey, pos));
+            if (net.endpoints.isEmpty()) {
+                net.destroyVirtualNode();
+            }
         }
         setDirty();
+    }
+
+    public synchronized void shutdownAllVirtualNodes() {
+        for (LabelNetwork net : networks.values()) {
+            net.destroyVirtualNode();
+        }
     }
 
     public synchronized LabelNetwork getNetwork(ServerLevel level, String rawLabel, @Nullable UUID placerId) {
