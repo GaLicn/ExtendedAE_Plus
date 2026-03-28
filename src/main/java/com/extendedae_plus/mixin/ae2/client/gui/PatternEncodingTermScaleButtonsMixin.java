@@ -27,6 +27,12 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
     @Unique
     private static final ResourceLocation EAP$SCALE_BUTTON_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/beizeng.png");
+    @Unique
+    private static final ResourceLocation EAP$SWAP_OUTPUT_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/zhu_fu_qie_huan.png");
+    @Unique
+    private static final ResourceLocation EAP$RESTORE_RATIO_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "textures/gui/huanyuan.png");
 
     @Unique
     private ScaledTextureButton eap$mul2Button;
@@ -40,6 +46,10 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
     private ScaledTextureButton eap$div3Button;
     @Unique
     private ScaledTextureButton eap$div5Button;
+    @Unique
+    private ScaledTextureButton eap$swapOutputsButton;
+    @Unique
+    private ScaledTextureButton eap$restoreRatioButton;
 
     @Inject(method = "init", at = @At("TAIL"), remap = false)
     private void eap$initScaleButtons(CallbackInfo ci) {
@@ -60,6 +70,16 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
                     ScaleEncodingPatternC2SPacket.Operation.DIV3);
             this.eap$div5Button = eap$createScaleButton(32, 16, "/5",
                     ScaleEncodingPatternC2SPacket.Operation.DIV5);
+            this.eap$swapOutputsButton = eap$createStandaloneButton(
+                    EAP$SWAP_OUTPUT_TEXTURE,
+                    "主副切换",
+                    ScaleEncodingPatternC2SPacket.Operation.SWAP_OUTPUTS
+            );
+            this.eap$restoreRatioButton = eap$createStandaloneButton(
+                    EAP$RESTORE_RATIO_TEXTURE,
+                    "恢复比例",
+                    ScaleEncodingPatternC2SPacket.Operation.RESTORE_RATIO
+            );
         }
 
         eap$ensureAdded(this.eap$mul2Button);
@@ -68,6 +88,8 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
         eap$ensureAdded(this.eap$div2Button);
         eap$ensureAdded(this.eap$div3Button);
         eap$ensureAdded(this.eap$div5Button);
+        eap$ensureAdded(this.eap$swapOutputsButton);
+        eap$ensureAdded(this.eap$restoreRatioButton);
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
@@ -85,6 +107,8 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
         eap$ensureAdded(this.eap$div2Button);
         eap$ensureAdded(this.eap$div3Button);
         eap$ensureAdded(this.eap$div5Button);
+        eap$ensureAdded(this.eap$swapOutputsButton);
+        eap$ensureAdded(this.eap$restoreRatioButton);
 
         boolean visible = screen.getMenu().getMode() == EncodingMode.PROCESSING;
         this.eap$mul2Button.setVisibility(visible);
@@ -93,6 +117,8 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
         this.eap$div2Button.setVisibility(visible);
         this.eap$div3Button.setVisibility(visible);
         this.eap$div5Button.setVisibility(visible);
+        this.eap$swapOutputsButton.setVisibility(visible);
+        this.eap$restoreRatioButton.setVisibility(visible);
 
         if (!visible) {
             return;
@@ -108,6 +134,8 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
         eap$placeButton(this.eap$mul2Button, "cheng_2", bounds);
         eap$placeButton(this.eap$mul3Button, "cheng_3", bounds);
         eap$placeButton(this.eap$mul5Button, "cheng_5", bounds);
+        eap$placeButton(this.eap$swapOutputsButton, "zhu_fu_qie_huan", bounds);
+        eap$placeButton(this.eap$restoreRatioButton, "huan_yuan_mo_ren", bounds);
     }
 
     @Unique
@@ -119,6 +147,23 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
                 32,
                 srcX,
                 srcY,
+                16,
+                16,
+                0.375f,
+                Component.literal(tooltipText),
+                btn -> PacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op))
+        );
+    }
+
+    @Unique
+    private ScaledTextureButton eap$createStandaloneButton(ResourceLocation texture, String tooltipText,
+            ScaleEncodingPatternC2SPacket.Operation op) {
+        return new ScaledTextureButton(
+                texture,
+                16,
+                16,
+                0,
+                0,
                 16,
                 16,
                 0.375f,

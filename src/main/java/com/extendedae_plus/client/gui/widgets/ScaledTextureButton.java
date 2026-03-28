@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class ScaledTextureButton extends Button {
+    private final OnPress delegateOnPress;
     private final ResourceLocation texture;
     private final int textureWidth;
     private final int textureHeight;
@@ -22,7 +23,9 @@ public class ScaledTextureButton extends Button {
             int srcX, int srcY, int srcWidth, int srcHeight, float scale,
             Component tooltipText, OnPress onPress) {
         super(0, 0, Math.round(srcWidth * scale), Math.round(srcHeight * scale),
-                Component.empty(), onPress, DEFAULT_NARRATION);
+                Component.empty(), btn -> {
+                }, DEFAULT_NARRATION);
+        this.delegateOnPress = onPress;
         this.texture = texture;
         this.textureWidth = textureWidth;
         this.textureHeight = textureHeight;
@@ -42,6 +45,12 @@ public class ScaledTextureButton extends Button {
     }
 
     @Override
+    public void onPress() {
+        this.delegateOnPress.onPress(this);
+        this.setFocused(false);
+    }
+
+    @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (!this.visible) {
             return;
@@ -51,18 +60,10 @@ public class ScaledTextureButton extends Button {
         this.height = Math.round(this.srcHeight * this.scale);
 
         int yOffset = this.isHovered() ? 1 : 0;
-        Icon bgIcon = isHovered() ? Icon.TOOLBAR_BUTTON_BACKGROUND_HOVER
-                : isFocused() ? Icon.TOOLBAR_BUTTON_BACKGROUND_FOCUS : Icon.TOOLBAR_BUTTON_BACKGROUND;
+        Icon bgIcon = isHovered() ? Icon.TOOLBAR_BUTTON_BACKGROUND_HOVER : Icon.TOOLBAR_BUTTON_BACKGROUND;
 
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
-
-        if (isFocused()) {
-            guiGraphics.fill(getX() - 1, getY() - 1, getX() + width + 1, getY(), 0xFFFFFFFF);
-            guiGraphics.fill(getX() - 1, getY(), getX(), getY() + height, 0xFFFFFFFF);
-            guiGraphics.fill(getX() + width, getY(), getX() + width + 1, getY() + height, 0xFFFFFFFF);
-            guiGraphics.fill(getX() - 1, getY() + height, getX() + width + 1, getY() + height + 1, 0xFFFFFFFF);
-        }
 
         var pose = guiGraphics.pose();
         pose.pushPose();

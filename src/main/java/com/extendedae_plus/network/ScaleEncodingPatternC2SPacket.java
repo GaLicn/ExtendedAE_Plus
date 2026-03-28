@@ -2,6 +2,7 @@ package com.extendedae_plus.network;
 
 import appeng.api.stacks.GenericStack;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.menu.slot.FakeSlot;
 import appeng.parts.encoding.EncodingMode;
 import appeng.util.ConfigInventory;
 import com.extendedae_plus.ExtendedAEPlus;
@@ -15,7 +16,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class ScaleEncodingPatternC2SPacket implements CustomPacketPayload {
     public enum Operation {
-        MUL2, DIV2, MUL3, DIV3, MUL5, DIV5
+        MUL2, DIV2, MUL3, DIV3, MUL5, DIV5, SWAP_OUTPUTS, RESTORE_RATIO
     }
 
     public static final Type<ScaleEncodingPatternC2SPacket> TYPE = new Type<>(
@@ -49,10 +50,32 @@ public class ScaleEncodingPatternC2SPacket implements CustomPacketPayload {
                 return;
             }
 
+            if (msg.op == Operation.SWAP_OUTPUTS) {
+                rotateProcessingOutputs(menu);
+                menu.broadcastChanges();
+                return;
+            }
+
+            if (msg.op == Operation.RESTORE_RATIO) {
+                var accessor = (PatternEncodingTermMenuAccessor) (Object) menu;
+                long gcd = computeSharedGcd(accessor.eap$getEncodedInputsInv(), accessor.eap$getEncodedOutputsInv());
+                if (gcd <= 1L) {
+                    return;
+                }
+
+                var reducedOutputs = reduceInventory(accessor.eap$getEncodedOutputsInv(), gcd);
+                var reducedInputs = reduceInventory(accessor.eap$getEncodedInputsInv(), gcd);
+                applyScaled(accessor.eap$getEncodedOutputsInv(), reducedOutputs);
+                applyScaled(accessor.eap$getEncodedInputsInv(), reducedInputs);
+                menu.broadcastChanges();
+                return;
+            }
+
             int scale = switch (msg.op) {
                 case MUL2, DIV2 -> 2;
                 case MUL3, DIV3 -> 3;
                 case MUL5, DIV5 -> 5;
+                default -> 1;
             };
             boolean divide = switch (msg.op) {
                 case DIV2, DIV3, DIV5 -> true;
@@ -108,6 +131,87 @@ public class ScaleEncodingPatternC2SPacket implements CustomPacketPayload {
             if (scaledStacks[slot] != null) {
                 inventory.setStack(slot, scaledStacks[slot]);
             }
+        }
+    }
+
+    private static GenericStack[] reduceInventory(ConfigInventory inventory, long gcd) {
+        var result = new GenericStack[inventory.size()];
+        for (int slot = 0; slot < inventory.size(); slot++) {
+            GenericStack stack = inventory.getStack(slot);
+            if (stack == null) {
+                continue;
+            }
+            result[slot] = new GenericStack(stack.what(), stack.amount() / gcd);
+        }
+        return result;
+    }
+
+    private static long computeSharedGcd(ConfigInventory inputs, ConfigInventory outputs) {
+        long gcd = 0L;
+        gcd = updateGcd(gcd, inputs);
+        gcd = updateGcd(gcd, outputs);
+        return gcd;
+    }
+
+    private static long updateGcd(long currentGcd, ConfigInventory inventory) {
+        long gcd = currentGcd;
+        for (int slot = 0; slot < inventory.size(); slot++) {
+            GenericStack stack = inventory.getStack(slot);
+            if (stack == null || stack.amount() <= 0L) {
+                continue;
+            }
+            gcd = gcd == 0L ? stack.amount() : gcd(gcd, stack.amount());
+            if (gcd == 1L) {
+                return 1L;
+            }
+        }
+        return gcd;
+    }
+
+    private static long gcd(long a, long b) {
+        long left = Math.abs(a);
+        long right = Math.abs(b);
+        while (right != 0L) {
+            long temp = left % right;
+            left = right;
+            right = temp;
+        }
+        return left;
+    }
+
+    private static void rotateProcessingOutputs(PatternEncodingTermMenu menu) {
+        FakeSlot[] outputSlots = menu.getProcessingOutputSlots();
+        int nonEmptyCount = 0;
+        for (FakeSlot slot : outputSlots) {
+            if (!slot.getItem().isEmpty()) {
+                nonEmptyCount++;
+            }
+        }
+        if (nonEmptyCount < 2) {
+            return;
+        }
+
+        var newOutputs = new net.minecraft.world.item.ItemStack[outputSlots.length];
+        for (int i = 0; i < outputSlots.length; i++) {
+            newOutputs[i] = outputSlots[i].getItem().copy();
+        }
+
+        for (int i = 0; i < outputSlots.length; i++) {
+            if (outputSlots[i].getItem().isEmpty()) {
+                continue;
+            }
+
+            for (int j = 1; j < outputSlots.length; j++) {
+                var nextItem = outputSlots[(i + j) % outputSlots.length].getItem();
+                if (!nextItem.isEmpty()) {
+                    newOutputs[i] = nextItem.copy();
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < newOutputs.length; i++) {
+            outputSlots[i].set(newOutputs[i]);
         }
     }
 }
