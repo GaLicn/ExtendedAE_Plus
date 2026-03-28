@@ -157,6 +157,7 @@ public final class CtrlQPatternKeyHandler {
 			RecipeInfo matching = matchById(recipeInfos, recipeId);
 			List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matching);
 			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
+			ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
 
 			PacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
 				recipeId,

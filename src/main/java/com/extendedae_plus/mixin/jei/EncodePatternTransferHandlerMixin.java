@@ -28,8 +28,10 @@ public abstract class EncodePatternTransferHandlerMixin {
         String name = null;
         Recipe<?> recipe = holder != null ? holder.value() : null;
         if (recipe != null) {
-            // 仅记录处理配方（非 3x3 合成）
-            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) return;
+            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+                ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+                return;
+            }
             name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
         } else {
             // 非原版 Recipe<?> 的显示，尝试从 display 类名/包名推导关键词

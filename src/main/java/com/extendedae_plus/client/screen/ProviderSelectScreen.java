@@ -66,7 +66,7 @@ public class ProviderSelectScreen extends Screen {
     private String query = "";
     private boolean needsRefresh = false;
     private int page = 0;
-    private boolean autoUploadRequestedFromProcessingName = false;
+    private boolean autoUploadRequestedFromPresetSearch = false;
     private boolean autoUploadAttempted = false;
     private int lastExactMatchCount = 0;
 
@@ -76,14 +76,12 @@ public class ProviderSelectScreen extends Screen {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
-        // 如果有来自 JEI 的最近处理名称，则作为初始查询
+        // 如果有来自最近一次写样板流程的预设搜索词，则作为初始查询
         try {
-            String recent = ExtendedAEPatternUploadUtil.lastProcessingName;
+            String recent = ExtendedAEPatternUploadUtil.consumeLastProviderSearchKey();
             if (recent != null && !recent.isBlank()) {
                 this.query = recent;
-                this.autoUploadRequestedFromProcessingName = true;
-                // 用后即清空，避免污染下次
-                ExtendedAEPatternUploadUtil.lastProcessingName = null;
+                this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
         this.buildGroups();
@@ -253,7 +251,7 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private void tryAutoUploadIfUniqueMatch() {
-        if (!this.autoUploadRequestedFromProcessingName || this.autoUploadAttempted) {
+        if (!this.autoUploadRequestedFromPresetSearch || this.autoUploadAttempted) {
             return;
         }
         this.autoUploadAttempted = true;

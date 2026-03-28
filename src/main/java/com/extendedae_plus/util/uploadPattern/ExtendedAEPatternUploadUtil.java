@@ -53,8 +53,10 @@ public class ExtendedAEPatternUploadUtil {
     private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    // 最近一次通过 JEI 填充到编码终端的“处理配方”的中文名称（如：烧炼/高炉/烟熏...)
-    public static volatile String lastProcessingName = null;
+    // 最近一次打开供应器选择界面时的预设搜索关键字。
+    // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
+    public static final String DEFAULT_CRAFTING_SEARCH_KEY = "crafting";
+    private static volatile String lastProviderSearchKey = null;
 
     static {
         try {
@@ -128,7 +130,26 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     public static void setLastProcessingName(String name) {
-        lastProcessingName = name;
+        setLastProviderSearchKey(name);
+    }
+
+    public static void setLastProviderSearchKey(String name) {
+        if (name == null) {
+            lastProviderSearchKey = null;
+            return;
+        }
+        String trimmed = name.trim();
+        lastProviderSearchKey = trimmed.isEmpty() ? null : trimmed;
+    }
+
+    public static void presetCraftingProviderSearchKey() {
+        setLastProviderSearchKey(resolveSearchKeyAlias(DEFAULT_CRAFTING_SEARCH_KEY));
+    }
+
+    public static String consumeLastProviderSearchKey() {
+        String searchKey = lastProviderSearchKey;
+        lastProviderSearchKey = null;
+        return searchKey;
     }
 
     /**
@@ -278,14 +299,28 @@ public class ExtendedAEPatternUploadUtil {
      * - 有中文映射则返回中文；
      * - 否则返回配方类型的 path（不含命名空间），例如 assembler。
      */
+    public static String resolveSearchKeyAlias(String rawKey) {
+        if (rawKey == null) {
+            return null;
+        }
+        String normalized = rawKey.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        String alias = CUSTOM_ALIASES.get(normalized.toLowerCase());
+        if (alias != null && !alias.isBlank()) {
+            return alias;
+        }
+        return normalized;
+    }
+
     public static String mapRecipeTypeToSearchKey(Recipe<?> recipe) {
         if (recipe == null) return null;
         RecipeType<?> type = recipe.getType();
         ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
         if (key == null) return null;
-        // 先查别名（按 path 匹配）
-        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase());
-        if (alias != null && !alias.isBlank()) return alias;
+        String resolvedPath = resolveSearchKeyAlias(key.getPath());
+        if (resolvedPath != null) return resolvedPath;
         // 再查完整ID映射
         String custom = CUSTOM_NAMES.get(key);
         if (custom != null && !custom.isBlank()) {
