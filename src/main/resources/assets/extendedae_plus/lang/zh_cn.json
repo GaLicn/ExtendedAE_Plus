@@ -162,6 +162,8 @@
   "extendedae_plus.tooltip.master_mode": "模式: %s",
   "extendedae_plus.tooltip.locked": "锁定状态: %s",
   "extendedae_plus.tooltip.locked_state": "状态: %s",
+  "extendedae_plus.tooltip.swap_processing_outputs": "主副切换",
+  "extendedae_plus.tooltip.restore_processing_ratio": "恢复比例",
 
   "gui.extendedae_plus.frequency_input.title": "设置频率",
   "gui.extendedae_plus.frequency_input.field": "频率",

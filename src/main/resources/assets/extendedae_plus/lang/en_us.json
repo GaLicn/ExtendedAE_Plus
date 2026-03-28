@@ -104,6 +104,8 @@
   "extendedae_plus.tooltip.frequency": "Frequency: %d",
   "extendedae_plus.tooltip.master_mode": "Mode: %s",
   "extendedae_plus.tooltip.locked": "Lock Status: %s",
+  "extendedae_plus.tooltip.swap_processing_outputs": "Swap Primary/Secondary Outputs",
+  "extendedae_plus.tooltip.restore_processing_ratio": "Restore Simplified Ratio",
 
   "screen.extendedae_plus.title": "ExtendedAE Plus Configuration",
   "config.extendedae_plus": "ExtendedAE Plus",

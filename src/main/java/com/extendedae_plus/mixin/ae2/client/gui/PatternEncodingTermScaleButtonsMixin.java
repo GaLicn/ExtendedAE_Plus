@@ -72,12 +72,12 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
                     ScaleEncodingPatternC2SPacket.Operation.DIV5);
             this.eap$swapOutputsButton = eap$createStandaloneButton(
                     EAP$SWAP_OUTPUT_TEXTURE,
-                    "主副切换",
+                    Component.translatable("extendedae_plus.tooltip.swap_processing_outputs"),
                     ScaleEncodingPatternC2SPacket.Operation.SWAP_OUTPUTS
             );
             this.eap$restoreRatioButton = eap$createStandaloneButton(
                     EAP$RESTORE_RATIO_TEXTURE,
-                    "恢复比例",
+                    Component.translatable("extendedae_plus.tooltip.restore_processing_ratio"),
                     ScaleEncodingPatternC2SPacket.Operation.RESTORE_RATIO
             );
         }
@@ -156,7 +156,7 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
     }
 
     @Unique
-    private ScaledTextureButton eap$createStandaloneButton(ResourceLocation texture, String tooltipText,
+    private ScaledTextureButton eap$createStandaloneButton(ResourceLocation texture, Component tooltipText,
             ScaleEncodingPatternC2SPacket.Operation op) {
         return new ScaledTextureButton(
                 texture,
@@ -167,7 +167,7 @@ public abstract class PatternEncodingTermScaleButtonsMixin<T extends AEBaseMenu>
                 16,
                 16,
                 0.375f,
-                Component.literal(tooltipText),
+                tooltipText,
                 btn -> PacketDistributor.sendToServer(new ScaleEncodingPatternC2SPacket(op))
         );
     }

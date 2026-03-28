@@ -79,6 +79,7 @@
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "ae2.client.gui.AEBaseScreenMixin",
     "ae2.client.gui.InterfaceScreenMixin",
+    "ae2.client.gui.ProcessingEncodingPanelMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
     "ae2.client.gui.PatternEncodingTermScaleButtonsMixin",
     "ae2.client.gui.PatternEncodingTermUploadMixin",
