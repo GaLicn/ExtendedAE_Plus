@@ -625,6 +625,29 @@ public class ExtendedAEPatternUploadUtil {
                     }
                 }
             }
+
+            // 【新增部分】：适配 ae2cs 自装配式样板供应器 (Meteorite Pattern Provider)
+            try {
+                for (Class<?> machineClass : grid.getMachineClasses()) {
+                    String className = machineClass.getName();
+                    if (className != null && className.contains("MeteoritePatternProvider")) {
+                        @SuppressWarnings("unchecked")
+                        java.util.Set<?> hosts = grid.getMachines((Class) machineClass);
+                        for (Object host : hosts) {
+                            if (host instanceof appeng.helpers.patternprovider.PatternProviderLogicHost logicHost) {
+                                appeng.helpers.patternprovider.PatternProviderLogic logic = logicHost.getLogic();
+                                if (logic != null) {
+                                    appeng.api.inventories.InternalInventory inv = logic.getPatternInv();
+                                    if (inv != null) {
+                                        result.add(inv);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
         } catch (Throwable t) {
         }
         return result;
