@@ -24,6 +24,7 @@ import java.util.List;
 
 public class MirrorPatternBindingToolItem extends Item {
     private static final String TAG_SELECTED_MASTER = "selectedMaster";
+    private static final String TAG_SELECTED_RANGE_START = "selectedRangeStart";
     private static final String TAG_DIMENSION = "dimension";
     private static final String TAG_POS = "pos";
 
@@ -46,10 +47,11 @@ public class MirrorPatternBindingToolItem extends Item {
         var player = context.getPlayer();
         var blockEntity = level.getBlockEntity(context.getClickedPos());
 
-        if (blockEntity instanceof PatternProviderBlockEntity master && !(blockEntity instanceof MirrorPatternProviderBlockEntity)) {
+        if (blockEntity instanceof PatternProviderBlockEntity && !(blockEntity instanceof MirrorPatternProviderBlockEntity)) {
             if (player != null && player.isShiftKeyDown()) {
                 if (!level.isClientSide) {
                     setSelectedMaster(stack, GlobalPos.of(level.dimension(), context.getClickedPos()));
+                    clearSelectedRangeStart(stack);
                     player.displayClientMessage(
                             Component.translatable(
                                     "extendedae_plus.message.mirror_binding_tool.selected",
@@ -65,6 +67,13 @@ public class MirrorPatternBindingToolItem extends Item {
         }
 
         if (blockEntity instanceof MirrorPatternProviderBlockEntity mirror) {
+            if (player != null && player.isShiftKeyDown()) {
+                if (!level.isClientSide) {
+                    this.handleRangeBinding(level, context.getClickedPos(), stack, player);
+                }
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            }
+
             if (!level.isClientSide) {
                 var selectedMaster = getSelectedMaster(stack);
                 if (selectedMaster == null) {
@@ -100,6 +109,7 @@ public class MirrorPatternBindingToolItem extends Item {
 
         tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.select"));
         tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.bind"));
+        tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.range"));
 
         var selectedMaster = getSelectedMaster(stack);
         if (selectedMaster != null) {
@@ -115,14 +125,21 @@ public class MirrorPatternBindingToolItem extends Item {
         } else {
             tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.unset"));
         }
+
+        var selectedRangeStart = getSelectedRangeStart(stack);
+        if (selectedRangeStart != null) {
+            var pos = selectedRangeStart.pos();
+            tooltipComponents.add(Component.translatable(
+                    "item.extendedae_plus.mirror_pattern_binding_tool.range_start",
+                    pos.getX(),
+                    pos.getY(),
+                    pos.getZ()));
+        }
     }
 
     private static void setSelectedMaster(ItemStack stack, GlobalPos master) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        var selectedTag = new CompoundTag();
-        selectedTag.putString(TAG_DIMENSION, master.dimension().location().toString());
-        selectedTag.putLong(TAG_POS, master.pos().asLong());
-        tag.put(TAG_SELECTED_MASTER, selectedTag);
+        tag.put(TAG_SELECTED_MASTER, createGlobalPosTag(master));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
@@ -132,14 +149,43 @@ public class MirrorPatternBindingToolItem extends Item {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
+    private static void setSelectedRangeStart(ItemStack stack, GlobalPos start) {
+        var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        tag.put(TAG_SELECTED_RANGE_START, createGlobalPosTag(start));
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    private static void clearSelectedRangeStart(ItemStack stack) {
+        var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        tag.remove(TAG_SELECTED_RANGE_START);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
     @Nullable
     private static GlobalPos getSelectedMaster(ItemStack stack) {
+        return getStoredGlobalPos(stack, TAG_SELECTED_MASTER);
+    }
+
+    @Nullable
+    private static GlobalPos getSelectedRangeStart(ItemStack stack) {
+        return getStoredGlobalPos(stack, TAG_SELECTED_RANGE_START);
+    }
+
+    private static CompoundTag createGlobalPosTag(GlobalPos globalPos) {
+        var selectedTag = new CompoundTag();
+        selectedTag.putString(TAG_DIMENSION, globalPos.dimension().location().toString());
+        selectedTag.putLong(TAG_POS, globalPos.pos().asLong());
+        return selectedTag;
+    }
+
+    @Nullable
+    private static GlobalPos getStoredGlobalPos(ItemStack stack, String tagKey) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        if (!tag.contains(TAG_SELECTED_MASTER, Tag.TAG_COMPOUND)) {
+        if (!tag.contains(tagKey, Tag.TAG_COMPOUND)) {
             return null;
         }
 
-        var selectedTag = tag.getCompound(TAG_SELECTED_MASTER);
+        var selectedTag = tag.getCompound(tagKey);
         if (!selectedTag.contains(TAG_DIMENSION) || !selectedTag.contains(TAG_POS)) {
             return null;
         }
@@ -151,6 +197,71 @@ public class MirrorPatternBindingToolItem extends Item {
                 BlockPos.of(selectedTag.getLong(TAG_POS)));
     }
 
+    private void handleRangeBinding(Level level, BlockPos clickedPos, ItemStack stack, Player player) {
+        var selectedMaster = getSelectedMaster(stack);
+        if (selectedMaster == null) {
+            player.displayClientMessage(
+                    Component.translatable("extendedae_plus.message.mirror_binding_tool.no_selection"),
+                    true);
+            return;
+        }
+
+        var rangeStart = getSelectedRangeStart(stack);
+        if (rangeStart == null || !rangeStart.dimension().equals(level.dimension())) {
+            setSelectedRangeStart(stack, GlobalPos.of(level.dimension(), clickedPos));
+            player.displayClientMessage(
+                    Component.translatable(
+                            "extendedae_plus.message.mirror_binding_tool.range_start_selected",
+                            clickedPos.getX(),
+                            clickedPos.getY(),
+                            clickedPos.getZ()),
+                    true);
+            return;
+        }
+
+        var bindResult = bindMirrorsInRange(level, rangeStart.pos(), clickedPos, selectedMaster);
+        clearSelectedRangeStart(stack);
+
+        if (bindResult.totalMirrors() == 0) {
+            player.displayClientMessage(
+                    Component.translatable("extendedae_plus.message.mirror_binding_tool.range_no_mirror"),
+                    true);
+            return;
+        }
+
+        player.displayClientMessage(
+                Component.translatable(
+                        "extendedae_plus.message.mirror_binding_tool.range_bound",
+                        bindResult.totalMirrors(),
+                        bindResult.boundMirrors(),
+                        bindResult.failedMirrors()),
+                true);
+    }
+
+    private static RangeBindResult bindMirrorsInRange(Level level, BlockPos start, BlockPos end, GlobalPos selectedMaster) {
+        int totalMirrors = 0;
+        int boundMirrors = 0;
+
+        var minX = Math.min(start.getX(), end.getX());
+        var minY = Math.min(start.getY(), end.getY());
+        var minZ = Math.min(start.getZ(), end.getZ());
+        var maxX = Math.max(start.getX(), end.getX());
+        var maxY = Math.max(start.getY(), end.getY());
+        var maxZ = Math.max(start.getZ(), end.getZ());
+
+        for (var pos : BlockPos.betweenClosed(minX, minY, minZ, maxX, maxY, maxZ)) {
+            var blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof MirrorPatternProviderBlockEntity mirror) {
+                totalMirrors++;
+                if (mirror.bindToMaster(selectedMaster)) {
+                    boundMirrors++;
+                }
+            }
+        }
+
+        return new RangeBindResult(totalMirrors, boundMirrors, totalMirrors - boundMirrors);
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand usedHand) {
         var stack = player.getItemInHand(usedHand);
@@ -160,8 +271,9 @@ public class MirrorPatternBindingToolItem extends Item {
         }
 
         if (!level.isClientSide) {
-            if (getSelectedMaster(stack) != null) {
+            if (getSelectedMaster(stack) != null || getSelectedRangeStart(stack) != null) {
                 clearSelectedMaster(stack);
+                clearSelectedRangeStart(stack);
                 player.displayClientMessage(
                         Component.translatable("extendedae_plus.message.mirror_binding_tool.cleared"),
                         true);
@@ -173,5 +285,8 @@ public class MirrorPatternBindingToolItem extends Item {
         }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    }
+
+    private record RangeBindResult(int totalMirrors, int boundMirrors, int failedMirrors) {
     }
 }
