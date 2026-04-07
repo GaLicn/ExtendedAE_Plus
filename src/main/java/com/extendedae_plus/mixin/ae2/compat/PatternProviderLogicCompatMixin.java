@@ -21,6 +21,7 @@ import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.mixin.ae2.accessor.CraftingCPUClusterAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
@@ -37,6 +38,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -483,8 +486,20 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
                             }
                         }
 
-                        if (progress != null && progress.eap$getValue() <= 1) {
-                            cluster.cancelJob();
+                        if (this.eap$compatShouldCancelWholeJob(tasks, progress)) {
+                            boolean finished = false;
+                            try {
+                                ((CraftingCPUClusterAccessor) (Object) cluster).eap$invokeUpdateOutput(null);
+                            } catch (Throwable ignored) {
+                            }
+                            try {
+                                logicAccessor.eap$invokeFinishJob(true);
+                                finished = true;
+                            } catch (Throwable ignored) {
+                            }
+                            if (!finished) {
+                                cluster.cancelJob();
+                            }
                             break;
                         }
                     }
@@ -501,6 +516,33 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public IManagedGridNode eap$compatGetMainNode() {
         return this.mainNode;
+    }
+
+    @Unique
+    private boolean eap$compatShouldCancelWholeJob(
+            Map<IPatternDetails, com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor> tasks,
+            com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor matchedProgress) {
+        if (matchedProgress == null || matchedProgress.eap$getValue() > 1) {
+            return false;
+        }
+
+        for (var entry : tasks.entrySet()) {
+            var taskProgress = entry.getValue();
+            if (taskProgress == null) {
+                continue;
+            }
+
+            long remaining = taskProgress.eap$getValue();
+            if (taskProgress == matchedProgress) {
+                remaining -= 1;
+            }
+
+            if (remaining > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Unique
