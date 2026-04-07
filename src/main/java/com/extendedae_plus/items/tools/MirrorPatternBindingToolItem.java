@@ -75,6 +75,13 @@ public class MirrorPatternBindingToolItem extends Item {
             }
 
             if (!level.isClientSide) {
+                if (mirror.hasMasterBinding()) {
+                    if (player != null && mirror.unbindFromMaster()) {
+                        player.displayClientMessage(mirror.createUnboundMessage(), true);
+                    }
+                    return InteractionResult.SUCCESS;
+                }
+
                 var selectedMaster = getSelectedMaster(stack);
                 if (selectedMaster == null) {
                     if (player != null) {
@@ -109,6 +116,7 @@ public class MirrorPatternBindingToolItem extends Item {
 
         tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.select"));
         tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.bind"));
+        tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.unbind"));
         tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.tip.range"));
 
         var selectedMaster = getSelectedMaster(stack);
@@ -219,7 +227,8 @@ public class MirrorPatternBindingToolItem extends Item {
             return;
         }
 
-        var bindResult = bindMirrorsInRange(level, rangeStart.pos(), clickedPos, selectedMaster);
+        var rangeEnd = clickedPos.immutable();
+        var bindResult = bindMirrorsInRange(level, rangeStart.pos(), rangeEnd, selectedMaster);
         clearSelectedRangeStart(stack);
 
         if (bindResult.totalMirrors() == 0) {
@@ -232,6 +241,12 @@ public class MirrorPatternBindingToolItem extends Item {
         player.displayClientMessage(
                 Component.translatable(
                         "extendedae_plus.message.mirror_binding_tool.range_bound",
+                        rangeStart.pos().getX(),
+                        rangeStart.pos().getY(),
+                        rangeStart.pos().getZ(),
+                        rangeEnd.getX(),
+                        rangeEnd.getY(),
+                        rangeEnd.getZ(),
                         bindResult.totalMirrors(),
                         bindResult.boundMirrors(),
                         bindResult.failedMirrors()),
