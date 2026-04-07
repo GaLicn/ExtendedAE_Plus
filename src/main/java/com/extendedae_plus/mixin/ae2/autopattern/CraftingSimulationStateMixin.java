@@ -5,16 +5,18 @@ import appeng.crafting.CraftingCalculation;
 import appeng.crafting.CraftingPlan;
 import appeng.crafting.inv.CraftingSimulationState;
 import appeng.me.service.CraftingService;
+import appeng.api.networking.crafting.ICraftingProvider;
+import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.util.smartDoubling.PatternScaler;
-import com.google.common.collect.Iterables;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,6 +34,7 @@ public abstract class CraftingSimulationStateMixin {
         Map<IPatternDetails, Long> crafts = accessor.getCrafts();
         // 存放最终分配后的 crafts
         Map<IPatternDetails, Long> finalCrafts = new LinkedHashMap<>();
+        Map<IPatternDetails, Integer> providerCountCache = new HashMap<>();
 
         for (Map.Entry<IPatternDetails, Long> entry : crafts.entrySet()) {
             IPatternDetails processingPattern = entry.getKey();
@@ -60,7 +63,11 @@ public abstract class CraftingSimulationStateMixin {
                 // 检查是否开启 provider 轮询分配功能
                 if (ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.getRaw()) {
                     CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid().getCraftingService();
-                    int providerCount = Math.max(Iterables.size(craftingService.getProviders(processingPattern)), 1);
+                    int providerCount = Math.max(
+                            providerCountCache.computeIfAbsent(
+                                    getProviderCacheKey(processingPattern),
+                                    key -> countProvidersUpTo(craftingService.getProviders(key), totalAmount)),
+                            1);
 
                     // totalAmount < providerCount → 只激活 totalAmount 台 provider
                     if (totalAmount < providerCount) {
@@ -105,5 +112,28 @@ public abstract class CraftingSimulationStateMixin {
 
         crafts.clear();
         crafts.putAll(finalCrafts);
+    }
+
+    private static IPatternDetails getProviderCacheKey(IPatternDetails pattern) {
+        if (pattern instanceof ScaledProcessingPattern scaled) {
+            return scaled.getOriginal();
+        }
+        return pattern;
+    }
+
+    private static int countProvidersUpTo(Iterable<ICraftingProvider> providers, long maxNeeded) {
+        int count = 0;
+        int limit = maxNeeded <= 0
+                ? Integer.MAX_VALUE
+                : maxNeeded >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) maxNeeded;
+
+        for (var ignored : providers) {
+            count++;
+            if (count >= limit) {
+                break;
+            }
+        }
+
+        return count;
     }
 }

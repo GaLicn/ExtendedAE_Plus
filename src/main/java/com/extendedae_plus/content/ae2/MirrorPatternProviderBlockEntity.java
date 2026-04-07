@@ -37,7 +37,9 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     private static final String TAG_MASTER = "mirrorMaster";
     private static final String TAG_MASTER_DIMENSION = "dimension";
     private static final String TAG_MASTER_POS = "pos";
-    private static final int SYNC_INTERVAL = 2;
+    private static final int FAST_SYNC_INTERVAL = 2;
+    private static final int STABLE_SYNC_INTERVAL = 20;
+    private static final int UNLOADED_MASTER_RETRY_INTERVAL = 40;
     private static final int AE2_PATTERN_SLOTS = 9;
     private static final int EXTENDED_PATTERN_PROVIDER_BASE_SLOTS = 36;
     private static final InternalInventory DISABLED_PATTERN_INVENTORY = new AppEngInternalInventory(0);
@@ -47,6 +49,8 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
     @Nullable
     private BlockPos masterPos;
+
+    private long nextSyncTick = Long.MIN_VALUE;
 
     public MirrorPatternProviderBlockEntity(BlockPos pos, BlockState blockState) {
         super(ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(), pos, blockState);
@@ -74,18 +78,19 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private void serverTick(ServerLevel level) {
-        if (Math.floorMod(level.getGameTime() + this.getBlockPos().asLong(), SYNC_INTERVAL) != 0) {
+        if (level.getGameTime() < this.nextSyncTick) {
             return;
         }
 
-        this.syncBoundMaster();
+        this.nextSyncTick = level.getGameTime() + this.syncBoundMaster();
     }
 
     @Override
     public void onReady() {
         super.onReady();
         if (this.getLevel() instanceof ServerLevel serverLevel) {
-            this.syncBoundMaster();
+            this.scheduleImmediateSync();
+            this.nextSyncTick = serverLevel.getGameTime() + this.syncBoundMaster();
         }
     }
 
@@ -109,6 +114,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
         this.masterDimension = null;
         this.masterPos = null;
+        this.scheduleImmediateSync();
         if (data.contains(TAG_MASTER, Tag.TAG_COMPOUND)) {
             var masterTag = data.getCompound(TAG_MASTER);
             if (masterTag.contains(TAG_MASTER_DIMENSION, Tag.TAG_STRING) && masterTag.contains(TAG_MASTER_POS, Tag.TAG_LONG)) {
@@ -148,7 +154,6 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             return false;
         }
 
-        this.bindToMaster(master);
         this.syncFromMaster(master);
         return true;
     }
@@ -172,13 +177,11 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             return false;
         }
 
-        var changed = !Objects.equals(this.masterDimension, master.dimension()) || !Objects.equals(this.masterPos, master.pos());
-        this.masterDimension = master.dimension();
-        this.masterPos = master.pos().immutable();
+        var changed = this.setBoundMaster(master.dimension(), master.pos());
         if (changed) {
-            this.saveChanges();
-            this.markForClientUpdate();
+            this.flushStateChanges();
         }
+        this.scheduleImmediateSync();
         return true;
     }
 
@@ -227,16 +230,21 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master");
     }
 
-    private void syncBoundMaster() {
+    private int syncBoundMaster() {
         var master = this.getMaster();
         if (master != null) {
-            this.syncFromMaster(master);
-            return;
+            return this.syncFromMaster(master) ? FAST_SYNC_INTERVAL : STABLE_SYNC_INTERVAL;
         }
 
         if (this.shouldClearBrokenBinding()) {
-            this.clearMasterBinding(true);
+            if (this.clearMasterBinding(true)) {
+                this.flushStateChanges();
+                return FAST_SYNC_INTERVAL;
+            }
+            return STABLE_SYNC_INTERVAL;
         }
+
+        return UNLOADED_MASTER_RETRY_INTERVAL;
     }
 
     private boolean shouldClearBrokenBinding() {
@@ -258,7 +266,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return !isValidMaster(masterLevel.getBlockEntity(this.masterPos));
     }
 
-    private void clearMasterBinding(boolean clearMirroredPatterns) {
+    private boolean clearMasterBinding(boolean clearMirroredPatterns) {
         var hadBinding = this.masterDimension != null || this.masterPos != null;
 
         this.masterDimension = null;
@@ -269,30 +277,15 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             changed |= this.clearMirroredPatterns();
         }
 
-        if (changed) {
-            this.saveChanges();
-            this.markForClientUpdate();
-        }
+        return changed;
     }
 
-    private boolean bindToMaster(PatternProviderBlockEntity master) {
-        var masterLevel = master.getLevel();
-        if (masterLevel == null) {
-            return false;
-        }
+    private boolean setBoundMaster(ResourceKey<Level> dimension, BlockPos pos) {
+        var newPos = pos.immutable();
+        var changed = !Objects.equals(this.masterDimension, dimension) || !Objects.equals(this.masterPos, newPos);
 
-        var newDimension = masterLevel.dimension();
-        var newPos = master.getBlockPos().immutable();
-        var changed = !Objects.equals(this.masterDimension, newDimension) || !Objects.equals(this.masterPos, newPos);
-
-        this.masterDimension = newDimension;
+        this.masterDimension = dimension;
         this.masterPos = newPos;
-
-        if (changed) {
-            this.saveChanges();
-            this.markForClientUpdate();
-        }
-
         return changed;
     }
 
@@ -314,13 +307,17 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private boolean syncFromMaster(PatternProviderBlockEntity master) {
-        var changed = this.bindToMaster(master);
+        var masterLevel = master.getLevel();
+        if (masterLevel == null) {
+            return false;
+        }
+
+        var changed = this.setBoundMaster(masterLevel.dimension(), master.getBlockPos());
         changed |= this.syncMirroredSettings(master);
         changed |= this.syncMirroredPatterns(master);
 
         if (changed) {
-            this.saveChanges();
-            this.markForClientUpdate();
+            this.flushStateChanges();
         }
 
         return changed;
@@ -360,70 +357,60 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
     private boolean syncMirroredPatterns(PatternProviderBlockEntity master) {
         var mirrorInventory = this.getPatternInventory();
-        var desiredInventory = this.createDesiredPatternInventory(master);
+        var masterInventory = asPatternInventory(master.getLogic().getPatternInv());
+        var mirrorSize = mirrorInventory.size();
+        var masterSize = masterInventory.size();
+        var changed = false;
 
-        if (this.hasSamePatterns(desiredInventory, mirrorInventory)) {
-            return false;
+        for (int slot = 0; slot < mirrorSize; slot++) {
+            var desiredStack = slot < masterSize ? masterInventory.getStackInSlot(slot) : ItemStack.EMPTY;
+            var currentStack = mirrorInventory.getStackInSlot(slot);
+            if (!sameStack(desiredStack, currentStack)) {
+                mirrorInventory.setItemDirect(slot, desiredStack.isEmpty() ? ItemStack.EMPTY : desiredStack.copy());
+                changed = true;
+            }
         }
 
-        mirrorInventory.fromItemContainerContents(desiredInventory.toItemContainerContents());
-        this.getLogic().updatePatterns();
-        return true;
+        if (changed) {
+            this.getLogic().updatePatterns();
+        }
+
+        return changed;
     }
 
     private boolean clearMirroredPatterns() {
         var patternInventory = this.getPatternInventory();
-        if (this.isPatternInventoryEmpty(patternInventory)) {
-            return false;
-        }
+        var changed = false;
 
-        patternInventory.fromItemContainerContents(ItemContainerContents.EMPTY);
-        this.getLogic().updatePatterns();
-        return true;
-    }
-
-    private boolean hasSamePatterns(AppEngInternalInventory masterInventory, AppEngInternalInventory mirrorInventory) {
-        if (masterInventory.size() != mirrorInventory.size()) {
-            return false;
-        }
-
-        for (int slot = 0; slot < masterInventory.size(); slot++) {
-            if (!sameStack(masterInventory.getStackInSlot(slot), mirrorInventory.getStackInSlot(slot))) {
-                return false;
+        for (int slot = 0; slot < patternInventory.size(); slot++) {
+            if (!patternInventory.getStackInSlot(slot).isEmpty()) {
+                patternInventory.setItemDirect(slot, ItemStack.EMPTY);
+                changed = true;
             }
         }
 
-        return true;
-    }
-
-    private boolean isPatternInventoryEmpty(AppEngInternalInventory inventory) {
-        for (int slot = 0; slot < inventory.size(); slot++) {
-            if (!inventory.getStackInSlot(slot).isEmpty()) {
-                return false;
-            }
+        if (changed) {
+            this.getLogic().updatePatterns();
         }
 
-        return true;
+        return changed;
     }
 
     private AppEngInternalInventory getPatternInventory() {
         return ((MirrorLogic) this.getLogic()).getActualPatternInventory();
     }
 
-    private AppEngInternalInventory createDesiredPatternInventory(PatternProviderBlockEntity master) {
-        var desiredInventory = new AppEngInternalInventory(this.getPatternInventory().size());
-        var masterInventory = asPatternInventory(master.getLogic().getPatternInv());
-        var copySlotCount = Math.min(masterInventory.size(), desiredInventory.size());
-
-        for (int slot = 0; slot < copySlotCount; slot++) {
-            desiredInventory.setItemDirect(slot, masterInventory.getStackInSlot(slot).copy());
-        }
-
-        return desiredInventory;
-    }
-
     private static AppEngInternalInventory asPatternInventory(Object inventory) {
         return (AppEngInternalInventory) inventory;
+    }
+
+    private void flushStateChanges() {
+        this.saveChanges();
+        this.markForClientUpdate();
+    }
+
+    private void scheduleImmediateSync() {
+        this.nextSyncTick = Long.MIN_VALUE;
     }
 
     private static int getMirrorPatternSlotCapacity() {

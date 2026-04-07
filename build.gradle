@@ -180,6 +180,9 @@ dependencies {
     //biggerae2
    // runtimeOnly "curse.maven:bigger-ae2-1013772:6587078"
 
+    //obs性能监测
+    implementation "curse.maven:observable-509575:6697124"
+    implementation "curse.maven:kotlin-for-forge-351264:7471280"
 
     runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 
