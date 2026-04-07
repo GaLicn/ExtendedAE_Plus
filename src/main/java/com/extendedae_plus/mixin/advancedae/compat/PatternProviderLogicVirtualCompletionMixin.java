@@ -6,14 +6,18 @@ import appeng.api.networking.crafting.ICraftingService;
 import appeng.api.stacks.KeyCounter;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
+import com.extendedae_plus.mixin.advancedae.accessor.AdvCraftingCPUAccessor;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvCraftingCPULogicAccessor;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobAccessor;
 import com.extendedae_plus.mixin.advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Map;
 
 /**
  * AdvancedAE 版本的虚拟完成兼容逻辑。
@@ -85,8 +89,20 @@ public abstract class PatternProviderLogicVirtualCompletionMixin {
                         }
 
                         if (progress instanceof AdvExecutingCraftingJobTaskProgressAccessor advProgressAccessor) {
-                            if (advProgressAccessor.eap$getAdvValue() <= 1) {
-                                advCpu.cancelJob();
+                            if (this.eap$advancedaeShouldCancelWholeJob(tasks, advProgressAccessor)) {
+                                boolean finished = false;
+                                try {
+                                    ((AdvCraftingCPUAccessor) (Object) advCpu).eap$invokeUpdateOutput(null);
+                                } catch (Throwable ignored) {
+                                }
+                                try {
+                                    advLogicAccessor.eap$invokeAdvFinishJob(true);
+                                    finished = true;
+                                } catch (Throwable ignored) {
+                                }
+                                if (!finished) {
+                                    advCpu.cancelJob();
+                                }
                                 break;
                             }
                         }
@@ -94,5 +110,32 @@ public abstract class PatternProviderLogicVirtualCompletionMixin {
                 }
             }
         }
+    }
+
+    @Unique
+    private boolean eap$advancedaeShouldCancelWholeJob(
+            Map<IPatternDetails, Object> tasks,
+            AdvExecutingCraftingJobTaskProgressAccessor matchedProgress) {
+        if (matchedProgress.eap$getAdvValue() > 1) {
+            return false;
+        }
+
+        for (var entry : tasks.entrySet()) {
+            var taskProgress = entry.getValue();
+            if (!(taskProgress instanceof AdvExecutingCraftingJobTaskProgressAccessor advTaskProgress)) {
+                continue;
+            }
+
+            long remaining = advTaskProgress.eap$getAdvValue();
+            if (taskProgress == matchedProgress) {
+                remaining -= 1;
+            }
+
+            if (remaining > 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

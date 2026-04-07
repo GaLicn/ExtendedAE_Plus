@@ -6,6 +6,7 @@
   "mixins": [
     "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
     "advancedae.AdvProcessingPatternMixin",
+    "advancedae.accessor.AdvCraftingCPUAccessor",
     "advancedae.accessor.AdvCraftingCPULogicAccessor",
     "advancedae.accessor.AdvExecutingCraftingJobAccessor",
     "advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor",
@@ -19,6 +20,7 @@
     "ae2.AEProcessingPatternMixin",
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",
+    "ae2.accessor.CraftingCPUClusterAccessor",
     "ae2.EncodedPatternItemMixin",
     "ae2.accessor.CraftingCpuLogicAccessor",
     "ae2.accessor.ExecutingCraftingJobAccessor",
