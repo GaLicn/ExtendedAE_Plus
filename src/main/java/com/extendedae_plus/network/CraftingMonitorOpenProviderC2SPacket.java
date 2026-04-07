@@ -11,6 +11,7 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftingCPUMenu;
 import appeng.parts.AEBasePart;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.glodblock.github.extendedae.util.FCClientUtil;
@@ -99,6 +100,7 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
                         if (host == null) continue;
                         var pbe = host.getBlockEntity();
                         if (pbe == null) continue;
+                        if (pbe instanceof MirrorPatternProviderBlockEntity) continue;
 
                         // 跳过未连接到网格或不活跃的 provider（使用 util 判断并传入当前 grid）
                         if (!PatternProviderDataUtil.isProviderAvailable(ppl, grid)) continue;
