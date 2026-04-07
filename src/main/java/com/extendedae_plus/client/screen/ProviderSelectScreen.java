@@ -479,7 +479,7 @@ public class ProviderSelectScreen extends Screen {
         }
         int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
         if (removed > 0) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_success", removed, val));
+            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_success", val, removed));
             this.applyFilter();
             this.needsRefresh = true;
         } else {
