@@ -44,4 +44,4 @@ The final acceleration multiplier equals the **product of all inserted cards’ 
 > - **Final acceleration multiplier = ×64**
 
 ## Crafting Recipe
-<RecipesFor id="extendedae_plus:entity_speed_card" />
+<RecipeFor id="extendedae_plus:entity_speed_card" />

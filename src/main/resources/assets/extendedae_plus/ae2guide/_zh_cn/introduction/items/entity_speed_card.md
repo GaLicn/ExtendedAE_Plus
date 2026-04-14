@@ -40,4 +40,4 @@ item_ids:
 > - 最高级单卡为 **x4卡**，其上限为 **64倍**，因此**最终加速倍率为64倍**
 
 ## 合成配方
-<RecipesFor  id="extendedae_plus:entity_speed_card"/>
+<RecipeFor id="extendedae_plus:entity_speed_card" />

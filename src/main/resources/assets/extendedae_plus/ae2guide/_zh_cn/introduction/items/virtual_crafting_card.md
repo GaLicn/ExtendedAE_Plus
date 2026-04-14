@@ -36,4 +36,4 @@ item_ids:
 
 ## 合成配方
 
-<RecipesFor id="extendedae_plus:virtual_crafting_card" />
+<RecipeFor id="extendedae_plus:virtual_crafting_card" />

@@ -42,4 +42,4 @@ The Virtual Crafting Card is a specialized upgrade for Pattern Providers that in
 
 ## Crafting Recipe
 
-<RecipesFor id="extendedae_plus:virtual_crafting_card" />
+<RecipeFor id="extendedae_plus:virtual_crafting_card" />
