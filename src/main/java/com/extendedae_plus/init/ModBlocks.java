@@ -6,6 +6,7 @@ import appeng.core.definitions.AEBlockEntities;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
@@ -13,6 +14,7 @@ import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.registries.DeferredRegister;
@@ -132,4 +134,16 @@ public final class ModBlocks {
             "mirror_pattern_provider",
             MirrorPatternProviderBlock::new
     );
+
+    public static final RegistryObject<Block> C_H716 = registerDollBlock("c-h716");
+    public static final RegistryObject<Block> FISH_DAN = registerDollBlock("fish_dan_");
+    public static final RegistryObject<Block> _FENG = registerDollBlock("_feng");
+    public static final RegistryObject<Block> XBAI = registerDollBlock("xbai");
+
+    private static RegistryObject<Block> registerDollBlock(String name) {
+        return BLOCKS.register(
+                name,
+                () -> new DollBlock(BlockBehaviour.Properties.copy(Blocks.WHITE_WOOL).noOcclusion())
+        );
+    }
 }

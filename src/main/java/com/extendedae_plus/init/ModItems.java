@@ -91,6 +91,26 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> C_H716 = ITEMS.register(
+            "c-h716",
+            () -> new BlockItem(ModBlocks.C_H716.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<Item> FISH_DAN = ITEMS.register(
+            "fish_dan_",
+            () -> new BlockItem(ModBlocks.FISH_DAN.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<Item> _FENG = ITEMS.register(
+            "_feng",
+            () -> new BlockItem(ModBlocks._FENG.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<Item> XBAI = ITEMS.register(
+            "xbai",
+            () -> new BlockItem(ModBlocks.XBAI.get(), new Item.Properties())
+    );
+
     public static final RegistryObject<MirrorPatternBindingToolItem> MIRROR_PATTERN_BINDING_TOOL = ITEMS.register(
             "mirror_pattern_binding_tool",
             () -> new MirrorPatternBindingToolItem(new Item.Properties())

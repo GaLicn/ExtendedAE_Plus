@@ -47,7 +47,9 @@ public class ProviderSelectScreen extends Screen {
     // 置顶的供应器名称集合（静态变量，持久化到配置文件）
     private static final Set<String> pinnedProviders = new HashSet<>();
     private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
+    private static final String AUTO_UPLOAD_UNIQUE_MATCH_KEY = "auto_upload_unique_match";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private static boolean autoUploadUniqueMatchEnabled = true;
 
     // 静态初始化块：加载置顶配置
     static {
@@ -62,6 +64,7 @@ public class ProviderSelectScreen extends Screen {
     private EditBox searchBox;
     // 中文名输入框（用于添加映射）
     private EditBox cnInput;
+    private Button autoUploadToggleButton;
     private String query = "";
     // 翻页按钮
     private Button prevButton;
@@ -168,37 +171,42 @@ public class ProviderSelectScreen extends Screen {
         int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
         int startX = centerX - totalWidth / 2;
 
+        this.autoUploadToggleButton = Button.builder(buildAutoUploadToggleLabel(), b -> toggleAutoUploadUniqueMatch())
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 30, btnWidth2 * 2 + btnGap, 20)
+                .build();
+        this.addRenderableWidget(this.autoUploadToggleButton);
+
         // 重载映射按钮
         Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> reloadMapping())
-                .bounds(startX, navY + 30, btnWidth2, 20)
+                .bounds(startX, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(reload);
 
         // 中文名输入框（用于新增映射的值）
         if (cnInput == null) {
-            cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 30, inputWidth, 20, Component.translatable("extendedae_plus.screen.upload.name"));
+            cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 55, inputWidth, 20, Component.translatable("extendedae_plus.screen.upload.name"));
         } else {
             cnInput.setX(startX + btnWidth2 + btnGap);
-            cnInput.setY(navY + 30);
+            cnInput.setY(navY + 55);
             cnInput.setWidth(inputWidth);
         }
         this.addRenderableWidget(cnInput);
 
         // 关闭按钮
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 30, btnWidth2, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(close);
 
         // 添加映射按钮（使用当前搜索关键字 -> 中文）
         Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> addMappingFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 30, btnWidth2, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(addMap);
 
         // 删除映射按钮（按中文值精确匹配删除）按钮
         Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.delete_mapping"), b -> deleteMappingByCnFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 30, btnWidth2, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(delByCn);
 
@@ -241,6 +249,22 @@ public class ProviderSelectScreen extends Screen {
             // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
         } catch (Throwable t) {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_fail", t.getClass().getSimpleName()));
+        }
+    }
+
+    private Component buildAutoUploadToggleLabel() {
+        String stateKey = autoUploadUniqueMatchEnabled
+                ? "config.extendedae_plus.option.state_on"
+                : "config.extendedae_plus.option.state_off";
+        return Component.translatable("extendedae_plus.screen.auto_upload_unique_match",
+                Component.translatable(stateKey));
+    }
+
+    private void toggleAutoUploadUniqueMatch() {
+        autoUploadUniqueMatchEnabled = !autoUploadUniqueMatchEnabled;
+        savePinnedProviders();
+        if (this.autoUploadToggleButton != null) {
+            this.autoUploadToggleButton.setMessage(buildAutoUploadToggleLabel());
         }
     }
 
@@ -399,7 +423,7 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private void tryAutoUploadIfUniqueMatch() {
-        if (!autoUploadRequestedFromPresetSearch || autoUploadAttempted) {
+        if (!autoUploadUniqueMatchEnabled || !autoUploadRequestedFromPresetSearch || autoUploadAttempted) {
             return;
         }
         autoUploadAttempted = true;
@@ -636,6 +660,11 @@ public class ProviderSelectScreen extends Screen {
                     }
                 }
             }
+
+            JsonElement autoUploadElement = obj.get(AUTO_UPLOAD_UNIQUE_MATCH_KEY);
+            if (autoUploadElement != null && autoUploadElement.isJsonPrimitive()) {
+                autoUploadUniqueMatchEnabled = autoUploadElement.getAsBoolean();
+            }
         } catch (IOException | JsonSyntaxException e) {
             // 加载失败时静默处理
         }
@@ -655,6 +684,7 @@ public class ProviderSelectScreen extends Screen {
                 arr.add(name);
             }
             obj.add("pinned", arr);
+            obj.addProperty(AUTO_UPLOAD_UNIQUE_MATCH_KEY, autoUploadUniqueMatchEnabled);
 
             Files.writeString(cfgPath, GSON.toJson(obj));
         } catch (IOException e) {

@@ -1,7 +1,7 @@
 package com.extendedae_plus.mixin.ae2.helpers.patternprovider;
 
 import appeng.helpers.patternprovider.PatternProviderLogic;
-import appeng.util.inv.AppEngInternalInventory;
+import appeng.api.inventories.InternalInventory;
 import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +15,7 @@ public abstract class PatternProviderLogicSyncVersionMixin implements PatternPro
     private long eap$patternSyncVersion;
 
     @Inject(method = "onChangeInventory", at = @At("TAIL"))
-    private void eap$trackPatternInventoryChanges(AppEngInternalInventory inv, int slot, CallbackInfo ci) {
+    private void eap$trackPatternInventoryChanges(InternalInventory inv, int slot, CallbackInfo ci) {
         this.eap$patternSyncVersion++;
     }
 

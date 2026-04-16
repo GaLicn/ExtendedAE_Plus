@@ -25,6 +25,6 @@ Their roles are analogous to the original ExtendedAE Assembler Matrix cores, but
 
 - **Assembler Matrix Pattern Core+**: each core provides **72 pattern slots**.  
 - **Assembler Matrix Craft Core+**: each core can run **32 crafting jobs in parallel**.  
-- **Assembler Matrix Speed Core+**: provides **5× the effect of a regular speed core** for the matrix.  
+- **Assembler Matrix Speed Core+**: provides **5× the effect of a regular speed core** for the matrix.(It’s just that its strength is five times, so placing just one is enough.)
 
 

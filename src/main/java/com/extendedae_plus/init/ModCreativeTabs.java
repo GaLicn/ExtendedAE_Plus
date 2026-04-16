@@ -28,6 +28,10 @@ public final class ModCreativeTabs {
                         //超级装配矩阵样板核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get());
                         output.accept(ModItems.MIRROR_PATTERN_PROVIDER.get());
+                        output.accept(ModItems.C_H716.get());
+                        output.accept(ModItems.FISH_DAN.get());
+                        output.accept(ModItems._FENG.get());
+                        output.accept(ModItems.XBAI.get());
                         output.accept(ModItems.MIRROR_PATTERN_BINDING_TOOL.get());
 
 

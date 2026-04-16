@@ -4,6 +4,7 @@ import appeng.api.implementations.items.IMemoryCard;
 import appeng.block.crafting.PatternProviderBlock;
 import appeng.util.InteractionUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -14,6 +15,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class MirrorPatternProviderBlock extends PatternProviderBlock {
 
+    public MirrorPatternProviderBlock() {
+        super();
+    }
+
     @Override
     public InteractionResult onActivated(Level level, BlockPos pos, Player player, InteractionHand hand,
             @Nullable ItemStack heldItem, BlockHitResult hit) {
@@ -22,23 +27,32 @@ public class MirrorPatternProviderBlock extends PatternProviderBlock {
             return InteractionResult.PASS;
         }
 
-        if (InteractionUtil.isInAlternateUseMode(player)) {
-            return InteractionResult.PASS;
-        }
-
         if (heldItem != null
                 && (InteractionUtil.canWrenchRotate(heldItem) || heldItem.getItem() instanceof IMemoryCard)) {
             if (!level.isClientSide) {
                 player.displayClientMessage(
-                        net.minecraft.network.chat.Component.translatable(
-                                "extendedae_plus.message.mirror_pattern_provider.readonly"),
+                        Component.translatable("extendedae_plus.message.mirror_pattern_provider.readonly"),
                         true);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
+        if (heldItem != null && !heldItem.isEmpty()) {
+            return InteractionResult.PASS;
+        }
+
         if (!level.isClientSide) {
-            player.displayClientMessage(mirror.getStatusMessage(), true);
+            if (player.isShiftKeyDown()) {
+                if (mirror.tryBindToAdjacentMaster()) {
+                    player.displayClientMessage(mirror.createBoundMessage(), true);
+                } else {
+                    player.displayClientMessage(
+                            Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master"),
+                            true);
+                }
+            } else {
+                player.displayClientMessage(mirror.getStatusMessage(), true);
+            }
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
