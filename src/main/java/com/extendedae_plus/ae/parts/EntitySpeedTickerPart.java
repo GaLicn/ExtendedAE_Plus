@@ -1,9 +1,12 @@
 package com.extendedae_plus.ae.parts;
 
+import appeng.api.components.ExportedUpgrades;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.Setting;
 import appeng.api.config.YesNo;
+import appeng.api.ids.AEComponents;
+import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyService;
@@ -20,10 +23,13 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigManagerBuilder;
 import appeng.core.definitions.AEItems;
 import appeng.items.parts.PartModels;
+import appeng.items.tools.NetworkToolItem;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import appeng.parts.PartModel;
 import appeng.parts.automation.UpgradeablePart;
+import appeng.util.SettingsFrom;
+import appeng.util.inv.PlayerInternalInventory;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
@@ -37,7 +43,11 @@ import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -47,6 +57,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackLinkedSet;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -55,6 +66,7 @@ import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -437,6 +449,28 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     }
 
     @Override
+    public void importSettings(SettingsFrom mode, DataComponentMap input, @Nullable Player player) {
+        if (mode != SettingsFrom.MEMORY_CARD) {
+            super.importSettings(mode, input, player);
+            return;
+        }
+
+        var desiredUpgrades = input.get(AEComponents.EXPORTED_UPGRADES);
+        super.importSettings(mode, this.filterOutExportedUpgrades(input), player);
+
+        if (desiredUpgrades == null) {
+            return;
+        }
+
+        if (player == null || player.getAbilities().instabuild) {
+            this.setUpgradesDirect(desiredUpgrades);
+            return;
+        }
+
+        this.restoreExactUpgrades(player, desiredUpgrades);
+    }
+
+    @Override
     public void upgradesChanged() {
         super.upgradesChanged();
         if (this.isClientSide()) {
@@ -630,5 +664,147 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
             return this.getMainNode().getNode().getOwningPlayerProfileId();
         }
         return null;
+    }
+
+    private DataComponentMap filterOutExportedUpgrades(DataComponentMap input) {
+        if (input.get(AEComponents.EXPORTED_UPGRADES) == null) {
+            return input;
+        }
+
+        var builder = DataComponentMap.builder();
+        for (var type : input.keySet()) {
+            if (type == AEComponents.EXPORTED_UPGRADES) {
+                continue;
+            }
+            copyDataComponent(input, builder, type);
+        }
+        return builder.build();
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void copyDataComponent(DataComponentMap input, DataComponentMap.Builder builder,
+                                          DataComponentType<?> type) {
+        var rawType = (DataComponentType) type;
+        var value = input.get(rawType);
+        if (value != null) {
+            builder.set(rawType, value);
+        }
+    }
+
+    private void setUpgradesDirect(ExportedUpgrades desiredUpgrades) {
+        var upgrades = this.getUpgrades();
+        for (int i = 0; i < upgrades.size(); i++) {
+            upgrades.setItemDirect(i, ItemStack.EMPTY);
+        }
+        for (var desired : desiredUpgrades.upgrades()) {
+            if (!desired.isEmpty()) {
+                upgrades.addItems(desired.copy());
+            }
+        }
+        this.upgradesChanged();
+        this.saveChanges();
+    }
+
+    private void restoreExactUpgrades(Player player, ExportedUpgrades desiredUpgrades) {
+        var upgrades = this.getUpgrades();
+        var desiredCounts = collectUpgradeCounts(desiredUpgrades.upgrades());
+        var currentCounts = collectUpgradeCounts(upgrades);
+
+        Object2IntMap<ItemStack> excessCounts = new Object2IntOpenCustomHashMap<>(ItemStackLinkedSet.TYPE_AND_TAG);
+        excessCounts.defaultReturnValue(0);
+        for (var entry : currentCounts.object2IntEntrySet()) {
+            int excess = entry.getIntValue() - desiredCounts.getInt(entry.getKey());
+            if (excess > 0) {
+                excessCounts.put(entry.getKey(), excess);
+            }
+        }
+
+        var upgradeSources = new ArrayList<InternalInventory>();
+        upgradeSources.add(new PlayerInternalInventory(player.getInventory()));
+
+        var networkTool = NetworkToolItem.findNetworkToolInv(player);
+        if (networkTool != null) {
+            upgradeSources.add(networkTool.getInventory());
+        }
+
+        for (int i = 0; i < upgrades.size(); i++) {
+            var current = upgrades.getStackInSlot(i);
+            if (current.isEmpty()) {
+                continue;
+            }
+
+            var key = normalizeUpgradeKey(current);
+            int excess = excessCounts.getInt(key);
+            if (excess <= 0) {
+                continue;
+            }
+
+            var removed = upgrades.extractItem(i, Math.min(excess, current.getCount()), false);
+            if (removed.isEmpty()) {
+                continue;
+            }
+
+            excessCounts.put(key, excess - removed.getCount());
+            for (var upgradeSource : upgradeSources) {
+                if (removed.isEmpty()) {
+                    break;
+                }
+                removed = upgradeSource.addItems(removed);
+            }
+            if (!removed.isEmpty()) {
+                player.drop(removed, false);
+            }
+        }
+
+        var afterRemovalCounts = collectUpgradeCounts(upgrades);
+        for (var entry : desiredCounts.object2IntEntrySet()) {
+            var desiredStack = entry.getKey();
+            int missing = entry.getIntValue() - afterRemovalCounts.getInt(desiredStack);
+            if (missing <= 0) {
+                continue;
+            }
+
+            var simulatedOverflow = upgrades.addItems(desiredStack.copyWithCount(missing), true);
+            int insertable = missing - simulatedOverflow.getCount();
+            if (insertable <= 0) {
+                continue;
+            }
+
+            int remaining = insertable;
+            for (var upgradeSource : upgradeSources) {
+                var extracted = upgradeSource.removeItems(remaining, desiredStack, null);
+                if (extracted.isEmpty()) {
+                    continue;
+                }
+
+                var overflow = upgrades.addItems(extracted);
+                if (!overflow.isEmpty()) {
+                    player.getInventory().placeItemBackInInventory(overflow);
+                }
+
+                remaining -= extracted.getCount();
+                if (remaining <= 0) {
+                    break;
+                }
+            }
+        }
+
+        this.saveChanges();
+    }
+
+    private static Object2IntMap<ItemStack> collectUpgradeCounts(Iterable<ItemStack> stacks) {
+        Object2IntMap<ItemStack> counts = new Object2IntOpenCustomHashMap<>(ItemStackLinkedSet.TYPE_AND_TAG);
+        counts.defaultReturnValue(0);
+        for (var stack : stacks) {
+            if (stack == null || stack.isEmpty()) {
+                continue;
+            }
+            counts.mergeInt(normalizeUpgradeKey(stack), stack.getCount(), Integer::sum);
+        }
+        return counts;
+    }
+
+    private static ItemStack normalizeUpgradeKey(ItemStack stack) {
+        return stack.copyWithCount(1);
     }
 }
