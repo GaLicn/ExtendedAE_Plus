@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "extendedae_plus:block/fish_dan_" },
+    "facing=east": { "model": "extendedae_plus:block/fish_dan_", "y": 90 },
+    "facing=south": { "model": "extendedae_plus:block/fish_dan_", "y": 180 },
+    "facing=west": { "model": "extendedae_plus:block/fish_dan_", "y": 270 }
+  }
+}

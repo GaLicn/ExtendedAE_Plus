@@ -85,6 +85,22 @@ public final class ModItems {
             "mirror_pattern_provider",
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> C_H716 = ITEMS.register(
+            "c-h716",
+            () -> new BlockItem(ModBlocks.C_H716.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> FISH_DAN = ITEMS.register(
+            "fish_dan_",
+            () -> new BlockItem(ModBlocks.FISH_DAN.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> _FENG = ITEMS.register(
+            "_feng",
+            () -> new BlockItem(ModBlocks._FENG.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> XBAI = ITEMS.register(
+            "xbai",
+            () -> new BlockItem(ModBlocks.XBAI.get(), new Item.Properties())
+    );
     public static final DeferredItem<MirrorPatternBindingToolItem> MIRROR_PATTERN_BINDING_TOOL = ITEMS.register(
             "mirror_pattern_binding_tool",
             () -> new MirrorPatternBindingToolItem(new Item.Properties())

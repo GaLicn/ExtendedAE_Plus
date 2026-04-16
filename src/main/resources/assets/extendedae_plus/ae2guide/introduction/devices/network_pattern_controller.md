@@ -18,7 +18,7 @@ The **Pattern Provider Status Controller** is a central control unit that allows
 
 ## User Interface & Operations
 
-![Pattern Provider Status Controller Interface](../../picture/network_pattern_controller.png)
+![Pattern Provider Status Controller Interface](../../picture/network_pattern_controller_en.png)
 
 The controller UI provides the following control options:
 

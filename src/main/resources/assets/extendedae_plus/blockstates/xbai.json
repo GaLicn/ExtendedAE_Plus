@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "extendedae_plus:block/xbai" },
+    "facing=east": { "model": "extendedae_plus:block/xbai", "y": 90 },
+    "facing=south": { "model": "extendedae_plus:block/xbai", "y": 180 },
+    "facing=west": { "model": "extendedae_plus:block/xbai", "y": 270 }
+  }
+}
