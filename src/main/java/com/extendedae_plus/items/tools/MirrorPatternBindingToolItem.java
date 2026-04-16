@@ -1,13 +1,18 @@
 package com.extendedae_plus.items.tools;
 
-import appeng.blockentity.crafting.PatternProviderBlockEntity;
+import appeng.blockentity.networking.CableBusBlockEntity;
+import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import appeng.parts.AEBasePart;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity.MasterLocation;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -18,6 +23,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -27,6 +33,7 @@ public class MirrorPatternBindingToolItem extends Item {
     private static final String TAG_SELECTED_RANGE_START = "selectedRangeStart";
     private static final String TAG_DIMENSION = "dimension";
     private static final String TAG_POS = "pos";
+    private static final String TAG_SIDE = "side";
 
     public MirrorPatternBindingToolItem(Properties properties) {
         super(properties.stacksTo(1));
@@ -47,18 +54,13 @@ public class MirrorPatternBindingToolItem extends Item {
         var player = context.getPlayer();
         var blockEntity = level.getBlockEntity(context.getClickedPos());
 
-        if (blockEntity instanceof PatternProviderBlockEntity && !(blockEntity instanceof MirrorPatternProviderBlockEntity)) {
+        var clickedMaster = getClickedMaster(level, context);
+        if (clickedMaster != null) {
             if (player != null && player.isShiftKeyDown()) {
                 if (!level.isClientSide) {
-                    setSelectedMaster(stack, GlobalPos.of(level.dimension(), context.getClickedPos()));
+                    setSelectedMaster(stack, clickedMaster);
                     clearSelectedRangeStart(stack);
-                    player.displayClientMessage(
-                            Component.translatable(
-                                    "extendedae_plus.message.mirror_binding_tool.selected",
-                                    context.getClickedPos().getX(),
-                                    context.getClickedPos().getY(),
-                                    context.getClickedPos().getZ()),
-                            true);
+                    player.displayClientMessage(createSelectedMessage(clickedMaster), true);
                 }
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
@@ -130,6 +132,9 @@ public class MirrorPatternBindingToolItem extends Item {
             tooltipComponents.add(Component.translatable(
                     "item.extendedae_plus.mirror_pattern_binding_tool.dimension",
                     selectedMaster.dimension().location().toString()));
+            if (selectedMaster.side() != null) {
+                tooltipComponents.add(Component.literal("方向: " + selectedMaster.side().getSerializedName()));
+            }
         } else {
             tooltipComponents.add(Component.translatable("item.extendedae_plus.mirror_pattern_binding_tool.unset"));
         }
@@ -145,9 +150,9 @@ public class MirrorPatternBindingToolItem extends Item {
         }
     }
 
-    private static void setSelectedMaster(ItemStack stack, GlobalPos master) {
+    private static void setSelectedMaster(ItemStack stack, MasterLocation master) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        tag.put(TAG_SELECTED_MASTER, createGlobalPosTag(master));
+        tag.put(TAG_SELECTED_MASTER, createMasterTag(master));
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
     }
 
@@ -170,8 +175,8 @@ public class MirrorPatternBindingToolItem extends Item {
     }
 
     @Nullable
-    private static GlobalPos getSelectedMaster(ItemStack stack) {
-        return getStoredGlobalPos(stack, TAG_SELECTED_MASTER);
+    private static MasterLocation getSelectedMaster(ItemStack stack) {
+        return getStoredMasterLocation(stack, TAG_SELECTED_MASTER);
     }
 
     @Nullable
@@ -179,11 +184,36 @@ public class MirrorPatternBindingToolItem extends Item {
         return getStoredGlobalPos(stack, TAG_SELECTED_RANGE_START);
     }
 
+    private static CompoundTag createMasterTag(MasterLocation master) {
+        var selectedTag = createGlobalPosTag(master.asGlobalPos());
+        if (master.side() != null) {
+            selectedTag.putString(TAG_SIDE, master.side().getSerializedName());
+        }
+        return selectedTag;
+    }
+
     private static CompoundTag createGlobalPosTag(GlobalPos globalPos) {
         var selectedTag = new CompoundTag();
         selectedTag.putString(TAG_DIMENSION, globalPos.dimension().location().toString());
         selectedTag.putLong(TAG_POS, globalPos.pos().asLong());
         return selectedTag;
+    }
+
+    @Nullable
+    private static MasterLocation getStoredMasterLocation(ItemStack stack, String tagKey) {
+        var globalPos = getStoredGlobalPos(stack, tagKey);
+        if (globalPos == null) {
+            return null;
+        }
+
+        var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        var selectedTag = tag.getCompound(tagKey);
+        Direction side = null;
+        if (selectedTag.contains(TAG_SIDE, Tag.TAG_STRING)) {
+            side = Direction.byName(selectedTag.getString(TAG_SIDE));
+        }
+
+        return new MasterLocation(globalPos.dimension(), globalPos.pos(), side);
     }
 
     @Nullable
@@ -253,7 +283,7 @@ public class MirrorPatternBindingToolItem extends Item {
                 true);
     }
 
-    private static RangeBindResult bindMirrorsInRange(Level level, BlockPos start, BlockPos end, GlobalPos selectedMaster) {
+    private static RangeBindResult bindMirrorsInRange(Level level, BlockPos start, BlockPos end, MasterLocation selectedMaster) {
         int totalMirrors = 0;
         int boundMirrors = 0;
 
@@ -275,6 +305,48 @@ public class MirrorPatternBindingToolItem extends Item {
         }
 
         return new RangeBindResult(totalMirrors, boundMirrors, totalMirrors - boundMirrors);
+    }
+
+    @Nullable
+    private static MasterLocation getClickedMaster(Level level, UseOnContext context) {
+        var pos = context.getClickedPos();
+        var blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null || blockEntity instanceof MirrorPatternProviderBlockEntity) {
+            return null;
+        }
+
+        if (blockEntity instanceof PatternProviderLogicHost) {
+            return new MasterLocation(level.dimension(), pos, null);
+        }
+
+        if (blockEntity instanceof CableBusBlockEntity cableBus) {
+            Vec3 hitVec = context.getClickLocation();
+            Vec3 hitInBlock = new Vec3(hitVec.x - pos.getX(), hitVec.y - pos.getY(), hitVec.z - pos.getZ());
+            var selectedPart = cableBus.getCableBus().selectPartLocal(hitInBlock).part;
+            if (selectedPart instanceof AEBasePart basePart
+                    && selectedPart instanceof PatternProviderLogicHost) {
+                return new MasterLocation(level.dimension(), pos, basePart.getSide());
+            }
+        }
+
+        return null;
+    }
+
+    private static Component createSelectedMessage(MasterLocation master) {
+        return appendSide(
+                Component.translatable(
+                        "extendedae_plus.message.mirror_binding_tool.selected",
+                        master.pos().getX(),
+                        master.pos().getY(),
+                        master.pos().getZ()),
+                master.side());
+    }
+
+    private static Component appendSide(MutableComponent message, @Nullable Direction side) {
+        if (side != null) {
+            message.append(Component.literal(" [" + side.getSerializedName() + "]"));
+        }
+        return message;
     }
 
     @Override

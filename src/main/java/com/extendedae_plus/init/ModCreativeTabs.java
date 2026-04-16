@@ -36,6 +36,10 @@ public final class ModCreativeTabs {
                                 ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance(),
+                                ModItems.C_H716.get().getDefaultInstance(),
+                                ModItems.FISH_DAN.get().getDefaultInstance(),
+                                ModItems._FENG.get().getDefaultInstance(),
+                                ModItems.XBAI.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_BINDING_TOOL.get().getDefaultInstance()
                         ).forEach(output::accept);
 

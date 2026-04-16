@@ -26,7 +26,7 @@ The **Entity Accelerator** consumes energy from the AE2 network to accelerate bl
     - If the *Applied Flux* mod is installed, FE energy stored in network disks can be consumed to continue acceleration when AE energy is insufficient (priority configurable).
 4. **Configuration Options:** Base energy consumption, entity blacklist, and per-entity energy multiplier can be adjusted via the config file.
 
-![Entity Accelerator Interface](../../picture/entity_speed_ticker.png)
+![Entity Accelerator Interface](../../picture/entity_speed_ticker_en.png)
 
 ## Energy Consumption Mechanism
 
