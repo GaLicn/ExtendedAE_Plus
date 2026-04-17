@@ -52,6 +52,10 @@ public final class UpgradeCards {
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.EXPORT_BUS, 1, ioBusGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.STORAGE_BUS, 1, storageGroup);
 
+            String storageCellGroup = GuiText.StorageCells.getTranslationKey();
+            Upgrades.add(AEItems.FUZZY_CARD, ModItems.INFINITY_BIGINTEGER_CELL.get(), 1, storageCellGroup);
+            Upgrades.add(AEItems.INVERTER_CARD, ModItems.INFINITY_BIGINTEGER_CELL.get(), 1, storageCellGroup);
+
             //EAE 的扩展输入/输出总线支持频道卡（部件）
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_IMPORT_BUS, 1, ioBusGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_EXPORT_BUS, 1, ioBusGroup);

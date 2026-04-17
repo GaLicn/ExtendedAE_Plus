@@ -2,6 +2,10 @@ package com.extendedae_plus.items;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.cells.ICellWorkbenchItem;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.upgrades.UpgradeInventories;
+import appeng.items.contents.CellConfig;
+import appeng.util.ConfigInventory;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.util.storage.InfinityConstants;
 import com.google.common.base.Preconditions;
@@ -95,11 +99,30 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
     }
 
     @Override
+    public IUpgradeInventory getUpgrades(ItemStack itemStack) {
+        return UpgradeInventories.forItem(itemStack, 4);
+    }
+
+    @Override
+    public ConfigInventory getConfigInventory(ItemStack itemStack) {
+        return CellConfig.create(itemStack);
+    }
+
+    @Override
     public FuzzyMode getFuzzyMode(ItemStack itemStack) {
-        return null;
+        final String fz = itemStack.getOrCreateTag().getString("FuzzyMode");
+        if (fz.isEmpty()) {
+            return FuzzyMode.IGNORE_ALL;
+        }
+        try {
+            return FuzzyMode.valueOf(fz);
+        } catch (Throwable t) {
+            return FuzzyMode.IGNORE_ALL;
+        }
     }
 
     @Override
     public void setFuzzyMode(ItemStack itemStack, FuzzyMode fuzzyMode) {
+        itemStack.getOrCreateTag().putString("FuzzyMode", fuzzyMode.name());
     }
 }

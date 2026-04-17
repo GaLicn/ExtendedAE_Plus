@@ -1,6 +1,8 @@
 package com.extendedae_plus.api.storage;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.IncludeExclude;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
@@ -8,7 +10,11 @@ import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
 import appeng.api.storage.cells.StorageCell;
+import appeng.api.upgrades.IUpgradeInventory;
 import appeng.core.AELog;
+import appeng.core.definitions.AEItems;
+import appeng.util.ConfigInventory;
+import appeng.util.prioritylist.IPartitionList;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.util.storage.InfinityConstants;
@@ -37,6 +43,8 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private final ItemStack self;
     // AE2 提供的保存提供者，用于在容器中批量保存时触发回调
     private final ISaveProvider container;
+    private final IPartitionList partitionList;
+    private final IncludeExclude partitionListMode;
     // 存储物品键和数量的映射
     private Object2ObjectMap<AEKey, BigInteger> AEKey2AmountsMap;
     // 存储的物品种类数量
@@ -59,6 +67,17 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         this.container = saveProvider;
         // 初始化 storedAmounts 为 null，延迟加载物品数据
         this.AEKey2AmountsMap = null;
+        var builder = IPartitionList.builder();
+        var upgrades = this.getUpgradesInventory();
+        var config = this.getConfigInventory();
+        boolean hasInverter = upgrades.isInstalled(AEItems.INVERTER_CARD);
+        boolean isFuzzy = upgrades.isInstalled(AEItems.FUZZY_CARD);
+        if (isFuzzy) {
+            builder.fuzzyMode(this.getFuzzyMode());
+        }
+        builder.addAll(config.keySet());
+        this.partitionListMode = hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST;
+        this.partitionList = builder.build();
         // 初始化磁盘数据
         initData();
     }
@@ -146,6 +165,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
                     // backward compat: also remove internal cell item count key if present
                     tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
                 }
+                this.isPersisted = true;
                 initData();
             }
             return;
@@ -195,7 +215,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     // 获取存储单元的描述（此处返回null，可自定义）
     @Override
     public Component getDescription() {
-        return null;
+        return self.getHoverName();
     }
 
     // 静态方法，创建存储单元库存
@@ -311,6 +331,18 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return ExtendedAEPlus.STORAGE_INSTANCE;
     }
 
+    private ConfigInventory getConfigInventory() {
+        return this.cell.getConfigInventory(this.self);
+    }
+
+    private IUpgradeInventory getUpgradesInventory() {
+        return this.cell.getUpgrades(this.self);
+    }
+
+    private FuzzyMode getFuzzyMode() {
+        return this.cell.getFuzzyMode(this.self);
+    }
+
     // 标记数据需要保存，并通知容器或直接持久化
     private void saveChanges() {
         // 更新存储的物品种类数量
@@ -337,6 +369,9 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
         // 数量为0或类型不匹配直接返回
         if (amount == 0){
+            return 0;
+        }
+        if (!this.partitionList.matchesFilter(what, this.partitionListMode)) {
             return 0;
         }
         // 不允许存储有物品的无限单元
