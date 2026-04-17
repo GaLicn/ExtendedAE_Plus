@@ -1,7 +1,12 @@
 package com.extendedae_plus.items;
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.ids.AEComponents;
 import appeng.api.storage.cells.ICellWorkbenchItem;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.upgrades.UpgradeInventories;
+import appeng.items.contents.CellConfig;
+import appeng.util.ConfigInventory;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellInventory;
 import com.extendedae_plus.util.storage.InfinityConstants;
 import com.google.common.base.Preconditions;
@@ -25,8 +30,7 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
-        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon1"));
-        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.summon2"));
+        tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell"));
 
         Preconditions.checkArgument(stack.getItem() == this);
         // 仅在 ItemStack 自身存在 UUID 时显示 UUID，避免触发持久化或加载逻辑
@@ -78,11 +82,22 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
     }
 
     @Override
+    public IUpgradeInventory getUpgrades(ItemStack itemStack) {
+        return UpgradeInventories.forItem(itemStack, 4);
+    }
+
+    @Override
+    public ConfigInventory getConfigInventory(ItemStack itemStack) {
+        return CellConfig.create(itemStack);
+    }
+
+    @Override
     public FuzzyMode getFuzzyMode(ItemStack itemStack) {
-        return null;
+        return itemStack.getOrDefault(AEComponents.STORAGE_CELL_FUZZY_MODE, FuzzyMode.IGNORE_ALL);
     }
 
     @Override
     public void setFuzzyMode(ItemStack itemStack, FuzzyMode fuzzyMode) {
+        itemStack.set(AEComponents.STORAGE_CELL_FUZZY_MODE, fuzzyMode);
     }
 }

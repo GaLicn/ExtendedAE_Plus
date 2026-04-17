@@ -62,6 +62,10 @@ public class UpgradeCards {
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.PRECISE_STORAGE_BUS, 1, storageGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.PRECISE_EXPORT_BUS, 1, ioBusGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.THRESHOLD_EXPORT_BUS, 1, ioBusGroup);
+
+            String storageCellGroup = GuiText.StorageCells.getTranslationKey();
+            Upgrades.add(AEItems.FUZZY_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
+            Upgrades.add(AEItems.INVERTER_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
             
             // 超大接口
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.OVERSIZE_INTERFACE, 1, interfaceGroup);
