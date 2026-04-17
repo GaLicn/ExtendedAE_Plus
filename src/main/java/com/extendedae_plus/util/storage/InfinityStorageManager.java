@@ -9,7 +9,6 @@ import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
-import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -55,7 +54,10 @@ public class InfinityStorageManager extends SavedData {
             // 获取当前索引的 CompoundTag，表示单个磁盘的数据
             CompoundTag cell = cellList.getCompound(i);
             // 从 CompoundTag 中读取 UUID 和 DataStorage 数据，并存入 cells 映射
-            cells.put(cell.getUUID(InfinityConstants.INFINITY_CELL_UUID), InfinityDataStorage.loadFromNBT(cell.getCompound(InfinityConstants.INFINITY_CELL_DATA)));
+            cells.put(
+                    cell.getUUID(InfinityConstants.INFINITY_CELL_UUID),
+                    InfinityDataStorage.loadFromNBT(cell.getCompound(InfinityConstants.INFINITY_CELL_DATA), registries)
+            );
         }
         // 使用加载的 cells 数据创建新的 StorageManager 实例
         return new InfinityStorageManager(cells);
@@ -69,7 +71,7 @@ public class InfinityStorageManager extends SavedData {
         for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
             CompoundTag cell = new CompoundTag();
             cell.putUUID(InfinityConstants.INFINITY_CELL_UUID, entry.getKey());
-            cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT());
+            cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT(provider));
             cellList.add(cell);
         }
         nbt.put(InfinityConstants.INFINITY_CELL_LIST, cellList);
@@ -111,20 +113,6 @@ public class InfinityStorageManager extends SavedData {
         }
         // 返回指定 UUID 对应的 DataStorage 对象
         return cells.get(uuid);
-    }
-
-    // 修改指定 UUID 的磁盘数据，包括堆栈键、数量和总项目数
-    public void modifyDisk(UUID uuid, ListTag keys, ListTag amounts, BigInteger itemCount) {
-        // 获取或创建指定 UUID 的 DataStorage 对象
-        InfinityDataStorage cellToModify = getOrCreateCell(uuid);
-        if (keys != null && amounts != null) {
-            cellToModify.keys = keys;
-            cellToModify.amounts = amounts;
-        }
-        // 更新 DataStorage 的 itemCount 字段
-        cellToModify.itemCount = itemCount;
-        // 将修改后的 DataStorage 对象更新到 cells 映射
-        updateCell(uuid, cellToModify);
     }
 
 
