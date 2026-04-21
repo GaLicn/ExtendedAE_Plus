@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.5.4]
+
+### Added / 新增
+- 样板终端新增系列倍增按钮
+  - Added series multiplier buttons to the Pattern Terminal.
+- 镜像绑定工具新增范围绑定功能
+  - Added area binding support to the Mirror Binding Tool.
+- 新增镜像样板供应器支持绑定 part 类型的样板供应器以及扩展样板供应器
+  - Mirror Pattern Providers can now bind to part-type Pattern Providers and Extended Pattern Providers.
+- 新增 4 个纪念品玩偶方块
+  - Added 4 souvenir doll blocks.
+- 唯一匹配时触发自动上传新增开关控制按钮
+  - Added a toggle button for automatic upload when only one match is found.
+
+### Changed / 变更
+- 上传合成配方时搜索内容固定为 `crafting`
+  - The search keyword is now fixed to `crafting` when uploading crafting recipes.
+- 上传合成样板到装配矩阵适配 AE2CS 的陨石样板供应器
+  - Uploading crafting patterns to the Assembler Matrix now supports AE2CS Meteorite Pattern Providers.
+- 镜像绑定工具操作逻辑和 tips 提示对齐
+  - Aligned Mirror Binding Tool interaction logic with its tips and prompts.
+- AE2 合成进度界面打开机器 UI 时过滤掉镜像样板供应器
+  - Mirror Pattern Providers are now filtered out when opening machine UIs from the AE2 crafting progress screen.
+
+### Fixed / 修复
+- 修复使用标签无线收发器时退出游戏无法保存的问题
+  - Fixed an issue where changes to the Labeled Wireless Transceiver were not saved when leaving the game.
+- 修复无线收发器满连接时模型顶面异常问题
+  - Fixed abnormal top-face rendering on Wireless Transceivers when fully connected.
+- 修正虚拟合成卡取消任务逻辑，改为全部发配完毕，且改用 `finishJob` 完成任务
+  - Corrected Virtual Crafting Card task cancellation logic to wait until full dispatch completes and finish the task via `finishJob`.
+- 修复使用内存卡刷取实体加速卡的 bug
+  - Fixed a bug that allowed Entity Acceleration Cards to be duplicated via the Memory Card.
+
+### Performance / 性能
+- 大幅度优化标签无线收发器性能消耗
+  - Significantly optimized the performance cost of the Labeled Wireless Transceiver.
+- 优化无限磁盘的性能
+  - Optimized infinite disk performance.
+
+### Docs / 文档
+- 修复 1.21.1 Guide 中图片只有中文没有英文图片的问题
+  - Fixed missing English images in the 1.21.1 Guide.
+- 修复 1.21.1 Guide 中部分标签路径错误问题
+  - Fixed several incorrect tag paths in the 1.21.1 Guide.
+- 超级速度核心 Guide 新增准确描述 `issue#70`
+  - Added a more accurate Guide entry for the Super Speed Core (`issue#70`).
+
 ## [1.5.3]
 
 ### Added / 新增
