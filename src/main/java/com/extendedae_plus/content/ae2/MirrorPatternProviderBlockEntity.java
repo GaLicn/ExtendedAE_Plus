@@ -429,17 +429,15 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private boolean hasDifferentMirroredSettings(PatternProviderLogicHost master) {
-        var mirrorLogic = this.getLogic();
-        var masterLogic = master.getLogic();
+        var mirrorSettings = new CompoundTag();
+        var masterSettings = new CompoundTag();
+
+        this.exportSettings(SettingsFrom.MEMORY_CARD, mirrorSettings, null);
+        exportMasterSettings(master, masterSettings);
 
         return !Objects.equals(this.getCustomName(), getCustomName(master))
                 || this.getPriority() != master.getPriority()
-                || mirrorLogic.getConfigManager().getSetting(Settings.BLOCKING_MODE)
-                != masterLogic.getConfigManager().getSetting(Settings.BLOCKING_MODE)
-                || mirrorLogic.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL)
-                != masterLogic.getConfigManager().getSetting(Settings.PATTERN_ACCESS_TERMINAL)
-                || mirrorLogic.getConfigManager().getSetting(Settings.LOCK_CRAFTING_MODE)
-                != masterLogic.getConfigManager().getSetting(Settings.LOCK_CRAFTING_MODE)
+                || !Objects.equals(mirrorSettings, masterSettings)
                 || supportsPushDirectionState(master)
                 && this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != getPushDirection(master);
     }
