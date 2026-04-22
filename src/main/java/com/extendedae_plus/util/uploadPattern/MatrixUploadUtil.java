@@ -132,6 +132,7 @@ public final class MatrixUploadUtil {
             if (remain.getCount() < pattern.getCount()) {
                 // 上传成功
                 sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
+                player.getPersistentData().putLong("eap_last_uploaded_provider_id", -999999L);
                 return true;
             }
         }
@@ -146,7 +147,7 @@ public final class MatrixUploadUtil {
     /**
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“样板核心”的用于外部插入的内部库存
      */
-    private static List<InternalInventory> findAllMatrixPatternInventories(IGrid grid) {
+    public static List<InternalInventory> findAllMatrixPatternInventories(IGrid grid) {
         List<InternalInventory> result = new ArrayList<>();
         if (grid == null) return result;
 
@@ -242,6 +243,7 @@ public final class MatrixUploadUtil {
             stack.shrink(inserted);
             if (stack.isEmpty()) encodedSlot.set(ItemStack.EMPTY);
             sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
+            player.getPersistentData().putLong("eap_last_uploaded_provider_id", -999999L);
         }
     }
 
