@@ -23,6 +23,7 @@
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
+    "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",
     "extendedae.accessor.HighlightButtonAccessor",
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
