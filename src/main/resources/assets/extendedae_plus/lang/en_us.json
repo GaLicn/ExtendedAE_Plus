@@ -275,5 +275,8 @@
   "extendedae_plus.jade.network.online": "Online",
   "extendedae_plus.jade.network.offline": "Offline",
 
-  "extendedae_plus.screen.global_controller_title": "Pattern Provider Status Controller"
+  "extendedae_plus.screen.global_controller_title": "Pattern Provider Status Controller",
+
+  "gui.extendedae_plus.add_bookmark": "Add Bookmark",
+  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "Add missing items to JEI bookmarks"
 }

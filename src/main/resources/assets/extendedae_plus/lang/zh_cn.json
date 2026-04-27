@@ -270,5 +270,8 @@
   "extendedae_plus.jade.network.online": "设备在线",
   "extendedae_plus.jade.network.offline": "设备离线",
 
-  "extendedae_plus.screen.global_controller_title": "样板供应器状态控制器"
+  "extendedae_plus.screen.global_controller_title": "样板供应器状态控制器",
+
+  "gui.extendedae_plus.add_bookmark": "添加书签",
+  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "添加缺失物品到JEI书签"
 }
