@@ -281,6 +281,9 @@ public final class JeiRuntimeProxy {
 
 	/**
 	 * 内部方法：将指定类型的原料添加到 JEI 书签列表
+	 * 兼容新旧版本 JEI：
+	 * - 新版本 (>= 19.27.0.336)：使用 BookmarkFactory.create()
+	 * - 旧版本 (<= 19.27.0.335)：使用 IngredientBookmark.create()
 	 * @param ingredientType 原料类型（如 ITEM_STACK、FLUID_STACK 等）
 	 * @param ingredient 原料对象（如 ItemStack、FluidStack 等）
 	 */
@@ -307,16 +310,44 @@ public final class JeiRuntimeProxy {
 			Object typedOpt = createTyped.invoke(manager, ingredientType, ingredient);
 			if (typedOpt instanceof Optional<?> opt && opt.isPresent()) {
 				Object typed = opt.get();
-				// 从 BookmarkList 获取 bookmarkFactory 字段
-				Field factoryField = list.getClass().getDeclaredField("bookmarkFactory");
-				factoryField.setAccessible(true);
-				Object factory = factoryField.get(list);
-				// 调用 bookmarkFactory.create() 创建书签对象
-				Method create = factory.getClass().getMethod("create", Class.forName("mezz.jei.api.ingredients.ITypedIngredient"));
-				Object bookmark = create.invoke(factory, typed);
+				Object bookmark = null;
+
+				// 【新版本 JEI >= JEI 19.27.0.336】使用 BookmarkFactory 创建书签
+				try {
+					Field factoryField = list.getClass().getDeclaredField("bookmarkFactory");
+					factoryField.setAccessible(true);
+					Object factory = factoryField.get(list);
+					Method create = factory.getClass().getMethod("create", Class.forName("mezz.jei.api.ingredients.ITypedIngredient"));
+					bookmark = create.invoke(factory, typed);
+				} catch (NoSuchFieldException e) {
+					// 【旧版本 <= JEI 19.27.0.335】使用 IngredientBookmark.create() 静态方法创建书签
+					Class<?> ingredientBookmarkCls = Class.forName("mezz.jei.gui.bookmarks.IngredientBookmark");
+					Method create = ingredientBookmarkCls.getMethod("create", Class.forName("mezz.jei.api.ingredients.ITypedIngredient"), Class.forName("mezz.jei.api.runtime.IIngredientManager"));
+					bookmark = create.invoke(null, typed, manager);
+				}
+
 				// 将书签添加到列表
-				Class<?> ibCls = Class.forName("mezz.jei.gui.bookmarks.IBookmark");
-				list.getClass().getMethod("add", ibCls).invoke(list, bookmark);
+				if (bookmark != null) {
+					// 获取 bookmark 的实际类（IngredientBookmark）
+					Class<?> bookmarkClass = bookmark.getClass();
+					// 查找 add 方法
+					// 【新旧版本兼容】遍历所有方法找到参数类型兼容的 add 方法
+					// 新版本：add(IBookmark)  旧版本：add(IBookmark) 或 add(IngredientBookmark)
+					Method addMethod = null;
+					for (Method m : list.getClass().getMethods()) {
+						if (m.getName().equals("add") && m.getParameterCount() == 1) {
+							Class<?> paramType = m.getParameterTypes()[0];
+							// 检查参数类型是否是 bookmark 的父类或接口
+							if (paramType.isAssignableFrom(bookmarkClass)) {
+								addMethod = m;
+								break;
+							}
+						}
+					}
+					if (addMethod != null) {
+						addMethod.invoke(list, bookmark);
+					}
+				}
 			}
 		} catch (Throwable ignored) {
 		}
