@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:basic_core"
+    },
+    "C": {
+      "item": "ae2:cell_component_16k"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    },
+    "L": {
+      "item": "ae2:logic_processor"
+    },
+    "M": {
+      "tag": "c:dusts/certus_quartz"
+    },
+    "P": {
+      "item": "ae2:calculation_processor"
+    }
+  },
+  "pattern": [
+    "MCM",
+    "LBP",
+    "MEM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:basic_core",
+    "components": {
+      "extendedae_plus:core_type": "STORAGE",
+      "extendedae_plus:core_stage": 1
+    }
+  },
+  "show_notification": true
+}

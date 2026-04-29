@@ -1,0 +1,42 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "advanced_ae"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "type": "neoforge:components",
+      "items": "extendedae_plus:basic_core",
+      "components": {
+        "extendedae_plus:core_type": "QUANTUM",
+        "extendedae_plus:core_stage": 3
+      }
+    },
+    "C": {
+      "item": "advanced_ae:quantum_storage_256"
+    },
+    "M": {
+      "item": "minecraft:netherite_block"
+    },
+    "N": {
+      "item": "minecraft:nether_star"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "MOM",
+    "NBN",
+    "MCM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:quantum_storage_core"
+  },
+  "show_notification": true
+}

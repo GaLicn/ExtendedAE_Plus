@@ -1,15 +1,18 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -109,10 +112,60 @@ public final class ModItems {
             "network_pattern_controller",
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
     );
-    static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+    public static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
             "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
     );
 
+    // ==================== 基础核心及相关物品 ====================
+    // 基础核心 - 用于合成各种高级核心，稀有度由DataComponent动态设置
+    public static final DeferredItem<BasicCoreItem> BASIC_CORE = ITEMS.register(
+            "basic_core",
+            () -> new BasicCoreItem(new Item.Properties())
+    );
+    // 存储核心
+    public static final DeferredItem<Item> STORAGE_CORE = ITEMS.register(
+            "storage_core",
+            () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
+    );
+    // 空间核心
+    public static final DeferredItem<Item> SPATIAL_CORE = ITEMS.register(
+            "spatial_core",
+            () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
+    );
+    // 吞噬核心
+    public static final DeferredItem<Item> INFINITY_CORE = ITEMS.register(
+            "infinity_core",
+            () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
+    );
+    // 湮灭奇点
+    public static final DeferredItem<Item> OBLIVION_SINGULARITY = ITEMS.register(
+            "oblivion_singularity",
+            () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE))
+    );
+    public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
+    public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
+
+    static {
+        // 能源存储核心 - 需要AppFlux模组
+        if (ModCheckUtils.isAppfluxLoading()) {
+            ENERGY_STORAGE_CORE = ITEMS.register(
+                    "energy_storage_core",
+                    () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
+            );
+        } else {
+            ENERGY_STORAGE_CORE = null;
+        }
+
+        // 量子存储核心 - 需要AdvancedAE模组
+        if (ModCheckUtils.isAAELoading()) {
+            QUANTUM_STORAGE_CORE = ITEMS.register(
+                    "quantum_storage_core",
+                    () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
+            );
+        } else {
+            QUANTUM_STORAGE_CORE = null;
+        }
+    }
 
     private ModItems() {}
 

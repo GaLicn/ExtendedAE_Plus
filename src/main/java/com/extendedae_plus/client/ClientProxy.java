@@ -4,11 +4,13 @@ import appeng.client.render.crafting.CraftingCubeModel;
 import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
+import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
@@ -33,6 +35,13 @@ public final class ClientProxy {
         // 注册 Item property
         ItemProperties.register(ModItems.ENTITY_SPEED_CARD.get(), ExtendedAEPlus.id("mult"),
                 (stack, world, entity, seed) -> (float) EntitySpeedCardItem.readMultiplier(stack));
+
+        // 注册 BasicCore 的 core_type 属性用于模型切换
+        ItemProperties.register(ModItems.BASIC_CORE.get(), ExtendedAEPlus.id("core_type"),
+                (stack, world, entity, seed) -> {
+                    BasicCoreItem.CoreType type = stack.get(EAPComponents.CORE_TYPE.get());
+                    return type != null ? (float) type.id : 0.0f;
+                });
 
         // 注册五种形成态模型为内置模型
         BuiltInModelHooks.addBuiltInModel(

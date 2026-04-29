@@ -1,6 +1,8 @@
 package com.extendedae_plus.integration.jei;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -27,27 +29,62 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
         JeiRuntimeProxy.setRuntime(jeiRuntime);
     }
 
-
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        // Register NBT-based subtype interpreter so JEI treats different multipliers as distinct items
         registration.registerSubtypeInterpreter(
                 VanillaTypes.ITEM_STACK,
-                com.extendedae_plus.init.ModItems.ENTITY_SPEED_CARD.get(),
-                new ISubtypeInterpreter<ItemStack>() {
+                ModItems.ENTITY_SPEED_CARD.get(),
+                new ISubtypeInterpreter<>() {
                     @Override
                     public @NotNull Object getSubtypeData(@NotNull ItemStack ingredient, @NotNull UidContext context) {
-                        // 返回你想让 JEI 区分子类型的数据，这里用 multiplier
                         return EntitySpeedCardItem.readMultiplier(ingredient);
                     }
 
                     @Override
-                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack ingredient, @NotNull UidContext context) {
+                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack ingredient,
+                                                                      @NotNull UidContext context) {
                         // 返回同样的值给旧接口兼容
                         return String.valueOf(EntitySpeedCardItem.readMultiplier(ingredient));
                     }
                 }
         );
 
+        // Basic Core - 基础核心的NBT变体支持
+        registration.registerSubtypeInterpreter(
+                VanillaTypes.ITEM_STACK,
+                ModItems.BASIC_CORE.get(),
+                new ISubtypeInterpreter<>() {
+                    @Override
+                    public @NotNull Object getSubtypeData(@NotNull ItemStack stack, @NotNull UidContext context) {
+                        if (!BasicCoreItem.isTyped(stack)) {
+                            return "untyped";
+                        }
+
+                        BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
+                        if (type == null) {
+                            return "untyped";
+                        }
+
+                        int stage = BasicCoreItem.getStage(stack);
+                        return type.id + "_" + stage;  // 如 "1_1", "2_3"
+                    }
+
+                    @Override
+                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack stack,
+                                                                      @NotNull UidContext context) {
+                        if (!BasicCoreItem.isTyped(stack)) {
+                            return "untyped";
+                        }
+
+                        BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
+                        if (type == null) {
+                            return "untyped";
+                        }
+
+                        int stage = BasicCoreItem.getStage(stack);
+                        return type.id + "_" + stage;
+                    }
+                }
+        );
     }
 }

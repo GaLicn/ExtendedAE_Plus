@@ -1,0 +1,47 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:mod_loaded",
+        "modid": "appflux"
+      }
+    },
+    {
+      "type": "neoforge:not",
+      "value": {
+        "type": "neoforge:mod_loaded",
+        "modid": "advanced_ae"
+      }
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "extendedae_plus:spatial_core"
+    },
+    "M": {
+      "item": "minecraft:netherite_block"
+    },
+    "N": {
+      "item": "minecraft:nether_star"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    },
+    "S": {
+      "item": "extendedae_plus:storage_core"
+    }
+  },
+  "pattern": [
+    "MNM",
+    "SOS",
+    "MCM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:infinity_core"
+  },
+  "show_notification": true
+}

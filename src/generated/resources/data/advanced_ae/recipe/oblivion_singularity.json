@@ -1,0 +1,34 @@
+{
+  "type": "advanced_ae:reaction",
+  "input_energy": 100000,
+  "input_fluid": {
+    "amount": 2000,
+    "ingredient": {
+      "fluid": "advanced_ae:quantum_infusion_source"
+    }
+  },
+  "input_items": [
+    {
+      "amount": 2,
+      "ingredient": {
+        "item": "ae2:singularity"
+      }
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:nether_star"
+      }
+    },
+    {
+      "amount": 4,
+      "ingredient": {
+        "item": "advanced_ae:quantum_alloy_plate"
+      }
+    }
+  ],
+  "output": {
+    "#": 1,
+    "#t": "ae2:i",
+    "id": "extendedae_plus:oblivion_singularity"
+  }
+}
