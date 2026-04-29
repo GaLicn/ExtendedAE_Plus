@@ -2,14 +2,21 @@ package com.extendedae_plus.datagen;
 
 import appeng.core.definitions.AEBlocks;
 import appeng.core.definitions.AEItems;
+import appeng.recipes.transform.TransformCircumstance;
+import appeng.recipes.transform.TransformRecipeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.glodblock.github.extendedae.common.EAESingletons;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.*;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.ItemLike;
+import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
+import net.pedroksl.advanced_ae.common.definitions.AAEItems;
+import net.pedroksl.advanced_ae.recipes.ReactionChamberRecipeBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +33,6 @@ public class CrafterRecipe extends RecipeProvider {
 
     @Override
     protected void buildRecipes(@NotNull RecipeOutput output) {
-
         //超级装配矩阵速度核心
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
                 .pattern("BRB")
@@ -92,5 +98,48 @@ public class CrafterRecipe extends RecipeProvider {
                 .define('C', Items.REDSTONE)
                 .define('D', AEItems.CALCULATION_PROCESSOR)
                 .save(output);
+
+        // 湮灭奇点 - 爆炸转换
+        TransformRecipeBuilder.transform(output,
+                                         ExtendedAEPlus.id("transform/oblivion_singularity"),
+                                         ModItems.OBLIVION_SINGULARITY.get(), 1,
+                                         TransformCircumstance.EXPLOSION,
+                                         AEItems.SINGULARITY, Items.NETHER_STAR, Items.NETHERITE_BLOCK
+        );
+
+        // 湮灭奇点 - AAE反应仓配方
+        ReactionChamberRecipeBuilder.react(ModItems.OBLIVION_SINGULARITY.get(), 1, 100000)
+                                    .input(AEItems.SINGULARITY, 2)
+                                    .input(Items.NETHER_STAR, 1)
+                                    .input(AAEItems.QUANTUM_ALLOY_PLATE, 4)
+                                    .fluid(AAEFluids.QUANTUM_INFUSION.source(), 2000)
+                                    .save(output, "oblivion_singularity");
+
+        // 基础核心配方
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.BASIC_CORE.get())
+                .pattern("ABA")
+                .pattern("CDE")
+                .pattern("AFA")
+                .define('A', Items.NETHERITE_BLOCK)
+                .define('B', Items.NETHER_STAR)
+                .define('C', AEItems.LOGIC_PROCESSOR)
+                .define('D', AEItems.FLUIX_PEARL)
+                .define('E', AEItems.ENGINEERING_PROCESSOR)
+                .define('F', AEItems.CALCULATION_PROCESSOR)
+                .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
+                .save(output);
+
+        // 吞噬盘
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get())
+                           .pattern("GOG")
+                           .pattern("NIN")
+                           .pattern("BBB")
+                           .define('G', AEBlocks.QUARTZ_VIBRANT_GLASS)
+                           .define('O', ModItems.OBLIVION_SINGULARITY.get())
+                           .define('N', Items.NETHER_STAR)
+                           .define('I', ModItems.INFINITY_CORE.get())
+                           .define('B', Items.NETHERITE_BLOCK)
+                           .unlockedBy("has_oblivion_singularity", has(ModItems.OBLIVION_SINGULARITY.get()))
+                           .save(output);
     }
 }
