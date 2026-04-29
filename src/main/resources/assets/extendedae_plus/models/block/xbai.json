@@ -2,7 +2,7 @@
 	"format_version": "1.21.6",
 	"credit": "Made with _leng",
 	"texture_size": [32, 32],
-	"render_type": "translucent",
+	"render_type": "cutout",
 	"textures": {
 		"0": "extendedae_plus:block/xbai",
 		"particle": "extendedae_plus:block/xbai"
