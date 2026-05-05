@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
@@ -219,5 +220,20 @@ public class WirelessTransceiverBlock extends Block implements EntityBlock {
             }
         }
         super.attack(state, level, pos, player);
+    }
+
+    @Override
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        // 基础挖掘进度
+        float baseProgress = super.getDestroyProgress(state, player, level, pos);
+
+        // 获取方块实体并检查锁定状态
+        if (level.getBlockEntity(pos) instanceof WirelessTransceiverBlockEntity te) {
+            if (te.isLocked()) {
+                // 如果被锁定，大幅降低挖掘速度
+                return baseProgress * 0.1f; // 只有10%的挖掘速度
+            }
+        }
+        return baseProgress; // 正常挖掘速度
     }
 }
