@@ -1,19 +1,17 @@
 package com.extendedae_plus.init;
 
+import appeng.block.crafting.CraftingUnitBlock;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
+import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
+import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
-import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
-import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
-import appeng.block.crafting.CraftingUnitBlock;
-import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.core.definitions.AEBlockEntities;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -31,7 +29,7 @@ public final class ModBlocks {
             () -> new WirelessTransceiverBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
-                            .strength(1.5F, 6.0F)
+                            .strength(2F, 6.0F)
                             .requiresCorrectToolForDrops()
             )
     );
