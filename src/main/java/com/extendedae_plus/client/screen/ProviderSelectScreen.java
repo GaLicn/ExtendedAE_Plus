@@ -33,8 +33,10 @@ public class ProviderSelectScreen extends Screen {
     private static final Set<String> pinnedProviders = new HashSet<>();
     private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
     private static final String AUTO_UPLOAD_UNIQUE_MATCH_KEY = "auto_upload_unique_match";
+    private static final String SHOW_PROCESSING_BUTTONS_KEY = "show_processing_buttons";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     private static boolean autoUploadUniqueMatchEnabled = true;
+    private static boolean showProcessingButtonsEnabled = true;
 
     // 静态初始化块：加载置顶配置
     static {
@@ -65,6 +67,7 @@ public class ProviderSelectScreen extends Screen {
     private EditBox searchBox;
     // 中文名输入框（用于添加映射）
     private EditBox cnInput;
+    private Button processingButtonsToggleButton;
     private Button autoUploadToggleButton;
     private String query = "";
     private boolean needsRefresh = false;
@@ -152,6 +155,26 @@ public class ProviderSelectScreen extends Screen {
                 : "extendedae_plus.configuration.state_off";
         return Component.translatable("extendedae_plus.screen.auto_upload_unique_match",
                 Component.translatable(stateKey));
+    }
+
+    private Component buildProcessingButtonsToggleLabel() {
+        String stateKey = showProcessingButtonsEnabled
+                ? "extendedae_plus.configuration.state_on"
+                : "extendedae_plus.configuration.state_off";
+        return Component.translatable("extendedae_plus.screen.show_processing_buttons",
+                Component.translatable(stateKey));
+    }
+
+    public static boolean isProcessingButtonsEnabled() {
+        return showProcessingButtonsEnabled;
+    }
+
+    private void toggleProcessingButtons() {
+        showProcessingButtonsEnabled = !showProcessingButtonsEnabled;
+        savePinnedProviders();
+        if (this.processingButtonsToggleButton != null) {
+            this.processingButtonsToggleButton.setMessage(this.buildProcessingButtonsToggleLabel());
+        }
     }
 
     private void toggleAutoUploadUniqueMatch() {
@@ -359,8 +382,17 @@ public class ProviderSelectScreen extends Screen {
                 .build();
         this.addRenderableWidget(reload);
 
+        int toggleX = centerX + 50;
+        int toggleY = navY + 30;
+        int toggleGap = 6;
+        int toggleWidth = 122;
+        this.processingButtonsToggleButton = Button.builder(this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons())
+                .bounds(toggleX, toggleY, toggleWidth, 20)
+                .build();
+        this.addRenderableWidget(this.processingButtonsToggleButton);
+
         this.autoUploadToggleButton = Button.builder(this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch())
-                .bounds(centerX + 50, navY + 30, 250, 20)
+                .bounds(toggleX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.autoUploadToggleButton);
 
@@ -562,6 +594,11 @@ public class ProviderSelectScreen extends Screen {
             if (autoUploadElement != null && autoUploadElement.isJsonPrimitive()) {
                 autoUploadUniqueMatchEnabled = autoUploadElement.getAsBoolean();
             }
+
+            JsonElement showProcessingButtonsElement = obj.get(SHOW_PROCESSING_BUTTONS_KEY);
+            if (showProcessingButtonsElement != null && showProcessingButtonsElement.isJsonPrimitive()) {
+                showProcessingButtonsEnabled = showProcessingButtonsElement.getAsBoolean();
+            }
         } catch (IOException | JsonSyntaxException e) {
             // 加载失败时静默处理
         }
@@ -582,6 +619,7 @@ public class ProviderSelectScreen extends Screen {
             }
             obj.add("pinned", arr);
             obj.addProperty(AUTO_UPLOAD_UNIQUE_MATCH_KEY, autoUploadUniqueMatchEnabled);
+            obj.addProperty(SHOW_PROCESSING_BUTTONS_KEY, showProcessingButtonsEnabled);
 
             Files.writeString(cfgPath, GSON.toJson(obj));
         } catch (IOException e) {
