@@ -103,7 +103,7 @@
   "extendedae_plus.screen.add_mapping": "Add Mapping",
   "extendedae_plus.screen.remove_mapping": "Remove Mapping",
   "extendedae_plus.screen.show_processing_buttons": "Pattern Terminal Buttons Display: %s",
-  "extendedae_plus.screen.auto_upload_unique_match": "Unique Match Upload: %s",
+  "extendedae_plus.screen.auto_upload_unique_match": "Auto Upload on Unique Match: %s",
   "extendedae_plus.screen.cn_name": "Chinese Name",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
   "key.extendedae_plus.create_pattern": "Create Pattern (Ctrl+Q)",
