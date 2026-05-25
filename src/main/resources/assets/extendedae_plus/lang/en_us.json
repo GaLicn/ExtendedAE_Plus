@@ -124,6 +124,7 @@
   "extendedae_plus.screen.reload_mapping_fail": "Overloading mapping failed: %s",
   "extendedae_plus.screen.add_mapping": "Add Mapping",
   "extendedae_plus.screen.delete_mapping": "Delete Mapping",
+  "extendedae_plus.screen.show_processing_buttons": "Pattern Terminal Button Display: %s",
   "extendedae_plus.screen.auto_upload_unique_match": "Auto Upload on Unique Match: %s",
   "extendedae_plus.screen.upload.enter_search_key": "Please enter a search keyword before adding a mapping",
   "extendedae_plus.screen.upload.enter_name": "Please enter a name",

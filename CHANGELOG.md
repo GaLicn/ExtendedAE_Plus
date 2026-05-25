@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.4.1]
+
+### Added / 新增
+- 样板终端按钮显示新增开关控制按钮
+  - Added a toggle button to control Pattern Terminal button visibility.
+
 ## [1.5.4]
 
 ### Added / 新增
