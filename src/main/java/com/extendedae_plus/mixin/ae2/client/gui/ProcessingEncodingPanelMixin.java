@@ -6,6 +6,7 @@ import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.me.items.ProcessingEncodingPanel;
 import appeng.client.gui.widgets.ActionButton;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import com.extendedae_plus.client.gui.widgets.ScaledTextureButton;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
@@ -139,7 +140,8 @@ public abstract class ProcessingEncodingPanelMixin extends EncodingModePanel {
 
     @Inject(method = "setVisible", at = @At("TAIL"), remap = false)
     private void eap$updateInjectedButtons(boolean visible, CallbackInfo ci) {
-        this.cycleOutputBtn.setVisibility(false);
+        boolean showInjectedButtons = visible && ProviderSelectScreen.isProcessingButtonsEnabled();
+        this.cycleOutputBtn.setVisibility(visible && !showInjectedButtons);
 
         if (this.eap$mul2Button == null) {
             return;
@@ -154,16 +156,16 @@ public abstract class ProcessingEncodingPanelMixin extends EncodingModePanel {
         eap$ensureAdded(this.eap$swapOutputsButton);
         eap$ensureAdded(this.eap$restoreRatioButton);
 
-        this.eap$mul2Button.setVisibility(visible);
-        this.eap$mul3Button.setVisibility(visible);
-        this.eap$mul5Button.setVisibility(visible);
-        this.eap$div2Button.setVisibility(visible);
-        this.eap$div3Button.setVisibility(visible);
-        this.eap$div5Button.setVisibility(visible);
-        this.eap$swapOutputsButton.setVisibility(visible);
-        this.eap$restoreRatioButton.setVisibility(visible);
+        this.eap$mul2Button.setVisibility(showInjectedButtons);
+        this.eap$mul3Button.setVisibility(showInjectedButtons);
+        this.eap$mul5Button.setVisibility(showInjectedButtons);
+        this.eap$div2Button.setVisibility(showInjectedButtons);
+        this.eap$div3Button.setVisibility(showInjectedButtons);
+        this.eap$div5Button.setVisibility(showInjectedButtons);
+        this.eap$swapOutputsButton.setVisibility(showInjectedButtons);
+        this.eap$restoreRatioButton.setVisibility(showInjectedButtons);
 
-        if (!visible) {
+        if (!showInjectedButtons) {
             return;
         }
 
