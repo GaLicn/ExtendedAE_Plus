@@ -104,7 +104,7 @@
   "extendedae_plus.screen.add_mapping": "增加映射",
   "extendedae_plus.screen.remove_mapping": "删除映射",
   "extendedae_plus.screen.show_processing_buttons": "样板终端按钮显示: %s",
-  "extendedae_plus.screen.auto_upload_unique_match": "唯一匹配上传: %s",
+  "extendedae_plus.screen.auto_upload_unique_match": "唯一匹配时自动上传: %s",
   "extendedae_plus.screen.cn_name": "中文名",
   "extendedae_plus.button.choose_provider":"上传样板",
   "key.extendedae_plus.create_pattern": "快速创建样板 (Ctrl+Q)",
