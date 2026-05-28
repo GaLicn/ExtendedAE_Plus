@@ -42,6 +42,10 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("com.glodblock.github.appflux.AppFlux");
 	}
 
+	private static boolean isNeoECOAEPresent() {
+		return isClassPresent("cn.dancingsnow.neoecoae.NeoECOAE");
+	}
+
 	@Override
 	public void onLoad(String mixinPackage) { }
 
@@ -60,6 +64,11 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		}
 		if (!isAdvancedAePresent()) {
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae.")) {
+				return false;
+			}
+		}
+		if (!isNeoECOAEPresent()) {
+			if (mixinClassName.startsWith("com.extendedae_plus.mixin.neoecoae.")) {
 				return false;
 			}
 		}

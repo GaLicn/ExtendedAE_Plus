@@ -1,18 +1,14 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
-import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IManagedGridNode;
-import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.stacks.KeyCounter;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.blockentity.AEBaseBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
-import appeng.me.cluster.implementations.CraftingCPUCluster;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
@@ -21,9 +17,6 @@ import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.mixin.ae2.accessor.CraftingCPUClusterAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
@@ -37,9 +30,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -188,9 +178,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             ExtendedAELogger.LOGGER.error("[样板供应器] 主节点状态变更处理失败", t);
         }
     }
-
-
-    
 
     @Override
     public void eap$updateWirelessLink() {
@@ -382,10 +369,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     private void eap$compatNotifyHostChanged() {
         try {
             this.host.saveChanges();
-        } catch (Throwable ignored) {
-        }
-
-        try {
             if (this.host.getBlockEntity() instanceof AEBaseBlockEntity blockEntity) {
                 blockEntity.markForUpdate();
             }
@@ -430,84 +413,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
     }
 
-    @Inject(method = "pushPattern", at = @At("RETURN"), cancellable = true)
-    private void eap$compatAfterPushPattern(IPatternDetails patternDetails, KeyCounter[] inputHolder, CallbackInfoReturnable<Boolean> cir) {
-        if (cir.getReturnValueZ()) {
-            this.eap$compatTryVirtualCompletion(patternDetails);
-        }
-    }
-
-    @Unique
-    private void eap$compatTryVirtualCompletion(IPatternDetails patternDetails) {
-        if (!this.eap$compatVirtualCraftingEnabled) {
-            return;
-        }
-
-        var node = this.mainNode.getNode();
-        if (node == null) {
-            return;
-        }
-
-        var grid = node.getGrid();
-        if (grid == null) {
-            return;
-        }
-
-        var craftingService = grid.getCraftingService();
-        if (craftingService == null) {
-            return;
-        }
-
-        for (ICraftingCPU cpu : craftingService.getCpus()) {
-            if (!cpu.isBusy()) {
-                continue;
-            }
-            if (cpu instanceof CraftingCPUCluster cluster) {
-                if (cluster.craftingLogic instanceof CraftingCpuLogicAccessor logicAccessor) {
-                    var job = logicAccessor.eap$getJob();
-                    if (job instanceof ExecutingCraftingJobAccessor accessor) {
-                        var tasks = accessor.eap$getTasks();
-                        var progress = tasks.get(patternDetails);
-                        if (progress == null && patternDetails != null) {
-                            var patternDefinition = patternDetails.getDefinition();
-                            for (var entry : tasks.entrySet()) {
-                                var taskPattern = entry.getKey();
-                                if (taskPattern == patternDetails) {
-                                    progress = entry.getValue();
-                                    break;
-                                }
-                                if (taskPattern != null && patternDefinition != null) {
-                                    var taskDefinition = taskPattern.getDefinition();
-                                    if (taskDefinition != null && taskDefinition.equals(patternDefinition)) {
-                                        progress = entry.getValue();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (this.eap$compatShouldCancelWholeJob(tasks, progress)) {
-                            boolean finished = false;
-                            try {
-                                ((CraftingCPUClusterAccessor) (Object) cluster).eap$invokeUpdateOutput(null);
-                            } catch (Throwable ignored) {
-                            }
-                            try {
-                                logicAccessor.eap$invokeFinishJob(true);
-                                finished = true;
-                            } catch (Throwable ignored) {
-                            }
-                            if (!finished) {
-                                cluster.cancelJob();
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public boolean eap$compatIsVirtualCraftingEnabled() {
         return this.eap$compatVirtualCraftingEnabled;
@@ -516,33 +421,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public IManagedGridNode eap$compatGetMainNode() {
         return this.mainNode;
-    }
-
-    @Unique
-    private boolean eap$compatShouldCancelWholeJob(
-            Map<IPatternDetails, com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor> tasks,
-            com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobTaskProgressAccessor matchedProgress) {
-        if (matchedProgress == null || matchedProgress.eap$getValue() > 1) {
-            return false;
-        }
-
-        for (var entry : tasks.entrySet()) {
-            var taskProgress = entry.getValue();
-            if (taskProgress == null) {
-                continue;
-            }
-
-            long remaining = taskProgress.eap$getValue();
-            if (taskProgress == matchedProgress) {
-                remaining -= 1;
-            }
-
-            if (remaining > 0) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     @Unique

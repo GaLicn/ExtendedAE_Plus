@@ -39,6 +39,7 @@
     "ae2.autopattern.CraftingSimulationStateMixin",
     "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
+    "ae2.compat.PatternProviderLogicVirtualCompletionMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
     "ae2.helpers.InterfaceLogicTickerMixin",
     "ae2.helpers.InterfaceLogicUpgradesMixin",
@@ -71,7 +72,11 @@
     "extendedae.container.ContainerExPatternProviderMixin",
     "extendedae.container.ContainerExPatternTerminalMixin",
     "extendedae.container.ContainerWirelessExPatternTerminalMixin",
-    "minecraft.accessor.BlockEntityAccessor"
+    "minecraft.accessor.BlockEntityAccessor",
+    "neoecoae.accessor.ECOCraftingCPULogicAccessor",
+    "neoecoae.accessor.ECOExecutingCraftingJobAccessor",
+    "neoecoae.accessor.ECOTaskProgressAccessor",
+    "neoecoae.compat.PatternProviderLogicVirtualCompletionMixin"
   ],
   "client": [
     "accessor.AbstractContainerScreenAccessor",
