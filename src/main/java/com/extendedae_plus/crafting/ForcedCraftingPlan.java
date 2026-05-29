@@ -8,6 +8,8 @@ import com.extendedae_plus.api.crafting.IForcedCraftingPlan;
 
 import java.util.Map;
 
+import java.util.LinkedHashMap;
+
 public class ForcedCraftingPlan implements ICraftingPlan, IForcedCraftingPlan {
     private final ICraftingPlan delegate;
     private final KeyCounter manualMissingItems;
@@ -20,6 +22,14 @@ public class ForcedCraftingPlan implements ICraftingPlan, IForcedCraftingPlan {
     @Override
     public KeyCounter eap$getManualMissingItems() {
         return copy(this.manualMissingItems);
+    }
+
+    public Map<appeng.api.stacks.AEKey, Long> eap$getManualMissingSnapshot() {
+        var snapshot = new LinkedHashMap<appeng.api.stacks.AEKey, Long>();
+        for (var entry : this.manualMissingItems) {
+            snapshot.put(entry.getKey(), entry.getLongValue());
+        }
+        return snapshot;
     }
 
     @Override
