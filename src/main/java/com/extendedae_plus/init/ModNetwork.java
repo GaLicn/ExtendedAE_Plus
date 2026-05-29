@@ -2,6 +2,8 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.*;
+import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
+import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
 import com.extendedae_plus.network.packet.EAPConfigButtonPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -57,6 +59,12 @@ public class ModNetwork {
         registrar.playToClient(com.extendedae_plus.network.LabelNetworkListS2CPacket.TYPE,
                 com.extendedae_plus.network.LabelNetworkListS2CPacket.STREAM_CODEC,
                 com.extendedae_plus.network.LabelNetworkListS2CPacket::handle);
+        registrar.playToServer(ForceCraftStartFlagC2SPacket.TYPE,
+                ForceCraftStartFlagC2SPacket.STREAM_CODEC,
+                ForceCraftStartFlagC2SPacket::handle);
+        registrar.playToClient(ManualCraftingStatusS2CPacket.TYPE,
+                ManualCraftingStatusS2CPacket.STREAM_CODEC,
+                ManualCraftingStatusS2CPacket::handle);
 
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
     }
