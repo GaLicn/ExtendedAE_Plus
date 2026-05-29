@@ -24,6 +24,9 @@ public interface ExecutingCraftingJobAccessor {
     @Accessor("remainingAmount")
     long extendedae_plus$getRemainingAmount();
 
+    @Accessor("remainingAmount")
+    void extendedae_plus$setRemainingAmount(long remainingAmount);
+
     @Accessor("link")
     CraftingLink extendedae_plus$getLink();
 }

@@ -274,6 +274,9 @@
   "message.extendedae_plus.recipe_not_found": "配方未找到",
   "message.extendedae_plus.pattern_creation_failed": "样板创建失败",
   "message.extendedae_plus.pattern_created": "已创建样板: %s",
+  "gui.extendedae_plus.force_start": "强制开始",
+  "tooltip.extendedae_plus.force_start": "忽略当前缺失项并直接提交任务",
+  "tooltip.extendedae_plus.crafting.manual_waiting": "手动等待: %s",
 
   "key.extendedae_plus.create_pattern": "从JEI创建样板",
   "key.extendedae_plus.fill_search": "从JEI填充搜索框",

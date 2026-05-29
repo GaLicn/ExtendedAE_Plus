@@ -2,8 +2,10 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.network.*;
+import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.crafting.SetSearchTextS2CPacket;
 import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
@@ -51,6 +53,18 @@ public final class ModNetwork {
                 .encoder(SetSearchTextS2CPacket::encode)  
                 .decoder(SetSearchTextS2CPacket::decode)  
                 .consumerNetworkThread(SetSearchTextS2CPacket::handle)  
+                .add();
+
+        CHANNEL.messageBuilder(ForceCraftStartFlagC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ForceCraftStartFlagC2SPacket::encode)
+                .decoder(ForceCraftStartFlagC2SPacket::decode)
+                .consumerNetworkThread(ForceCraftStartFlagC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ManualCraftingStatusS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ManualCraftingStatusS2CPacket::encode)
+                .decoder(ManualCraftingStatusS2CPacket::decode)
+                .consumerNetworkThread(ManualCraftingStatusS2CPacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(PullFromJeiOrCraftC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)

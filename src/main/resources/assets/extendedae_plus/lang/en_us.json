@@ -275,6 +275,9 @@
   "message.extendedae_plus.recipe_not_found": "Recipe not found",
   "message.extendedae_plus.pattern_creation_failed": "Pattern creation failed",
   "message.extendedae_plus.pattern_created": "Created pattern: %s",
+  "gui.extendedae_plus.force_start": "Force Start",
+  "tooltip.extendedae_plus.force_start": "Submit this job immediately and keep missing entries as manual waiting",
+  "tooltip.extendedae_plus.crafting.manual_waiting": "Manual waiting: %s",
 
   "key.extendedae_plus.create_pattern": "Create Pattern from JEI",
   "key.extendedae_plus.fill_search": "Fill Search Field from JEI",
