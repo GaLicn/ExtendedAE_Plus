@@ -59,7 +59,7 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 			if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.menu.CraftConfirmMenuGoBackMixin")) return false;
 		}
 		if (!isAdvancedAePresent()) {
-			if (mixinClassName.equals("com.extendedae_plus.mixin.advancedae.compat.PatternProviderLogicVirtualCompletionMixin")) {
+			if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae.")) {
 				return false;
 			}
 		}
