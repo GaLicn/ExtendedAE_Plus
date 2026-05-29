@@ -4,7 +4,12 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.network.pattern.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -15,7 +20,15 @@ import net.minecraftforge.fml.loading.FMLPaths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,11 +88,12 @@ public class ProviderSelectScreen extends Screen {
 
     // 页面
     private int page = 0;
-    private static final int PAGE_SIZE = 6;
+    private static final int MIN_PAGE_SIZE = 4;
+    private int pageSize = 6;
 
     // 按钮池
     private final List<Button> entryButtons = new ArrayList<>();
-    private final int[] buttonIndexMap = new int[PAGE_SIZE]; // 映射到 fIds 的索引
+    private int[] buttonIndexMap = new int[pageSize]; // 映射到 fIds 的索引
 
     // 缓存 Component JSON 解析
     private static final Map<String, String> componentCache = new HashMap<>();
@@ -113,7 +127,23 @@ public class ProviderSelectScreen extends Screen {
         entryButtons.clear();
 
         int centerX = this.width / 2;
-        int startY = this.height / 2 - 70;
+        
+        // 动态计算页面大小，确保所有元素都能显示
+        // 布局结构：搜索框(30) + 条目按钮 + 分页按钮(30) + 切换按钮(30) + 其他按钮(20) + 边距(40)
+        int buttonHeight = 20;
+        int gap = 5;
+        int entryUnitHeight = buttonHeight + gap;
+        int reservedHeight = 30 + 30 + 30 + 20 + 40;
+        int availableHeight = this.height - reservedHeight;
+        this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
+        
+        // 动态计算起始高度，使内容垂直居中
+        int totalEntriesHeight = this.pageSize * entryUnitHeight;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
+        int startY = (this.height - contentHeight) / 2 + 30;
+        
+        // 重新初始化按钮索引映射数组
+        this.buttonIndexMap = new int[this.pageSize];
 
         // 搜索框（置于条目上方）
         if (searchBox == null) {
@@ -137,9 +167,7 @@ public class ProviderSelectScreen extends Screen {
 
         // 初始化按钮池
         int buttonWidth = 240;
-        int buttonHeight = 20;
-        int gap = 5;
-        for (int i = 0; i < PAGE_SIZE; i++) {
+        for (int i = 0; i < this.pageSize; i++) {
             int btnIdx = i;
             Button btn = Button.builder(Component.literal(""), b -> {
                         int actualIdx = buttonIndexMap[btnIdx];
@@ -154,7 +182,7 @@ public class ProviderSelectScreen extends Screen {
         }
 
         // 分页按钮
-        int navY = startY + PAGE_SIZE * (buttonHeight + gap) + 10;
+        int navY = startY + this.pageSize * (buttonHeight + gap) + 10;
         prevButton = Button.builder(Component.literal("<"), b -> changePage(-1))
                 .bounds(centerX - 60, navY, 20, 20)
                 .build();
@@ -174,16 +202,22 @@ public class ProviderSelectScreen extends Screen {
         int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
         int startX = centerX - totalWidth / 2;
 
-        int toggleX = startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap;
+        // 两个切换按钮从关闭按钮左侧开始，平分剩余空间（到删除映射按钮右侧）
+        int toggleStartX = startX + btnWidth2 + btnGap + inputWidth + btnGap;
+        // 删除映射按钮的右侧位置 = 重载 + 间距 + 输入框 + 间距 + 关闭 + 间距 + 添加 + 间距 + 删除
+        int delByCnEndX = startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap + btnWidth2 + btnGap + btnWidth2;
+        int toggleAvailableWidth = delByCnEndX - toggleStartX;
+        int toggleGap = 5;
+        int toggleWidth = (toggleAvailableWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
         this.processingButtonsToggleButton = Button.builder(buildProcessingButtonsToggleLabel(), b -> toggleProcessingButtons())
-                .bounds(toggleX, toggleY, btnWidth2, 20)
+                .bounds(toggleStartX, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
         this.autoUploadToggleButton = Button.builder(buildAutoUploadToggleLabel(), b -> toggleAutoUploadUniqueMatch())
-                .bounds(toggleX + btnWidth2 + btnGap, toggleY, btnWidth2, 20)
+                .bounds(toggleStartX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.autoUploadToggleButton);
 
@@ -227,15 +261,15 @@ public class ProviderSelectScreen extends Screen {
 
     private void changePage(int delta) {
         int newPage = page + delta;
-        if (newPage < 0 || newPage * PAGE_SIZE >= fIds.size()) return;
+        if (newPage < 0 || newPage * pageSize >= fIds.size()) return;
         page = newPage;
         refreshButtons();
     }
 
     private void refreshButtons() {
-        int start = page * PAGE_SIZE;
-        int end = Math.min(start + PAGE_SIZE, fIds.size());
-        for (int i = 0; i < PAGE_SIZE; i++) {
+        int start = page * pageSize;
+        int end = Math.min(start + pageSize, fIds.size());
+        for (int i = 0; i < pageSize; i++) {
             Button btn = entryButtons.get(i);
             int idx = start + i;
             if (idx < end) {
@@ -250,7 +284,7 @@ public class ProviderSelectScreen extends Screen {
             }
         }
         if (prevButton != null) prevButton.active = page > 0;
-        if (nextButton != null) nextButton.active = fIds.size() > (page + 1) * PAGE_SIZE;
+        if (nextButton != null) nextButton.active = fIds.size() > (page + 1) * pageSize;
     }
 
     private void reloadMapping() {
