@@ -24,7 +24,8 @@ import java.util.regex.Pattern;
  * 展示若干个可点击的供应器条目，点击后发送带 providerId 的上传请求。
  */
 public class ProviderSelectScreen extends Screen {
-    private static final int PAGE_SIZE = 6;
+    private static final int MIN_PAGE_SIZE = 4;
+    private int pageSize = 6;
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
     private static Boolean JEC_AVAILABLE = null;
     private static java.lang.reflect.Method JEC_CONTAINS = null;
@@ -127,7 +128,7 @@ public class ProviderSelectScreen extends Screen {
     private void changePage(int delta) {
         int newPage = this.page + delta;
         if (newPage < 0) return;
-        if (newPage * PAGE_SIZE >= this.fIds.size()) return;
+        if (newPage * this.pageSize >= this.fIds.size()) return;
         this.page = newPage;
         // 避免在回调中直接重建 UI，改为下帧刷新
         this.needsRefresh = true;
@@ -323,7 +324,20 @@ public class ProviderSelectScreen extends Screen {
         this.entryButtons.clear();
 
         int centerX = this.width / 2;
-        int startY = this.height / 2 - 70;
+        
+        // 动态计算页面大小，确保所有元素都能显示
+        // 布局结构：搜索框(30) + 条目按钮 + 分页按钮(30) + 切换按钮(30) + 其他按钮(20) + 边距(40)
+        int buttonHeight = 20;
+        int gap = 5;
+        int entryUnitHeight = buttonHeight + gap;
+        int reservedHeight = 30 + 30 + 30 + 20 + 40;
+        int availableHeight = this.height - reservedHeight;
+        this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
+        
+        // 动态计算起始高度，使内容垂直居中
+        int totalEntriesHeight = this.pageSize * entryUnitHeight;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
+        int startY = (this.height - contentHeight) / 2 + 30;
 
         // 搜索框（置于条目上方）
         if (this.searchBox == null) {
@@ -346,12 +360,10 @@ public class ProviderSelectScreen extends Screen {
         });
         this.addRenderableWidget(this.searchBox);
 
-        int start = this.page * PAGE_SIZE;
-        int end = Math.min(start + PAGE_SIZE, this.fIds.size());
+        int start = this.page * this.pageSize;
+        int end = Math.min(start + this.pageSize, this.fIds.size());
 
         int buttonWidth = 240;
-        int buttonHeight = 20;
-        int gap = 5;
 
         for (int i = start; i < end; i++) {
             int idx = i;
@@ -364,7 +376,7 @@ public class ProviderSelectScreen extends Screen {
         }
 
         // 分页按钮
-        int navY = startY + PAGE_SIZE * (buttonHeight + gap) + 10;
+        int navY = startY + this.pageSize * (buttonHeight + gap) + 10;
         Button prev = Button.builder(Component.literal("<"), b -> this.changePage(-1))
                 .bounds(centerX - 60, navY, 20, 20)
                 .build();
@@ -372,57 +384,72 @@ public class ProviderSelectScreen extends Screen {
                 .bounds(centerX + 40, navY, 20, 20)
                 .build();
         prev.active = this.page > 0;
-        next.active = (this.page + 1) * PAGE_SIZE < this.fIds.size();
+        next.active = (this.page + 1) * this.pageSize < this.fIds.size();
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
 
-        // 重载映射按钮（热重载 recipe_type_names.json）——移至下一行，与关闭按钮并排
-        Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> this.reloadMapping())
-                .bounds(centerX - 130, navY + 55, 80, 20)
-                .build();
-        this.addRenderableWidget(reload);
+        // 映射按钮和输入框
+        // 统一按钮宽度
+        int btnWidth2 = 80;
+        int inputWidth = 120;
+        int btnGap = 5;
 
-        int toggleX = centerX + 50;
+        // 总宽度 = 重载按钮 + 输入框 + 添加 + 删除 + 关闭按钮 + 间距
+        int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
+        int startX = centerX - totalWidth / 2;
+
+        // 两个切换按钮从关闭按钮左侧开始，平分剩余空间（到删除映射按钮右侧）
+        int toggleStartX = startX + btnWidth2 + btnGap + inputWidth + btnGap;
+        // 删除映射按钮的右侧位置 = 重载 + 间距 + 输入框 + 间距 + 关闭 + 间距 + 添加 + 间距 + 删除
+        int delByCnEndX = startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap + btnWidth2 + btnGap + btnWidth2;
+        int toggleAvailableWidth = delByCnEndX - toggleStartX;
+        int toggleGap = 5;
+        int toggleWidth = (toggleAvailableWidth - toggleGap) / 2;
         int toggleY = navY + 30;
-        int toggleGap = 6;
-        int toggleWidth = 122;
+
         this.processingButtonsToggleButton = Button.builder(this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons())
-                .bounds(toggleX, toggleY, toggleWidth, 20)
+                .bounds(toggleStartX, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
         this.autoUploadToggleButton = Button.builder(this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch())
-                .bounds(toggleX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
+                .bounds(toggleStartX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.autoUploadToggleButton);
 
+        // 重载映射按钮
+        Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> this.reloadMapping())
+                .bounds(startX, navY + 55, btnWidth2, 20)
+                .build();
+        this.addRenderableWidget(reload);
+
         // 中文名输入框（用于新增映射的值）
         if (this.cnInput == null) {
-            this.cnInput = new EditBox(this.font, centerX + 50, navY + 55, 120, 20, Component.translatable("extendedae_plus.screen.cn_name"));
+            this.cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 55, inputWidth, 20, Component.translatable("extendedae_plus.screen.cn_name"));
         } else {
-            this.cnInput.setX(centerX + 50);
+            this.cnInput.setX(startX + btnWidth2 + btnGap);
             this.cnInput.setY(navY + 55);
-            this.cnInput.setWidth(120);
+            this.cnInput.setWidth(inputWidth);
         }
         this.addRenderableWidget(this.cnInput);
 
-        // 增加映射按钮（使用当前搜索关键字 -> 中文）
+        // 关闭按钮
+        Button close = Button.builder(Component.translatable("gui.cancel"), b -> this.onClose())
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 55, btnWidth2, 20)
+                .build();
+        this.addRenderableWidget(close);
+
+        // 添加映射按钮（使用当前搜索关键字 -> 中文）
         Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> this.addMappingFromUI())
-                .bounds(centerX + 175, navY + 55, 60, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(addMap);
 
-        // 删除映射（按中文值精确匹配删除）按钮
+        // 删除映射按钮（按中文值精确匹配删除）按钮
         Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.remove_mapping"), b -> this.deleteMappingByCnFromUI())
-                .bounds(centerX + 240, navY + 55, 60, 20)
+                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 55, btnWidth2, 20)
                 .build();
         this.addRenderableWidget(delByCn);
-
-        // 关闭按钮
-        Button close = Button.builder(Component.translatable("gui.cancel"), b -> this.onClose())
-                .bounds(centerX - 40, navY + 55, 80, 20)
-                .build();
-        this.addRenderableWidget(close);
 
         this.tryAutoUploadIfUniqueMatch();
     }
@@ -473,7 +500,7 @@ public class ProviderSelectScreen extends Screen {
                     int h = btn.getHeight();
                     if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
                         // 计算实际索引
-                        int start = this.page * PAGE_SIZE;
+                        int start = this.page * this.pageSize;
                         int actualIdx = start + i;
                         if (actualIdx >= 0 && actualIdx < this.fNames.size()) {
                             togglePin(actualIdx);
