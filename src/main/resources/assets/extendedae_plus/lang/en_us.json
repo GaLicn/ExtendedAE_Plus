@@ -303,5 +303,8 @@
   "extendedae_plus.screen.global_controller_title": "Pattern Provider Status Controller",
 
   "gui.extendedae_plus.add_bookmark": "Add Bookmark",
-  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "Add missing items to JEI bookmarks"
+  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "Add missing items to JEI bookmarks",
+  "gui.extendedae_plus.force_start": "Force Start",
+  "tooltip.extendedae_plus.force_start": "Submit this job immediately and keep missing entries as manual waiting",
+  "tooltip.extendedae_plus.crafting.manual_waiting": "Manual waiting: %s"
 }

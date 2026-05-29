@@ -299,5 +299,8 @@
   "extendedae_plus.screen.global_controller_title": "样板供应器状态控制器",
 
   "gui.extendedae_plus.add_bookmark": "添加书签",
-  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "添加缺失物品到JEI书签"
+  "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "添加缺失物品到JEI书签",
+  "gui.extendedae_plus.force_start": "强制开始",
+  "tooltip.extendedae_plus.force_start": "忽略当前缺失项并直接提交任务",
+  "tooltip.extendedae_plus.crafting.manual_waiting": "手动等待: %s"
 }
