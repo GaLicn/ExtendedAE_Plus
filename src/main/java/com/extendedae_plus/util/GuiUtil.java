@@ -6,6 +6,8 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.SettingToggleButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -208,14 +210,16 @@ public class GuiUtil {
     }
 
     /**
-     * 创建用于每个提供者缩放上限的输入框，包含值清洗与回调处理
+     * 创建用于每个提供者缩放上限的输入框，使用 AE2 原生样式
+     * @param style ScreenStyle 用于获取颜色配置
      * @param font 字体对象
      * @param initialValue 初始数值
      * @param onCommit 当值解析成功后回调（以 int 形式提供）
      */
-    public static EditBox createPerProviderLimitInput(Font font, int initialValue, IntConsumer onCommit) {
-        EditBox input = new EditBox(font, 0, 0, 28, 12, Component.literal("Limit"));
+    public static AETextField createPerProviderLimitInput(ScreenStyle style, Font font, int initialValue, IntConsumer onCommit) {
+        AETextField input = new AETextField(style, font, 0, 0, 32, 16);
         input.setMaxLength(6);
+        input.setBordered(false);
         input.setValue(String.valueOf(initialValue));
         input.setResponder(s -> {
             try {

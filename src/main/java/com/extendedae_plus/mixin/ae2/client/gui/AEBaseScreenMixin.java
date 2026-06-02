@@ -12,6 +12,7 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
+import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -225,5 +226,13 @@ public abstract class AEBaseScreenMixin {
             guiGraphics.drawString(font, pageText, 0, 0, color, false);
             guiGraphics.pose().popPose();
         } catch (Throwable ignored) {}
+    }
+
+    @Inject(method = "drawBG", at = @At("TAIL"), remap = false)
+    private void eap$renderInputBackground(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        Object self = this;
+        if (self instanceof IInputBackgroundRenderer renderer) {
+            renderer.eap$renderInputBackground(guiGraphics);
+        }
     }
 }

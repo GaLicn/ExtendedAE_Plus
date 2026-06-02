@@ -2,8 +2,11 @@ package com.extendedae_plus.mixin.advancedae.client.gui;
 
 import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
 import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.SettingToggleButton;
+import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
 import com.extendedae_plus.init.ModNetwork;
@@ -11,9 +14,8 @@ import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.pedroksl.advanced_ae.client.gui.SmallAdvPatternProviderScreen;
@@ -25,31 +27,35 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.extendedae_plus.util.GuiUtil.createToggle;
 import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
 /**
- * 为高级ae样板供应器界面添加“高级阻挡模式”按钮。
+ * 为高级ae样板供应器界面添加"高级阻挡模式"按钮。
  * - 位于左侧工具栏
  * - 点击仅发送 C2S 切换请求；状态由 AE2 @GuiSync 回传决定
  */
 @Mixin(SmallAdvPatternProviderScreen.class)
-public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<SmallAdvPatternProviderMenu> {
+public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<SmallAdvPatternProviderMenu> implements IInputBackgroundRenderer {
     // 高级阻挡模式切换按钮
     @Unique private SettingToggleButton<YesNo> eap$AdvancedBlockingToggle;
     // 智能翻倍切换按钮
     @Unique private SettingToggleButton<YesNo> eap$SmartDoublingToggle;
     // 智能翻倍上限输入框
-    @Unique private EditBox eap$PerProviderLimitInput;
-
+    @Unique private AETextField eap$PerProviderLimitInput;
     // 当前高级阻挡模式是否启用
     @Unique private boolean eap$AdvancedBlockingEnabled = false;
     // 当前智能翻倍是否启用
     @Unique private boolean eap$SmartDoublingEnabled = false;
     // 当前智能翻倍上限
     @Unique private int eap$PerProviderScalingLimit = 0;
+    @Unique private int eap$inputBgX;
+    @Unique private int eap$inputBgY;
+    @Unique private int eap$inputBgW;
+    @Unique private int eap$inputBgH;
 
     public SmallAdvPatternProviderScreenMixin(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -105,15 +111,14 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
         this.eap$SmartDoublingToggle.set(eap$SmartDoublingEnabled ? YesNo.YES : YesNo.NO);
         this.addToLeftToolbar(this.eap$SmartDoublingToggle);
 
-        // 缩放上限输入框（使用 GuiUtil 抽离）
-        this.eap$PerProviderLimitInput = GuiUtil.createPerProviderLimitInput(this.font, this.eap$PerProviderScalingLimit, limit -> {
+        // 缩放上限输入框
+        this.eap$PerProviderLimitInput = GuiUtil.createPerProviderLimitInput(this.style, this.font, this.eap$PerProviderScalingLimit, limit -> {
             this.eap$PerProviderScalingLimit = limit;
             ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
         });
         this.addRenderableWidget(this.eap$PerProviderLimitInput);
     }
 
-    /* ---------------------------- 注入点 ---------------------------- */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void eap$onInit(SmallAdvPatternProviderMenu menu, Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         // 初始化时同步服务端状态并创建控件
@@ -166,31 +171,43 @@ public abstract class SmallAdvPatternProviderScreenMixin extends AEBaseScreen<Sm
         }
 
         if (this.eap$SmartDoublingEnabled) {
-            // 智能翻倍启用时，确保输入框可见
             if (!this.renderables.contains(this.eap$PerProviderLimitInput)) {
                 this.addRenderableWidget(this.eap$PerProviderLimitInput);
             }
-            // 未聚焦且内容为空时，显示0
             if (!focused && this.eap$PerProviderLimitInput.getValue().trim().isEmpty()) {
                 this.eap$PerProviderLimitInput.setValue("0");
             }
 
-            // 定位输入框到智能翻倍按钮左侧
             Button ref = eap$SmartDoublingToggle;
             if (ref != null) {
-                int ex = ref.getX() - this.eap$PerProviderLimitInput.getWidth() - 5;
-                int ey = ref.getY() + 2;
-                this.eap$PerProviderLimitInput.setX(ex);
-                this.eap$PerProviderLimitInput.setY(ey);
+                int visualWidth = this.eap$PerProviderLimitInput.getWidth() + 4 + this.font.width("_");
+                int visualHeight = 16;
+                int padding = 2;
+                int ex = ref.getX() - visualWidth - 5 - padding;
+                int ey = ref.getY() + (ref.getHeight() - visualHeight) / 2 - padding + 4;
+                this.eap$PerProviderLimitInput.setX(ex + padding);
+                this.eap$PerProviderLimitInput.setY(ey + padding);
+                this.eap$inputBgX = ex;
+                this.eap$inputBgY = ey;
+                this.eap$inputBgW = visualWidth + padding * 2;
+                this.eap$inputBgH = visualHeight + padding * 2;
             }
 
-            // 设置 tooltip
             String cur = this.eap$PerProviderLimitInput.getValue();
             if (cur.isBlank()) cur = "0";
-            this.eap$PerProviderLimitInput.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.gui.per_provider_limit.tooltip", cur)));
+            this.eap$PerProviderLimitInput.setTooltipMessage(Collections.singletonList(Component.translatable("extendedae_plus.gui.per_provider_limit.tooltip", cur)));
         } else {
-            // 智能翻倍未启用时，移除输入框
             this.removeWidget(this.eap$PerProviderLimitInput);
+        }
+    }
+
+    @Override
+    public void eap$renderInputBackground(GuiGraphics guiGraphics) {
+        if (this.eap$SmartDoublingEnabled
+                && this.eap$PerProviderLimitInput != null && this.eap$PerProviderLimitInput.isVisible()) {
+            Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter()
+                                          .dest(this.eap$inputBgX - 5, this.eap$inputBgY - 3, this.eap$inputBgW + 6, this.eap$inputBgH - 2)
+                                          .blit(guiGraphics);
         }
     }
 }
