@@ -1,7 +1,23 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.network.*;
+import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
+import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
+import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
+import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
+import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
+import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.OpenProviderUiC2SPacket;
+import com.extendedae_plus.network.ProvidersListS2CPacket;
+import com.extendedae_plus.network.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
+import com.extendedae_plus.network.ScalePatternsC2SPacket;
+import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
+import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
+import com.extendedae_plus.network.SetProviderPageS2CPacket;
+import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
+import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
 import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
 import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
 import com.extendedae_plus.network.packet.EAPConfigButtonPacket;
@@ -67,5 +83,6 @@ public class ModNetwork {
                 ManualCraftingStatusS2CPacket::handle);
 
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
+        registrar.playToServer(SetPerProviderScalingLimitC2SPacket.TYPE, SetPerProviderScalingLimitC2SPacket.STREAM_CODEC, SetPerProviderScalingLimitC2SPacket::handle);
     }
 }

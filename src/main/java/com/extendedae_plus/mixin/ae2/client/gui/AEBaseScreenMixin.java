@@ -14,6 +14,7 @@ import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
+import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
@@ -317,5 +318,14 @@ public abstract class AEBaseScreenMixin {
                 }
             }
         } catch (Throwable ignored) {}
+    }
+
+    // 在 drawBG 方法末尾调用输入框背景渲染
+    @Inject(method = "drawBG", at = @At("TAIL"), remap = false)
+    private void eap$renderInputBackground(GuiGraphics guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        Object self = this;
+        if (self instanceof IInputBackgroundRenderer renderer) {
+            renderer.eap$renderInputBackground(guiGraphics);
+        }
     }
 }
