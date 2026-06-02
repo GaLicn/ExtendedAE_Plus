@@ -3,7 +3,7 @@ package com.extendedae_plus.network;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAdvancedAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -50,7 +50,7 @@ public class ScalePatternsC2SPacket implements CustomPacketPayload {
             if (!(player.containerMenu instanceof PatternProviderMenu menu)) return;
 
             try {
-                var accessor = (PatternProviderMenuAdvancedAccessor) menu;
+                var accessor = (PatternProviderMenuAccessor) menu;
                 PatternProviderLogic logic = accessor.eap$logic();
                 if (logic == null) return;
 

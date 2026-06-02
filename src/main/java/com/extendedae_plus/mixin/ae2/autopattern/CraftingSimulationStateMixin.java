@@ -1,11 +1,11 @@
 package com.extendedae_plus.mixin.ae2.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
+import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.crafting.CraftingCalculation;
 import appeng.crafting.CraftingPlan;
 import appeng.crafting.inv.CraftingSimulationState;
 import appeng.me.service.CraftingService;
-import appeng.api.networking.crafting.ICraftingProvider;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
@@ -37,21 +37,20 @@ public abstract class CraftingSimulationStateMixin {
         Map<IPatternDetails, Integer> providerCountCache = new HashMap<>();
 
         for (Map.Entry<IPatternDetails, Long> entry : crafts.entrySet()) {
-            IPatternDetails processingPattern = entry.getKey();
+            IPatternDetails details = entry.getKey();
             long totalAmount = entry.getValue();
 
-            // 非 AEProcessingPattern 直接保留
-            if (!(processingPattern instanceof ISmartDoublingAwarePattern aware)) {
-                finalCrafts.put(processingPattern, totalAmount);
+            // 非 AEProcessingPattern/AdvProcessingPattern 直接保留
+            if (!(details instanceof ISmartDoublingAwarePattern aware)) {
+                finalCrafts.put(details, totalAmount);
                 continue;
             }
 
             boolean allowScaling = aware.eap$allowScaling();
             int perCraftLimit = aware.eap$getMultiplierLimit();
 
-
             if (!allowScaling || totalAmount <= 1) {
-                finalCrafts.put(processingPattern, totalAmount);
+                finalCrafts.put(details, totalAmount);
                 continue;
             }
 
@@ -62,12 +61,15 @@ public abstract class CraftingSimulationStateMixin {
             if (perCraftLimit <= 0) {
                 // 检查是否开启 provider 轮询分配功能
                 if (ModConfigs.PROVIDER_ROUND_ROBIN_ENABLE.getRaw()) {
-                    CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid().getCraftingService();
+                    CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid()
+                                                                                                               .getCraftingService();
                     int providerCount = Math.max(
                             providerCountCache.computeIfAbsent(
-                                    getProviderCacheKey(processingPattern),
-                                    key -> countProvidersUpTo(craftingService.getProviders(key), totalAmount)),
-                            1);
+                                    getProviderCacheKey(details),
+                                    key -> countProvidersUpTo(craftingService.getProviders(key), totalAmount)
+                            ),
+                            1
+                    );
 
                     // totalAmount < providerCount → 只激活 totalAmount 台 provider
                     if (totalAmount < providerCount) {
@@ -79,19 +81,19 @@ public abstract class CraftingSimulationStateMixin {
 
                     // base+1 组（数量 remainder 个）
                     if (remainder > 0) {
-                        IPatternDetails scaledPlus = PatternScaler.createScaled(processingPattern, base + 1);
+                        ScaledProcessingPattern scaledPlus = PatternScaler.createScaled(details, base + 1);
                         finalCrafts.merge(scaledPlus, remainder, Long::sum);
                     }
 
                     // base 组（数量 providerCount - remainder 个）
                     long countBase = providerCount - remainder;
                     if (countBase > 0) {
-                        IPatternDetails scaledBase = PatternScaler.createScaled(processingPattern, base);
+                        ScaledProcessingPattern scaledBase = PatternScaler.createScaled(details, base);
                         finalCrafts.merge(scaledBase, countBase, Long::sum);
                     }
                 } else {
                     // 未开启轮询 → 直接分配一次总量
-                    IPatternDetails scaled = PatternScaler.createScaled(processingPattern, totalAmount);
+                    ScaledProcessingPattern scaled = PatternScaler.createScaled(details, totalAmount);
                     finalCrafts.put(scaled, 1L);
                 }
             } else {
@@ -100,11 +102,11 @@ public abstract class CraftingSimulationStateMixin {
                 long remainder = totalAmount % perCraftLimit;
 
                 if (fullCrafts > 0) {
-                    IPatternDetails scaledFull = PatternScaler.createScaled(processingPattern, perCraftLimit);
+                    ScaledProcessingPattern scaledFull = PatternScaler.createScaled(details, perCraftLimit);
                     finalCrafts.put(scaledFull, fullCrafts);
                 }
                 if (remainder > 0) {
-                    IPatternDetails scaledRem = PatternScaler.createScaled(processingPattern, remainder);
+                    ScaledProcessingPattern scaledRem = PatternScaler.createScaled(details, remainder);
                     finalCrafts.put(scaledRem, 1L);
                 }
             }

@@ -4,4 +4,6 @@ import appeng.api.config.YesNo;
 
 public interface IPatternProviderMenuDoublingSync {
     YesNo eap$getSmartDoublingSynced();
+
+    int eap$getScalingLimit();
 }

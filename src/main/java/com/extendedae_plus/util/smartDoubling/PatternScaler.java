@@ -4,7 +4,6 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
-import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPatternAdv;
 import net.neoforged.fml.loading.LoadingModList;
@@ -48,7 +47,7 @@ public final class PatternScaler {
      * 创建缩放样板。
      * 自动支持原版 AE 和可选 AAE 的 AdvProcessingPattern。
      */
-    public static IPatternDetails createScaled(IPatternDetails base, long multiplier) {
+    public static ScaledProcessingPattern createScaled(IPatternDetails base, long multiplier) {
         // 尝试 Advanced AE 扩展
         if (advAvailable && advIfaceClass != null && advCtor != null) {
             try {
@@ -67,7 +66,7 @@ public final class PatternScaler {
     /**
      * 计算基于 limit 的最大允许倍率（单次输出主物品 ≤ limit）
      */
-    public static int getComputedMul(AEProcessingPattern proc, int limit) {
+    public static int getComputedMul(IPatternDetails proc, int limit) {
         if (limit <= 0) return 0; // 0 = 不限制
 
         long minMul = Long.MAX_VALUE;

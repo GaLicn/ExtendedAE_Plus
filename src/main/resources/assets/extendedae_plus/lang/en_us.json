@@ -6,6 +6,7 @@
   "gui.extendedae_plus.global.toggle_blocking": "Toggle Blocking Mode",
   "gui.extendedae_plus.global.toggle_adv_blocking": "Toggle Advanced Blocking",
   "gui.extendedae_plus.global.toggle_smart_doubling": "Toggle Smart Doubling",
+  "gui.extendedae_plus.per_provider_limit.tooltip": "Per-item distribution limit: %s",
   "gui.extendedae_plus.global.all_on": "All On",
   "gui.extendedae_plus.global.all_off": "All Off",
 

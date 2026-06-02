@@ -4,14 +4,19 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.widgets.AETextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntConsumer;
 
 
 /**
@@ -186,5 +191,31 @@ public class GuiUtil {
         int borderColor = withAlpha(rainbowRgb, 0xA0);
         int backgroundColor = withAlpha(rainbowRgb, 0x3C);
         drawSlotBox(guiGraphics, sx, sy, borderColor, backgroundColor);
+    }
+
+    /**
+     * 创建用于每个提供者缩放上限的输入框，使用 AE2 原生样式
+     * @param style ScreenStyle 用于获取颜色配置
+     * @param font 字体对象
+     * @param initialValue 初始数值
+     * @param onCommit 当值解析成功后回调（以 int 形式提供）
+     */
+    public static AETextField createPerProviderLimitInput(ScreenStyle style, Font font, int initialValue, IntConsumer onCommit) {
+        // 高度设为16，与按钮高度(16)一致，内部会减去4px padding，实际渲染高度12
+        AETextField input = new AETextField(style, font, 0, 0, 32, 16);
+        input.setMaxLength(6);
+        input.setBordered(false);
+        input.setValue(String.valueOf(initialValue));
+        input.setResponder(s -> {
+            try {
+                String sValue = (s == null || s.isBlank()) ? "0" : s.replaceFirst("^0+(?=.)", "");
+                if (!sValue.equals(s)) {
+                    input.setValue(sValue);
+                }
+                int limit = Integer.parseInt(sValue);
+                onCommit.accept(limit);
+            } catch (Throwable ignored) {}
+        });
+        return input;
     }
 } 
