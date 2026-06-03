@@ -131,6 +131,12 @@ public final class ModNetwork {
                 .consumerNetworkThread(GlobalToggleProviderModesC2SPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(SetGlobalScalingLimitC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SetGlobalScalingLimitC2SPacket::encode)
+                .decoder(SetGlobalScalingLimitC2SPacket::decode)
+                .consumerNetworkThread(SetGlobalScalingLimitC2SPacket::handle)
+                .add();
+
         CHANNEL.messageBuilder(ToggleEntityTickerC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(ToggleEntityTickerC2SPacket::encode)
                 .decoder(ToggleEntityTickerC2SPacket::decode)

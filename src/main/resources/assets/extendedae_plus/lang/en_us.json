@@ -8,6 +8,9 @@
   "gui.extendedae_plus.global.toggle_smart_doubling": "Toggle Smart Doubling",
   "gui.extendedae_plus.global.all_on": "All On",
   "gui.extendedae_plus.global.all_off": "All Off",
+  "gui.extendedae_plus.global.supplier_doubling_limit": "Supplier Doubling Limit:",
+  "gui.extendedae_plus.global.confirm_tooltip": "Confirm doubling limit value",
+  "extendedae_plus.chat.pattern_provider.global_scaling_limit_applied": "Set scaling limit to %2$s for %1$s providers",
   "gui.extendedae.pattern_page": "Page %s/%s",
 
   "itemGroup.extendedae_plus.main": "ExtendedAE Plus",
