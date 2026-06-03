@@ -15,6 +15,7 @@ import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
 import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
+import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetProviderPageS2CPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
@@ -84,5 +85,6 @@ public class ModNetwork {
 
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
         registrar.playToServer(SetPerProviderScalingLimitC2SPacket.TYPE, SetPerProviderScalingLimitC2SPacket.STREAM_CODEC, SetPerProviderScalingLimitC2SPacket::handle);
+        registrar.playToServer(SetGlobalScalingLimitC2SPacket.TYPE, SetGlobalScalingLimitC2SPacket.STREAM_CODEC, SetGlobalScalingLimitC2SPacket::handle);
     }
 }
