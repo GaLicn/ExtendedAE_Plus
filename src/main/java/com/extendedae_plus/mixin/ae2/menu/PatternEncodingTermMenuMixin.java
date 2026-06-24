@@ -53,6 +53,9 @@ public abstract class PatternEncodingTermMenuMixin {
 
             InternalInventory blankInv = host.getLogic().getBlankPatternInv();
             var current = blankInv.getStackInSlot(0);
+            if (!current.isEmpty() && !current.is(AEItems.BLANK_PATTERN.asItem())) {
+                return;
+            }
             int limit = blankInv.getSlotLimit(0);
             int space = Math.max(0, limit - current.getCount());
             space = Math.min(space, AEItems.BLANK_PATTERN.stack(1).getMaxStackSize());
@@ -121,6 +124,9 @@ public abstract class PatternEncodingTermMenuMixin {
         var host = ((IPatternTerminalMenuHost) self.getTarget());
         InternalInventory blankInv = host.getLogic().getBlankPatternInv();
         var current = blankInv.getStackInSlot(0);
+        if (!current.isEmpty() && !current.is(AEItems.BLANK_PATTERN.asItem())) {
+            return;
+        }
         int limit = blankInv.getSlotLimit(0);
         int space = Math.max(0, limit - current.getCount());
         space = Math.min(space, AEItems.BLANK_PATTERN.stack(1).getMaxStackSize());
