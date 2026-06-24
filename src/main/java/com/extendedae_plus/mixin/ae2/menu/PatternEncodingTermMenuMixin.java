@@ -96,6 +96,9 @@ public abstract class PatternEncodingTermMenuMixin {
             // 获取空白样板的专用内部槽
             InternalInventory blankInv = host.getLogic().getBlankPatternInv();
             var current = blankInv.getStackInSlot(0);
+            if (!current.isEmpty() && !current.is(AEItems.BLANK_PATTERN.asItem())) {
+                return;
+            }
             int limit = blankInv.getSlotLimit(0);
 
             // 计算当前剩余可放入数量（不超过物品最大堆叠）
