@@ -178,10 +178,22 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.searchBox != null && this.searchBox.isFocused()
+                && Minecraft.getInstance().options.keyInventory.matches(keyCode, scanCode)) {
+            return true;
+        }
         if (this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.searchBox != null && this.searchBox.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
