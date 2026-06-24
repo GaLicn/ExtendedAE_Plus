@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.me.crafting.CraftConfirmScreen;
 import appeng.core.localization.GuiText;
+import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -14,19 +15,24 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.style.ScreenStyle;
 
 import java.text.NumberFormat;
 
 @Mixin(value = CraftConfirmScreen.class, remap = false)
-public class CraftConfirmScreenMixin {
+public abstract class CraftConfirmScreenMixin extends AEBaseScreen<CraftConfirmMenu> {
+    protected CraftConfirmScreenMixin(CraftConfirmMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
+        super(menu, playerInventory, title, style);
+    }
+
     @Unique
     private static final Component EAP_BOOKMARK_TEXT = Component.translatable("gui.extendedae_plus.add_bookmark");
 
@@ -45,19 +51,25 @@ public class CraftConfirmScreenMixin {
     @Unique
     private static final Component EAP_FORCE_START_TOOLTIP = Component.translatable("tooltip.extendedae_plus.force_start");
 
-    @Redirect(
-            method = "updateBeforeRender",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Ljava/text/NumberFormat;format(J)Ljava/lang/String;",
-                    ordinal = 0
-            )
-    )
-    private String useCustomFormat(NumberFormat instance, long number) {
+    @Unique
+    private static String eap$formatCraftBytes(long number) {
         if (number < 10_000) {
             return NumberFormat.getInstance().format(number);
         }
         return NumberFormatUtil.formatNumber(number);
+    }
+
+    @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
+    private void eap$rewriteCraftingPlanTitle(CallbackInfo ci) {
+        CraftConfirmScreen self = (CraftConfirmScreen) (Object) this;
+        CraftingPlanSummary plan = self.getMenu().getPlan();
+        if (plan == null) {
+            return;
+        }
+
+        String byteUsed = eap$formatCraftBytes(plan.getUsedBytes());
+        Component planDetails = GuiText.BytesUsed.text(byteUsed);
+        this.setTextContent(TEXT_ID_DIALOG_TITLE, GuiText.CraftingPlan.text(planDetails));
     }
 
     @Inject(method = "updateBeforeRender", at = @At("TAIL"))
