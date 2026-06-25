@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "extendedae_plus:256x_crafting_accelerator"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ae2:cell_component_256k"
+  }
+}

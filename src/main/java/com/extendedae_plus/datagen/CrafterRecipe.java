@@ -13,7 +13,9 @@ import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
 import net.pedroksl.advanced_ae.common.definitions.AAEItems;
 import net.pedroksl.advanced_ae.recipes.ReactionChamberRecipeBuilder;
@@ -33,6 +35,12 @@ public class CrafterRecipe extends RecipeProvider {
 
     @Override
     protected void buildRecipes(@NotNull RecipeOutput output) {
+        // 高级合成加速器拆解：只返还对应存储核心，不返还基础壳子
+        addAcceleratorCoreRecoveryRecipe(output, "4x_crafting_accelerator", ModItems.ACCELERATOR_4x.get(), AEItems.CELL_COMPONENT_4K);
+        addAcceleratorCoreRecoveryRecipe(output, "16x_crafting_accelerator", ModItems.ACCELERATOR_16x.get(), AEItems.CELL_COMPONENT_16K);
+        addAcceleratorCoreRecoveryRecipe(output, "64x_crafting_accelerator", ModItems.ACCELERATOR_64x.get(), AEItems.CELL_COMPONENT_64K);
+        addAcceleratorCoreRecoveryRecipe(output, "256x_crafting_accelerator", ModItems.ACCELERATOR_256x.get(), AEItems.CELL_COMPONENT_256K);
+
         //超级装配矩阵速度核心
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
                 .pattern("BRB")
@@ -141,5 +149,12 @@ public class CrafterRecipe extends RecipeProvider {
                            .define('B', Items.NETHERITE_BLOCK)
                            .unlockedBy("has_oblivion_singularity", has(ModItems.OBLIVION_SINGULARITY.get()))
                            .save(output);
+    }
+
+    private void addAcceleratorCoreRecoveryRecipe(RecipeOutput output, String acceleratorName, ItemLike accelerator, ItemLike component) {
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, component)
+                .requires(accelerator)
+                .unlockedBy("has_" + acceleratorName, has(accelerator))
+                .save(output, ExtendedAEPlus.id(acceleratorName + "_core_recovery"));
     }
 }
