@@ -22,7 +22,10 @@ public class InfinityDiskGiveCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("eap").then(
-                Commands.literal("give_infinity_disks").executes(InfinityDiskGiveCommand::execute)
+                // 仅允许管理员执行，避免普通玩家复制全部 Infinity 磁盘数据
+                Commands.literal("give_infinity_disks")
+                        .requires(source -> source.hasPermission(2))
+                        .executes(InfinityDiskGiveCommand::execute)
         ));
     }
 
