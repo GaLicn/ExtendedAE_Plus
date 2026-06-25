@@ -17,6 +17,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 import net.pedroksl.advanced_ae.common.definitions.AAEBlocks;
 import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
@@ -173,6 +174,12 @@ public class CraftingRecipes extends RecipeProvider {
                 .unlockedBy("has_accelerator", has(AEBlocks.CRAFTING_ACCELERATOR))
                 .save(consumer, ExtendedAEPlus.id("network/crafting/" + ModItems.CRAFTING_ACCELERATOR_256x.get().toString().toLowerCase()));
 
+        // 高级合成加速器拆解：只返还对应存储核心，不返还基础壳子
+        addAcceleratorCoreRecoveryRecipe(consumer, "4x_crafting_accelerator", ModItems.CRAFTING_ACCELERATOR_4x.get(), AEItems.CELL_COMPONENT_4K);
+        addAcceleratorCoreRecoveryRecipe(consumer, "16x_crafting_accelerator", ModItems.CRAFTING_ACCELERATOR_16x.get(), AEItems.CELL_COMPONENT_16K);
+        addAcceleratorCoreRecoveryRecipe(consumer, "64x_crafting_accelerator", ModItems.CRAFTING_ACCELERATOR_64x.get(), AEItems.CELL_COMPONENT_64K);
+        addAcceleratorCoreRecoveryRecipe(consumer, "256x_crafting_accelerator", ModItems.CRAFTING_ACCELERATOR_256x.get(), AEItems.CELL_COMPONENT_256K);
+
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.CRAFTING_ACCELERATOR_1024x.get())
                 .pattern("   ")
                 .pattern("ACA")
@@ -258,6 +265,13 @@ public class CraftingRecipes extends RecipeProvider {
                 .define('B', Blocks.BEACON)
                 .unlockedBy("has_entity_speed_card_8x", has(EntitySpeedCardItem.withMultiplier(8).getItem()))
                 .save(consumer, ExtendedAEPlus.id("entity_speed_card_16x"));
+    }
+
+    private void addAcceleratorCoreRecoveryRecipe(Consumer<FinishedRecipe> consumer, String acceleratorName, ItemLike accelerator, ItemLike component) {
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, component)
+                .requires(accelerator)
+                .unlockedBy("has_" + acceleratorName, has(accelerator))
+                .save(consumer, ExtendedAEPlus.id("network/crafting/" + acceleratorName + "_core_recovery"));
     }
 
     private void addCoreRecipes(Consumer<FinishedRecipe> consumer) {
