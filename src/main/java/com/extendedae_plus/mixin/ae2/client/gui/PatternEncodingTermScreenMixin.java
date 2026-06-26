@@ -12,7 +12,9 @@ import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
@@ -44,8 +46,13 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         }
         // 复用已存在的按钮实例，避免重复创建
         if (eap$uploadBtn == null) {
-            eap$uploadBtn = new IconButton(btn -> PacketDistributor
-                    .sendToServer(RequestProvidersListC2SPacket.INSTANCE)) {
+            eap$uploadBtn = new IconButton(btn -> {
+                if (Screen.hasShiftDown()) {
+                    PacketDistributor.sendToServer(ReturnLastPatternC2SPacket.INSTANCE);
+                } else {
+                    PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
+                }
+            }) {
                 private final float eap$scale = 0.75f; // 约 12x12
 
                 @Override
@@ -84,6 +91,10 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         if (!this.isDisableBackground()) {
                             Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
                         }
+                        if (Screen.hasShiftDown()) {
+                            pose.translate(16.0F, 16.0F, 0.0F);
+                            pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180.0F));
+                        }
                         blitter.dest(0, 0).blit(guiGraphics);
                         pose.popPose();
 
@@ -96,7 +107,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                     return new Rect2i(getX(), getY(), Math.round(16 * eap$scale), Math.round(16 * eap$scale));
                 }
             };
-            eap$uploadBtn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
+            eap$updateUploadButtonTooltip();
         }
 
         // 解析 encodePattern 的样式位置
@@ -140,6 +151,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         if (!children.contains(eap$uploadBtn)) {
             children.add(eap$uploadBtn);
         }
+        eap$updateUploadButtonTooltip();
     }
 
     @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
@@ -189,5 +201,18 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                 c.add(eap$uploadBtn);
             }
         }
+        eap$updateUploadButtonTooltip();
+    }
+
+    @Unique
+    private void eap$updateUploadButtonTooltip() {
+        if (eap$uploadBtn == null) {
+            return;
+        }
+        eap$uploadBtn.setTooltip(Tooltip.create(Component.translatable(
+                Screen.hasShiftDown()
+                        ? "extendedae_plus.button.return_last_pattern"
+                        : "extendedae_plus.button.choose_provider"
+        )));
     }
 }

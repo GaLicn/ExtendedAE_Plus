@@ -11,6 +11,7 @@ import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.network.ProvidersListS2CPacket;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
+import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
@@ -42,6 +43,7 @@ public class ModNetwork {
         registrar.playToServer(CraftingMonitorOpenProviderC2SPacket.TYPE, CraftingMonitorOpenProviderC2SPacket.STREAM_CODEC, CraftingMonitorOpenProviderC2SPacket::handle);
         registrar.playToServer(OpenProviderUiC2SPacket.TYPE, OpenProviderUiC2SPacket.STREAM_CODEC, OpenProviderUiC2SPacket::handle);
         registrar.playToServer(UploadEncodedPatternToProviderC2SPacket.TYPE, UploadEncodedPatternToProviderC2SPacket.STREAM_CODEC, UploadEncodedPatternToProviderC2SPacket::handle);
+        registrar.playToServer(ReturnLastPatternC2SPacket.TYPE, ReturnLastPatternC2SPacket.STREAM_CODEC, ReturnLastPatternC2SPacket::handle);
         registrar.playToServer(UploadInventoryPatternToProviderC2SPacket.TYPE, UploadInventoryPatternToProviderC2SPacket.STREAM_CODEC, UploadInventoryPatternToProviderC2SPacket::handle);
         registrar.playToServer(CreateCtrlQPatternC2SPacket.TYPE, CreateCtrlQPatternC2SPacket.STREAM_CODEC, CreateCtrlQPatternC2SPacket::handle);
         registrar.playToServer(CreateAndUploadPatternC2SPacket.TYPE, CreateAndUploadPatternC2SPacket.STREAM_CODEC, CreateAndUploadPatternC2SPacket::handle);

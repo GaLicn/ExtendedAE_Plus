@@ -110,6 +110,7 @@
   "extendedae_plus.screen.auto_upload_unique_match": "Auto Upload on Unique Match: %s",
   "extendedae_plus.screen.cn_name": "Chinese Name",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
+  "extendedae_plus.button.return_last_pattern": "Return Last Uploaded Pattern",
   "key.extendedae_plus.create_pattern": "Create Pattern (Ctrl+Q)",
   "key.extendedae_plus.fill_search": "Fill Search Field from JEI",
   "key.categories.extendedae_plus": "ExtendedAE Plus",

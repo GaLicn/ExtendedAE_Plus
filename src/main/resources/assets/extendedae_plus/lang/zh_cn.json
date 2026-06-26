@@ -111,6 +111,7 @@
   "extendedae_plus.screen.auto_upload_unique_match": "唯一匹配时自动上传: %s",
   "extendedae_plus.screen.cn_name": "中文名",
   "extendedae_plus.button.choose_provider":"上传样板",
+  "extendedae_plus.button.return_last_pattern": "取回上一个上传样板",
   "key.extendedae_plus.create_pattern": "快速创建样板 (Ctrl+Q)",
   "key.extendedae_plus.fill_search": "从JEI填充搜索框",
   "key.categories.extendedae_plus": "扩展AE Plus",
