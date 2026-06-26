@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -34,6 +35,11 @@ import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
  */
 public final class MatrixUploadUtil {
     private MatrixUploadUtil() {}
+
+    public record MatrixInventoryTarget(InternalInventory insertInventory,
+                                        InternalInventory patternInventory,
+                                        BlockPos pos,
+                                        boolean plus) {}
 
     /**
      * 从 AE2 的样板编码终端菜单上传当前“已编码合成样板”至 ExtendedAE 装配矩阵（仅合成样板）
@@ -67,7 +73,7 @@ public final class MatrixUploadUtil {
         ItemStack toInsert = stack.copy();
 
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
-        List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+        List<MatrixInventoryTarget> inventories = findAllMatrixPatternInventories(grid);
 
         // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
         if (matrixContainsPattern(inventories, stack)) {
@@ -78,11 +84,12 @@ public final class MatrixUploadUtil {
             return;
         }
         // 尝试插入
-        for (InternalInventory inv : inventories) {
-            if (inv == null) continue;
-            ItemStack remain = inv.addItems(toInsert);
+        for (MatrixInventoryTarget target : inventories) {
+            if (target == null || target.insertInventory() == null || target.patternInventory() == null) continue;
+            ItemStack[] before = snapshotInventory(target.patternInventory());
+            ItemStack remain = target.insertInventory().addItems(toInsert);
             if (remain.getCount() < stackCount) {
-                completeUploadSuccess(player, encodedSlot, stack, remain);
+                completeUploadSuccess(player, encodedSlot, stack, remain, target, findLastChangedSlot(target.patternInventory(), before));
                 return;
             }
         }
@@ -116,7 +123,7 @@ public final class MatrixUploadUtil {
         ItemStack toInsert = pattern.copy();
 
         // 收集所有可用的装配矩阵（图样模块）内部库存并逐一尝试（遵循其过滤规则）
-        List<InternalInventory> inventories = findAllMatrixPatternInventories(grid);
+        List<MatrixInventoryTarget> inventories = findAllMatrixPatternInventories(grid);
 
         // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
         if (matrixContainsPattern(inventories, pattern)) {
@@ -126,13 +133,20 @@ public final class MatrixUploadUtil {
         }
 
         // 尝试插入
-        for (InternalInventory inv : inventories) {
-            if (inv == null) continue;
-            ItemStack remain = inv.addItems(toInsert);
+        for (MatrixInventoryTarget target : inventories) {
+            if (target == null || target.insertInventory() == null || target.patternInventory() == null) continue;
+            ItemStack[] before = snapshotInventory(target.patternInventory());
+            ItemStack remain = target.insertInventory().addItems(toInsert);
             if (remain.getCount() < pattern.getCount()) {
                 // 上传成功
                 sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
-                player.getPersistentData().putLong("eap_last_uploaded_provider_id", -999999L);
+                ProviderUploadUtil.recordMatrixUpload(
+                        player,
+                        target.pos(),
+                        player.level().dimension().location().toString(),
+                        target.plus(),
+                        findLastChangedSlot(target.patternInventory(), before)
+                );
                 return true;
             }
         }
@@ -147,8 +161,8 @@ public final class MatrixUploadUtil {
     /**
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“样板核心”的用于外部插入的内部库存
      */
-    public static List<InternalInventory> findAllMatrixPatternInventories(IGrid grid) {
-        List<InternalInventory> result = new ArrayList<>();
+    public static List<MatrixInventoryTarget> findAllMatrixPatternInventories(IGrid grid) {
+        List<MatrixInventoryTarget> result = new ArrayList<>();
         if (grid == null) return result;
 
         try {
@@ -169,9 +183,10 @@ public final class MatrixUploadUtil {
                 if (scannedClusters.contains(cluster) || clusterHasSingleUploadCore(cluster)) {
                     scannedClusters.add(cluster); // 标记为已扫描
 
-                    InternalInventory inv = tile.getExposedInventory();
-                    if (inv != null) {
-                        result.add(inv);
+                    InternalInventory insertInv = tile.getExposedInventory();
+                    InternalInventory patternInv = tile.getTerminalPatternInventory();
+                    if (insertInv != null && patternInv != null) {
+                        result.add(new MatrixInventoryTarget(insertInv, patternInv, tile.getBlockPos(), false));
                     }
                 }
             }
@@ -186,9 +201,10 @@ public final class MatrixUploadUtil {
                 if (scannedClusters.contains(cluster) || clusterHasSingleUploadCore(cluster)) {
                     scannedClusters.add(cluster); // 标记为已扫描
 
-                    InternalInventory inv = myTile.getExposedInventory();
-                    if (inv != null) {
-                        result.add(inv);
+                    InternalInventory insertInv = myTile.getExposedInventory();
+                    InternalInventory patternInv = myTile.getTerminalPatternInventory();
+                    if (insertInv != null && patternInv != null) {
+                        result.add(new MatrixInventoryTarget(insertInv, patternInv, myTile.getBlockPos(), true));
                     }
                 }
             }
@@ -200,8 +216,9 @@ public final class MatrixUploadUtil {
     /**
      * 检查装配矩阵（所有已成型矩阵的样板核心）中是否已存在与给定样板完全相同的物品（含NBT）
      */
-    private static boolean matrixContainsPattern(@NotNull List<InternalInventory> inventories, @NotNull ItemStack pattern) {
-        for (InternalInventory inv : inventories) {
+    private static boolean matrixContainsPattern(@NotNull List<MatrixInventoryTarget> inventories, @NotNull ItemStack pattern) {
+        for (MatrixInventoryTarget target : inventories) {
+            InternalInventory inv = target.patternInventory();
             if (inv == null) continue;
             ItemStack patternCopy = pattern.copy();
             if (patternCopy.getTag() != null) {
@@ -237,14 +254,45 @@ public final class MatrixUploadUtil {
     /**
      * 上传成功后处理：清空编码槽，发送提示。
      */
-    private static void completeUploadSuccess(ServerPlayer player, RestrictedInputSlot encodedSlot, ItemStack stack, ItemStack remain) {
+    private static void completeUploadSuccess(ServerPlayer player,
+                                              RestrictedInputSlot encodedSlot,
+                                              ItemStack stack,
+                                              ItemStack remain,
+                                              MatrixInventoryTarget target,
+                                              int slot) {
         int inserted = stack.getCount() - remain.getCount();
         if (inserted > 0) {
             stack.shrink(inserted);
             if (stack.isEmpty()) encodedSlot.set(ItemStack.EMPTY);
             sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
-            player.getPersistentData().putLong("eap_last_uploaded_provider_id", -999999L);
+            ProviderUploadUtil.recordMatrixUpload(
+                    player,
+                    target.pos(),
+                    player.level().dimension().location().toString(),
+                    target.plus(),
+                    slot
+            );
         }
+    }
+
+    private static ItemStack[] snapshotInventory(InternalInventory inv) {
+        ItemStack[] snapshot = new ItemStack[inv.size()];
+        for (int i = 0; i < inv.size(); i++) {
+            snapshot[i] = inv.getStackInSlot(i).copy();
+        }
+        return snapshot;
+    }
+
+    private static int findLastChangedSlot(InternalInventory inv, ItemStack[] before) {
+        int changedSlot = -1;
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack previous = i < before.length ? before[i] : ItemStack.EMPTY;
+            ItemStack current = inv.getStackInSlot(i);
+            if (!ItemStack.matches(previous, current)) {
+                changedSlot = i;
+            }
+        }
+        return changedSlot;
     }
 
     /**

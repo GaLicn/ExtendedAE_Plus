@@ -5,11 +5,14 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
+import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.parts.AEBasePart;
 import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
@@ -17,9 +20,14 @@ import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
 import de.mari_023.ae2wtlib.wut.WTDefinition;
 import de.mari_023.ae2wtlib.wut.WUTHandler;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,8 +44,24 @@ public final class ProviderUploadUtil {
     private static final String PENDING_DATA_KEY = "eap_ctrlq_pending_provider_upload_id";
     private static final String PENDING_STACK_KEY = "eap_ctrlq_pending_provider_upload_stack";
     private static final String LAST_UPLOADED_PROVIDER_KEY = "eap_last_uploaded_provider_id";
+    private static final String LAST_UPLOAD_KIND_KEY = "eap_last_upload_kind";
+    private static final String LAST_UPLOAD_SLOT_KEY = "eap_last_upload_slot";
+    private static final String LAST_UPLOAD_POS_KEY = "eap_last_upload_pos";
+    private static final String LAST_UPLOAD_SIDE_KEY = "eap_last_upload_side";
+    private static final String LAST_UPLOAD_DIM_KEY = "eap_last_upload_dim";
+    private static final String LAST_UPLOAD_MATRIX_PLUS_KEY = "eap_last_upload_matrix_plus";
+    private static final String LAST_UPLOAD_KIND_PROVIDER = "provider";
+    private static final String LAST_UPLOAD_KIND_MATRIX = "matrix";
 
     private ProviderUploadUtil() {}
+
+    public record LastUploadRecord(String kind, long providerId, int slot, long pos, String side, String dimension, boolean matrixPlus) {
+        public boolean isMatrix() {
+            return LAST_UPLOAD_KIND_MATRIX.equals(this.kind);
+        }
+    }
+
+    private record HostLocator(long pos, String side, String dimension) {}
 
     /**
      * 发送消息给玩家
@@ -103,6 +127,7 @@ public final class ProviderUploadUtil {
         var filteredInventory = new FilteredInternalInventory(patternInventory, patternFilter);
 
         // 7. 尝试插入样板
+        ItemStack[] before = snapshotInventory(patternInventory);
         ItemStack itemToInsert = playerItem.copy();
         ItemStack remaining = filteredInventory.addItems(itemToInsert);
 
@@ -115,7 +140,7 @@ public final class ProviderUploadUtil {
                 player.getInventory().setItem(playerSlotIndex, ItemStack.EMPTY);
             }
 
-            player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, providerId);
+            recordProviderUpload(player, providerId, patternContainer, findLastChangedSlot(patternInventory, before));
 
             String terminalType = PatternTerminalUtil.isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
             sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
@@ -168,6 +193,7 @@ public final class ProviderUploadUtil {
             if (inv == null || inv.size() <= 0) continue;
 
             var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+            ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
             ItemStack remain = filtered.addItems(toInsert);
             if (remain.getCount() < toInsert.getCount()) {
@@ -178,7 +204,7 @@ public final class ProviderUploadUtil {
                 } else {
                     encodedSlot.set(stack);
                 }
-                player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, id);
+                recordProviderUpload(player, id, c, findLastChangedSlot(inv, before));
                 return true;
             }
         }
@@ -221,6 +247,7 @@ public final class ProviderUploadUtil {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
             var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
+            ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
             ItemStack remain = filtered.addItems(toInsert);
             if (remain.getCount() < toInsert.getCount()) {
@@ -231,15 +258,9 @@ public final class ProviderUploadUtil {
                 } else {
                     encodedSlot.set(stack);
                 }
-                
-                // For index-based, we can store the negative index to let the return logic resolve it
-                player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, index == 0 && c == list.get(0) ? (-1L - index) : -1000000L); // store specifically if logic allows, but to be sure let's store the index format
-                // actually we know `c` might be from tryList, let's find the true index of `c` in `list`
                 int trueIndex = list.indexOf(c);
-                if (trueIndex >= 0) {
-                    player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, -1L - trueIndex);
-                }
-
+                long storedProviderId = trueIndex >= 0 ? -1L - trueIndex : Long.MIN_VALUE;
+                recordProviderUpload(player, storedProviderId, c, findLastChangedSlot(inv, before));
                 return true;
             }
         }
@@ -281,7 +302,8 @@ public final class ProviderUploadUtil {
         ItemStack pending = getPendingCtrlQPattern(player);
         if (pending.isEmpty()) return false;
 
-        ItemStack remain = insertPatternIntoProviderFromPlayerNetwork(player, pending, providerId);
+        UploadResult result = insertPatternIntoProviderFromPlayerNetwork(player, pending, providerId);
+        ItemStack remain = result.remaining();
         if (remain.getCount() >= pending.getCount()) {
             return false;
         }
@@ -292,7 +314,9 @@ public final class ProviderUploadUtil {
             player.getPersistentData().put(PENDING_STACK_KEY, remain.save(new CompoundTag()));
         }
 
-        player.getPersistentData().putLong(LAST_UPLOADED_PROVIDER_KEY, providerId);
+        if (result.target() != null) {
+            recordProviderUpload(player, providerId, result.target(), result.slot());
+        }
         return true;
     }
 
@@ -335,34 +359,41 @@ public final class ProviderUploadUtil {
         return stack;
     }
 
-    private static ItemStack insertPatternIntoProviderFromPlayerNetwork(ServerPlayer player, ItemStack pattern, long providerId) {
+    private record UploadResult(ItemStack remaining, PatternContainer target, int slot) {}
+
+    private static UploadResult insertPatternIntoProviderFromPlayerNetwork(ServerPlayer player, ItemStack pattern, long providerId) {
         if (player == null || pattern == null || pattern.isEmpty() || !PatternDetailsHelper.isEncodedPattern(pattern)) {
-            return pattern == null ? ItemStack.EMPTY : pattern;
+            return new UploadResult(pattern == null ? ItemStack.EMPTY : pattern, null, -1);
         }
 
         int index = decodeProviderIndex(providerId);
-        if (index < 0) return pattern;
+        if (index < 0) return new UploadResult(pattern, null, -1);
 
         List<PatternContainer> providers = listAvailableProvidersFromPlayerNetwork(player);
-        if (index >= providers.size()) return pattern;
+        if (index >= providers.size()) return new UploadResult(pattern, null, -1);
 
         PatternContainer target = providers.get(index);
-        if (target == null) return pattern;
+        if (target == null) return new UploadResult(pattern, null, -1);
 
         ItemStack remain = pattern.copy();
+        PatternContainer changedContainer = null;
+        int changedSlot = -1;
         for (PatternContainer container : buildSameNameTryList(providers, target)) {
             InternalInventory inv = container.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
 
+            ItemStack[] before = snapshotInventory(inv);
             ItemStack nextRemain = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter()).addItems(remain.copy());
             if (nextRemain.getCount() < remain.getCount()) {
+                changedSlot = findLastChangedSlot(inv, before);
+                changedContainer = container;
                 remain = nextRemain;
                 if (remain.isEmpty()) {
-                    return ItemStack.EMPTY;
+                    return new UploadResult(ItemStack.EMPTY, changedContainer, changedSlot);
                 }
             }
         }
-        return remain;
+        return new UploadResult(remain, changedContainer, changedSlot);
     }
 
     private static int decodeProviderIndex(long providerId) {
@@ -422,6 +453,84 @@ public final class ProviderUploadUtil {
         return null;
     }
 
+    public static PatternContainer findProviderContainer(ServerPlayer player, LastUploadRecord record) {
+        if (player == null || record == null) {
+            return null;
+        }
+
+        if (record.pos() == Long.MIN_VALUE) {
+            return findProviderContainerByLegacyId(player, record.providerId());
+        }
+
+        IGrid grid = null;
+        if (player.containerMenu instanceof PatternEncodingTermMenu encMenu) {
+            IGridNode node = encMenu.getNetworkNode();
+            if (node != null) {
+                grid = node.getGrid();
+            }
+        }
+        if (grid == null) {
+            grid = findPlayerGrid(player);
+        }
+        if (grid == null) {
+            return null;
+        }
+
+        return findProviderContainerByLocation(grid, record.pos(), record.side(), record.dimension());
+    }
+
+    public static void recordProviderUpload(ServerPlayer player, long providerId, PatternContainer container, int slot) {
+        if (player == null || container == null || slot < 0) {
+            return;
+        }
+
+        HostLocator locator = getHostLocator(container);
+        CompoundTag data = player.getPersistentData();
+        data.putString(LAST_UPLOAD_KIND_KEY, LAST_UPLOAD_KIND_PROVIDER);
+        data.putLong(LAST_UPLOADED_PROVIDER_KEY, providerId);
+        data.putInt(LAST_UPLOAD_SLOT_KEY, slot);
+        data.putLong(LAST_UPLOAD_POS_KEY, locator != null ? locator.pos() : Long.MIN_VALUE);
+        data.putString(LAST_UPLOAD_SIDE_KEY, locator != null ? locator.side() : "");
+        data.putString(LAST_UPLOAD_DIM_KEY, locator != null ? locator.dimension() : "");
+        data.remove(LAST_UPLOAD_MATRIX_PLUS_KEY);
+    }
+
+    public static void recordMatrixUpload(ServerPlayer player, BlockPos pos, String dimension, boolean isPlus, int slot) {
+        if (player == null || pos == null || slot < 0) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+        data.putString(LAST_UPLOAD_KIND_KEY, LAST_UPLOAD_KIND_MATRIX);
+        data.putLong(LAST_UPLOADED_PROVIDER_KEY, Long.MIN_VALUE);
+        data.putInt(LAST_UPLOAD_SLOT_KEY, slot);
+        data.putLong(LAST_UPLOAD_POS_KEY, pos.asLong());
+        data.putString(LAST_UPLOAD_SIDE_KEY, "");
+        data.putString(LAST_UPLOAD_DIM_KEY, dimension == null ? "" : dimension);
+        data.putBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY, isPlus);
+    }
+
+    public static LastUploadRecord getLastUploadRecord(ServerPlayer player) {
+        if (player == null) {
+            return null;
+        }
+
+        CompoundTag data = player.getPersistentData();
+        if (!data.contains(LAST_UPLOAD_KIND_KEY) || !data.contains(LAST_UPLOAD_SLOT_KEY) || !data.contains(LAST_UPLOAD_POS_KEY)) {
+            return null;
+        }
+
+        return new LastUploadRecord(
+                data.getString(LAST_UPLOAD_KIND_KEY),
+                data.contains(LAST_UPLOADED_PROVIDER_KEY) ? data.getLong(LAST_UPLOADED_PROVIDER_KEY) : Long.MIN_VALUE,
+                data.getInt(LAST_UPLOAD_SLOT_KEY),
+                data.getLong(LAST_UPLOAD_POS_KEY),
+                data.getString(LAST_UPLOAD_SIDE_KEY),
+                data.getString(LAST_UPLOAD_DIM_KEY),
+                data.getBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY)
+        );
+    }
+
     public static long getLastUploadedProviderId(ServerPlayer player) {
         if (player == null) return Long.MIN_VALUE;
         CompoundTag data = player.getPersistentData();
@@ -429,6 +538,129 @@ public final class ProviderUploadUtil {
             return data.getLong(LAST_UPLOADED_PROVIDER_KEY);
         }
         return Long.MIN_VALUE;
+    }
+
+    private static PatternContainer findProviderContainerByLegacyId(ServerPlayer player, long providerId) {
+        if (providerId >= 0) {
+            PatternAccessTermMenu accessMenu = PatternTerminalUtil.getPatternAccessMenu(player);
+            return accessMenu != null ? PatternTerminalUtil.getPatternContainerById(accessMenu, providerId) : null;
+        }
+
+        int index = decodeProviderIndex(providerId);
+        if (index < 0) {
+            return null;
+        }
+
+        List<PatternContainer> providers;
+        if (player.containerMenu instanceof PatternEncodingTermMenu encMenu) {
+            providers = PatternTerminalUtil.listAvailableProvidersFromGrid(encMenu);
+        } else {
+            providers = listAvailableProvidersFromPlayerNetwork(player);
+        }
+        return index < providers.size() ? providers.get(index) : null;
+    }
+
+    private static PatternContainer findProviderContainerByLocation(IGrid grid, long pos, String side, String dimension) {
+        if (grid == null) {
+            return null;
+        }
+
+        try {
+            for (var machineClass : grid.getMachineClasses()) {
+                if (!PatternContainer.class.isAssignableFrom(machineClass)) {
+                    continue;
+                }
+                @SuppressWarnings("unchecked")
+                Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                for (PatternContainer container : grid.getMachines(containerClass)) {
+                    if (container != null && matchesContainer(container, pos, side, dimension)) {
+                        return container;
+                    }
+                }
+                for (PatternContainer container : grid.getActiveMachines(containerClass)) {
+                    if (container != null && matchesContainer(container, pos, side, dimension)) {
+                        return container;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            return null;
+        }
+        return null;
+    }
+
+    private static boolean matchesContainer(PatternContainer container, long pos, String side, String dimension) {
+        HostLocator locator = getHostLocator(container);
+        return locator != null
+                && locator.pos() == pos
+                && locator.side().equals(side == null ? "" : side)
+                && (dimension == null || dimension.isEmpty() || dimension.equals(locator.dimension()));
+    }
+
+    private static HostLocator getHostLocator(PatternContainer container) {
+        if (!(container instanceof PatternProviderLogicAccessor accessor)) {
+            return null;
+        }
+
+        PatternProviderLogicHost host = accessor.eap$host();
+        if (host == null) {
+            return null;
+        }
+
+        BlockEntity blockEntity = host.getBlockEntity();
+        if (blockEntity == null) {
+            return null;
+        }
+
+        String side = "";
+        if (host instanceof AEBasePart part) {
+            side = part.getSide().getSerializedName();
+        }
+        String dimension = blockEntity.getLevel() != null
+                ? blockEntity.getLevel().dimension().location().toString()
+                : "";
+        return new HostLocator(blockEntity.getBlockPos().asLong(), side, dimension);
+    }
+
+    public static Level findLevel(ServerPlayer player, String dimension) {
+        if (player == null) {
+            return null;
+        }
+        if (dimension == null || dimension.isEmpty()) {
+            return player.level();
+        }
+        ResourceLocation id = ResourceLocation.tryParse(dimension);
+        if (id == null || player.server == null) {
+            return null;
+        }
+        return player.server.getLevel(ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, id));
+    }
+
+    private static boolean dimensionMatches(Level level, String dimension) {
+        if (dimension == null || dimension.isEmpty()) {
+            return true;
+        }
+        return level != null && dimension.equals(level.dimension().location().toString());
+    }
+
+    private static ItemStack[] snapshotInventory(InternalInventory inv) {
+        ItemStack[] snapshot = new ItemStack[inv.size()];
+        for (int i = 0; i < inv.size(); i++) {
+            snapshot[i] = inv.getStackInSlot(i).copy();
+        }
+        return snapshot;
+    }
+
+    private static int findLastChangedSlot(InternalInventory inv, ItemStack[] before) {
+        int changedSlot = -1;
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack previous = i < before.length ? before[i] : ItemStack.EMPTY;
+            ItemStack current = inv.getStackInSlot(i);
+            if (!ItemStack.matches(previous, current)) {
+                changedSlot = i;
+            }
+        }
+        return changedSlot;
     }
 
     /**
