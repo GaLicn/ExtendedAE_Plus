@@ -1,12 +1,32 @@
 # Changelog
 
+## [1.5.5]
+
+### Added / 新增
+- 新增缺失下单功能（AE2 库存不足时仍然可发起合成计划请求，缺失材料会以紫色背景渲染提示玩家补充材料）
+  - Added missing-item ordering support: crafting plan requests can now still be created when AE2 stock is insufficient, and missing materials are highlighted with a purple background to prompt replenishment.
+- 新增撤回上传编码样板功能（按住 Shift 时上传按钮会变成撤回按钮，且仅能撤回上一次上传）
+  - Added undo support for uploaded encoded patterns: holding Shift changes the upload button into an undo button, which can only revert the most recent upload.
+- 并行处理单元新增可拆解回存储组件的配方支持
+  - Added recipes to dismantle Parallel Processing Units back into Storage Components.
+
+### Changed / 变更
+- `/eap give_infinity_disks` 命令现仅允许 OP 及以上权限玩家执行
+  - The `/eap give_infinity_disks` command can now only be executed by players with OP permissions or higher.
+
+### Fixed / 修复
+- 修复标签无线收发器界面中按下 `E` 键会直接退出 UI 的问题
+  - Fixed an issue where pressing `E` in the Labeled Wireless Transceiver UI would immediately close the screen.
+- 修复自动补充空白样板槽时，未检查样板槽内物品而导致的意外问题
+  - Fixed an issue in auto-refilling blank pattern slots caused by not checking the existing item in the pattern slot.
+
 ## [1.5.4.1]
 
 ### Added / 新增
 - 样板终端按钮显示新增开关控制按钮
   - Added a toggle button to control Pattern Terminal button visibility.
 
-## [1.5.4]  
+## [1.5.4]
 
 ### Added / 新增
 - 样板终端新增系列倍增按钮
@@ -173,10 +193,10 @@
   - Removed the minimum benefit factor configuration option for Smart Multiplication
 - 添加对MAE2版本的限制
   - Added version restrictions for MAE2
-- 为部分文本添加翻译键支持，改善国际化体验 
+- 为部分文本添加翻译键支持，改善国际化体验
   - Added translation key support for some previously hardcoded text, improving internationalization experience
 - 略微提升无线收发器基础硬度，锁定状态下挖掘速度降至10%
-  - Slightly increased wireless transceiver base hardness, mining speed reduced to 10% when locked 
+  - Slightly increased wireless transceiver base hardness, mining speed reduced to 10% when locked
 - 调整部分物品合成配方
   - Adjust the synthesis formula of some items
 - 优化本mod磁盘性能
@@ -262,21 +282,21 @@
 
 ## [1.4.1]
 ### Added / 新增
-- 模组配置项：可设置智能倍增的最大倍数  
+- 模组配置项：可设置智能倍增的最大倍数
   - Config option: set maximum multiplier for Smart Doubling.
-- 上传样板搜索框：右键点击可清空文本  
+- 上传样板搜索框：右键点击可清空文本
   - Right-clicking the pattern upload search box clears the text.
-- 合成监控界面：打开样板供应器 UI 时自动跳转到该样板所在页数，并以彩虹高亮显示  
+- 合成监控界面：打开样板供应器 UI 时自动跳转到该样板所在页数，并以彩虹高亮显示
   - Crafting monitor: auto-jumps to the page containing the pattern and highlights it with rainbow effect when opening the provider UI.
-- 样板供应器 UI 标题现在显示为玩家自定义名称  
+- 样板供应器 UI 标题现在显示为玩家自定义名称
   - Pattern Provider UI now displays the player-customized name as its title.
-- 配置项：当产物数量达到指定值时启用智能倍增  
+- 配置项：当产物数量达到指定值时启用智能倍增
   - Config option: enable Smart Doubling only when output amount reaches a specified threshold.
 
 ### Fixed / 修复
-- 修复编码终端中空白配方无法覆盖已有编码样板的问题  
+- 修复编码终端中空白配方无法覆盖已有编码样板的问题
   - Fixed issue where blank recipes couldn't overwrite existing encoded patterns in the Encoding Terminal.
-- 修复非 AE 与 ExtendedAE 样板供应器无法发配材料的问题  
+- 修复非 AE 与 ExtendedAE 样板供应器无法发配材料的问题
   - Fixed issue where non-AE2 and non-ExtendedAE pattern providers failed to dispatch materials.
 
 ## [1.4.0-fix]
