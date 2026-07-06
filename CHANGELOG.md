@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.5.5]
+
+### Added / 新增
+- 新增缺失下单功能（AE2 库存不足时仍然可发起合成计划请求，缺失材料会以紫色背景渲染提示玩家补充材料）
+  - Added missing-item ordering support: crafting plan requests can now still be created when AE2 stock is insufficient, and missing materials are highlighted with a purple background to prompt replenishment.
+- 新增撤回上传编码样板功能（按住 Shift 时上传按钮会变成撤回按钮，且仅能撤回上一次上传）
+  - Added undo support for uploaded encoded patterns: holding Shift changes the upload button into an undo button, which can only revert the most recent upload.
+- 并行处理单元新增可拆解回存储组件的配方支持
+  - Added recipes to dismantle Parallel Processing Units back into Storage Components.
+
+### Changed / 变更
+- `/eap give_infinity_disks` 命令现仅允许 OP 及以上权限玩家执行
+  - The `/eap give_infinity_disks` command can now only be executed by players with OP permissions or higher.
+
+### Fixed / 修复
+- 修复标签无线收发器界面中按下 `E` 键会直接退出 UI 的问题
+  - Fixed an issue where pressing `E` in the Labeled Wireless Transceiver UI would immediately close the screen.
+- 修复自动补充空白样板槽时，未检查样板槽内物品而导致的意外问题
+  - Fixed an issue in auto-refilling blank pattern slots caused by not checking the existing item in the pattern slot.
+
 ## [1.5.4.1]
 
 ### Added / 新增
