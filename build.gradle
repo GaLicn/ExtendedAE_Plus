@@ -188,6 +188,9 @@ dependencies {
     implementation "curse.maven:observable-509575:6697124"
     implementation "curse.maven:kotlin-for-forge-351264:7471280"
 
+    //建筑棒
+    implementation "curse.maven:construction-sticks-1156098:8287281"
+
     runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'

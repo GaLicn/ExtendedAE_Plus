@@ -7,6 +7,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 
 /**
  * 注册 AE2 能力给本模组的方块实体，确保 AE 电缆能识别并连接到我们的 In-World Grid Node。
@@ -76,6 +77,22 @@ public final class ModCapabilities {
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.UPLOAD_CORE_BE.get(),
                 (be, ctx) -> (UploadCoreBlockEntity) be
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
+                (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_GLASS_BE.get(),
+                (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
         );
 
         // 如果还有其他实现了 IInWorldGridNodeHost 的方块实体，也在这里一并注册

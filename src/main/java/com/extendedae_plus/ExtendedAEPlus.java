@@ -158,6 +158,27 @@ public class ExtendedAEPlus {
                     null
             );
 
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get().setBlockEntity(
+                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
+                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get().setBlockEntity(
+                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_GLASS_BE.get(),
+                    null,
+                    null
+            );
+
             ((AEBaseEntityBlock) ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get()).setBlockEntity(
                     MirrorPatternProviderBlockEntity.class,
                     ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
