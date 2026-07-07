@@ -35,6 +35,13 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.extendedae_plus]]
+modId = "ae2"
+mandatory = true
+versionRange = "[15.4.10,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.extendedae_plus]]
 modId = "mae2"
 mandatory = false
 versionRange = "[2.0.0-alpha,)"
