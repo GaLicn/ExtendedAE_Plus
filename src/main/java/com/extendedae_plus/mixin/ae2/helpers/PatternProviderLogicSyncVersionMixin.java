@@ -23,4 +23,9 @@ public abstract class PatternProviderLogicSyncVersionMixin implements PatternPro
     public long eap$getPatternSyncVersion() {
         return this.eap$patternSyncVersion;
     }
+
+    @Override
+    public void eap$markPatternSyncDirty() {
+        this.eap$patternSyncVersion++;
+    }
 }

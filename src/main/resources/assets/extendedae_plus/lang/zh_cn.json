@@ -26,6 +26,7 @@
   "item.extendedae_plus.channel_card": "频道卡",
   "item.extendedae_plus.mirror_pattern_binding_tool": "镜像样板绑定器",
   "item.extendedae_plus.virtual_crafting_card": "虚拟合成卡",
+  "item.extendedae_plus.extended_pattern_provider_expansion_card_plus": "超级扩展样板供应器扩容卡",
   "item.extendedae_plus.c-h716": "C-H716 玩偶",
   "item.extendedae_plus.fish_dan_": "Fish_Dan_ 玩偶",
   "item.extendedae_plus._feng": "麦激凌 玩偶",
@@ -148,8 +149,6 @@
   "config.extendedae_plus": "ExtendedAE Plus",
 
   "extendedae_plus.configuration.common": "通用配置",
-  "extendedae_plus.configuration.pageMultiplier": "扩展样板供应器槽位倍率",
-  "extendedae_plus.configuration.pageMultiplier_with_range": "扩展样板供应器槽位倍率 (1-64)",
 
   "extendedae_plus.configuration.client": "显示配置",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "显示样板编码玩家",
@@ -253,6 +252,7 @@
   "extendedae_plus.message.invalid_pattern_item": "该物品不是编码样板。",
   "extendedae_plus.message.provider.not_found": "未找到样板供应器 %s。",
   "extendedae_plus.message.provider.inventory_unavailable": "供应器库存不可用。",
+  "extendedae_plus.message.pattern_provider.expansion_card_locked": "剩余已解锁槽位无法容纳当前样板，无法取下该扩容卡。",
   "extendedae_plus.message.upload.success_single": "已上传到 %s：%d 个样板。",
   "extendedae_plus.message.upload.fail": "样板上传失败。",
   "extendedae_plus.message.upload.success_batch": "批量上传到 %s：%d 个样板。",

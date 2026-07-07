@@ -26,6 +26,7 @@
   "item.extendedae_plus.channel_card": "Channel Card",
   "item.extendedae_plus.mirror_pattern_binding_tool": "Mirror Pattern Binder",
   "item.extendedae_plus.virtual_crafting_card": "Virtual Crafting Card",
+  "item.extendedae_plus.extended_pattern_provider_expansion_card_plus": "Super Extended Pattern Provider Expansion Card",
   "item.extendedae_plus.c-h716": "C-H716 Doll",
   "item.extendedae_plus.fish_dan_": "Fish Dan Doll",
   "item.extendedae_plus._feng": "_leng Doll",
@@ -152,8 +153,6 @@
   "config.extendedae_plus": "ExtendedAE Plus",
   
   "extendedae_plus.configuration.common": "Common Configuration",
-  "extendedae_plus.configuration.pageMultiplier": "Pattern Provider Slot Multiplier",
-  "extendedae_plus.configuration.pageMultiplier_with_range": "Pattern Provider Slot Multiplier (1-64)",
 
   "extendedae_plus.configuration.client": "Display Configuration",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Pattern Encoder Player",
@@ -253,6 +252,7 @@
   "extendedae_plus.message.invalid_pattern_item": "Item is not an encoded pattern.",
   "extendedae_plus.message.provider.not_found": "Pattern provider %s not found.",
   "extendedae_plus.message.provider.inventory_unavailable": "Provider inventory is unavailable.",
+  "extendedae_plus.message.pattern_provider.expansion_card_locked": "This expansion card cannot be removed because the remaining unlocked slots cannot hold the current patterns.",
   "extendedae_plus.message.upload.success_single": "Uploaded to %s: %d pattern(s).",
   "extendedae_plus.message.upload.fail": "Pattern upload failed.",
   "extendedae_plus.message.upload.success_batch": "Batch uploaded to %s: %d patterns.",

@@ -1,6 +1,7 @@
 package com.extendedae_plus.mixin.ae2.compat;
 
 import appeng.api.networking.IGridConnection;
+import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.upgrades.IUpgradeInventory;
@@ -13,6 +14,8 @@ import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
+import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
@@ -36,12 +39,12 @@ import java.util.UUID;
 
 /**
  * 样板供应器频道卡兼容实现：
- * - 未安装 appflux 时，提供 2 个升级槽并读取频道卡；
+ * - 未安装 appflux 时，提供升级槽并读取频道卡；
  * - 安装 appflux 时，优先从 appflux 提供的升级槽读取频道卡；
  * - 建立到无线主站的网格连接。
  */
 @Mixin(value = PatternProviderLogic.class, priority = 900, remap = false)
-public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge, PatternProviderLogicVirtualCompatBridge, PatternProviderLogicUpgradeCompatBridge {
+public abstract class PatternProviderLogicCompatMixin implements CompatUpgradeProvider, InterfaceWirelessLinkBridge, PatternProviderLogicVirtualCompatBridge, PatternProviderLogicUpgradeCompatBridge, PatternProviderPageUnlockBridge {
 
     @Unique
     private IUpgradeInventory eap$compatUpgrades = UpgradeInventories.empty();
@@ -76,6 +79,12 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Shadow
     private IActionSource actionSource;
 
+    @Shadow
+    public abstract InternalInventory getPatternInv();
+
+    @Shadow
+    public abstract void updatePatterns();
+
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
     private void eap$compatInit(IManagedGridNode mainNode, PatternProviderLogicHost host, int size, CallbackInfo ci) {
@@ -83,7 +92,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades = UpgradeInventories.forMachine(
                         host.getTerminalIcon().getItem(),
-                        UpgradeSlotCompat.getPatternProviderLocalUpgradeSlots(),
+                        UpgradeSlotCompat.getPatternProviderLocalUpgradeSlots(host),
                         this::eap$compatOnUpgradesChanged);
             } else if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
                 this.eap$compatUpgrades = UpgradeInventories.empty();
@@ -100,6 +109,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             this.eap$compatLastChannel = -1;
             this.eap$compatLastOwner = null;
             this.eap$compatHasInitialized = false;
+            this.updatePatterns();
+            if ((Object) this instanceof PatternProviderLogicSyncBridge bridge) {
+                bridge.eap$markPatternSyncDirty();
+            }
             this.eap$compatInitializeChannelLink();
             this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
@@ -421,6 +434,31 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public IManagedGridNode eap$compatGetMainNode() {
         return this.mainNode;
+    }
+
+    @Override
+    public boolean eap$isExtendedPatternProviderHost() {
+        return UpgradeSlotCompat.isExtendedPatternProviderHost(this.host);
+    }
+
+    @Override
+    public int eap$getUnlockedPatternPages() {
+        if (!this.eap$isExtendedPatternProviderHost()) {
+            int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+            return Math.max(1, (size + 35) / 36);
+        }
+
+        return UpgradeSlotCompat.getUnlockedExtendedPatternProviderPages(this.eap$compatGetEffectiveUpgrades());
+    }
+
+    @Override
+    public int eap$getUnlockedPatternSlots() {
+        int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+        if (!this.eap$isExtendedPatternProviderHost()) {
+            return size;
+        }
+
+        return Math.min(size, UpgradeSlotCompat.getUnlockedExtendedPatternProviderSlots(this.eap$compatGetEffectiveUpgrades()));
     }
 
     @Unique

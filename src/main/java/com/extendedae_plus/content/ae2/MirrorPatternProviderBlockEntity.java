@@ -13,8 +13,9 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.AEBasePart;
 import appeng.util.SettingsFrom;
 import appeng.util.inv.AppEngInternalInventory;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -454,12 +455,15 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
         var mirrorInventory = this.getPatternInventory();
         var masterInventory = asPatternInventory(master.getLogic().getPatternInv());
+        var masterUnlockedSlots = getUnlockedPatternSlots(master.getLogic());
         var mirrorSize = mirrorInventory.size();
         var masterSize = masterInventory.size();
         var changed = false;
 
         for (int slot = 0; slot < mirrorSize; slot++) {
-            var desiredStack = slot < masterSize ? masterInventory.getStackInSlot(slot) : ItemStack.EMPTY;
+            var desiredStack = slot < masterUnlockedSlots && slot < masterSize
+                    ? masterInventory.getStackInSlot(slot)
+                    : ItemStack.EMPTY;
             var currentStack = mirrorInventory.getStackInSlot(slot);
             if (!sameStack(desiredStack, currentStack)) {
                 mirrorInventory.setItemDirect(slot, desiredStack.isEmpty() ? ItemStack.EMPTY : desiredStack.copy());
@@ -520,14 +524,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private static int getMirrorPatternSlotCapacity() {
-        int pageMultiplier = 1;
-        try {
-            pageMultiplier = ModConfigs.PAGE_MULTIPLIER.get();
-        } catch (Throwable ignored) {
-        }
-
-        pageMultiplier = Math.max(1, Math.min(64, pageMultiplier));
-        return Math.max(AE2_PATTERN_SLOTS, EXTENDED_PATTERN_PROVIDER_BASE_SLOTS * pageMultiplier);
+        return Math.max(AE2_PATTERN_SLOTS, UpgradeSlotCompat.getExtendedPatternProviderPatternCapacity());
     }
 
     private static boolean sameStack(ItemStack left, ItemStack right) {
@@ -544,6 +541,13 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         return UNKNOWN_PATTERN_SYNC_VERSION;
+    }
+
+    private static int getUnlockedPatternSlots(PatternProviderLogic logic) {
+        if (logic instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge.eap$getUnlockedPatternSlots();
+        }
+        return logic.getPatternInv().size();
     }
 
     @Nullable

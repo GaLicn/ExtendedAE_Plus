@@ -1,6 +1,6 @@
 package com.extendedae_plus.mixin.extendedae.common;
 
-import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -19,10 +19,8 @@ public abstract class PartExPatternProviderMixin {
             ),
             index = 2
     )
-    private int eap$multiplyCapacity(int original) {
-        int mult = ModConfigs.PAGE_MULTIPLIER.get();
-        if (mult < 1) mult = 1;
-        if (mult > 64) mult = 64;
-        return Math.max(1, original) * mult;
+    private int eap$expandCapacity(int original) {
+        // 扩展样板供应器固定预留最大容量，实际启用页数由扩容卡控制。
+        return Math.max(original, UpgradeSlotCompat.getExtendedPatternProviderPatternCapacity());
     }
 }

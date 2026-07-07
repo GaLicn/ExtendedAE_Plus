@@ -5,7 +5,6 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.items.tools.powered.WirelessTerminalItem;
-import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
@@ -134,14 +133,9 @@ public final class CtrlQPendingUploadUtil {
 						if (container == null || !container.isVisibleInTerminal()) continue;
 						InternalInventory inv = container.getTerminalPatternInventory();
 						if (inv == null || inv.size() <= 0) continue;
-						boolean hasEmpty = false;
-						for (int i = 0; i < inv.size(); i++) {
-							if (inv.getStackInSlot(i).isEmpty()) {
-								hasEmpty = true;
-								break;
-							}
+						if (ExtendedAEPatternUploadUtil.getAvailableSlots(container) > 0) {
+							list.add(container);
 						}
-						if (hasEmpty) list.add(container);
 					}
 				}
 			}
@@ -185,7 +179,8 @@ public final class CtrlQPendingUploadUtil {
 			InternalInventory inv = container.getTerminalPatternInventory();
 			if (inv == null || inv.size() <= 0) continue;
 
-			ItemStack nextRemain = new FilteredInternalInventory(inv, new CtrlQPatternFilter()).addItems(remain.copy());
+			ItemStack nextRemain = ExtendedAEPatternUploadUtil.insertIntoAccessiblePatternSlots(
+					container, remain.copy(), new CtrlQPatternFilter());
 			if (nextRemain.getCount() < remain.getCount()) {
 				remain = nextRemain;
 				if (remain.isEmpty()) {

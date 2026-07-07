@@ -54,7 +54,7 @@ public class ReturnLastPatternC2SPacket implements CustomPacketPayload {
             }
 
             InternalInventory inv = targetContainer.getTerminalPatternInventory();
-            if (inv != null) {
+            if (inv != null && ExtendedAEPatternUploadUtil.isAccessiblePatternSlot(targetContainer, record.slot())) {
                 returnPatternFromSlot(player, inv, record.slot());
             }
         });

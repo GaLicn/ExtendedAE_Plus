@@ -7,7 +7,6 @@ import java.util.List;
 public final class ModConfigs {
     // Common 配置
     public static final ModConfigSpec COMMON_SPEC;
-    public static final ModConfigSpec.IntValue PAGE_MULTIPLIER;
 
     // Client 配置
     public static final ModConfigSpec CLIENT_SPEC;
@@ -30,15 +29,6 @@ public final class ModConfigs {
     static {
         // Common 配置
         ModConfigSpec.Builder commonBuilder = new ModConfigSpec.Builder();
-        commonBuilder.push("common");
-        PAGE_MULTIPLIER = commonBuilder
-                .comment(
-                        "扩展样板供应器总槽位容量的倍率",
-                        "基础为36，每页仍显示36格，倍率会增加总页数/总容量",
-                        "建议范围 1-16"
-                )
-                .defineInRange("pageMultiplier", 1, 1, 64);
-        commonBuilder.pop();
         COMMON_SPEC = commonBuilder.build();
 
         // Client 配置
