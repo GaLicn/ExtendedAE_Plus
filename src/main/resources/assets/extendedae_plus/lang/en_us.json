@@ -318,5 +318,9 @@
   "block.extendedae_plus.super_assembler_matrix_frame": "Super Assembler Matrix Frame",
   "block.extendedae_plus.super_assembler_matrix_wall": "Super Assembler Matrix Wall",
   "block.extendedae_plus.super_assembler_matrix_glass": "Super Assembler Matrix Glass",
-  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix"
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix",
+  "gui.extendedae_plus.super_assembler_matrix": "Super Assembler Matrix",
+  "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
+  "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Current Jobs",
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns"
 }

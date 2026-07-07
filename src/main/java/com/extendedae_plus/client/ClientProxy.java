@@ -6,6 +6,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
+import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -99,5 +100,7 @@ public final class ClientProxy {
          * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
          */
         InitScreens.register(event, ModMenuTypes.ENTITY_TICKER_MENU.get(), EntitySpeedTickerScreen::new, "/screens/entity_speed_ticker.json");
+        InitScreens.register(event, ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), SuperAssemblerMatrixScreen::new,
+                "/screens/super_assembler_matrix.json");
     }
 }

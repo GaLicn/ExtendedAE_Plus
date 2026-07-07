@@ -18,6 +18,9 @@ import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
 import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetProviderPageS2CPacket;
+import com.extendedae_plus.network.SuperAssemblerMatrixActionC2SPacket;
+import com.extendedae_plus.network.SuperAssemblerMatrixStatsS2CPacket;
+import com.extendedae_plus.network.SuperAssemblerMatrixUpdateS2CPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
 import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
@@ -88,5 +91,14 @@ public class ModNetwork {
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
         registrar.playToServer(SetPerProviderScalingLimitC2SPacket.TYPE, SetPerProviderScalingLimitC2SPacket.STREAM_CODEC, SetPerProviderScalingLimitC2SPacket::handle);
         registrar.playToServer(SetGlobalScalingLimitC2SPacket.TYPE, SetGlobalScalingLimitC2SPacket.STREAM_CODEC, SetGlobalScalingLimitC2SPacket::handle);
+        registrar.playToClient(SuperAssemblerMatrixUpdateS2CPacket.TYPE,
+                SuperAssemblerMatrixUpdateS2CPacket.STREAM_CODEC,
+                SuperAssemblerMatrixUpdateS2CPacket::handle);
+        registrar.playToClient(SuperAssemblerMatrixStatsS2CPacket.TYPE,
+                SuperAssemblerMatrixStatsS2CPacket.STREAM_CODEC,
+                SuperAssemblerMatrixStatsS2CPacket::handle);
+        registrar.playToServer(SuperAssemblerMatrixActionC2SPacket.TYPE,
+                SuperAssemblerMatrixActionC2SPacket.STREAM_CODEC,
+                SuperAssemblerMatrixActionC2SPacket::handle);
     }
 }
