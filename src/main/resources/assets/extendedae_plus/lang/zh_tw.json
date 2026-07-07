@@ -156,8 +156,6 @@
   "item.extendedae_plus.entity_speed_ticker.tip.energy": "加速將消耗 AE 網路能量，網路能量不足時無法加速",
 
   "config.screen.extendedae_plus": "ExtendedAE Plus 配置",
-  "config.extendedae_plus.option.pageMultiplier": "擴充套件樣板供應器槽位倍率",
-  "config.extendedae_plus.option.pageMultiplier_with_range": "擴充套件樣板供應器槽位倍率",
   "config.extendedae_plus.option.wirelessMaxRange": "無線最大距離",
   "config.extendedae_plus.option.wirelessMaxRange_with_range": "無線最大距離",
   "config.extendedae_plus.option.wirelessCrossDimEnable": "無線收發器允許跨維度連線",
@@ -186,6 +184,7 @@
   "item.extendedae_plus.channel_card.owner.bound": "已繫結到: %s",
   "item.extendedae_plus.channel_card.owner.cleared": "已清除繫結",
   "item.extendedae_plus.virtual_crafting_card": "虛擬合成卡",
+  "item.extendedae_plus.extended_pattern_provider_expansion_card_plus": "超級擴充樣板供應器擴容卡",
   "item.extendedae_plus.virtual_crafting_card.tooltip_main": "當前樣板即將完成時嘗試終止剩餘合成",
   "item.extendedae_plus.virtual_crafting_card.tooltip_detail": "需安裝在樣板供應器的升級槽內",
 
@@ -211,6 +210,7 @@
   "extendedae_plus.chat.pattern_provider.global_toggle_applied": "全域性切換已應用到 %s 個樣板供應器",
   "extendedae_plus.message.config_update_failed": "對映檔案更新失敗: %s",
   "extendedae_plus.message.config_delete_failed": "對映檔案刪除失敗: %s",
+  "extendedae_plus.message.pattern_provider.expansion_card_locked": "剩餘已解鎖槽位無法容納目前樣板，無法取下此擴容卡。",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "無線收發器資訊",
   "config.jade.plugin_extendedae_plus.wt_frequency": "顯示頻率",

@@ -49,7 +49,9 @@ public class ReturnLastPatternC2SPacket {
             }
 
             PatternContainer targetContainer = ProviderUploadUtil.findProviderContainer(player, record);
-            if (targetContainer == null || !targetContainer.isVisibleInTerminal()) {
+            if (targetContainer == null
+                    || !targetContainer.isVisibleInTerminal()
+                    || !ProviderUploadUtil.isAccessiblePatternSlot(targetContainer, record.slot())) {
                 return;
             }
 

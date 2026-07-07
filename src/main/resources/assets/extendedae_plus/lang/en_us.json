@@ -160,8 +160,6 @@
   "item.extendedae_plus.entity_speed_ticker.tip.energy": "Acceleration consumes AE network power; insufficient power disables acceleration",
 
   "config.screen.extendedae_plus": "ExtendedAE Plus Config",
-  "config.extendedae_plus.option.pageMultiplier": "Pattern Provider Page Multiplier",
-  "config.extendedae_plus.option.pageMultiplier_with_range": "Pattern Provider Page Multiplier",
   "config.extendedae_plus.option.wirelessMaxRange": "Wireless Max Range",
   "config.extendedae_plus.option.wirelessMaxRange_with_range": "Wireless Max Range",
   "config.extendedae_plus.option.wirelessCrossDimEnable": "Allow Wireless Cross-Dimension",
@@ -201,6 +199,7 @@
   "item.extendedae_plus.mirror_pattern_binding_tool.unset": "No master pattern provider recorded",
   "item.extendedae_plus.mirror_pattern_binding_tool.range_start": "Selected range start: (%d, %d, %d)",
   "item.extendedae_plus.virtual_crafting_card": "Virtual Crafting Card",
+  "item.extendedae_plus.extended_pattern_provider_expansion_card_plus": "Super Extended Pattern Provider Expansion Card",
   "item.extendedae_plus.virtual_crafting_card.tooltip_main": "Auto-completes crafting jobs once the current pattern is about to finish",
   "item.extendedae_plus.virtual_crafting_card.tooltip_detail": "Install inside a Pattern Provider upgrade slot",
 
@@ -239,6 +238,7 @@
   "extendedae_plus.message.mirror_binding_tool.range_no_mirror": "No mirror pattern providers were found in the selected range.",
   "extendedae_plus.message.mirror_binding_tool.range_bound": "Range binding complete: start (%d, %d, %d), end (%d, %d, %d); found %d mirror pattern providers, bound %d successfully, failed %d.",
   "extendedae_plus.message.mirror_binding_tool.cleared": "Cleared the recorded master pattern provider and range selection from the binding tool.",
+  "extendedae_plus.message.pattern_provider.expansion_card_locked": "This expansion card cannot be removed because the remaining unlocked slots cannot hold the current patterns.",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "Wireless Transceiver Info",
   "config.jade.plugin_extendedae_plus.wt_frequency": "Show Frequency",

@@ -10,8 +10,8 @@ import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
-import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
@@ -124,12 +124,9 @@ public final class ProviderUploadUtil {
 
         // 6. 使用AE2的标准样板过滤器进行插入
         var patternFilter = new ExtendedAEPatternFilter();
-        var filteredInventory = new FilteredInternalInventory(patternInventory, patternFilter);
-
-        // 7. 尝试插入样板
         ItemStack[] before = snapshotInventory(patternInventory);
         ItemStack itemToInsert = playerItem.copy();
-        ItemStack remaining = filteredInventory.addItems(itemToInsert);
+        ItemStack remaining = insertIntoAccessiblePatternSlots(patternContainer, itemToInsert, patternFilter);
 
         if (remaining.getCount() < itemToInsert.getCount()) {
             // 插入成功（部分或全部）
@@ -192,10 +189,9 @@ public final class ProviderUploadUtil {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
 
-            var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
             ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
-            ItemStack remain = filtered.addItems(toInsert);
+            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
             if (remain.getCount() < toInsert.getCount()) {
                 int inserted = toInsert.getCount() - remain.getCount();
                 stack.shrink(inserted);
@@ -246,10 +242,9 @@ public final class ProviderUploadUtil {
         for (PatternContainer c : tryList) {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
-            var filtered = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter());
             ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
-            ItemStack remain = filtered.addItems(toInsert);
+            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
             if (remain.getCount() < toInsert.getCount()) {
                 int inserted = toInsert.getCount() - remain.getCount();
                 stack.shrink(inserted);
@@ -383,7 +378,7 @@ public final class ProviderUploadUtil {
             if (inv == null || inv.size() <= 0) continue;
 
             ItemStack[] before = snapshotInventory(inv);
-            ItemStack nextRemain = new FilteredInternalInventory(inv, new ExtendedAEPatternFilter()).addItems(remain.copy());
+            ItemStack nextRemain = insertIntoAccessiblePatternSlots(container, remain.copy(), new ExtendedAEPatternFilter());
             if (nextRemain.getCount() < remain.getCount()) {
                 changedSlot = findLastChangedSlot(inv, before);
                 changedContainer = container;
@@ -641,6 +636,58 @@ public final class ProviderUploadUtil {
             return true;
         }
         return level != null && dimension.equals(level.dimension().location().toString());
+    }
+
+    public static int getAccessiblePatternSlotCount(PatternContainer container) {
+        if (container == null) {
+            return 0;
+        }
+        return getAccessiblePatternSlotCount(container, container.getTerminalPatternInventory());
+    }
+
+    public static boolean isAccessiblePatternSlot(PatternContainer container, int slot) {
+        return slot >= 0 && slot < getAccessiblePatternSlotCount(container);
+    }
+
+    private static int getAccessiblePatternSlotCount(PatternContainer container, InternalInventory inventory) {
+        if (inventory == null) {
+            return 0;
+        }
+
+        int size = inventory.size();
+        if (container instanceof PatternProviderPageUnlockBridge bridge && bridge.eap$isExtendedPatternProviderHost()) {
+            return Math.max(0, Math.min(size, bridge.eap$getUnlockedPatternSlots()));
+        }
+        return size;
+    }
+
+    private static ItemStack insertIntoAccessiblePatternSlots(PatternContainer container, ItemStack stack,
+            IAEItemFilter filter) {
+        if (container == null) {
+            return stack == null ? ItemStack.EMPTY : stack;
+        }
+        return insertIntoAccessiblePatternSlots(
+                container.getTerminalPatternInventory(),
+                getAccessiblePatternSlotCount(container),
+                stack,
+                filter);
+    }
+
+    private static ItemStack insertIntoAccessiblePatternSlots(InternalInventory inventory, int slotLimit, ItemStack stack,
+            IAEItemFilter filter) {
+        if (inventory == null || stack == null || stack.isEmpty()) {
+            return stack == null ? ItemStack.EMPTY : stack;
+        }
+
+        ItemStack remain = stack.copy();
+        int limit = Math.max(0, Math.min(inventory.size(), slotLimit));
+        for (int i = 0; i < limit && !remain.isEmpty(); i++) {
+            if (filter != null && !filter.allowInsert(inventory, i, remain)) {
+                continue;
+            }
+            remain = inventory.insertItem(i, remain, false);
+        }
+        return remain;
     }
 
     private static ItemStack[] snapshotInventory(InternalInventory inv) {

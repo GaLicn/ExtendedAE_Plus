@@ -51,6 +51,7 @@ public final class ModCreativeTabs {
                         // 频道卡
                         output.accept(ModItems.CHANNEL_CARD.get());
                         output.accept(ModItems.VIRTUAL_CRAFTING_CARD.get());
+                        output.accept(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get());
 
                         output.accept(ModItems.OBLIVION_SINGULARITY.get());
                         output.accept(ModItems.BASIC_CORE.get());

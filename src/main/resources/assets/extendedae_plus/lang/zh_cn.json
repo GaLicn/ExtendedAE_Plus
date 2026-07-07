@@ -159,8 +159,6 @@
   "item.extendedae_plus.entity_speed_ticker.tip.energy": "加速将消耗 AE 网络能量，网络能量不足时无法加速",
 
   "config.screen.extendedae_plus": "ExtendedAE Plus 配置",
-  "config.extendedae_plus.option.pageMultiplier": "扩展样板供应器槽位倍率",
-  "config.extendedae_plus.option.pageMultiplier_with_range": "扩展样板供应器槽位倍率",
   "config.extendedae_plus.option.wirelessMaxRange": "无线最大距离",
   "config.extendedae_plus.option.wirelessMaxRange_with_range": "无线最大距离",
   "config.extendedae_plus.option.wirelessCrossDimEnable": "无线收发器允许跨维度连接",
@@ -200,6 +198,7 @@
   "item.extendedae_plus.mirror_pattern_binding_tool.unset": "当前未记录主样板供应器",
   "item.extendedae_plus.mirror_pattern_binding_tool.range_start": "当前范围起点：(%d, %d, %d)",
   "item.extendedae_plus.virtual_crafting_card": "虚拟合成卡",
+  "item.extendedae_plus.extended_pattern_provider_expansion_card_plus": "超级扩展样板供应器扩容卡",
   "item.extendedae_plus.virtual_crafting_card.tooltip_main": "当前样板即将完成时尝试终止剩余合成",
   "item.extendedae_plus.virtual_crafting_card.tooltip_detail": "需安装在样板供应器的升级槽内",
 
@@ -238,6 +237,7 @@
   "extendedae_plus.message.mirror_binding_tool.range_no_mirror": "所选范围内未找到镜像样板供应器。",
   "extendedae_plus.message.mirror_binding_tool.range_bound": "范围绑定完成：起点 (%d, %d, %d)，终点 (%d, %d, %d)；找到 %d 个镜像样板供应器，成功绑定 %d 个，失败 %d 个。",
   "extendedae_plus.message.mirror_binding_tool.cleared": "已清空绑定工具中记录的主样板供应器和范围选择。",
+  "extendedae_plus.message.pattern_provider.expansion_card_locked": "剩余已解锁槽位无法容纳当前样板，无法取下该扩容卡。",
 
   "config.jade.plugin_extendedae_plus.wireless_transceiver_info": "无线收发器信息",
   "config.jade.plugin_extendedae_plus.wt_frequency": "显示频率",

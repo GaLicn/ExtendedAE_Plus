@@ -1,22 +1,24 @@
 package com.extendedae_plus.compat;
 
 import appeng.api.upgrades.IUpgradeInventory;
+import com.extendedae_plus.init.ModItems;
+import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
+import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ModList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * 升级卡槽兼容性管理类
- * 统一管理：
- * 1. 是否由我们自己提供升级槽
- * 2. appflux存在时是否复用其升级槽
- * 3. appflux PatternProviderLogic 的反射访问入口
+ * 统一管理样板供应器升级槽与扩展样板供应器的扩容页逻辑。
  */
 public final class UpgradeSlotCompat {
     private static final String APPFLUX_MOD_ID = "appflux";
-    private static final int LOCAL_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
-    private static final int APPFLUX_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
+    private static final int BASE_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
+    private static final int EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS = 3;
+    private static final int EXTENDED_PATTERN_PROVIDER_BASE_PAGES = 1;
+    private static final int EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE = 36;
     private static final String[] APPFLUX_UPGRADES_FIELD_NAMES = { "af_upgrades", "af_$upgrades" };
     private static final String[] APPFLUX_UPGRADES_CHANGED_METHOD_NAMES = { "af_onUpgradesChanged", "af_$onUpgradesChanged" };
 
@@ -28,73 +30,90 @@ public final class UpgradeSlotCompat {
     private UpgradeSlotCompat() {
     }
 
-    /**
-     * 检测Applied Flux模组是否存在
-     * @return true如果存在，false如果不存在
-     */
     public static boolean isAppfluxPresent() {
         return ModList.get().isLoaded(APPFLUX_MOD_ID);
     }
 
-    /**
-     * 是否由我们自己提供升级槽实现。
-     */
     public static boolean usesDedicatedUpgradeSlots() {
         return !isAppfluxPresent();
     }
 
-    /**
-     * 是否应当复用 appflux 注入到 PatternProviderLogic 上的升级槽。
-     */
     public static boolean usesAppfluxUpgradeSlots() {
         return isAppfluxPresent();
     }
 
-    /**
-     * 检测是否应该启用我们的升级卡槽功能
-     * @return true如果应该启用，false如果检测到appflux模组存在
-     */
     public static boolean shouldEnableUpgradeSlots() {
         return usesDedicatedUpgradeSlots();
     }
 
-    /**
-     * 是否需要持久化和管理我们本地创建的升级槽。
-     */
     public static boolean shouldManageLocalUpgradeInventory() {
         return usesDedicatedUpgradeSlots();
     }
 
-    /**
-     * 检测是否应该启用频道卡功能
-     * 频道卡是我们独有的功能，即使appflux存在也应该启用
-     * @return 总是返回true，因为频道卡功能不与appflux冲突
-     */
     public static boolean shouldEnableChannelCard() {
-        return true; // 频道卡功能总是启用，因为appflux没有实现这个功能
+        return true;
     }
 
-    /**
-     * appflux 存在时，我们仍然需要监听其升级槽变化来驱动额外的兼容逻辑。
-     */
     public static boolean shouldListenToAppfluxUpgrades() {
         return usesAppfluxUpgradeSlots();
     }
 
-    /**
-     * 检测是否应该在Screen中添加升级面板
-     * @return true如果应该添加，false如果检测到appflux模组存在
-     */
     public static boolean shouldAddUpgradePanelToScreen() {
         return usesDedicatedUpgradeSlots();
     }
 
     public static int getPatternProviderLocalUpgradeSlots() {
-        return LOCAL_PATTERN_PROVIDER_UPGRADE_SLOTS;
+        return getPatternProviderLocalUpgradeSlots(null);
+    }
+
+    public static int getPatternProviderLocalUpgradeSlots(Object host) {
+        return BASE_PATTERN_PROVIDER_UPGRADE_SLOTS
+                + (isExtendedPatternProviderHost(host) ? EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS : 0);
     }
 
     public static int getPatternProviderAppfluxUpgradeSlots() {
-        return APPFLUX_PATTERN_PROVIDER_UPGRADE_SLOTS;
+        return getPatternProviderAppfluxUpgradeSlots(null);
+    }
+
+    public static int getPatternProviderAppfluxUpgradeSlots(Object host) {
+        return BASE_PATTERN_PROVIDER_UPGRADE_SLOTS
+                + (isExtendedPatternProviderHost(host) ? EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS : 0);
+    }
+
+    public static boolean isExtendedPatternProviderHost(Object host) {
+        return host instanceof TileExPatternProvider || host instanceof PartExPatternProvider;
+    }
+
+    public static int getExtendedPatternProviderPatternCapacity() {
+        return getExtendedPatternProviderTotalPages() * EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE;
+    }
+
+    public static int getExtendedPatternProviderTotalPages() {
+        return EXTENDED_PATTERN_PROVIDER_BASE_PAGES + EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS;
+    }
+
+    public static int getUnlockedExtendedPatternProviderPages(Iterable<ItemStack> upgrades) {
+        int expansionCards = 0;
+        if (upgrades != null) {
+            for (ItemStack stack : upgrades) {
+                if (isExtendedPatternProviderExpansionCard(stack)) {
+                    expansionCards++;
+                }
+            }
+        }
+
+        expansionCards = Math.min(expansionCards, EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS);
+        return EXTENDED_PATTERN_PROVIDER_BASE_PAGES + expansionCards;
+    }
+
+    public static int getUnlockedExtendedPatternProviderSlots(Iterable<ItemStack> upgrades) {
+        return getUnlockedExtendedPatternProviderPages(upgrades) * EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE;
+    }
+
+    public static boolean isExtendedPatternProviderExpansionCard(ItemStack stack) {
+        return stack != null
+                && !stack.isEmpty()
+                && stack.getItem() == ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get();
     }
 
     public static IUpgradeInventory getPatternProviderAppfluxUpgrades(Object logicInstance) {

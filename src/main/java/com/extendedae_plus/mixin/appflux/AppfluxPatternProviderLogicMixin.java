@@ -14,14 +14,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 当 appflux 存在时，把它默认的 1 槽升级栏扩展为我们兼容层需要的 2 槽。
- * 优先级设置为 2000，确保在 appflux 自己初始化之后执行。
+ * 当 appflux 存在时，按宿主类型扩展它的升级槽数量。
+ * 对扩展样板供应器会额外补 3 个槽位。
  */
 @Mixin(value = PatternProviderLogic.class, priority = 2000, remap = false)
 public class AppfluxPatternProviderLogicMixin {
 
     /**
-     * 在appflux初始化升级槽之后，替换为2个槽的版本
+     * 在 appflux 初始化升级槽之后，替换为兼容层所需的槽位数量。
      */
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
@@ -37,7 +37,7 @@ public class AppfluxPatternProviderLogicMixin {
                 return;
             }
 
-            int targetSlots = UpgradeSlotCompat.getPatternProviderAppfluxUpgradeSlots();
+            int targetSlots = UpgradeSlotCompat.getPatternProviderAppfluxUpgradeSlots(host);
             if (currentUpgrades.size() == targetSlots) {
                 return;
             }

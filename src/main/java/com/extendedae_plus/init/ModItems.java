@@ -9,6 +9,7 @@ import com.extendedae_plus.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
+import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
 import com.extendedae_plus.util.ModCheckUtils;
@@ -142,6 +143,11 @@ public final class ModItems {
     public static final RegistryObject<VirtualCraftingCardItem> VIRTUAL_CRAFTING_CARD = ITEMS.register(
             "virtual_crafting_card",
             () -> new VirtualCraftingCardItem(new Item.Properties())
+    );
+
+    public static final RegistryObject<ExtendedPatternProviderExpansionCardItem> EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS = ITEMS.register(
+            "extended_pattern_provider_expansion_card_plus",
+            () -> new ExtendedPatternProviderExpansionCardItem(new Item.Properties())
     );
 
     public static final RegistryObject<BasicCoreItem> BASIC_CORE = ITEMS.register(

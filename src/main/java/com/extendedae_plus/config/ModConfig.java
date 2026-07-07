@@ -30,16 +30,6 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
-            "扩展样板供应器总槽位容量的倍率。",
-            "基础为36，每页仍显示36格，倍率会增加总页数/总容量。",
-            "建议范围 1-16"
-    })
-    @Configurable.Synchronized
-    @Configurable.Range(min = 1, max = 64)
-    public int pageMultiplier = 1;
-
-    @Configurable
-    @Configurable.Comment(value = {
             "设置AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
     })
     @Configurable.Synchronized
