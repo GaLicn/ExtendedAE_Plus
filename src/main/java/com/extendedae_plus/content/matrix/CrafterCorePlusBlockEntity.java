@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 public class CrafterCorePlusBlockEntity extends TileAssemblerMatrixCrafter implements SuperAssemblerMatrixPart {
 
     public static final int MAX_THREAD = 32;
-    public static final int SUPER_PARALLEL = 108;
+    public static final int SUPER_PARALLEL = 512;
 
     private int activeThreadMask = 0;
     private @Nullable SuperAssemblerMatrixCluster superMatrixCluster;

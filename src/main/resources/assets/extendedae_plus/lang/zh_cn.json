@@ -314,5 +314,9 @@
   "block.extendedae_plus.super_assembler_matrix_frame": "超级装配矩阵框架",
   "block.extendedae_plus.super_assembler_matrix_wall": "超级装配矩阵墙",
   "block.extendedae_plus.super_assembler_matrix_glass": "超级装配矩阵玻璃",
-  "gui.extendedae_plus.super_assembler_matrix.pattern": "超级装配矩阵"
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "超级装配矩阵",
+  "gui.extendedae_plus.super_assembler_matrix": "超级装配矩阵",
+  "gui.extendedae_plus.super_assembler_matrix.concurrent": "并发执行数：%s",
+  "gui.extendedae_plus.super_assembler_matrix.cancel": "取消当前任务",
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板"
 }

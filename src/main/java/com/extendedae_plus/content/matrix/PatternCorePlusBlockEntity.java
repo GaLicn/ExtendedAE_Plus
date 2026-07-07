@@ -103,6 +103,14 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern imple
         return super.isBusy();
     }
 
+    @Override
+    public void saveChangedInventory(AppEngInternalInventory inv) {
+        super.saveChangedInventory(inv);
+        if (this.superMatrixCluster != null) {
+            this.superMatrixCluster.refreshCraftingProvider();
+        }
+    }
+
     public record Filter(Supplier<Level> world) implements IAEItemFilter {
 
         @Override

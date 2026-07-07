@@ -1,6 +1,9 @@
 package com.extendedae_plus.content.matrix.supermatrix;
 
 import appeng.block.AEBaseEntityBlock;
+import appeng.menu.MenuOpener;
+import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.init.ModMenuTypes;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -74,9 +77,13 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
     @Override
     protected @NotNull InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
-        if (level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part
-                && part.eap$getSuperMatrixCluster() == null) {
+        var blockEntity = this.getBlockEntity(level, pos);
+        if (blockEntity == null || blockEntity.eap$getSuperMatrixCluster() == null) {
             return InteractionResult.PASS;
+        }
+        if (!level.isClientSide && blockEntity.getMainNode().isActive()) {
+            MenuOpener.open(ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), player,
+                    MenuLocators.forBlockEntity(blockEntity));
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
@@ -84,9 +91,17 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
     @Override
     protected ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos,
             Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
-        if (level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part
-                && part.eap$getSuperMatrixCluster() == null) {
+        var parent = super.useItemOn(heldItem, state, level, pos, player, hand, hitResult);
+        if (parent.result() != InteractionResult.PASS) {
+            return parent;
+        }
+        var blockEntity = this.getBlockEntity(level, pos);
+        if (blockEntity == null || blockEntity.eap$getSuperMatrixCluster() == null) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!level.isClientSide && blockEntity.getMainNode().isActive()) {
+            MenuOpener.open(ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), player,
+                    MenuLocators.forBlockEntity(blockEntity));
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }

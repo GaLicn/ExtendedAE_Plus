@@ -42,6 +42,8 @@ public class SuperAssemblerMatrixCluster {
     private int crafterCoreCount;
     private int speedCoreCount;
     private int uploadCoreCount;
+    private long displayedConcurrentExecutions;
+    private long displayedConcurrentUntil;
 
     public SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax) {
         this.boundsMin = boundsMin.immutable();
@@ -132,12 +134,85 @@ public class SuperAssemblerMatrixCluster {
         return this.destroyed || this.core == null || this.getStats().parallelBudget() <= 0;
     }
 
+    public boolean isDestroyed() {
+        return this.destroyed;
+    }
+
     public InternalInventory[] getPatternInventories() {
         var inventories = new InternalInventory[this.patternCores.size()];
         for (int i = 0; i < this.patternCores.size(); i++) {
             inventories[i] = this.patternCores.get(i).getPatternInventory();
         }
         return inventories;
+    }
+
+    public List<PatternCorePlusBlockEntity> getPatternCores() {
+        return java.util.Collections.unmodifiableList(this.patternCores);
+    }
+
+    public long getConcurrentExecutions() {
+        if (this.destroyed || this.core == null) {
+            return 0;
+        }
+        long current = this.computeConcurrentExecutions();
+        if (current > 0) {
+            return this.isConcurrentDisplayActive()
+                    ? Math.max(current, this.displayedConcurrentExecutions)
+                    : current;
+        }
+        return this.isConcurrentDisplayActive() ? this.displayedConcurrentExecutions : 0;
+    }
+
+    private long computeConcurrentExecutions() {
+        if (this.destroyed || this.core == null) {
+            return 0;
+        }
+        long count = this.activeBatch == null ? 0 : this.activeBatch.batchSize;
+        count += this.fallbackThreads.size();
+
+        // 批处理可能 1tick 内完成，UI 同步时 activeBatch 已清空；把已接单待执行量也计入显示。
+        if (this.activeBatch == null && !this.batchQueue.isEmpty()) {
+            long pendingBatch = 0;
+            for (var task : this.batchQueue.values()) {
+                pendingBatch += task.pending;
+            }
+            count += Math.min(pendingBatch, this.getStats().parallelBudget());
+        }
+        return count;
+    }
+
+    private void rememberConcurrentExecutions() {
+        long current = this.computeConcurrentExecutions();
+        if (current > 0) {
+            // 1tick 批处理会产生瞬时尾批，UI 参考原版线程占用口径保留近期峰值，避免数字来回跳。
+            this.displayedConcurrentExecutions = this.isConcurrentDisplayActive()
+                    ? Math.max(this.displayedConcurrentExecutions, current)
+                    : current;
+            this.displayedConcurrentUntil = this.getGameTime() + 20;
+        }
+    }
+
+    private boolean isConcurrentDisplayActive() {
+        return this.displayedConcurrentExecutions > 0 && this.getGameTime() <= this.displayedConcurrentUntil;
+    }
+
+    private long getGameTime() {
+        return this.core != null && this.core.getLevel() != null ? this.core.getLevel().getGameTime() : 0;
+    }
+
+    public void cancelWork() {
+        this.batchQueue.clear();
+        this.fallbackThreads.clear();
+        this.outputBuffer.clear();
+        this.activeBatch = null;
+        this.displayedConcurrentExecutions = 0;
+        this.displayedConcurrentUntil = 0;
+    }
+
+    public void refreshCraftingProvider() {
+        if (this.core != null) {
+            this.core.refreshCraftingProvider();
+        }
     }
 
     public List<IPatternDetails> getAvailablePatterns() {
@@ -194,6 +269,7 @@ public class SuperAssemblerMatrixCluster {
         } else {
             this.fallbackThreads.add(new VirtualThreadTask(pattern, consumedGrid));
         }
+        this.rememberConcurrentExecutions();
         this.core.wakeCoreNode();
         return true;
     }
@@ -206,6 +282,9 @@ public class SuperAssemblerMatrixCluster {
         worked |= this.flushOutputBuffer();
         worked |= this.tickBatch(ticksSinceLastCall);
         worked |= this.tickFallbackThreads(ticksSinceLastCall);
+        if (this.computeConcurrentExecutions() > 0) {
+            this.rememberConcurrentExecutions();
+        }
         return worked || this.hasPendingWork();
     }
 
@@ -230,6 +309,7 @@ public class SuperAssemblerMatrixCluster {
                     iterator.remove();
                 }
                 this.activeBatch = new BatchPlan(task.outputKey, task.outputAmount, batchSize, 0);
+                this.rememberConcurrentExecutions();
             }
         }
 
