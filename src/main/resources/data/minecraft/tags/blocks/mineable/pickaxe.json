@@ -13,6 +13,9 @@
     "extendedae_plus:1024x_crafting_accelerator",
     "extendedae_plus:assembler_matrix_crafter_plus",
     "extendedae_plus:assembler_matrix_pattern_plus",
+    "extendedae_plus:super_assembler_matrix_frame",
+    "extendedae_plus:super_assembler_matrix_wall",
+    "extendedae_plus:super_assembler_matrix_glass",
     "extendedae_plus:labeled_wireless_transceiver"
   ]
 }

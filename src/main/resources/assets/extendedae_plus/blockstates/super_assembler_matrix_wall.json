@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "formed=false,powered=false": {
+      "model": "expatternprovider:block/assembler_matrix/wall"
+    },
+    "formed=false,powered=true": {
+      "model": "expatternprovider:block/assembler_matrix/wall"
+    },
+    "formed=true,powered=false": {
+      "model": "expatternprovider:block/assembler_matrix/wall"
+    },
+    "formed=true,powered=true": {
+      "model": "expatternprovider:block/assembler_matrix/wall"
+    }
+  }
+}

@@ -284,5 +284,13 @@
 
   "key.extendedae_plus.create_pattern": "Create Pattern from JEI",
   "key.extendedae_plus.fill_search": "Fill Search Field from JEI",
-  "key.categories.extendedae_plus": "ExtendedAE Plus"
+  "key.categories.extendedae_plus": "ExtendedAE Plus",
+  "block.extendedae_plus.super_assembler_matrix_frame": "Super Assembler Matrix Frame",
+  "block.extendedae_plus.super_assembler_matrix_wall": "Super Assembler Matrix Wall",
+  "block.extendedae_plus.super_assembler_matrix_glass": "Super Assembler Matrix Glass",
+  "gui.extendedae_plus.super_assembler_matrix": "Super Assembler Matrix",
+  "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
+  "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Crafting",
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search pattern inputs or outputs",
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix"
 }

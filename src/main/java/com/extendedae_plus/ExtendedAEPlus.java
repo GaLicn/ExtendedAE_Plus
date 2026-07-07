@@ -10,6 +10,9 @@ import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
@@ -21,6 +24,9 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -36,6 +42,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class ExtendedAEPlus {
 
     public static final String MODID = "extendedae_plus";
+    private static volatile boolean serverStopping;
 
     // 注意：避免在静态初始化阶段访问注册对象，相关客户端注册改在 FMLClientSetupEvent 中执行。
 
@@ -61,6 +68,9 @@ public class ExtendedAEPlus {
         MinecraftForge.EVENT_BUS.register(this);
         // 注册命令注册监听
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
         // 注册通用配置
         ModConfig.init();
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::worldTick);
@@ -109,6 +119,27 @@ public class ExtendedAEPlus {
                     null
             );
 
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get().setBlockEntity(
+                    SuperAssemblerMatrixFrameBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
+                    SuperAssemblerMatrixWallBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get().setBlockEntity(
+                    SuperAssemblerMatrixGlassBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_GLASS_BE.get(),
+                    null,
+                    null
+            );
+
             ((AEBaseEntityBlock) ModBlocks.MIRROR_PATTERN_PROVIDER.get()).setBlockEntity(
                     MirrorPatternProviderBlockEntity.class,
                     ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
@@ -128,6 +159,22 @@ public class ExtendedAEPlus {
      */
     public static ResourceLocation id(String path) {
         return new ResourceLocation(MODID, path);
+    }
+
+    public static boolean isServerStopping() {
+        return serverStopping;
+    }
+
+    private static void onServerStarted(ServerStartedEvent event) {
+        serverStopping = false;
+    }
+
+    private static void onServerStopping(ServerStoppingEvent event) {
+        serverStopping = true;
+    }
+
+    private static void onServerStopped(ServerStoppedEvent event) {
+        serverStopping = false;
     }
 
     /**

@@ -135,6 +135,9 @@ dependencies {
 
     //MEK
     modImplementation "curse.maven:mekanism-268560:6552911"
+
+    //建筑手杖
+    modImplementation "curse.maven:construction-wand-399558:4684054"
 }
 
 compileJava {

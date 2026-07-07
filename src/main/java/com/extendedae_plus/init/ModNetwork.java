@@ -222,6 +222,24 @@ public final class ModNetwork {
                 .decoder(ReturnLastPatternC2SPacket::decode)
                 .consumerNetworkThread(ReturnLastPatternC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(SuperAssemblerMatrixUpdateS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SuperAssemblerMatrixUpdateS2CPacket::encode)
+                .decoder(SuperAssemblerMatrixUpdateS2CPacket::decode)
+                .consumerNetworkThread(SuperAssemblerMatrixUpdateS2CPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SuperAssemblerMatrixStatsS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SuperAssemblerMatrixStatsS2CPacket::encode)
+                .decoder(SuperAssemblerMatrixStatsS2CPacket::decode)
+                .consumerNetworkThread(SuperAssemblerMatrixStatsS2CPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SuperAssemblerMatrixActionC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SuperAssemblerMatrixActionC2SPacket::encode)
+                .decoder(SuperAssemblerMatrixActionC2SPacket::decode)
+                .consumerNetworkThread(SuperAssemblerMatrixActionC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }

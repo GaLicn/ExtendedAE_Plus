@@ -4,8 +4,10 @@ import appeng.menu.implementations.MenuTypeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
+import com.extendedae_plus.menu.SuperAssemblerMatrixMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.registries.DeferredRegister;
@@ -32,4 +34,10 @@ public final class ModMenuTypes {
                     () -> MenuTypeBuilder
                             .create(EntitySpeedTickerMenu::new, EntitySpeedTickerPart.class)
                             .build("entity_speed_ticker"));
+
+    public static final RegistryObject<MenuType<SuperAssemblerMatrixMenu>> SUPER_ASSEMBLER_MATRIX =
+            MENUS.register("super_assembler_matrix",
+                    () -> MenuTypeBuilder
+                            .create(SuperAssemblerMatrixMenu::new, SuperAssemblerMatrixBlockEntity.class)
+                            .build("super_assembler_matrix"));
 }

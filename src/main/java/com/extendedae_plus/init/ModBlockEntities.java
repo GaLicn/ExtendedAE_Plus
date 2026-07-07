@@ -5,6 +5,9 @@ import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
@@ -53,6 +56,21 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("assmbler_matrix_pattern_plus",
                     ()-> BlockEntityType.Builder.of(PatternCorePlusBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SuperAssemblerMatrixFrameBlockEntity>> SUPER_ASSEMBLER_MATRIX_FRAME_BE =
+            BLOCK_ENTITY_TYPES.register("super_assembler_matrix_frame",
+                    () -> BlockEntityType.Builder.of(SuperAssemblerMatrixFrameBlockEntity::new,
+                            ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SuperAssemblerMatrixWallBlockEntity>> SUPER_ASSEMBLER_MATRIX_WALL_BE =
+            BLOCK_ENTITY_TYPES.register("super_assembler_matrix_wall",
+                    () -> BlockEntityType.Builder.of(SuperAssemblerMatrixWallBlockEntity::new,
+                            ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<SuperAssemblerMatrixGlassBlockEntity>> SUPER_ASSEMBLER_MATRIX_GLASS_BE =
+            BLOCK_ENTITY_TYPES.register("super_assembler_matrix_glass",
+                    () -> BlockEntityType.Builder.of(SuperAssemblerMatrixGlassBlockEntity::new,
+                            ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get()).build(null));
 
     // 装配矩阵上传核心
     public static final RegistryObject<BlockEntityType<UploadCoreBlockEntity>> UPLOAD_CORE_BE =

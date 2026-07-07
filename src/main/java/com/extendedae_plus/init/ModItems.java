@@ -61,6 +61,22 @@ public final class ModItems {
             "assembler_matrix_pattern_plus",
             ()-> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), new Item.Properties())
     );
+
+    public static final RegistryObject<Item> SUPER_ASSEMBLER_MATRIX_FRAME = ITEMS.register(
+            "super_assembler_matrix_frame",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<Item> SUPER_ASSEMBLER_MATRIX_WALL = ITEMS.register(
+            "super_assembler_matrix_wall",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<Item> SUPER_ASSEMBLER_MATRIX_GLASS = ITEMS.register(
+            "super_assembler_matrix_glass",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get(), new Item.Properties())
+    );
+
     // Crafting Accelerators
     public static final RegistryObject<Item> CRAFTING_ACCELERATOR_4x = ITEMS.register(
             "4x_crafting_accelerator",
