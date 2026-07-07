@@ -89,6 +89,18 @@ public final class ModItems {
             "assembler_matrix_pattern_plus",
             () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_FRAME = ITEMS.register(
+            "super_assembler_matrix_frame",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_WALL = ITEMS.register(
+            "super_assembler_matrix_wall",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_GLASS = ITEMS.register(
+            "super_assembler_matrix_glass",
+            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get(), new Item.Properties())
+    );
     public static final DeferredItem<Item> MIRROR_PATTERN_PROVIDER = ITEMS.register(
             "mirror_pattern_provider",
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), new Item.Properties())

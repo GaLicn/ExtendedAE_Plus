@@ -311,5 +311,12 @@
   "tooltip.extendedae_plus.add_missing_to_jei_bookmark": "Add missing items to JEI bookmarks",
   "gui.extendedae_plus.force_start": "Force Start",
   "tooltip.extendedae_plus.force_start": "Submit this job immediately and keep missing entries as manual waiting",
-  "tooltip.extendedae_plus.crafting.manual_waiting": "Manual waiting: %s"
+  "tooltip.extendedae_plus.crafting.manual_waiting": "Manual waiting: %s",
+  "item.extendedae_plus.super_assembler_matrix_frame": "Super Assembler Matrix Frame",
+  "item.extendedae_plus.super_assembler_matrix_wall": "Super Assembler Matrix Wall",
+  "item.extendedae_plus.super_assembler_matrix_glass": "Super Assembler Matrix Glass",
+  "block.extendedae_plus.super_assembler_matrix_frame": "Super Assembler Matrix Frame",
+  "block.extendedae_plus.super_assembler_matrix_wall": "Super Assembler Matrix Wall",
+  "block.extendedae_plus.super_assembler_matrix_glass": "Super Assembler Matrix Glass",
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix"
 }

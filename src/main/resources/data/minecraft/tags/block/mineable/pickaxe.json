@@ -12,6 +12,9 @@
     "extendedae_plus:assembler_matrix_speed_plus",
     "extendedae_plus:assembler_matrix_crafter_plus",
     "extendedae_plus:assembler_matrix_pattern_plus",
-    "extendedae_plus:labeled_wireless_transceiver"
+    "extendedae_plus:labeled_wireless_transceiver",
+    "extendedae_plus:super_assembler_matrix_frame",
+    "extendedae_plus:super_assembler_matrix_wall",
+    "extendedae_plus:super_assembler_matrix_glass"
   ]
 }

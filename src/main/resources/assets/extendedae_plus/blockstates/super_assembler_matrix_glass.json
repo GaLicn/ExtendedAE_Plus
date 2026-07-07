@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "formed=false,powered=false": {
+      "model": "extendedae:block/assembler_matrix_glass"
+    },
+    "formed=false,powered=true": {
+      "model": "extendedae:block/assembler_matrix_glass"
+    },
+    "formed=true,powered=false": {
+      "model": "extendedae:block/assembler_matrix_glass"
+    },
+    "formed=true,powered=true": {
+      "model": "extendedae:block/assembler_matrix_glass"
+    }
+  }
+}
