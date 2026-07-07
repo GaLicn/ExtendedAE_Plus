@@ -30,6 +30,7 @@ public final class ModCreativeTabs {
                                 ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get().getDefaultInstance(),
                                 ModItems.CHANNEL_CARD.get().getDefaultInstance(),
                                 ModItems.VIRTUAL_CRAFTING_CARD.get().getDefaultInstance(),
+                                ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get().getDefaultInstance(),
                                 ModItems.ENTITY_TICKER_PART_ITEM.get().getDefaultInstance(),
                                 ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance(),

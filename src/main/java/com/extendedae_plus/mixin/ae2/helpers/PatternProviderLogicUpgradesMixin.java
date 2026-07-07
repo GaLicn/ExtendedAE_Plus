@@ -78,7 +78,7 @@ public abstract class PatternProviderLogicUpgradesMixin implements PatternProvid
         try {
             PatternProviderLogicAppfluxAccessor accessor = (PatternProviderLogicAppfluxAccessor) (Object) this;
             IUpgradeInventory existingUpgrades = currentUpgrades != null ? currentUpgrades : accessor.eap$getAppfluxUpgrades();
-            int targetSlots = UpgradeSlotCompat.getPatternProviderAppfluxUpgradeSlots();
+            int targetSlots = UpgradeSlotCompat.getPatternProviderAppfluxUpgradeSlots(this.host);
 
             if (existingUpgrades != null && existingUpgrades.size() >= targetSlots) {
                 this.eap$upgrades = existingUpgrades;

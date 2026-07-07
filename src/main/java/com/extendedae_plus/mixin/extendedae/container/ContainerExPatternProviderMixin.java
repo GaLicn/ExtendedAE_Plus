@@ -9,7 +9,9 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
@@ -34,6 +36,10 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     public int eap$maxPage = 0;
 
+    @GuiSync(31416)
+    @Unique
+    public int eap$unlockedMaxPage = 1;
+
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
 
@@ -47,11 +53,17 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     public void eap$showPage() {
         List<Slot> slots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
         int totalSlots = slots.size();
+        int unlockedPages = Math.max(1, Math.min(this.eap$maxPage, this.eap$getUnlockedPages()));
+        int unlockedSlots = Math.min(totalSlots, unlockedPages * SLOTS_PER_PAGE);
+        this.eap$unlockedMaxPage = unlockedPages;
+        this.eap$page = Math.max(0, Math.min(this.eap$page, unlockedPages - 1));
         
         // 如果总槽位数不超过36个，不需要翻页
-        if (totalSlots <= SLOTS_PER_PAGE) {
+        if (totalSlots <= SLOTS_PER_PAGE && unlockedPages <= 1) {
             for (Slot s : slots) {
-                ((AppEngSlot) s).setActive(true);
+                AppEngSlot appEngSlot = (AppEngSlot) s;
+                appEngSlot.setSlotEnabled(true);
+                appEngSlot.setActive(true);
             }
             return;
         }
@@ -60,10 +72,12 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
 
         for (Slot s : slots) {
             int page_id = slot_id / SLOTS_PER_PAGE;
+            boolean unlocked = slot_id < unlockedSlots;
 
-            // 当前页的槽位激活
-            // 其他页的槽位隐藏
-            ((AppEngSlot) s).setActive(page_id == this.eap$page);
+            // 未解锁槽位直接禁用，已解锁但非当前页的槽位仅隐藏。
+            AppEngSlot appEngSlot = (AppEngSlot) s;
+            appEngSlot.setSlotEnabled(unlocked);
+            appEngSlot.setActive(unlocked && page_id == this.eap$page);
             ++slot_id;
         }
     }
@@ -72,6 +86,32 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     private void eap$initPages(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
         this.eap$maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
+        this.eap$showPage();
+    }
+
+    @Inject(method = "broadcastChanges", at = @At("TAIL"), remap = false, require = 0)
+    private void eap$refreshUnlockedPatternSlots(CallbackInfo ci) {
+        this.eap$showPage();
+    }
+
+    @Override
+    public void onSlotChange(Slot slot) {
+        super.onSlotChange(slot);
+        if (slot == null || !this.getSlots(SlotSemantics.UPGRADE).contains(slot)) {
+            return;
+        }
+
+        // 升级卡插拔后立刻刷新菜单页状态，并把最新页信息同步给界面层。
+        this.eap$showPage();
+        if (this.isServerSide()) {
+            this.sendAllDataToRemote();
+        }
+    }
+
+    @Override
+    public void onServerDataSync(ShortSet updatedFields) {
+        super.onServerDataSync(updatedFields);
+        this.eap$showPage();
     }
 
     @Unique
@@ -82,6 +122,14 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     public void setPage(int page) {
         this.eap$page = page;
+        this.eap$showPage();
+    }
+
+    @Unique
+    private int eap$getUnlockedPages() {
+        return UpgradeSlotCompat.getUnlockedExtendedPatternProviderPages(this.getSlots(SlotSemantics.UPGRADE).stream()
+                .map(Slot::getItem)
+                .toList());
     }
 
     @Unique

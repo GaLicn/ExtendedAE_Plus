@@ -1,5 +1,9 @@
 package com.extendedae_plus.compat;
 
+import com.extendedae_plus.init.ModItems;
+import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
+import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
 
 /**
@@ -11,8 +15,10 @@ import net.neoforged.fml.ModList;
 public final class UpgradeSlotCompat {
     private static final String APPFLUX_MOD_ID = "appflux";
     private static final String APPFLUX_SCREEN_MIXIN = "com.glodblock.github.appflux.mixins.MixinPatternProviderScreen";
-    private static final int LOCAL_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
-    private static final int APPFLUX_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
+    private static final int BASE_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
+    private static final int EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS = 3;
+    private static final int EXTENDED_PATTERN_PROVIDER_BASE_PAGES = 1;
+    private static final int EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE = 36;
 
     private static Boolean appfluxLoaded;
     private static Boolean appfluxPatternProviderMixinActive;
@@ -84,11 +90,61 @@ public final class UpgradeSlotCompat {
     }
 
     public static int getPatternProviderLocalUpgradeSlots() {
-        return LOCAL_PATTERN_PROVIDER_UPGRADE_SLOTS;
+        return getPatternProviderLocalUpgradeSlots(null);
     }
 
     public static int getPatternProviderAppfluxUpgradeSlots() {
-        return APPFLUX_PATTERN_PROVIDER_UPGRADE_SLOTS;
+        return getPatternProviderAppfluxUpgradeSlots(null);
+    }
+
+    public static int getPatternProviderLocalUpgradeSlots(Object host) {
+        return BASE_PATTERN_PROVIDER_UPGRADE_SLOTS
+                + (isExtendedPatternProviderHost(host) ? EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS : 0);
+    }
+
+    public static int getPatternProviderAppfluxUpgradeSlots(Object host) {
+        return BASE_PATTERN_PROVIDER_UPGRADE_SLOTS
+                + (isExtendedPatternProviderHost(host) ? EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS : 0);
+    }
+
+    public static boolean isExtendedPatternProviderHost(Object host) {
+        return host instanceof TileExPatternProvider || host instanceof PartExPatternProvider;
+    }
+
+    public static int getExtendedPatternProviderExtraUpgradeSlots() {
+        return EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS;
+    }
+
+    public static int getExtendedPatternProviderTotalPages() {
+        return EXTENDED_PATTERN_PROVIDER_BASE_PAGES + EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS;
+    }
+
+    public static int getExtendedPatternProviderPatternCapacity() {
+        return EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE * getExtendedPatternProviderTotalPages();
+    }
+
+    public static int getUnlockedExtendedPatternProviderPages(Iterable<ItemStack> upgrades) {
+        int expansionCards = 0;
+        if (upgrades != null) {
+            for (ItemStack stack : upgrades) {
+                if (isExtendedPatternProviderExpansionCard(stack)) {
+                    expansionCards++;
+                }
+            }
+        }
+
+        expansionCards = Math.min(expansionCards, EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS);
+        return EXTENDED_PATTERN_PROVIDER_BASE_PAGES + expansionCards;
+    }
+
+    public static int getUnlockedExtendedPatternProviderSlots(Iterable<ItemStack> upgrades) {
+        return getUnlockedExtendedPatternProviderPages(upgrades) * EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE;
+    }
+
+    public static boolean isExtendedPatternProviderExpansionCard(ItemStack stack) {
+        return stack != null
+                && !stack.isEmpty()
+                && stack.getItem() == ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get();
     }
 
     /**

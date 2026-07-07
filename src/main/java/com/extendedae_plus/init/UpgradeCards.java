@@ -49,6 +49,8 @@ public class UpgradeCards {
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
             Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
             Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER, 3, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 3, patternProviderGroup);
             
             // 
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_IMPORT_BUS, 1, ioBusGroup);

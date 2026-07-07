@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "extendedae_plus:item/virtual_crafting_card"
+  }
+}
