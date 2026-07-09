@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.CraftingContainer;
@@ -231,7 +232,7 @@ public class SuperAssemblerMatrixCluster {
                 if (stack.getItem() instanceof EncodedPatternItem) {
                     var details = PatternDetailsHelper.decodePattern(stack, level);
                     if (details instanceof IMolecularAssemblerSupportedPattern) {
-                        patterns.add(details);
+                        patterns.add(StrictMolecularAssemblerPattern.wrap((IMolecularAssemblerSupportedPattern) details));
                     }
                 }
             }
