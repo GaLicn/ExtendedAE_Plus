@@ -12,6 +12,7 @@ import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.EncodedPatternItem;
 import appeng.menu.AutoCraftingMenu;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
@@ -171,7 +172,9 @@ public class SuperAssemblerMatrixCluster {
             return 0;
         }
         long count = this.activeBatch == null ? 0 : this.activeBatch.batchSize;
-        count += this.fallbackThreads.size();
+        for (var task : this.fallbackThreads) {
+            count += task.amount;
+        }
 
         // 批处理可能 1tick 内完成，UI 同步时 activeBatch 已清空；把已接单待执行量也计入显示。
         if (this.activeBatch == null && !this.batchQueue.isEmpty()) {
@@ -260,17 +263,18 @@ public class SuperAssemblerMatrixCluster {
         if (job == null) {
             return false;
         }
+        long dispatchAmount = getDispatchAmount(pattern);
 
         if (job.batchable()) {
             this.batchQueue.compute(job.definition(), (definition, task) -> {
                 if (task == null) {
-                    return new BatchTask(job.definition(), job.outputKey(), job.outputAmount(), 1);
+                    return new BatchTask(job.definition(), job.outputKey(), job.outputAmount(), dispatchAmount);
                 }
-                task.pending++;
+                task.pending += dispatchAmount;
                 return task;
             });
         } else {
-            this.fallbackThreads.add(new VirtualThreadTask(pattern, consumedGrid));
+            this.fallbackThreads.add(new VirtualThreadTask(pattern, consumedGrid, dispatchAmount));
         }
         this.rememberConcurrentExecutions();
         this.core.wakeCoreNode();
@@ -354,12 +358,12 @@ public class SuperAssemblerMatrixCluster {
         var output = task.pattern.assemble(input, this.core.getLevel());
         var genericOutput = GenericStack.fromItemStack(output);
         if (genericOutput != null) {
-            this.outputBuffer.addTo(genericOutput.what(), genericOutput.amount());
+            this.outputBuffer.addTo(genericOutput.what(), genericOutput.amount() * task.amount);
         }
         for (var remainder : task.pattern.getRemainingItems(input)) {
             var genericRemainder = GenericStack.fromItemStack(remainder);
             if (genericRemainder != null) {
-                this.outputBuffer.addTo(genericRemainder.what(), genericRemainder.amount());
+                this.outputBuffer.addTo(genericRemainder.what(), genericRemainder.amount() * task.amount);
             }
         }
     }
@@ -416,6 +420,10 @@ public class SuperAssemblerMatrixCluster {
             container.setItem(i, stack == null ? ItemStack.EMPTY : stack.copy());
         }
         return container;
+    }
+
+    private static long getDispatchAmount(IMolecularAssemblerSupportedPattern pattern) {
+        return pattern instanceof ScaledMolecularAssemblerPattern scaled ? scaled.getMultiplier() : 1;
     }
 
     private record AcceptedJob(
@@ -478,11 +486,13 @@ public class SuperAssemblerMatrixCluster {
     private static final class VirtualThreadTask {
         private final IMolecularAssemblerSupportedPattern pattern;
         private final ItemStack[] grid;
+        private final long amount;
         private int progress;
 
-        private VirtualThreadTask(IMolecularAssemblerSupportedPattern pattern, ItemStack[] grid) {
+        private VirtualThreadTask(IMolecularAssemblerSupportedPattern pattern, ItemStack[] grid, long amount) {
             this.pattern = pattern;
             this.grid = grid;
+            this.amount = amount;
         }
     }
 }

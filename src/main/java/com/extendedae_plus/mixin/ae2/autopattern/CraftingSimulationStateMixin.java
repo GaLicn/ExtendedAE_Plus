@@ -5,8 +5,8 @@ import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.crafting.CraftingCalculation;
 import appeng.crafting.CraftingPlan;
 import appeng.crafting.inv.CraftingSimulationState;
-import appeng.crafting.pattern.AEProcessingPattern;
 import appeng.me.service.CraftingService;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
@@ -41,21 +41,17 @@ public abstract class CraftingSimulationStateMixin {
             IPatternDetails details = entry.getKey();
             long totalAmount = entry.getValue();
 
-            // 非 AEProcessingPattern 直接保留
-            if (!(details instanceof AEProcessingPattern processingPattern)) {
+            // 只有声明支持智能倍增的样板才参与缩放，避免影响其它 provider。
+            if (!(details instanceof ISmartDoublingAwarePattern aware)) {
                 finalCrafts.put(details, totalAmount);
                 continue;
             }
 
-            boolean allowScaling = false;
-            int perCraftLimit = 0;
-            if (processingPattern instanceof ISmartDoublingAwarePattern aware) {
-                allowScaling = aware.eap$allowScaling();
-                perCraftLimit = aware.eap$getMultiplierLimit();
-            }
+            boolean allowScaling = aware.eap$allowScaling();
+            int perCraftLimit = aware.eap$getMultiplierLimit();
 
             if (!allowScaling || totalAmount <= 1) {
-                finalCrafts.put(processingPattern, totalAmount);
+                finalCrafts.put(details, totalAmount);
                 continue;
             }
 
@@ -69,7 +65,7 @@ public abstract class CraftingSimulationStateMixin {
                     CraftingService craftingService = (CraftingService) ((ICraftingCalculationExt) calculation).getGrid().getCraftingService();
                     int providerCount = Math.max(
                             providerCountCache.computeIfAbsent(
-                                    getProviderCacheKey(processingPattern),
+                                    getProviderCacheKey(details),
                                     key -> countProvidersUpTo(craftingService.getProviders(key), totalAmount)),
                             1);
 
@@ -83,19 +79,19 @@ public abstract class CraftingSimulationStateMixin {
 
                     // base+1 组（数量 remainder 个）
                     if (remainder > 0) {
-                        ScaledProcessingPattern scaledPlus = PatternScaler.createScaled(processingPattern, base + 1);
+                        IPatternDetails scaledPlus = PatternScaler.createScaled(details, base + 1);
                         finalCrafts.merge(scaledPlus, remainder, Long::sum);
                     }
 
                     // base 组（数量 providerCount - remainder 个）
                     long countBase = providerCount - remainder;
                     if (countBase > 0) {
-                        ScaledProcessingPattern scaledBase = PatternScaler.createScaled(processingPattern, base);
+                        IPatternDetails scaledBase = PatternScaler.createScaled(details, base);
                         finalCrafts.merge(scaledBase, countBase, Long::sum);
                     }
                 } else {
                     // 未开启轮询 → 直接分配一次总量
-                    ScaledProcessingPattern scaled = PatternScaler.createScaled(processingPattern, totalAmount);
+                    IPatternDetails scaled = PatternScaler.createScaled(details, totalAmount);
                     finalCrafts.put(scaled, 1L);
                 }
             } else {
@@ -104,11 +100,11 @@ public abstract class CraftingSimulationStateMixin {
                 long remainder = totalAmount % perCraftLimit;
 
                 if (fullCrafts > 0) {
-                    ScaledProcessingPattern scaledFull = PatternScaler.createScaled(processingPattern, perCraftLimit);
+                    IPatternDetails scaledFull = PatternScaler.createScaled(details, perCraftLimit);
                     finalCrafts.put(scaledFull, fullCrafts);
                 }
                 if (remainder > 0) {
-                    ScaledProcessingPattern scaledRem = PatternScaler.createScaled(processingPattern, remainder);
+                    IPatternDetails scaledRem = PatternScaler.createScaled(details, remainder);
                     finalCrafts.put(scaledRem, 1L);
                 }
             }
@@ -120,6 +116,9 @@ public abstract class CraftingSimulationStateMixin {
 
     private static IPatternDetails getProviderCacheKey(IPatternDetails pattern) {
         if (pattern instanceof ScaledProcessingPattern scaled) {
+            return scaled.getOriginal();
+        }
+        if (pattern instanceof ScaledMolecularAssemblerPattern scaled) {
             return scaled.getOriginal();
         }
         return pattern;

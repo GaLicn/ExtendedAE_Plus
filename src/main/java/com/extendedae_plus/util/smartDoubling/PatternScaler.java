@@ -4,7 +4,9 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
+import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.AEProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import net.minecraftforge.fml.loading.LoadingModList;
 
@@ -60,6 +62,16 @@ public final class PatternScaler {
 
         // 回退原版
         return new ScaledProcessingPattern(base, multiplier);
+    }
+
+    public static IPatternDetails createScaled(IPatternDetails base, long multiplier) {
+        if (base instanceof AEProcessingPattern processingPattern) {
+            return createScaled(processingPattern, multiplier);
+        }
+        if (base instanceof IMolecularAssemblerSupportedPattern molecularPattern) {
+            return new ScaledMolecularAssemblerPattern(molecularPattern, multiplier);
+        }
+        return base;
     }
 
     /**
