@@ -78,10 +78,10 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
     protected @NotNull InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
             BlockHitResult hitResult) {
         var blockEntity = this.getBlockEntity(level, pos);
-        if (blockEntity == null || blockEntity.eap$getSuperMatrixCluster() == null) {
+        if (!this.isFormedForInteraction(state, blockEntity)) {
             return InteractionResult.PASS;
         }
-        if (!level.isClientSide && blockEntity.getMainNode().isActive()) {
+        if (!level.isClientSide && blockEntity != null && blockEntity.getMainNode().isActive()) {
             MenuOpener.open(ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), player,
                     MenuLocators.forBlockEntity(blockEntity));
         }
@@ -96,13 +96,21 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
             return parent;
         }
         var blockEntity = this.getBlockEntity(level, pos);
-        if (blockEntity == null || blockEntity.eap$getSuperMatrixCluster() == null) {
+        if (!this.isFormedForInteraction(state, blockEntity)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (!level.isClientSide && blockEntity.getMainNode().isActive()) {
+        if (!level.isClientSide && blockEntity != null && blockEntity.getMainNode().isActive()) {
             MenuOpener.open(ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), player,
                     MenuLocators.forBlockEntity(blockEntity));
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private boolean isFormedForInteraction(BlockState state, T blockEntity) {
+        // 客户端以同步的方块状态为准，避免手持方块时先走默认放置预览再被服务端回滚。
+        if (state.hasProperty(BlockAssemblerMatrixBase.FORMED) && state.getValue(BlockAssemblerMatrixBase.FORMED)) {
+            return true;
+        }
+        return blockEntity != null && blockEntity.eap$getSuperMatrixCluster() != null;
     }
 }
