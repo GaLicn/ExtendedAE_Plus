@@ -40,6 +40,8 @@
     "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.compat.PatternProviderLogicVirtualCompletionMixin",
+    "ae2.crafting.CraftingCpuHelperInputPreferenceMixin",
+    "ae2.crafting.CraftingCpuLogicInputPreferenceMixin",
     "ae2.crafting.CraftingCpuLogicManualWaitingMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
     "ae2.helpers.InterfaceLogicTickerMixin",
