@@ -1,11 +1,13 @@
 package com.extendedae_plus.util.smartDoubling;
 
 import appeng.api.crafting.IPatternDetails;
+import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPatternAdv;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import net.neoforged.fml.loading.LoadingModList;
 
 import java.lang.reflect.Constructor;
@@ -47,7 +49,11 @@ public final class PatternScaler {
      * 创建缩放样板。
      * 自动支持原版 AE 和可选 AAE 的 AdvProcessingPattern。
      */
-    public static ScaledProcessingPattern createScaled(IPatternDetails base, long multiplier) {
+    public static IPatternDetails createScaled(IPatternDetails base, long multiplier) {
+        if (base instanceof IMolecularAssemblerSupportedPattern molecularPattern) {
+            return new ScaledMolecularAssemblerPattern(molecularPattern, multiplier);
+        }
+
         // 尝试 Advanced AE 扩展
         if (advAvailable && advIfaceClass != null && advCtor != null) {
             try {

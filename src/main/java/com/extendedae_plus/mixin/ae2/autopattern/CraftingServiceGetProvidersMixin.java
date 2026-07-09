@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.ae2.autopattern;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.me.service.CraftingService;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,6 +21,8 @@ public class CraftingServiceGetProvidersMixin {
         IPatternDetails base = null;
         if (original instanceof ScaledProcessingPattern scaledProcessingPattern) {
             base = scaledProcessingPattern.getOriginal();
+        } else if (original instanceof ScaledMolecularAssemblerPattern scaledMolecularPattern) {
+            base = scaledMolecularPattern.getOriginal();
         }
         return base == null ? original : base;
     }

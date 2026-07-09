@@ -7,6 +7,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
+import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -22,11 +23,15 @@ import java.util.Objects;
 /**
  * 让装配矩阵中的分子装配样板始终只接受编码时的首选输入。
  */
-public final class StrictMolecularAssemblerPattern implements IMolecularAssemblerSupportedPattern {
+public final class StrictMolecularAssemblerPattern implements IMolecularAssemblerSupportedPattern, ISmartDoublingAwarePattern {
+
+    private static final int DEFAULT_SUPER_MATRIX_BATCH_SIZE = 1024;
 
     private final IMolecularAssemblerSupportedPattern delegate;
     private final IInput[] strictInputs;
     private final Map<Integer, AEItemKey> strictSlotInputs;
+    private boolean allowScaling = true;
+    private int multiplierLimit = DEFAULT_SUPER_MATRIX_BATCH_SIZE;
 
     private StrictMolecularAssemblerPattern(IMolecularAssemblerSupportedPattern delegate) {
         this.delegate = Objects.requireNonNull(delegate, "delegate");
@@ -92,6 +97,26 @@ public final class StrictMolecularAssemblerPattern implements IMolecularAssemble
     @Override
     public void fillCraftingGrid(KeyCounter[] table, CraftingGridAccessor gridAccessor) {
         this.delegate.fillCraftingGrid(table, gridAccessor);
+    }
+
+    @Override
+    public boolean eap$allowScaling() {
+        return this.allowScaling;
+    }
+
+    @Override
+    public void eap$setAllowScaling(boolean allow) {
+        this.allowScaling = allow;
+    }
+
+    @Override
+    public int eap$getMultiplierLimit() {
+        return this.multiplierLimit;
+    }
+
+    @Override
+    public void eap$setMultiplierLimit(int limit) {
+        this.multiplierLimit = limit <= 0 ? DEFAULT_SUPER_MATRIX_BATCH_SIZE : limit;
     }
 
     @Override
