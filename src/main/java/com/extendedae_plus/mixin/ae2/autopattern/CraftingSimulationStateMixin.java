@@ -7,6 +7,7 @@ import appeng.crafting.CraftingPlan;
 import appeng.crafting.inv.CraftingSimulationState;
 import appeng.me.service.CraftingService;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
+import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.smartDoubling.ICraftingCalculationExt;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingAwarePattern;
 import com.extendedae_plus.config.ModConfigs;
@@ -81,19 +82,19 @@ public abstract class CraftingSimulationStateMixin {
 
                     // base+1 组（数量 remainder 个）
                     if (remainder > 0) {
-                        ScaledProcessingPattern scaledPlus = PatternScaler.createScaled(details, base + 1);
+                        IPatternDetails scaledPlus = PatternScaler.createScaled(details, base + 1);
                         finalCrafts.merge(scaledPlus, remainder, Long::sum);
                     }
 
                     // base 组（数量 providerCount - remainder 个）
                     long countBase = providerCount - remainder;
                     if (countBase > 0) {
-                        ScaledProcessingPattern scaledBase = PatternScaler.createScaled(details, base);
+                        IPatternDetails scaledBase = PatternScaler.createScaled(details, base);
                         finalCrafts.merge(scaledBase, countBase, Long::sum);
                     }
                 } else {
                     // 未开启轮询 → 直接分配一次总量
-                    ScaledProcessingPattern scaled = PatternScaler.createScaled(details, totalAmount);
+                    IPatternDetails scaled = PatternScaler.createScaled(details, totalAmount);
                     finalCrafts.put(scaled, 1L);
                 }
             } else {
@@ -102,11 +103,11 @@ public abstract class CraftingSimulationStateMixin {
                 long remainder = totalAmount % perCraftLimit;
 
                 if (fullCrafts > 0) {
-                    ScaledProcessingPattern scaledFull = PatternScaler.createScaled(details, perCraftLimit);
+                    IPatternDetails scaledFull = PatternScaler.createScaled(details, perCraftLimit);
                     finalCrafts.put(scaledFull, fullCrafts);
                 }
                 if (remainder > 0) {
-                    ScaledProcessingPattern scaledRem = PatternScaler.createScaled(details, remainder);
+                    IPatternDetails scaledRem = PatternScaler.createScaled(details, remainder);
                     finalCrafts.put(scaledRem, 1L);
                 }
             }
@@ -118,6 +119,9 @@ public abstract class CraftingSimulationStateMixin {
 
     private static IPatternDetails getProviderCacheKey(IPatternDetails pattern) {
         if (pattern instanceof ScaledProcessingPattern scaled) {
+            return scaled.getOriginal();
+        }
+        if (pattern instanceof ScaledMolecularAssemblerPattern scaled) {
             return scaled.getOriginal();
         }
         return pattern;
