@@ -50,17 +50,7 @@ public class MirrorPatternProviderBlock extends PatternProviderBlock {
         }
 
         if (!level.isClientSide) {
-            if (player.isShiftKeyDown()) {
-                if (mirror.tryBindToAdjacentMaster()) {
-                    player.displayClientMessage(mirror.createBoundMessage(), true);
-                } else {
-                    player.displayClientMessage(
-                            Component.translatable("extendedae_plus.message.mirror_pattern_provider.missing_master"),
-                            true);
-                }
-            } else {
-                player.displayClientMessage(mirror.getStatusMessage(), true);
-            }
+            player.displayClientMessage(mirror.getStatusMessage(), true);
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide);
