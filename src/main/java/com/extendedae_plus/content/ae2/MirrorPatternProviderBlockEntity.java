@@ -183,20 +183,6 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return this.bindToMaster(new MasterLocation(master.dimension(), master.pos(), null));
     }
 
-    public boolean tryBindToAdjacentMaster() {
-        if (!(this.getLevel() instanceof ServerLevel)) {
-            return false;
-        }
-
-        var master = this.findAdjacentMaster();
-        if (master == null) {
-            return false;
-        }
-
-        this.syncFromMaster(master);
-        return true;
-    }
-
     public boolean bindToMaster(MasterLocation master) {
         if (!(this.getLevel() instanceof ServerLevel serverLevel)) {
             return false;
@@ -370,27 +356,6 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             this.invalidatePatternSyncState();
         }
         return changed;
-    }
-
-    @Nullable
-    private ResolvedMaster findAdjacentMaster() {
-        var level = this.getLevel();
-        if (level == null) {
-            return null;
-        }
-
-        for (var direction : Direction.values()) {
-            var adjacent = level.getBlockEntity(this.getBlockPos().relative(direction));
-            var master = resolveMaster(adjacent, null);
-            if (master == null) {
-                master = resolveMaster(adjacent, direction.getOpposite());
-            }
-            if (master != null) {
-                return master;
-            }
-        }
-
-        return null;
     }
 
     private boolean syncFromMaster(ResolvedMaster master) {

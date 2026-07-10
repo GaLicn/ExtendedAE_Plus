@@ -2,7 +2,7 @@
 navigation:
   parent: introduction/index.md
   title: 实体加速器
-  position: 5
+  position: 6
   icon: extendedae_plus:entity_speed_ticker
 categories:
   - extendedae_plus devices

@@ -2,7 +2,7 @@
 navigation:
   parent: introduction/index.md
   title: Entity Accelerator
-  position: 5
+  position: 6
   icon: extendedae_plus:entity_speed_ticker
 categories:
   - extendedae_plus devices
