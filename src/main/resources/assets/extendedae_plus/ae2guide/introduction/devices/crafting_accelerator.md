@@ -2,7 +2,7 @@
 navigation:
   parent: introduction/index.md
   title: Parallel Processing Unit
-  position: 4
+  position: 5
   icon: extendedae_plus:1024x_crafting_accelerator
 categories:
   - extendedae_plus devices
