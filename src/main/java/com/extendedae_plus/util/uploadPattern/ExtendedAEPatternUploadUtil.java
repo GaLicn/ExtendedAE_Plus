@@ -38,6 +38,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -426,17 +427,129 @@ public class ExtendedAEPatternUploadUtil {
 
     public static String mapRecipeTypeToSearchKey(Recipe<?> recipe) {
         if (recipe == null) return null;
-        RecipeType<?> type = recipe.getType();
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        ResourceLocation key = getRecipeTypeId(recipe.getType());
         if (key == null) return null;
-        String resolvedPath = resolveSearchKeyAlias(key.getPath());
-        if (resolvedPath != null) return resolvedPath;
-        // 再查完整ID映射
+        return mapRecipeTypeIdToSearchKey(key);
+    }
+
+    /**
+     * Maps recipe objects received from JEI, including holders and mod-specific wrappers.
+     */
+    public static String mapRecipeObjectToSearchKey(Object recipeBase) {
+        return mapRecipeObjectToSearchKey(recipeBase,
+                Collections.newSetFromMap(new IdentityHashMap<>()), 0);
+    }
+
+    private static String mapRecipeObjectToSearchKey(Object recipeBase, Set<Object> visited, int depth) {
+        if (recipeBase == null || depth > 4 || !visited.add(recipeBase)) {
+            return null;
+        }
+        if (recipeBase instanceof RecipeHolder<?> holder) {
+            return mapRecipeObjectToSearchKey(holder.value(), visited, depth + 1);
+        }
+        if (recipeBase instanceof Recipe<?> recipe) {
+            if (appeng.integration.modules.itemlists.EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+                return resolveSearchKeyAlias(DEFAULT_CRAFTING_SEARCH_KEY);
+            }
+            String mapped = mapRecipeTypeToSearchKey(recipe);
+            if (mapped != null && !mapped.isBlank()) {
+                return mapped;
+            }
+        }
+        if ("com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
+            String mapped = mapGTCEuRecipeToSearchKey(recipeBase);
+            if (mapped != null && !mapped.isBlank()) {
+                return mapped;
+            }
+        }
+
+        ResourceLocation typeId = getRecipeTypeIdFromObject(recipeBase);
+        if (typeId != null) {
+            return mapRecipeTypeIdToSearchKey(typeId);
+        }
+
+        for (String methodName : List.of("getRecipe", "recipe", "value")) {
+            try {
+                Object inner = recipeBase.getClass().getMethod(methodName).invoke(recipeBase);
+                String mapped = mapRecipeObjectToSearchKey(inner, visited, depth + 1);
+                if (mapped != null && !mapped.isBlank()) {
+                    return mapped;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        for (String fieldName : List.of("recipe", "value", "delegate")) {
+            try {
+                Field field = recipeBase.getClass().getDeclaredField(fieldName);
+                field.setAccessible(true);
+                String mapped = mapRecipeObjectToSearchKey(field.get(recipeBase), visited, depth + 1);
+                if (mapped != null && !mapped.isBlank()) {
+                    return mapped;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return deriveSearchKeyFromUnknownRecipe(recipeBase);
+    }
+
+    private static String mapRecipeTypeIdToSearchKey(ResourceLocation key) {
         String custom = CUSTOM_NAMES.get(key);
         if (custom != null && !custom.isBlank()) {
             return custom;
         }
-        return key.getPath();
+        return resolveSearchKeyAlias(key.getPath());
+    }
+
+    private static ResourceLocation getRecipeTypeIdFromObject(Object recipeBase) {
+        for (String methodName : List.of("getType", "getOriType", "getRecipeType")) {
+            try {
+                Object type = recipeBase.getClass().getMethod(methodName).invoke(recipeBase);
+                ResourceLocation id = getRecipeTypeId(type);
+                if (id != null) {
+                    return id;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static ResourceLocation getRecipeTypeId(Object type) {
+        if (type == null) {
+            return null;
+        }
+        if (type instanceof ResourceLocation id) {
+            return id;
+        }
+        ResourceLocation exposed = getExposedTypeId(type);
+        if (exposed != null) {
+            return exposed;
+        }
+        if (type instanceof RecipeType<?> recipeType) {
+            ResourceLocation registered = BuiltInRegistries.RECIPE_TYPE.getKey(recipeType);
+            if (registered != null) {
+                return registered;
+            }
+        }
+        return null;
+    }
+
+    private static ResourceLocation getExposedTypeId(Object type) {
+        // Oritech and JEI expose stable identifiers directly on their type objects.
+        for (String methodName : List.of("getIdentifier", "getUid", "location")) {
+            try {
+                Object id = type.getClass().getMethod(methodName).invoke(type);
+                if (id instanceof ResourceLocation resourceLocation) {
+                    return resourceLocation;
+                }
+                ResourceLocation parsed = id != null ? ResourceLocation.tryParse(id.toString()) : null;
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return null;
     }
 
     // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
@@ -475,18 +588,9 @@ public class ExtendedAEPatternUploadUtil {
      */
     public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
         if (recipeBase == null) return null;
-        // 优先尝试反射 getType()：覆盖“单一配方类 + 类型字段”设计的模组（如 Oritech），
-        // 避免所有机器配方被类名推导成同一个关键字。
-        try {
-            Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
-            if (type instanceof RecipeType<?> rt) {
-                ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(rt);
-                if (key != null) {
-                    String resolved = resolveSearchKeyAlias(key.getPath());
-                    if (resolved != null && !resolved.isBlank()) return resolved;
-                }
-            }
-        } catch (Throwable ignored) {
+        ResourceLocation typeId = getRecipeTypeIdFromObject(recipeBase);
+        if (typeId != null) {
+            return mapRecipeTypeIdToSearchKey(typeId);
         }
         try {
             Class<?> cls = recipeBase.getClass();
