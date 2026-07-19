@@ -1,9 +1,12 @@
 package com.extendedae_plus.mixin.jei;
 
+import appeng.integration.modules.itemlists.EncodingHelper;
+import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,13 +18,10 @@ import tamaized.ae2jeiintegration.integration.modules.jei.transfer.EncodePattern
  * 捕获处理配方并记录一个可用于搜索的关键字，以便 ProviderSelectScreen 自动预填搜索框。
  */
 @Mixin(value = EncodePatternTransferHandler.class, remap = false)
-public abstract class AE2JeiEncodePatternTransferHandlerMixin {
+public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternEncodingTermMenu> {
 
-    @Inject(
-            method = "transferRecipe(Lnet/minecraft/world/inventory/AbstractContainerMenu;Ljava/lang/Object;Lmezz/jei/api/gui/ingredient/IRecipeSlotsView;Lnet/minecraft/world/entity/player/Player;ZZ)Lmezz/jei/api/recipe/transfer/IRecipeTransferError;",
-            at = @At("HEAD"),
-            remap = false)
-    private void extendedae_plus$captureProcessingName(AbstractContainerMenu menu,
+    @Inject(method = "transferRecipe", at = @At("HEAD"), require = 0, remap = false)
+    private void extendedae_plus$captureProcessingName(T menu,
                                                        Object recipeBase,
                                                        IRecipeSlotsView slotsView,
                                                        Player player,
@@ -29,7 +29,24 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin {
                                                        boolean doTransfer,
                                                        CallbackInfoReturnable<mezz.jei.api.recipe.transfer.IRecipeTransferError> cir) {
         if (!doTransfer) return;
-        String name = ExtendedAEPatternUploadUtil.mapRecipeObjectToSearchKey(recipeBase);
+        String name = null;
+        Recipe<?> recipe = null;
+        if (recipeBase instanceof RecipeHolder<?> holder) {
+            recipe = holder.value();
+        } else if (recipeBase instanceof Recipe<?> r) {
+            // 部分模组（如 Oritech）向 JEI 注册的是未包装的 Recipe 对象而非 RecipeHolder
+            recipe = r;
+        }
+        if (recipe != null) {
+            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+                ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+                return;
+            }
+            name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+        } else {
+            // 非原版 Recipe<?> 的显示，尝试从 recipeBase 类名/包名推导关键词
+            name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+        }
         if (name != null && !name.isBlank()) {
             ExtendedAEPatternUploadUtil.setLastProcessingName(name);
         }

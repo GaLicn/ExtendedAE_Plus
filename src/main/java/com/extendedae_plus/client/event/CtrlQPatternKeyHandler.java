@@ -19,6 +19,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -87,7 +88,6 @@ public final class CtrlQPatternKeyHandler {
 
 		List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(selected);
 		List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
-		setLastProcessingNameFromRecipe(selected.getRecipeBase());
 
 		PacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
 			selected.getRecipeId(),
@@ -195,18 +195,12 @@ public final class CtrlQPatternKeyHandler {
 			}
 
 			Object recipeBase = null;
-			Object recipeCategory = null;
 			try {
 				var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
 				recipeBase = getRecipeMethod.invoke(recipeBookmark);
 			} catch (Throwable ignored) {
 			}
-			try {
-				var getCategoryMethod = recipeBookmark.getClass().getMethod("getRecipeCategory");
-				recipeCategory = getCategoryMethod.invoke(recipeBookmark);
-			} catch (Throwable ignored) {
-			}
-			setLastProcessingNameFromRecipe(recipeCategory, recipeBase, recipeOpt.get());
+			setLastProcessingNameFromRecipe(recipeBase != null ? recipeBase : recipeOpt.get());
 
 			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
 			if (recipeInfos.isEmpty()) {
@@ -340,13 +334,41 @@ public final class CtrlQPatternKeyHandler {
 		return Optional.empty();
 	}
 
-	private static void setLastProcessingNameFromRecipe(Object... recipeCandidates) {
-		for (Object candidate : recipeCandidates) {
-			String name = ExtendedAEPatternUploadUtil.mapRecipeObjectToSearchKey(candidate);
-			if (name != null && !name.isBlank()) {
-				ExtendedAEPatternUploadUtil.setLastProcessingName(name);
-				return;
+	private static void setLastProcessingNameFromRecipe(Object recipeBase) {
+		String name = null;
+		
+		// 处理 RecipeHolder
+		if (recipeBase != null && "net.minecraft.world.item.crafting.RecipeHolder".equals(recipeBase.getClass().getName())) {
+			try {
+				var valueMethod = recipeBase.getClass().getMethod("value");
+				Object actualRecipe = valueMethod.invoke(recipeBase);
+				if (actualRecipe != null) {
+					recipeBase = actualRecipe;
+				}
+			} catch (Throwable ignored) {
 			}
+		}
+		
+		if (recipeBase instanceof Recipe<?> recipe) {
+			name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+		} else if (recipeBase != null
+			&& "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
+			name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(recipeBase);
+		} else if (recipeBase != null
+			&& "com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
+			try {
+				var field = recipeBase.getClass().getField("recipe");
+				Object inner = field.get(recipeBase);
+				name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(inner);
+			} catch (Throwable ignored) {
+			}
+		}
+
+		if (name == null || name.isBlank()) {
+			name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+		}
+		if (name != null && !name.isBlank()) {
+			ExtendedAEPatternUploadUtil.setLastProcessingName(name);
 		}
 	}
 
