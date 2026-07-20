@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ae2:interface"
+    },
+    {
+      "item": "extendedae:tag_export_bus"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:tag_inventory_me_interface"
+  }
+}

@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import appeng.block.crafting.CraftingUnitBlock;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
+import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlock;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.decor.DollBlock;
@@ -164,6 +165,16 @@ public final class ModBlocks {
     public static final DeferredBlock<MirrorPatternProviderBlock> MIRROR_PATTERN_PROVIDER_BLOCK = BLOCKS.register(
             "mirror_pattern_provider",
             MirrorPatternProviderBlock::new
+    );
+
+    public static final DeferredBlock<TagInventoryMEInterfaceBlock> TAG_INVENTORY_ME_INTERFACE = BLOCKS.register(
+            "tag_inventory_me_interface",
+            () -> new TagInventoryMEInterfaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(1.5F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
     );
 
     public static final DeferredBlock<Block> C_H716 = registerDollBlock("c-h716");

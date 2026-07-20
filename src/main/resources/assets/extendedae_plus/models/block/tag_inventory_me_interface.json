@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "extendedae_plus:block/network_pattern_controller",
+    "particle": "extendedae_plus:block/network_pattern_controller"
+  }
+}

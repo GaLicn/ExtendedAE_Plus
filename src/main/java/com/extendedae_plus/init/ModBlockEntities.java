@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
+import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
@@ -102,4 +103,9 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("mirror_pattern_provider",
                     ()-> BlockEntityType.Builder.of(MirrorPatternProviderBlockEntity::new,
                             ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<TagInventoryMEInterfaceBlockEntity>> TAG_INVENTORY_ME_INTERFACE_BE =
+            BLOCK_ENTITY_TYPES.register("tag_inventory_me_interface",
+                    () -> BlockEntityType.Builder.of(TagInventoryMEInterfaceBlockEntity::new,
+                            ModBlocks.TAG_INVENTORY_ME_INTERFACE.get()).build(null));
 }
