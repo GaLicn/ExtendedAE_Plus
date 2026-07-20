@@ -7,6 +7,7 @@ import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
+import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -15,6 +16,7 @@ import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
+import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -92,6 +94,20 @@ public final class ClientProxy {
                     @Override
                     public LabeledWirelessTransceiverScreen create(LabeledWirelessTransceiverMenu menu, net.minecraft.world.entity.player.Inventory inv, net.minecraft.network.chat.Component title) {
                         return new LabeledWirelessTransceiverScreen(menu, inv, title);
+                    }
+                }
+        );
+
+        event.register(
+                ModMenuTypes.TAG_INVENTORY_ME_INTERFACE.get(),
+                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
+                        TagInventoryMEInterfaceMenu,
+                        TagInventoryMEInterfaceScreen>() {
+                    @Override
+                    public TagInventoryMEInterfaceScreen create(TagInventoryMEInterfaceMenu menu,
+                            net.minecraft.world.entity.player.Inventory inv,
+                            net.minecraft.network.chat.Component title) {
+                        return new TagInventoryMEInterfaceScreen(menu, inv, title);
                     }
                 }
         );

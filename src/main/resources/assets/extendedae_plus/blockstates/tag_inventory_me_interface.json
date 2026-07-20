@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "extendedae_plus:block/tag_inventory_me_interface" }
+  }
+}

@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import appeng.api.AECapabilities;
 import appeng.api.networking.IInWorldGridNodeHost;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
@@ -46,6 +47,18 @@ public final class ModCapabilities {
                 AECapabilities.GENERIC_INTERNAL_INV,
                 ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
                 (be, ctx) -> be.getLogic().getReturnInv()
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.TAG_INVENTORY_ME_INTERFACE_BE.get(),
+                (be, ctx) -> (IInWorldGridNodeHost) be
+        );
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.TAG_INVENTORY_ME_INTERFACE_BE.get(),
+                (be, ctx) -> be.getItemHandler(ctx)
         );
 
         // 并行处理单元（CraftingUnitBlock -> CraftingBlockEntity 实现了 IInWorldGridNodeHost）

@@ -107,6 +107,13 @@ public class CrafterRecipe extends RecipeProvider {
                 .define('D', AEItems.CALCULATION_PROCESSOR)
                 .save(output);
 
+        // 标签库存 ME 接口
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
+                .requires(AEBlocks.INTERFACE)
+                .requires(EAESingletons.TAG_EXPORT_BUS)
+                .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
+                .save(output);
+
         // 湮灭奇点 - 爆炸转换
         TransformRecipeBuilder.transform(output,
                                          ExtendedAEPlus.id("transform/oblivion_singularity"),
