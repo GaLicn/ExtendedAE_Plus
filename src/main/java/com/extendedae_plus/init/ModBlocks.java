@@ -5,6 +5,7 @@ import appeng.blockentity.crafting.CraftingBlockEntity;
 import appeng.core.definitions.AEBlockEntities;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
+import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
@@ -168,6 +169,16 @@ public final class ModBlocks {
     public static final RegistryObject<MirrorPatternProviderBlock> MIRROR_PATTERN_PROVIDER = BLOCKS.register(
             "mirror_pattern_provider",
             MirrorPatternProviderBlock::new
+    );
+
+    public static final RegistryObject<TagInventoryMEInterfaceBlock> TAG_INVENTORY_ME_INTERFACE = BLOCKS.register(
+            "tag_inventory_me_interface",
+            () -> new TagInventoryMEInterfaceBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(2F, 6.0F)
+                            .requiresCorrectToolForDrops()
+            )
     );
 
     public static final RegistryObject<Block> C_H716 = registerDollBlock("c-h716");

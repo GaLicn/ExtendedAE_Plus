@@ -81,6 +81,7 @@
   "block.extendedae_plus._feng": "_feng Doll",
   "block.extendedae_plus.xbai": "Xbai Doll",
   "block.extendedae_plus.mirror_pattern_provider": "Mirror Pattern Provider",
+  "block.extendedae_plus.tag_inventory_me_interface": "Tag Inventory ME Interface",
   "block.extendedae_plus.assembler_matrix_upload_core": "Assembler Matrix Upload Core",
   "block.extendedae_plus.assembler_matrix_speed_plus": "Assembler Matrix Speed Core Plus",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "Assembler Matrix Crafter Core Plus",
@@ -118,6 +119,10 @@
   "gui.extendedae_plus.labeled_wireless.button.set": "Set",
   "gui.extendedae_plus.labeled_wireless.button.refresh": "DC",
   "gui.extendedae_plus.labeled_wireless.current_label": "Current Label",
+  "gui.extendedae_plus.tag_inventory_me_interface.whitelist": "Whitelist Tag Expression",
+  "gui.extendedae_plus.tag_inventory_me_interface.blacklist": "Blacklist Tag Expression",
+  "gui.extendedae_plus.tag_inventory_me_interface.hint": "Supports & | ^ ! ( ) and * wildcard",
+  "gui.extendedae_plus.tag_inventory_me_interface.save": "Save",
   "gui.extendedae_plus.labeled_wireless.current_owner": "Owner",
   "gui.extendedae_plus.labeled_wireless.online_count": "Online",
 

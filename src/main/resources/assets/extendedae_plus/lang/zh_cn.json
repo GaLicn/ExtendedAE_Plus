@@ -79,6 +79,7 @@
   "block.extendedae_plus._feng": "_feng 玩偶",
   "block.extendedae_plus.xbai": "Xbai 玩偶",
   "block.extendedae_plus.mirror_pattern_provider": "镜像样板供应器",
+  "block.extendedae_plus.tag_inventory_me_interface": "标签库存ME接口",
   "block.extendedae_plus.assembler_matrix_upload_core": "装配矩阵上传核心",
   "block.extendedae_plus.assembler_matrix_speed_plus": "超级装配矩阵速度核心",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "超级装配矩阵合成核心",
@@ -117,6 +118,10 @@
   "gui.extendedae_plus.labeled_wireless.button.set": "设定",
   "gui.extendedae_plus.labeled_wireless.button.refresh": "断开",
   "gui.extendedae_plus.labeled_wireless.current_label": "当前标签",
+  "gui.extendedae_plus.tag_inventory_me_interface.whitelist": "白名单标签表达式",
+  "gui.extendedae_plus.tag_inventory_me_interface.blacklist": "黑名单标签表达式",
+  "gui.extendedae_plus.tag_inventory_me_interface.hint": "支持 & | ^ ! ( ) 和 * 通配",
+  "gui.extendedae_plus.tag_inventory_me_interface.save": "保存",
   "gui.extendedae_plus.labeled_wireless.current_owner": "所有者",
   "gui.extendedae_plus.labeled_wireless.online_count": "在线数",
 

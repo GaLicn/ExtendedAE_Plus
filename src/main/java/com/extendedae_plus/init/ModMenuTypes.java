@@ -8,6 +8,7 @@ import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockE
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import com.extendedae_plus.menu.SuperAssemblerMatrixMenu;
+import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.registries.DeferredRegister;
@@ -28,6 +29,10 @@ public final class ModMenuTypes {
     public static final RegistryObject<MenuType<LabeledWirelessTransceiverMenu>> LABELED_WIRELESS_TRANSCEIVER =
             MENUS.register("labeled_wireless_transceiver",
                     () -> IForgeMenuType.create(LabeledWirelessTransceiverMenu::new));
+
+    public static final RegistryObject<MenuType<TagInventoryMEInterfaceMenu>> TAG_INVENTORY_ME_INTERFACE =
+            MENUS.register("tag_inventory_me_interface",
+                    () -> IForgeMenuType.create(TagInventoryMEInterfaceMenu::new));
 
     public static final RegistryObject<MenuType<EntitySpeedTickerMenu>> ENTITY_TICKER_MENU =
             MENUS.register("entity_speed_ticker",

@@ -31,6 +31,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get());
                         output.accept(ModItems.SUPER_ASSEMBLER_MATRIX_GLASS.get());
                         output.accept(ModItems.MIRROR_PATTERN_PROVIDER.get());
+                        output.accept(ModItems.TAG_INVENTORY_ME_INTERFACE.get());
                         output.accept(ModItems.C_H716.get());
                         output.accept(ModItems.FISH_DAN.get());
                         output.accept(ModItems._FENG.get());

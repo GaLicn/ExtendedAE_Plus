@@ -240,6 +240,12 @@ public final class ModNetwork {
                 .decoder(SuperAssemblerMatrixActionC2SPacket::decode)
                 .consumerNetworkThread(SuperAssemblerMatrixActionC2SPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(TagInventoryFilterC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(TagInventoryFilterC2SPacket::encode)
+                .decoder(TagInventoryFilterC2SPacket::decode)
+                .consumerNetworkThread(TagInventoryFilterC2SPacket::handle)
+                .add();
     }
 
     private static int nextId() { return id++; }

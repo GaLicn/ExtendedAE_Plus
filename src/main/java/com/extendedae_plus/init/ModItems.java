@@ -108,6 +108,11 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> TAG_INVENTORY_ME_INTERFACE = ITEMS.register(
+            "tag_inventory_me_interface",
+            () -> new BlockItem(ModBlocks.TAG_INVENTORY_ME_INTERFACE.get(), new Item.Properties())
+    );
+
     public static final RegistryObject<Item> C_H716 = ITEMS.register(
             "c-h716",
             () -> new BlockItem(ModBlocks.C_H716.get(), new Item.Properties())

@@ -62,6 +62,13 @@ public class CraftingRecipes extends RecipeProvider {
                 .unlockedBy("has_pattern_provider", has(ConventionTags.PATTERN_PROVIDER))
                 .save(consumer);
 
+        // 标签库存 ME 接口
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
+                .requires(AEBlocks.INTERFACE)
+                .requires(EPPItemAndBlock.TAG_EXPORT_BUS)
+                .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
+                .save(consumer);
+
         // 无线收发器
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.WIRELESS_TRANSCEIVER.get())
                 .pattern("RRR")
