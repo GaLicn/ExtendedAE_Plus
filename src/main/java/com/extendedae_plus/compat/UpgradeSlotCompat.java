@@ -171,13 +171,17 @@ public final class UpgradeSlotCompat {
     }
 
     private static Field findField(Class<?> owner, String[] candidates) {
-        for (String candidate : candidates) {
-            try {
-                Field field = owner.getDeclaredField(candidate);
-                field.setAccessible(true);
-                return field;
-            } catch (NoSuchFieldException ignored) {
+        Class<?> clazz = owner;
+        while (clazz != null && clazz != Object.class) {
+            for (String candidate : candidates) {
+                try {
+                    Field field = clazz.getDeclaredField(candidate);
+                    field.setAccessible(true);
+                    return field;
+                } catch (NoSuchFieldException ignored) {
+                }
             }
+            clazz = clazz.getSuperclass();
         }
         return null;
     }
