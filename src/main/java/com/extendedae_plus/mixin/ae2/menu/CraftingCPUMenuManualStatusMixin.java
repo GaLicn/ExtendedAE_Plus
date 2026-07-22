@@ -27,7 +27,7 @@ public abstract class CraftingCPUMenuManualStatusMixin {
     @Unique
     private Map<AEKey, Long> eap$lastManualWaitingSnapshot = Collections.emptyMap();
 
-    @Inject(method = "broadcastChanges", at = @At("TAIL"))
+    @Inject(method = "broadcastChanges()V", at = @At("TAIL"), remap = true)
     private void eap$syncManualWaitingStatus(CallbackInfo ci) {
         CraftingCPUMenu self = (CraftingCPUMenu) (Object) this;
         if (self.isClientSide() || !(self.getPlayer() instanceof ServerPlayer serverPlayer)) {
