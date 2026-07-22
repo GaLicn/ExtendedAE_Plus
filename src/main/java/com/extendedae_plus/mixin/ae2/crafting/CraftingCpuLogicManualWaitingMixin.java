@@ -14,6 +14,9 @@ import appeng.crafting.inv.ListCraftingInventory;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import com.extendedae_plus.api.crafting.IForcedCraftingPlan;
 import com.extendedae_plus.api.crafting.IManualCraftingState;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,6 +33,9 @@ import java.util.Set;
 
 @Mixin(value = CraftingCpuLogic.class, remap = false)
 public abstract class CraftingCpuLogicManualWaitingMixin implements IManualCraftingState {
+    @Unique
+    private static final String EAP_MANUAL_WAITING_NBT_KEY = "extendedae_plus:manual_waiting";
+
     @Shadow
     private CraftingCPUCluster cluster;
 
@@ -141,6 +147,40 @@ public abstract class CraftingCpuLogicManualWaitingMixin implements IManualCraft
     @Inject(method = "finishJob", at = @At("HEAD"))
     private void eap$clearManualWaitingOnFinish(boolean success, CallbackInfo ci) {
         this.eap$clearManualWaitingInternal(true);
+    }
+
+    @Inject(method = "writeToNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
+    private void eap$writeManualWaitingToNbt(CompoundTag data, CallbackInfo ci) {
+        data.remove(EAP_MANUAL_WAITING_NBT_KEY);
+        if (this.job == null || this.eap$manualWaitingFor.isEmpty()) {
+            return;
+        }
+
+        var entries = new ListTag();
+        for (var entry : this.eap$manualWaitingFor.entrySet()) {
+            var entryTag = entry.getKey().toTagGeneric();
+            entryTag.putLong("#", entry.getValue());
+            entries.add(entryTag);
+        }
+        data.put(EAP_MANUAL_WAITING_NBT_KEY, entries);
+    }
+
+    @Inject(method = "readFromNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
+    private void eap$readManualWaitingFromNbt(CompoundTag data, CallbackInfo ci) {
+        this.eap$manualWaitingFor.clear();
+        if (this.job == null) {
+            return;
+        }
+
+        var entries = data.getList(EAP_MANUAL_WAITING_NBT_KEY, Tag.TAG_COMPOUND);
+        for (int i = 0; i < entries.size(); i++) {
+            var entryTag = entries.getCompound(i);
+            var key = AEKey.fromTagGeneric(entryTag);
+            long amount = entryTag.getLong("#");
+            if (key != null && amount > 0) {
+                this.eap$manualWaitingFor.put(key, amount);
+            }
+        }
     }
 
     @Unique

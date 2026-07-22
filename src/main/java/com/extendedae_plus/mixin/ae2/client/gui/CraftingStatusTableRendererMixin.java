@@ -1,10 +1,12 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
+import appeng.api.client.AEKeyRendering;
 import appeng.api.stacks.AmountFormat;
 import appeng.api.util.AEColor;
 import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.me.crafting.CraftingStatusTableRenderer;
 import appeng.core.AEConfig;
+import appeng.core.localization.GuiText;
 import appeng.menu.me.crafting.CraftingStatusEntry;
 import com.extendedae_plus.content.ClientManualCraftingStatusStore;
 import net.minecraft.ChatFormatting;
@@ -35,19 +37,47 @@ public abstract class CraftingStatusTableRendererMixin {
         }
     }
 
-    @Inject(method = "getEntryTooltip", at = @At("RETURN"), cancellable = true)
-    private void eap$appendManualWaitingTooltip(CraftingStatusEntry entry,
+    @Inject(
+            method = "getEntryDescription(Lappeng/menu/me/crafting/CraftingStatusEntry;)Ljava/util/List;",
+            at = @At("HEAD"),
+            cancellable = true)
+    private void eap$replaceManualWaitingDescription(CraftingStatusEntry entry,
             CallbackInfoReturnable<List<Component>> cir) {
         long manualWaiting = this.eap$getManualWaitingAmount(entry);
         if (manualWaiting <= 0 || entry.getWhat() == null) {
             return;
         }
 
-        List<Component> lines = new ArrayList<>(cir.getReturnValue());
-        lines.add(Component.translatable(
-                "tooltip.extendedae_plus.crafting.manual_waiting",
-                entry.getWhat().formatAmount(manualWaiting, AmountFormat.FULL)).withStyle(ChatFormatting.AQUA));
+        List<Component> lines = new ArrayList<>(2);
+        lines.add(GuiText.FromStorage.text(
+                entry.getWhat().formatAmount(entry.getStoredAmount(), AmountFormat.SLOT)));
+        lines.add(this.eap$manualWaitingLine(entry, manualWaiting, AmountFormat.SLOT));
         cir.setReturnValue(lines);
+    }
+
+    @Inject(
+            method = "getEntryTooltip(Lappeng/menu/me/crafting/CraftingStatusEntry;)Ljava/util/List;",
+            at = @At("HEAD"),
+            cancellable = true)
+    private void eap$replaceManualWaitingTooltip(CraftingStatusEntry entry,
+            CallbackInfoReturnable<List<Component>> cir) {
+        long manualWaiting = this.eap$getManualWaitingAmount(entry);
+        if (manualWaiting <= 0 || entry.getWhat() == null) {
+            return;
+        }
+
+        List<Component> lines = AEKeyRendering.getTooltip(entry.getWhat());
+        lines.add(GuiText.FromStorage.text(
+                entry.getWhat().formatAmount(entry.getStoredAmount(), AmountFormat.FULL)));
+        lines.add(this.eap$manualWaitingLine(entry, manualWaiting, AmountFormat.FULL));
+        cir.setReturnValue(lines);
+    }
+
+    @Unique
+    private Component eap$manualWaitingLine(CraftingStatusEntry entry, long manualWaiting, AmountFormat format) {
+        return Component.translatable(
+                "tooltip.extendedae_plus.crafting.manual_waiting",
+                entry.getWhat().formatAmount(manualWaiting, format)).withStyle(ChatFormatting.AQUA);
     }
 
     @Unique
