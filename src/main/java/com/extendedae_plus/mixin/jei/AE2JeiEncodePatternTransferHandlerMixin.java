@@ -33,6 +33,9 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternE
         Recipe<?> recipe = null;
         if (recipeBase instanceof RecipeHolder<?> holder) {
             recipe = holder.value();
+        } else if (recipeBase instanceof Recipe<?> r) {
+            // 部分模组（如 Oritech）向 JEI 注册的是未包装的 Recipe 对象而非 RecipeHolder
+            recipe = r;
         }
         if (recipe != null) {
             if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
