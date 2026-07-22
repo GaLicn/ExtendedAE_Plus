@@ -8,6 +8,7 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
+import net.pedroksl.advanced_ae.gui.quantumcomputer.QuantumComputerMenu;
 import net.minecraftforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Mixin(value = CraftingCPUMenu.class, remap = false)
+@Mixin(value = QuantumComputerMenu.class, priority = 1100, remap = false)
 public abstract class CraftingCPUMenuManualStatusAdvancedMixin {
     @Unique
     private AdvCraftingCPU eap$advancedaeSelectedCpu;
@@ -27,11 +28,14 @@ public abstract class CraftingCPUMenuManualStatusAdvancedMixin {
     @Unique
     private Map<AEKey, Long> eap$advancedaeLastManualWaitingSnapshot = Collections.emptyMap();
 
-    @Inject(method = "setCPU", at = @At("HEAD"))
+    @Inject(
+            method = "setCPU(Lappeng/api/networking/crafting/ICraftingCPU;)V",
+            at = @At("HEAD"))
     private void eap$trackAdvancedAeCpu(ICraftingCPU cpu, CallbackInfo ci) {
-        this.eap$advancedaeSelectedCpu = cpu instanceof AdvCraftingCPU advCpu ? advCpu : null;
-        if (this.eap$advancedaeSelectedCpu == null) {
-            this.eap$advancedaeLastManualWaitingSnapshot = Collections.emptyMap();
+        AdvCraftingCPU selectedCpu = cpu instanceof AdvCraftingCPU advCpu ? advCpu : null;
+        if (this.eap$advancedaeSelectedCpu != selectedCpu) {
+            this.eap$advancedaeSelectedCpu = selectedCpu;
+            this.eap$advancedaeLastManualWaitingSnapshot = null;
         }
     }
 
@@ -41,12 +45,10 @@ public abstract class CraftingCPUMenuManualStatusAdvancedMixin {
         if (self.isClientSide() || !(self.getPlayer() instanceof ServerPlayer serverPlayer)) {
             return;
         }
-        if (this.eap$advancedaeSelectedCpu == null) {
-            return;
-        }
 
         Map<AEKey, Long> snapshot = Collections.emptyMap();
-        if (this.eap$advancedaeSelectedCpu.craftingLogic instanceof IManualCraftingState manualState) {
+        if (this.eap$advancedaeSelectedCpu != null
+                && this.eap$advancedaeSelectedCpu.craftingLogic instanceof IManualCraftingState manualState) {
             snapshot = manualState.eap$getManualWaitingSnapshot();
         }
 
