@@ -475,6 +475,19 @@ public class ExtendedAEPatternUploadUtil {
      */
     public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
         if (recipeBase == null) return null;
+        // 优先尝试反射 getType()：覆盖“单一配方类 + 类型字段”设计的模组（如 Oritech），
+        // 避免所有机器配方被类名推导成同一个关键字。
+        try {
+            Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
+            if (type instanceof RecipeType<?> rt) {
+                ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(rt);
+                if (key != null) {
+                    String resolved = resolveSearchKeyAlias(key.getPath());
+                    if (resolved != null && !resolved.isBlank()) return resolved;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
         try {
             Class<?> cls = recipeBase.getClass();
             String simple = cls.getSimpleName();
