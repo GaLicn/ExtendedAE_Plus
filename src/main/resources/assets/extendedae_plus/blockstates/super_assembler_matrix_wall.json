@@ -1,16 +1,16 @@
 {
   "variants": {
     "formed=false,powered=false": {
-      "model": "extendedae:block/assembler_matrix/wall"
+      "model": "extendedae_plus:block/super_assembler_matrix_wall"
     },
     "formed=false,powered=true": {
-      "model": "extendedae:block/assembler_matrix/wall"
+      "model": "extendedae_plus:block/super_assembler_matrix_wall"
     },
     "formed=true,powered=false": {
-      "model": "extendedae:block/assembler_matrix/wall"
+      "model": "extendedae_plus:block/super_assembler_matrix_wall"
     },
     "formed=true,powered=true": {
-      "model": "extendedae:block/assembler_matrix/wall"
+      "model": "extendedae_plus:block/super_assembler_matrix_wall"
     }
   }
 }
