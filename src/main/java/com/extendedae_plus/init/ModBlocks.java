@@ -14,7 +14,6 @@ import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlock;
-import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlock;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlock;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
@@ -148,16 +147,6 @@ public final class ModBlocks {
     public static final DeferredBlock<SuperAssemblerMatrixWallBlock<SuperAssemblerMatrixWallBlockEntity>> SUPER_ASSEMBLER_MATRIX_WALL = BLOCKS.register(
             "super_assembler_matrix_wall",
             () -> new SuperAssemblerMatrixWallBlock<>(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.METAL)
-                            .strength(1.5F, 6.0F)
-                            .requiresCorrectToolForDrops()
-            )
-    );
-
-    public static final DeferredBlock<SuperAssemblerMatrixGlassBlock> SUPER_ASSEMBLER_MATRIX_GLASS = BLOCKS.register(
-            "super_assembler_matrix_glass",
-            () -> new SuperAssemblerMatrixGlassBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.METAL)
                             .strength(1.5F, 6.0F)

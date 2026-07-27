@@ -5,6 +5,7 @@ import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
+import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -22,13 +23,14 @@ public final class SuperAssemblerMatrixCalculator {
     }
 
     public static void recalculate(ServerLevel level, BlockPos start) {
-        var parts = collectConnectedParts(level, start);
-        if (parts.isEmpty()) {
+        var positions = collectConnectedPositions(level, start);
+        if (positions.isEmpty()) {
             return;
         }
 
-        var min = min(parts);
-        var max = max(parts);
+        var parts = collectSuperParts(level, positions);
+        var min = min(positions);
+        var max = max(positions);
         var cluster = verifyAndCreate(level, min, max);
         if (cluster == null) {
             clear(parts);
@@ -45,8 +47,8 @@ public final class SuperAssemblerMatrixCalculator {
         cluster.done();
     }
 
-    private static Set<SuperAssemblerMatrixPart> collectConnectedParts(ServerLevel level, BlockPos start) {
-        var result = new HashSet<SuperAssemblerMatrixPart>();
+    private static Set<BlockPos> collectConnectedPositions(ServerLevel level, BlockPos start) {
+        var result = new HashSet<BlockPos>();
         var visited = new HashSet<BlockPos>();
         var queue = new ArrayDeque<BlockPos>();
         queue.add(start.immutable());
@@ -56,16 +58,26 @@ public final class SuperAssemblerMatrixCalculator {
             if (!visited.add(pos)) {
                 continue;
             }
-            var part = asPart(level.getBlockEntity(pos));
-            if (part == null) {
+            if (!isStructureComponent(level.getBlockEntity(pos))) {
                 continue;
             }
-            result.add(part);
+            result.add(pos);
             for (var direction : net.minecraft.core.Direction.values()) {
                 queue.add(pos.relative(direction));
             }
         }
         return result;
+    }
+
+    private static Set<SuperAssemblerMatrixPart> collectSuperParts(ServerLevel level, Set<BlockPos> positions) {
+        var parts = new HashSet<SuperAssemblerMatrixPart>();
+        for (var pos : positions) {
+            var part = asPart(level.getBlockEntity(pos));
+            if (part != null) {
+                parts.add(part);
+            }
+        }
+        return parts;
     }
 
     private static SuperAssemblerMatrixCluster verifyAndCreate(ServerLevel level, BlockPos min, BlockPos max) {
@@ -79,8 +91,7 @@ public final class SuperAssemblerMatrixCalculator {
         boolean anyPattern = false;
         for (var pos : BlockPos.betweenClosed(min, max)) {
             var blockEntity = level.getBlockEntity(pos);
-            var part = asPart(blockEntity);
-            if (part == null) {
+            if (!isStructureComponent(blockEntity)) {
                 return null;
             }
             if (isInternal(pos, min, max)) {
@@ -94,7 +105,8 @@ public final class SuperAssemblerMatrixCalculator {
                     return null;
                 }
             } else {
-                if (!(blockEntity instanceof SuperAssemblerMatrixWallBlockEntity)) {
+                if (!(blockEntity instanceof SuperAssemblerMatrixWallBlockEntity)
+                        && !(blockEntity instanceof TileAssemblerMatrixGlass)) {
                     return null;
                 }
             }
@@ -124,12 +136,11 @@ public final class SuperAssemblerMatrixCalculator {
         }
     }
 
-    private static BlockPos min(Set<SuperAssemblerMatrixPart> parts) {
+    private static BlockPos min(Set<BlockPos> positions) {
         int x = Integer.MAX_VALUE;
         int y = Integer.MAX_VALUE;
         int z = Integer.MAX_VALUE;
-        for (var part : parts) {
-            var pos = part.eap$getSuperMatrixPos();
+        for (var pos : positions) {
             x = Math.min(x, pos.getX());
             y = Math.min(y, pos.getY());
             z = Math.min(z, pos.getZ());
@@ -137,12 +148,11 @@ public final class SuperAssemblerMatrixCalculator {
         return new BlockPos(x, y, z);
     }
 
-    private static BlockPos max(Set<SuperAssemblerMatrixPart> parts) {
+    private static BlockPos max(Set<BlockPos> positions) {
         int x = Integer.MIN_VALUE;
         int y = Integer.MIN_VALUE;
         int z = Integer.MIN_VALUE;
-        for (var part : parts) {
-            var pos = part.eap$getSuperMatrixPos();
+        for (var pos : positions) {
             x = Math.max(x, pos.getX());
             y = Math.max(y, pos.getY());
             z = Math.max(z, pos.getZ());
@@ -175,6 +185,14 @@ public final class SuperAssemblerMatrixCalculator {
                 || blockEntity instanceof PatternCorePlusBlockEntity
                 || blockEntity instanceof SpeedCorePlusBlockEntity
                 || blockEntity instanceof UploadCoreBlockEntity;
+    }
+
+    private static boolean isStructureComponent(BlockEntity blockEntity) {
+        if (blockEntity instanceof TileAssemblerMatrixBase oldMatrixPart && oldMatrixPart.isFormed()) {
+            return false;
+        }
+        return blockEntity instanceof SuperAssemblerMatrixPart
+                || blockEntity instanceof TileAssemblerMatrixGlass;
     }
 
     private static SuperAssemblerMatrixPart asPart(BlockEntity blockEntity) {

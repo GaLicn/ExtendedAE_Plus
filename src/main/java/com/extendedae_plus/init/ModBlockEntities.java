@@ -7,7 +7,6 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
-import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
@@ -92,11 +91,6 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("super_assembler_matrix_wall",
                     () -> BlockEntityType.Builder.of(SuperAssemblerMatrixWallBlockEntity::new,
                             ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get()).build(null));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperAssemblerMatrixGlassBlockEntity>> SUPER_ASSEMBLER_MATRIX_GLASS_BE =
-            BLOCK_ENTITY_TYPES.register("super_assembler_matrix_glass",
-                    () -> BlockEntityType.Builder.of(SuperAssemblerMatrixGlassBlockEntity::new,
-                            ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get()).build(null));
 
     //镜像样板供应器
     public static final DeferredHolder<BlockEntityType<?>,BlockEntityType<MirrorPatternProviderBlockEntity>> MIRROR_PATTERN_PROVIDER_BE=
