@@ -1,0 +1,6 @@
+{
+	"parent": "extendedae_plus:block/super_crystal_assembler_off",
+	"textures": {
+		"screen": "extendedae_plus:block/super_crystal_assembler_on"
+	}
+}

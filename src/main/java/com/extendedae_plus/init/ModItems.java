@@ -163,6 +163,15 @@ public final class ModItems {
             "oblivion_singularity",
             () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.RARE))
     );
+    // 莱卓罗水晶暂作为基础材料注册，工具和其余衍生物留待后续实现。
+    public static final DeferredItem<Item> LATTRA_CRYSTAL = ITEMS.register(
+            "lattra_crystal",
+            () -> new Item(new Item.Properties().rarity(Rarity.UNCOMMON))
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_FULLY = ITEMS.register(
+            "lattra_budding_fully",
+            () -> new BlockItem(ModBlocks.LATTRA_BUDDING_FULLY.get(), new Item.Properties())
+    );
     public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
 
