@@ -1,20 +1,14 @@
 {
   "replace": false,
   "values": [
-    "extendedae_plus:network_pattern_controller",
-    "extendedae_plus:assembler_matrix_upload_core",
-    "extendedae_plus:wireless_transceiver",
-    "extendedae_plus:4x_crafting_accelerator",
-    "extendedae_plus:16x_crafting_accelerator",
-    "extendedae_plus:64x_crafting_accelerator",
-    "extendedae_plus:256x_crafting_accelerator",
-    "extendedae_plus:1024x_crafting_accelerator",
-    "extendedae_plus:assembler_matrix_speed_plus",
-    "extendedae_plus:assembler_matrix_crafter_plus",
-    "extendedae_plus:assembler_matrix_pattern_plus",
-    "extendedae_plus:labeled_wireless_transceiver",
-    "extendedae_plus:super_assembler_matrix_frame",
-    "extendedae_plus:super_assembler_matrix_wall",
-    "extendedae_plus:super_assembler_matrix_glass"
+    "extendedae_plus:lattra_crystal_block",
+    "extendedae_plus:lattra_budding_fully",
+    "extendedae_plus:lattra_budding_mostly",
+    "extendedae_plus:lattra_budding_half",
+    "extendedae_plus:lattra_budding_hardly",
+    "extendedae_plus:lattra_crystal_bud_small",
+    "extendedae_plus:lattra_crystal_bud_medium",
+    "extendedae_plus:lattra_crystal_bud_large",
+    "extendedae_plus:lattra_crystal_cluster"
   ]
 }

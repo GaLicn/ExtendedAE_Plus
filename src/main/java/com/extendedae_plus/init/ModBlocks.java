@@ -5,6 +5,8 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlock;
 import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlock;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
+import com.extendedae_plus.content.crystal.LattraBuddingBlock;
+import com.extendedae_plus.content.crystal.LattraCrystalClusterBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
@@ -19,6 +21,7 @@ import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.registries.DeferredBlock;
@@ -182,10 +185,67 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> _FENG = registerDollBlock("_feng");
     public static final DeferredBlock<Block> XBAI = registerDollBlock("xbai");
 
+    public static final DeferredBlock<Block> LATTRA_CRYSTAL_BLOCK = BLOCKS.register(
+            "lattra_crystal_block",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.GOLD)
+                    .strength(3.0F, 8.0F)
+                    .requiresCorrectToolForDrops())
+    );
+    public static final DeferredBlock<LattraBuddingBlock> LATTRA_BUDDING_HARDLY = BLOCKS.register(
+            "lattra_budding_hardly",
+            () -> new LattraBuddingBlock(buddingProperties(), LATTRA_CRYSTAL_BLOCK.get())
+    );
+    public static final DeferredBlock<LattraBuddingBlock> LATTRA_BUDDING_HALF = BLOCKS.register(
+            "lattra_budding_half",
+            () -> new LattraBuddingBlock(buddingProperties(), LATTRA_BUDDING_HARDLY.get())
+    );
+    public static final DeferredBlock<LattraBuddingBlock> LATTRA_BUDDING_MOSTLY = BLOCKS.register(
+            "lattra_budding_mostly",
+            () -> new LattraBuddingBlock(buddingProperties(), LATTRA_BUDDING_HALF.get())
+    );
+    public static final DeferredBlock<LattraBuddingBlock> LATTRA_BUDDING_FULLY = BLOCKS.register(
+            "lattra_budding_fully",
+            () -> new LattraBuddingBlock(buddingProperties(), LATTRA_BUDDING_MOSTLY.get())
+    );
+    public static final DeferredBlock<LattraCrystalClusterBlock> LATTRA_CRYSTAL_BUD_SMALL = registerLattraCrystalBud(
+            "lattra_crystal_bud_small", 3, 4, SoundType.SMALL_AMETHYST_BUD, 1
+    );
+    public static final DeferredBlock<LattraCrystalClusterBlock> LATTRA_CRYSTAL_BUD_MEDIUM = registerLattraCrystalBud(
+            "lattra_crystal_bud_medium", 4, 3, SoundType.MEDIUM_AMETHYST_BUD, 2
+    );
+    public static final DeferredBlock<LattraCrystalClusterBlock> LATTRA_CRYSTAL_BUD_LARGE = registerLattraCrystalBud(
+            "lattra_crystal_bud_large", 5, 3, SoundType.LARGE_AMETHYST_BUD, 4
+    );
+    public static final DeferredBlock<LattraCrystalClusterBlock> LATTRA_CRYSTAL_CLUSTER = registerLattraCrystalBud(
+            "lattra_crystal_cluster", 7, 3, SoundType.AMETHYST_CLUSTER, 5
+    );
+
     private static DeferredBlock<Block> registerDollBlock(String name) {
         return BLOCKS.register(
                 name,
                 () -> new DollBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_WOOL).noOcclusion())
         );
+    }
+
+    private static BlockBehaviour.Properties buddingProperties() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.GOLD)
+                .strength(3.0F, 8.0F)
+                .sound(SoundType.AMETHYST)
+                .requiresCorrectToolForDrops()
+                .randomTicks();
+    }
+
+    private static DeferredBlock<LattraCrystalClusterBlock> registerLattraCrystalBud(
+            String name, int height, int width, SoundType sound, int lightLevel) {
+        return BLOCKS.register(name, () -> new LattraCrystalClusterBlock(height, width,
+                BlockBehaviour.Properties.of()
+                        .mapColor(MapColor.GOLD)
+                        .strength(1.5F)
+                        .sound(sound)
+                        .lightLevel(state -> lightLevel)
+                        .noOcclusion()
+                        .requiresCorrectToolForDrops()));
     }
 }

@@ -51,7 +51,9 @@ public final class ModCreativeTabs {
                                 ModItems.BASIC_CORE.get().getDefaultInstance(),
                                 ModItems.STORAGE_CORE.get().getDefaultInstance(),
                                 ModItems.SPATIAL_CORE.get().getDefaultInstance(),
-                                ModItems.INFINITY_CORE.get().getDefaultInstance()
+                                ModItems.INFINITY_CORE.get().getDefaultInstance(),
+                                ModItems.LATTRA_CRYSTAL.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_FULLY.get().getDefaultInstance()
                         ).forEach(output::accept);
 
                         if (ModItems.ENERGY_STORAGE_CORE != null) {
