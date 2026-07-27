@@ -2,7 +2,7 @@
   "multipart": [
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_block_off"
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_block_off"
       },
       "when": {
         "powered": "false",
@@ -11,7 +11,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_block_on"
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_block_on"
       },
       "when": {
         "powered": "true",
@@ -20,7 +20,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_off",
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_off",
         "x": 90,
         "y": 90
       },
@@ -31,7 +31,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_on",
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_on",
         "x": 90,
         "y": 90
       },
@@ -42,7 +42,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_off"
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_off"
       },
       "when": {
         "powered": "false",
@@ -51,7 +51,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_on"
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_on"
       },
       "when": {
         "powered": "true",
@@ -60,7 +60,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_off",
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_off",
         "x": 90
       },
       "when": {
@@ -70,7 +70,7 @@
     },
     {
       "apply": {
-        "model": "extendedae:block/assembler_matrix/frame_column_on",
+        "model": "extendedae_plus:block/super_assembler_matrix_frame_column_on",
         "x": 90
       },
       "when": {

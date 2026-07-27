@@ -102,12 +102,6 @@ public final class ModCapabilities {
                 ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                 (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
         );
-        event.registerBlockEntity(
-                AECapabilities.IN_WORLD_GRID_NODE_HOST,
-                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_GLASS_BE.get(),
-                (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
-        );
-
         // 如果还有其他实现了 IInWorldGridNodeHost 的方块实体，也在这里一并注册
         // event.registerBlockEntity(AECapabilities.IN_WORLD_GRID_NODE_HOST, ModBlockEntities.NETWORK_PATTERN_CONTROLLER_BE.get(), (be, ctx) -> (IInWorldGridNodeHost) be);
     }

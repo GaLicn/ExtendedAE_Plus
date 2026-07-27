@@ -97,10 +97,6 @@ public final class ModItems {
             "super_assembler_matrix_wall",
             () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get(), new Item.Properties())
     );
-    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_GLASS = ITEMS.register(
-            "super_assembler_matrix_glass",
-            () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get(), new Item.Properties())
-    );
     public static final DeferredItem<Item> MIRROR_PATTERN_PROVIDER = ITEMS.register(
             "mirror_pattern_provider",
             () -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), new Item.Properties())
