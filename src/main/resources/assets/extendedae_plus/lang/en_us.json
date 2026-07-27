@@ -302,7 +302,6 @@
   "key.categories.extendedae_plus": "ExtendedAE Plus",
   "block.extendedae_plus.super_assembler_matrix_frame": "Super Assembler Matrix Frame",
   "block.extendedae_plus.super_assembler_matrix_wall": "Super Assembler Matrix Wall",
-  "block.extendedae_plus.super_assembler_matrix_glass": "Super Assembler Matrix Glass",
   "gui.extendedae_plus.super_assembler_matrix": "Super Assembler Matrix",
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Crafting",

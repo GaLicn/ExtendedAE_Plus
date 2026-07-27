@@ -29,7 +29,6 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get());
                         output.accept(ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get());
                         output.accept(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get());
-                        output.accept(ModItems.SUPER_ASSEMBLER_MATRIX_GLASS.get());
                         output.accept(ModItems.MIRROR_PATTERN_PROVIDER.get());
                         output.accept(ModItems.TAG_INVENTORY_ME_INTERFACE.get());
                         output.accept(ModItems.C_H716.get());

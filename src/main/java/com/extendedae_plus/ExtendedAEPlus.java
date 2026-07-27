@@ -11,7 +11,6 @@ import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
-import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixGlassBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
@@ -129,13 +128,6 @@ public class ExtendedAEPlus {
             ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
                     SuperAssemblerMatrixWallBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
-                    null,
-                    null
-            );
-
-            ModBlocks.SUPER_ASSEMBLER_MATRIX_GLASS.get().setBlockEntity(
-                    SuperAssemblerMatrixGlassBlockEntity.class,
-                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_GLASS_BE.get(),
                     null,
                     null
             );
