@@ -16,6 +16,15 @@
     "extendedae_plus:super_assembler_matrix_frame",
     "extendedae_plus:super_assembler_matrix_wall",
     "extendedae_plus:super_assembler_matrix_glass",
-    "extendedae_plus:labeled_wireless_transceiver"
+    "extendedae_plus:labeled_wireless_transceiver",
+    "extendedae_plus:lattra_crystal_block",
+    "extendedae_plus:lattra_budding_fully",
+    "extendedae_plus:lattra_budding_mostly",
+    "extendedae_plus:lattra_budding_half",
+    "extendedae_plus:lattra_budding_hardly",
+    "extendedae_plus:lattra_crystal_bud_small",
+    "extendedae_plus:lattra_crystal_bud_medium",
+    "extendedae_plus:lattra_crystal_bud_large",
+    "extendedae_plus:lattra_crystal_cluster"
   ]
 }

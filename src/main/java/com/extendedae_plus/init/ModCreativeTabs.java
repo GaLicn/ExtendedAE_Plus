@@ -68,6 +68,8 @@ public final class ModCreativeTabs {
                         }
                         output.accept(ModItems.SPATIAL_CORE.get());
                         output.accept(ModItems.INFINITY_CORE.get());
+                        output.accept(ModItems.LATTRA_CRYSTAL.get());
+                        output.accept(ModItems.LATTRA_BUDDING_FULLY.get());
 
                         output.accept(ModItems.INFINITY_BIGINTEGER_CELL.get());
                     })
