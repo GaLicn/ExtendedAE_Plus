@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.recipe.ModRecipeSerializers;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
@@ -178,6 +179,13 @@ public class ExtendedAEPlus {
             ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get().setBlockEntity(
                     SuperCrystalAssemblerBlockEntity.class,
                     ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.CIRCUIT_CUTTER_PLUS.get().setBlockEntity(
+                    SuperCircuitCutterBlockEntity.class,
+                    ModBlockEntities.CIRCUIT_CUTTER_PLUS_BE.get(),
                     null,
                     null
             );

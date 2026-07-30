@@ -11,6 +11,8 @@ public final class ModRecipeSerializers {
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, ExtendedAEPlus.MODID);
     public static final DeferredHolder<RecipeSerializer<?>, SuperCrystalAssemblerRecipeSerializer> SUPER_CRYSTAL_ASSEMBLER =
             SERIALIZERS.register("crystal_assembler_plus", SuperCrystalAssemblerRecipeSerializer::new);
+    public static final DeferredHolder<RecipeSerializer<?>, SuperCircuitCutterRecipeSerializer> SUPER_CIRCUIT_CUTTER =
+            SERIALIZERS.register("circuit_cutter_plus", SuperCircuitCutterRecipeSerializer::new);
 
     private ModRecipeSerializers() {
     }

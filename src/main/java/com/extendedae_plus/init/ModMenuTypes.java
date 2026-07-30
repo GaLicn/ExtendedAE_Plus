@@ -6,11 +6,13 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.SuperAssemblerMatrixMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
+import com.extendedae_plus.menu.SuperCircuitCutterMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
@@ -52,4 +54,9 @@ public final class ModMenuTypes {
                     () -> MenuTypeBuilder
                             .create(SuperCrystalAssemblerMenu::new, SuperCrystalAssemblerBlockEntity.class)
                             .build("crystal_assembler_plus"));
+    public static final DeferredHolder<MenuType<?>, MenuType<SuperCircuitCutterMenu>> CIRCUIT_CUTTER_PLUS =
+            MENUS.register("circuit_cutter_plus",
+                    () -> MenuTypeBuilder
+                            .create(SuperCircuitCutterMenu::new, SuperCircuitCutterBlockEntity.class)
+                            .build("circuit_cutter_plus"));
 }

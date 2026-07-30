@@ -1,0 +1,12 @@
+{
+  "type": "extendedae_plus:circuit_cutter_plus",
+  "input": {
+    "ingredient": {
+      "tag": "c:storage_blocks/diamond"
+    }
+  },
+  "output": {
+    "count": 9,
+    "id": "ae2:printed_engineering_processor"
+  }
+}

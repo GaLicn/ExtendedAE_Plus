@@ -109,6 +109,10 @@ public final class ModItems {
             "crystal_assembler_plus",
             () -> new BlockItem(ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> CIRCUIT_CUTTER_PLUS = ITEMS.register(
+            "circuit_cutter_plus",
+            () -> new BlockItem(ModBlocks.CIRCUIT_CUTTER_PLUS.get(), new Item.Properties())
+    );
     public static final DeferredItem<Item> C_H716 = ITEMS.register(
             "c-h716",
             () -> new BlockItem(ModBlocks.C_H716.get(), new Item.Properties())
