@@ -39,6 +39,9 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> CIRCUIT_CUTTER_PLUS = ITEMS.register(
+            "circuit_cutter_plus", () -> new BlockItem(ModBlocks.CIRCUIT_CUTTER_PLUS.get(), new Item.Properties()));
+
     // 装配矩阵上传核心（方块物品）
     public static final RegistryObject<Item> ASSEMBLER_MATRIX_UPLOAD_CORE = ITEMS.register(
             "assembler_matrix_upload_core",

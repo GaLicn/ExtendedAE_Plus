@@ -10,6 +10,7 @@ import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.crystal.LattraBuddingBlock;
 import com.extendedae_plus.content.crystal.LattraCrystalClusterBlock;
 import com.extendedae_plus.content.decor.DollBlock;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
@@ -63,6 +64,10 @@ public final class ModBlocks {
                             .requiresCorrectToolForDrops()
             )
     );
+
+    // 复用原切片机的完整逻辑，仅使用超级机的独立方块注册和模型。
+    public static final RegistryObject<SuperCircuitCutterBlock> CIRCUIT_CUTTER_PLUS = BLOCKS.register(
+            "circuit_cutter_plus", SuperCircuitCutterBlock::new);
 
     // 装配矩阵上传核心（内部功能块）
     public static final RegistryObject<UploadCoreBlock> ASSEMBLER_MATRIX_UPLOAD_CORE = BLOCKS.register(

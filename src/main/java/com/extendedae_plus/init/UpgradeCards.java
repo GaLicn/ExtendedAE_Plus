@@ -20,6 +20,8 @@ public final class UpgradeCards {
             // 使用单一的 UpgradeCard Item 作为注册键，总共允许安装 4 张（不同等级由 ItemStack NBT 区分）
             Upgrades.add(ModItems.ENTITY_SPEED_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 4, "group.entity_ticker.name");
             Upgrades.add(ModItems.CHANNEL_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 1, "group.entity_ticker.name");
+            // 超级切片机与原机相同，允许安装四张 AE2 速度卡。
+            Upgrades.add(AEItems.SPEED_CARD, ModItems.CIRCUIT_CUTTER_PLUS.get(), 4, "group.circuit_cutter_plus.name");
 
             // 新增：频道卡仅允许安装在 ME 接口（方块与部件）上，每台最多 1 张
             String interfaceGroup = GuiText.Interface.getTranslationKey();

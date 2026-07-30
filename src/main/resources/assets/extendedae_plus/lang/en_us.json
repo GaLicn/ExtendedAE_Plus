@@ -306,5 +306,7 @@
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Crafting",
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search pattern inputs or outputs",
-  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix"
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix",
+  "block.extendedae_plus.circuit_cutter_plus": "Super Circuit Cutter",
+  "group.circuit_cutter_plus.name": "Super Circuit Cutter"
 }

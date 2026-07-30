@@ -19,6 +19,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.WIRELESS_TRANSCEIVER.get());
                         output.accept(ModItems.LABELED_WIRELESS_TRANSCEIVER.get());
                         output.accept(ModItems.NETWORK_PATTERN_CONTROLLER.get());
+                        output.accept(ModItems.CIRCUIT_CUTTER_PLUS.get());
                         // 装配矩阵上传核心
                         output.accept(ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get());
                         //超级装配矩阵速度核心

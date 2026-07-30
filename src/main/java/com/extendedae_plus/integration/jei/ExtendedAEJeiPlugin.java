@@ -5,9 +5,11 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.util.ModCheckUtils;
+import com.glodblock.github.extendedae.xmod.jei.recipe.CircuitCutterCategory;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.registration.ISubtypeRegistration;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.resources.ResourceLocation;
 
@@ -56,6 +58,12 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                     return type.id + "_" + stage;  // 如 "0_1", "1_4"
                 }
         );
+    }
+
+    @Override
+    public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        // 超级机共享原切片机配方类别，保证 JEI 可由该方块跳转。
+        registration.addRecipeCatalyst(ModItems.CIRCUIT_CUTTER_PLUS.get(), CircuitCutterCategory.RECIPE_TYPE);
     }
 
     private boolean isCoreTypeAvailable(int typeId) {

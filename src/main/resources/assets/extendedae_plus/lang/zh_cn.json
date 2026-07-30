@@ -305,5 +305,7 @@
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "并发执行数：%s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "取消合成",
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索样板输入或输出",
-  "gui.extendedae_plus.super_assembler_matrix.pattern": "超级装配矩阵"
+  "gui.extendedae_plus.super_assembler_matrix.pattern": "超级装配矩阵",
+  "block.extendedae_plus.circuit_cutter_plus": "超级电路切片机",
+  "group.circuit_cutter_plus.name": "超级电路切片机"
 }

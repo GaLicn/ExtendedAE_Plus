@@ -8,6 +8,8 @@ import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
+import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
+import com.glodblock.github.glodium.util.GlodUtil;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
@@ -95,6 +97,14 @@ public class ExtendedAEPlus {
                 ModBlockEntities.UPLOAD_CORE_BE.get(),
                 null,
                 null
+            );
+
+            // 复用原机实体，保留流体槽、自动导出、配方和网络处理行为。
+            ModBlocks.CIRCUIT_CUTTER_PLUS.get().setBlockEntity(
+                    TileCircuitCutter.class,
+                    GlodUtil.getTileType(TileCircuitCutter.class),
+                    null,
+                    null
             );
 
             ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
