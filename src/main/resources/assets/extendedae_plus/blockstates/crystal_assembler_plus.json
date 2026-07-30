@@ -1,0 +1,12 @@
+{
+  "multipart": [
+    {
+      "when": { "working": "false" },
+      "apply": { "model": "extendedae_plus:block/super_crystal_assembler_off" }
+    },
+    {
+      "when": { "working": "true" },
+      "apply": { "model": "extendedae_plus:block/super_crystal_assembler_on" }
+    }
+  ]
+}

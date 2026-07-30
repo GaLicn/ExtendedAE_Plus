@@ -7,6 +7,7 @@ import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlock;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlock;
 import com.extendedae_plus.content.crystal.LattraBuddingBlock;
 import com.extendedae_plus.content.crystal.LattraCrystalClusterBlock;
+import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlock;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
@@ -167,6 +168,16 @@ public final class ModBlocks {
                             .strength(1.5F, 6.0F)
                             .requiresCorrectToolForDrops()
             )
+    );
+
+    // 单方块超级水晶装配器，使用独立的工作态模型。
+    public static final DeferredBlock<SuperCrystalAssemblerBlock> CRYSTAL_ASSEMBLER_PLUS = BLOCKS.register(
+            "crystal_assembler_plus",
+            () -> new SuperCrystalAssemblerBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(1.5F, 6.0F)
+                    .requiresCorrectToolForDrops()
+                    .noOcclusion())
     );
 
     public static final DeferredBlock<Block> C_H716 = registerDollBlock("c-h716");

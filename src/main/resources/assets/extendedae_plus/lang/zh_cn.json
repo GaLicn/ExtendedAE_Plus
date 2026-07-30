@@ -14,6 +14,12 @@
   "extendedae_plus.message.global_scaling_limit_applied": "已为 %s 个供应器设置翻倍限制为 %s",
 
   "itemGroup.extendedae_plus.main": "扩展AE Plus",
+  "block.extendedae_plus.crystal_assembler_plus": "超级水晶装配器",
+  "item.extendedae_plus.crystal_assembler_plus": "超级水晶装配器",
+  "gui.extendedae_plus.crystal_assembler_plus": "超级水晶装配器",
+  "gui.extendedae_plus.crystal_assembler_plus.tank_empty": "空",
+  "gui.extendedae_plus.crystal_assembler_plus.amount": "%s mB / %s mB",
+  "group.crystal_assembler_plus.name": "超级水晶装配器",
   "item.extendedae_plus.wireless_transceiver": "无线收发器",
   "item.extendedae_plus.4x_crafting_accelerator": "4x并行处理单元",
   "item.extendedae_plus.16x_crafting_accelerator": "16x并行处理单元",

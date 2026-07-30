@@ -8,6 +8,7 @@ import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
 import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
+import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -17,6 +18,7 @@ import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
+import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -118,5 +120,7 @@ public final class ClientProxy {
         InitScreens.register(event, ModMenuTypes.ENTITY_TICKER_MENU.get(), EntitySpeedTickerScreen::new, "/screens/entity_speed_ticker.json");
         InitScreens.register(event, ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), SuperAssemblerMatrixScreen::new,
                 "/screens/super_assembler_matrix.json");
+        InitScreens.register(event, ModMenuTypes.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerScreen::new,
+                "/screens/crystal_assembler_plus.json");
     }
 }
