@@ -66,7 +66,10 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     /* ===================== Tick ===================== */
     static void serverTick(Level level, BlockPos pos, BlockState state, WirelessTransceiverBlockEntity be) {
         if (!(level instanceof ServerLevel)) return;
-        if (!be.masterMode) {
+        if (be.masterMode) {
+            // 主端周期重试冲突后失败的注册，并同步团队所有者键。
+            be.masterLink.updateStatus();
+        } else {
             // 从端需要周期检查与维护连接
             be.slaveLink.updateStatus();
         }
@@ -164,6 +167,10 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         this.placerName = placerName;
         this.masterLink.setPlacerId(placerId);
         this.slaveLink.setPlacerId(placerId);
+        if (this.masterMode && this.frequency != 0L) {
+            // 所有者变化后用新键重新注册主端。
+            this.masterLink.setFrequency(this.frequency);
+        }
         this.setChanged();
     }
     
@@ -253,36 +260,31 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     }
 
     @Override
-    public void onChunkUnloaded() {
-        cleanupForRemoval();
-        super.onChunkUnloaded();
-    }
-
-    @Override
     public void setRemoved() {
-        cleanupForRemoval();
         super.setRemoved();
+        cleanupForRemoval();
     }
 
     private void cleanupForRemoval() {
-        if (this.beingRemoved) {
-            return;
+        if (!this.beingRemoved) {
+            this.beingRemoved = true;
+            if (this.masterMode) {
+                this.masterLink.onUnloadOrRemove();
+            } else {
+                this.slaveLink.onUnloadOrRemove();
+            }
         }
 
-        this.beingRemoved = true;
-        if (this.masterMode) {
-            this.masterLink.onUnloadOrRemove();
-        } else {
-            this.slaveLink.onUnloadOrRemove();
-        }
-
-        if (this.managedNode != null) {
+        // AE2 节点只能创建一次，因此仅在实体永久移除时销毁。
+        if (this.isRemoved() && this.managedNode != null) {
             this.managedNode.destroy();
+            this.managedNode = null;
         }
     }
 
     @Override
     public void onLoad() {
+        this.beingRemoved = false;
         super.onLoad();
         // 仅服务端创建节点
         ServerLevel sl = this.getServerLevel();

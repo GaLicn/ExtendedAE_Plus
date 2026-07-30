@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.ae2.parts.storagebus;
 
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -46,11 +47,26 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
         }
     }
 
-    @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
+    @Inject(method = "onMainNodeStateChanged(Lappeng/api/networking/IGridNodeListener$State;)V", at = @At("TAIL"))
     private void eap$onMainNodeStateChanged(IGridNodeListener.State reason, CallbackInfo ci) {
-        // 在节点状态变化时（包括加载后的GRID_BOOT）重新初始化频道链接
         if (reason == IGridNodeListener.State.GRID_BOOT && !((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
+            // 网格启动后节点已可用，强制刷新频道缓存。
+            this.eap$lastChannel = -1;
             this.eap$initializeChannelLink();
+        }
+    }
+
+    @Inject(method = "getTickingRequest", at = @At("RETURN"), cancellable = true)
+    private void eap$overrideSleeping(appeng.api.networking.IGridNode node, CallbackInfoReturnable<TickingRequest> cir) {
+        if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
+            return;
+        }
+
+        IUpgradeInventory upgrades = this.getUpgrades();
+        if (ChannelCardLinkHelper.hasChannelCard(upgrades)) {
+            // 频道卡需要周期性唤醒，避免红石休眠阻断链接初始化。
+            var original = cir.getReturnValue();
+            cir.setReturnValue(new TickingRequest(original.minTickRate(), original.maxTickRate(), false));
         }
     }
 
@@ -61,6 +77,15 @@ public abstract class StorageBusPartChannelCardMixin implements InterfaceWireles
             // 从NBT加载时重置频道缓存，强制重新初始化
             this.eap$lastChannel = -1;
             this.eap$initializeChannelLink();
+
+            // 频道卡存在时唤醒设备，确保休眠节点重新参与调度。
+            IUpgradeInventory upgrades = this.getUpgrades();
+            if (ChannelCardLinkHelper.hasChannelCard(upgrades)) {
+                var node = ((IActionHost)(Object)this).getActionableNode();
+                if (node != null && node.getGrid() != null) {
+                    node.getGrid().getTickManager().wakeDevice(node);
+                }
+            }
         }
     }
 

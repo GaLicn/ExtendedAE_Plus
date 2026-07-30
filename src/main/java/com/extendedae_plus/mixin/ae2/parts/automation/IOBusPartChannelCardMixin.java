@@ -1,6 +1,7 @@
 package com.extendedae_plus.mixin.ae2.parts.automation;
 
 import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -48,6 +49,20 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
         }
     }
 
+    @Inject(method = "getTickingRequest", at = @At("RETURN"), cancellable = true)
+    private void eap$overrideSleeping(appeng.api.networking.IGridNode node, CallbackInfoReturnable<TickingRequest> cir) {
+        if (((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
+            return;
+        }
+
+        IUpgradeInventory upgrades = this.getUpgrades();
+        if (ChannelCardLinkHelper.hasChannelCard(upgrades)) {
+            // 频道卡需要周期性唤醒，避免红石休眠阻断链接初始化。
+            var original = cir.getReturnValue();
+            cir.setReturnValue(new TickingRequest(original.minTickRate(), original.maxTickRate(), false));
+        }
+    }
+
     @Inject(method = "tickingRequest", at = @At("HEAD"))
     private void eap$beforeTick(appeng.api.networking.IGridNode node, int ticksSinceLastCall, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
         // 在第一次tick时初始化频道链接（此时网格节点已经在线）
@@ -76,6 +91,15 @@ public abstract class IOBusPartChannelCardMixin implements InterfaceWirelessLink
         if (!((appeng.parts.AEBasePart)(Object)this).isClientSide()) {
             this.eap$lastChannel = -1;
             this.eap$hasTickInitialized = false; // 重置标志，允许再次初始化
+
+            // 频道卡存在时唤醒设备，确保休眠节点重新参与调度。
+            IUpgradeInventory upgrades = this.getUpgrades();
+            if (ChannelCardLinkHelper.hasChannelCard(upgrades)) {
+                var node = ((IActionHost)(Object)this).getActionableNode();
+                if (node != null && node.getGrid() != null) {
+                    node.getGrid().getTickManager().wakeDevice(node);
+                }
+            }
         }
     }
 

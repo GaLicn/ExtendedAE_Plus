@@ -176,7 +176,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
         }
     }
 
-    @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
+    @Inject(method = "onMainNodeStateChanged()V", at = @At("TAIL"))
     private void eap$compatOnNodeChange(CallbackInfo ci) {
         try {
             this.eap$compatLastChannel = -1;
