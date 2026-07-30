@@ -25,7 +25,7 @@ public final class WirelessMasterRegistry {
      * 公共收发器UUID（用于没有设置所有者的收发器）
      * 所有placerId为null的收发器都使用这个UUID，实现公共访问
      */
-    private static final UUID PUBLIC_NETWORK_UUID = new UUID(0, 0);
+    public static final UUID PUBLIC_NETWORK_UUID = new UUID(0, 0);
 
     private WirelessMasterRegistry() {}
 
@@ -33,13 +33,23 @@ public final class WirelessMasterRegistry {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(endpoint, "endpoint");
         if (frequency == 0L) return false;
-        
-        // 获取网络所有者UUID
-        // placerId为null时使用公共UUID（向下兼容旧版本收发器）
+
+        // placerId为null时使用公共UUID（向下兼容旧版本收发器）。
         UUID ownerUUID = placerId != null 
             ? WirelessTeamUtil.getNetworkOwnerUUID(level, placerId)
             : PUBLIC_NETWORK_UUID;
-        
+        return registerWithOwnerKey(level, frequency, ownerUUID, endpoint);
+    }
+
+    /**
+     * 使用已解析的网络所有者注册，确保调用方可记录实际使用的键。
+     */
+    public static synchronized boolean registerWithOwnerKey(ServerLevel level, long frequency, UUID ownerUUID, IWirelessEndpoint endpoint) {
+        Objects.requireNonNull(level, "level");
+        Objects.requireNonNull(ownerUUID, "ownerUUID");
+        Objects.requireNonNull(endpoint, "endpoint");
+        if (frequency == 0L) return false;
+
         final Key key = new Key(useGlobal() ? null : level.dimension(), frequency, ownerUUID);
         
         cleanupIfCleared(key);
@@ -55,11 +65,20 @@ public final class WirelessMasterRegistry {
 
     static synchronized void unregister(ServerLevel level, long frequency, @Nullable UUID placerId, IWirelessEndpoint endpoint) {
         if (frequency == 0L || level == null) return;
-        
+
         UUID ownerUUID = placerId != null 
             ? WirelessTeamUtil.getNetworkOwnerUUID(level, placerId)
             : PUBLIC_NETWORK_UUID;
-        
+        unregisterWithOwnerKey(level, frequency, ownerUUID, endpoint);
+    }
+
+    /**
+     * 使用注册时记录的网络所有者注销，避免团队归属延迟变化留下旧条目。
+     */
+    static synchronized void unregisterWithOwnerKey(ServerLevel level, long frequency, UUID ownerUUID, IWirelessEndpoint endpoint) {
+        if (frequency == 0L || level == null) return;
+        Objects.requireNonNull(ownerUUID, "ownerUUID");
+
         final Key key = new Key(useGlobal() ? null : level.dimension(), frequency, ownerUUID);
         
         var ref = MASTERS.get(key);
