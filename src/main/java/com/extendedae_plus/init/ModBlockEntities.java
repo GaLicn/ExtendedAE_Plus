@@ -12,6 +12,7 @@ import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -102,4 +103,9 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("tag_inventory_me_interface",
                     () -> BlockEntityType.Builder.of(TagInventoryMEInterfaceBlockEntity::new,
                             ModBlocks.TAG_INVENTORY_ME_INTERFACE.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperCrystalAssemblerBlockEntity>> CRYSTAL_ASSEMBLER_PLUS_BE =
+            BLOCK_ENTITY_TYPES.register("crystal_assembler_plus",
+                    () -> BlockEntityType.Builder.of(SuperCrystalAssemblerBlockEntity::new,
+                            ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get()).build(null));
 }

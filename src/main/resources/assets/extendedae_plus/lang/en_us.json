@@ -14,6 +14,12 @@
   "extendedae_plus.message.global_scaling_limit_applied": "Set scaling limit to %2$s for %1$s providers",
 
   "itemGroup.extendedae_plus.main": "ExtendedAE Plus",
+  "block.extendedae_plus.crystal_assembler_plus": "Super Crystal Assembler",
+  "item.extendedae_plus.crystal_assembler_plus": "Super Crystal Assembler",
+  "gui.extendedae_plus.crystal_assembler_plus": "Super Crystal Assembler",
+  "gui.extendedae_plus.crystal_assembler_plus.tank_empty": "Empty",
+  "gui.extendedae_plus.crystal_assembler_plus.amount": "%s mB / %s mB",
+  "group.crystal_assembler_plus.name": "Super Crystal Assembler",
   "item.extendedae_plus.wireless_transceiver": "Wireless Transceiver",
   "item.extendedae_plus.4x_crafting_accelerator": "4x Crafting Accelerator",
   "item.extendedae_plus.16x_crafting_accelerator": "16x Crafting Accelerator",

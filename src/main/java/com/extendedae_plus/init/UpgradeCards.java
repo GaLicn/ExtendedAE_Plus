@@ -20,6 +20,10 @@ public class UpgradeCards {
             // 
             Upgrades.add(ModItems.CHANNEL_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 1, "group.entity_ticker.name");
 
+            // 超级水晶装配器沿用原机规则：仅接受至多四张速度卡。
+            Upgrades.add(AEItems.SPEED_CARD, ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), 4,
+                    "group.crystal_assembler_plus.name");
+
             // 
             String interfaceGroup = GuiText.Interface.getTranslationKey();
             Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.INTERFACE, 1, interfaceGroup);

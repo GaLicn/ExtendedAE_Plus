@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [{ "condition": "minecraft:survives_explosion" }],
+      "entries": [{ "type": "minecraft:item", "name": "extendedae_plus:crystal_assembler_plus" }],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "extendedae_plus:blocks/crystal_assembler_plus"
+}

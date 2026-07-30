@@ -15,7 +15,9 @@ import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.init.*;
+import com.extendedae_plus.recipe.ModRecipeSerializers;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -60,6 +62,7 @@ public class ExtendedAEPlus {
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
+        ModRecipeSerializers.SERIALIZERS.register(modEventBus);
 
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
@@ -168,6 +171,13 @@ public class ExtendedAEPlus {
             ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
                     com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get().setBlockEntity(
+                    SuperCrystalAssemblerBlockEntity.class,
+                    ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
                     null,
                     null
             );

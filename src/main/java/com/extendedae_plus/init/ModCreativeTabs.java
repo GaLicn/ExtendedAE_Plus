@@ -40,6 +40,7 @@ public final class ModCreativeTabs {
                                 ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance(),
                                 ModItems.TAG_INVENTORY_ME_INTERFACE.get().getDefaultInstance(),
+                                ModItems.CRYSTAL_ASSEMBLER_PLUS.get().getDefaultInstance(),
                                 ModItems.C_H716.get().getDefaultInstance(),
                                 ModItems.FISH_DAN.get().getDefaultInstance(),
                                 ModItems._FENG.get().getDefaultInstance(),

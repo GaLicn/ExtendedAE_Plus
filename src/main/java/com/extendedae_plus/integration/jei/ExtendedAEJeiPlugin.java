@@ -4,16 +4,28 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
+import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
 import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.registration.ISubtypeRegistration;
+import mezz.jei.api.registration.IRecipeCategoryRegistration;
+import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.gui.handlers.IGuiClickableArea;
+import mezz.jei.api.gui.handlers.IGuiContainerHandler;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.List;
 
 @JeiPlugin
 public class ExtendedAEJeiPlugin implements IModPlugin {
@@ -86,5 +98,36 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                     }
                 }
         );
+    }
+
+    @Override
+    public void registerCategories(IRecipeCategoryRegistration registration) {
+        registration.addRecipeCategories(new SuperCrystalAssemblerCategory(registration.getJeiHelpers().getGuiHelper()));
+    }
+
+    @Override
+    public void registerRecipes(@NotNull IRecipeRegistration registration) {
+        var level = Minecraft.getInstance().level;
+        if (level != null) {
+            registration.addRecipes(SuperCrystalAssemblerCategory.TYPE,
+                    level.getRecipeManager().getAllRecipesFor(SuperCrystalAssemblerRecipe.TYPE));
+        }
+    }
+
+    @Override
+    public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
+        registration.addRecipeCatalyst(ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerCategory.TYPE);
+    }
+
+    @Override
+    public void registerGuiHandlers(IGuiHandlerRegistration registration) {
+        registration.addGenericGuiContainerHandler(SuperCrystalAssemblerScreen.class,
+                new IGuiContainerHandler<SuperCrystalAssemblerScreen>() {
+                    @Override
+                    public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(
+                            @NotNull SuperCrystalAssemblerScreen screen, double mouseX, double mouseY) {
+                        return List.of(IGuiClickableArea.createBasic(81, 42, 40, 12, SuperCrystalAssemblerCategory.TYPE));
+                    }
+                });
     }
 }
