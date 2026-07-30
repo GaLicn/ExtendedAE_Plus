@@ -1,0 +1,6 @@
+{
+  "multipart": [
+    { "when": { "working": "false" }, "apply": { "model": "extendedae_plus:block/super_circuit_cutter_off" } },
+    { "when": { "working": "true" }, "apply": { "model": "extendedae_plus:block/super_circuit_cutter_on" } }
+  ]
+}

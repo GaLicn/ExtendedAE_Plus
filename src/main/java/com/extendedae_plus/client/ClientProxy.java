@@ -9,6 +9,7 @@ import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
 import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
 import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
+import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
@@ -122,5 +123,7 @@ public final class ClientProxy {
                 "/screens/super_assembler_matrix.json");
         InitScreens.register(event, ModMenuTypes.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerScreen::new,
                 "/screens/crystal_assembler_plus.json");
+        InitScreens.register(event, ModMenuTypes.CIRCUIT_CUTTER_PLUS.get(), SuperCircuitCutterScreen::new,
+                "/screens/circuit_cutter_plus.json");
     }
 }

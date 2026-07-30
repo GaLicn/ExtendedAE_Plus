@@ -13,6 +13,7 @@ import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntit
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import appeng.blockentity.crafting.CraftingBlockEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -108,4 +109,8 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("crystal_assembler_plus",
                     () -> BlockEntityType.Builder.of(SuperCrystalAssemblerBlockEntity::new,
                             ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperCircuitCutterBlockEntity>> CIRCUIT_CUTTER_PLUS_BE =
+            BLOCK_ENTITY_TYPES.register("circuit_cutter_plus",
+                    () -> BlockEntityType.Builder.of(SuperCircuitCutterBlockEntity::new,
+                            ModBlocks.CIRCUIT_CUTTER_PLUS.get()).build(null));
 }

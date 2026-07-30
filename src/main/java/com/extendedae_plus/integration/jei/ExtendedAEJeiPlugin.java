@@ -5,7 +5,9 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
+import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
@@ -103,6 +105,7 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
         registration.addRecipeCategories(new SuperCrystalAssemblerCategory(registration.getJeiHelpers().getGuiHelper()));
+        registration.addRecipeCategories(new SuperCircuitCutterCategory(registration.getJeiHelpers().getGuiHelper()));
     }
 
     @Override
@@ -111,12 +114,15 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
         if (level != null) {
             registration.addRecipes(SuperCrystalAssemblerCategory.TYPE,
                     level.getRecipeManager().getAllRecipesFor(SuperCrystalAssemblerRecipe.TYPE));
+            registration.addRecipes(SuperCircuitCutterCategory.TYPE,
+                    level.getRecipeManager().getAllRecipesFor(SuperCircuitCutterRecipe.TYPE));
         }
     }
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
         registration.addRecipeCatalyst(ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerCategory.TYPE);
+        registration.addRecipeCatalyst(ModItems.CIRCUIT_CUTTER_PLUS.get(), SuperCircuitCutterCategory.TYPE);
     }
 
     @Override
@@ -127,6 +133,14 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                     public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(
                             @NotNull SuperCrystalAssemblerScreen screen, double mouseX, double mouseY) {
                         return List.of(IGuiClickableArea.createBasic(81, 42, 40, 12, SuperCrystalAssemblerCategory.TYPE));
+                    }
+                });
+        registration.addGenericGuiContainerHandler(SuperCircuitCutterScreen.class,
+                new IGuiContainerHandler<SuperCircuitCutterScreen>() {
+                    @Override
+                    public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(
+                            @NotNull SuperCircuitCutterScreen screen, double mouseX, double mouseY) {
+                        return List.of(IGuiClickableArea.createBasic(65, 39, 35, 12, SuperCircuitCutterCategory.TYPE));
                     }
                 });
     }
