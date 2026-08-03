@@ -14,6 +14,7 @@ import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameB
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import com.extendedae_plus.server.JeiSyncManager;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import net.minecraft.resources.ResourceLocation;
@@ -70,6 +71,8 @@ public class ExtendedAEPlus {
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
+        // 注册 JEI 网络存量同步
+        MinecraftForge.EVENT_BUS.register(JeiSyncManager.class);
         // 注册通用配置
         ModConfig.init();
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::worldTick);
