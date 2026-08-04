@@ -49,8 +49,9 @@ import java.util.Set;
 /** 保留原电路切片机数值与处理逻辑的超级版本。 */
 public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         implements IGridTickable, IUpgradeableObject, IConfigurableObject {
-    public static final int POWER_MAXIMUM_AMOUNT = 8_000;
+    public static final int POWER_MAXIMUM_AMOUNT = 64_000;
     public static final int MAX_PROGRESS = 200;
+    public static final int MAX_PARALLEL_RECIPES = 8;
     private final AppEngInternalInventory input = new AppEngInternalInventory(this, 1, 64);
     private final AppEngInternalInventory output = new AppEngInternalInventory(this, 1, 64);
     private final CombinedInternalInventory inventory = new CombinedInternalInventory(input, output);
@@ -131,18 +132,18 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
             return TickRateModulation.SLOWER;
         }
         setWorking(true);
+        int operations = getParallelOperations(recipe.value());
         int speed = speedFor(upgrades.getInstalledUpgrades(AEItems.SPEED_CARD));
-        if (consumePower(10 * speed)) {
+        if (consumePower(10 * speed * operations)) {
             progress += speed;
         }
         if (progress >= MAX_PROGRESS) {
             progress = 0;
             // 完成时重新确认库存和输出空间，阻止并发操作重复消耗或产出。
-            if (canRun(recipe.value())) {
-                var stack = input.getStackInSlot(0);
-                recipe.value().input().sample().consume(stack);
-                input.setItemDirect(0, stack);
-                output.insertItem(0, recipe.value().output().copy(), false);
+            operations = getParallelOperations(recipe.value());
+            if (operations > 0) {
+                consumeInputs(recipe.value(), operations);
+                output.insertItem(0, createOutput(recipe.value(), operations), false);
                 saveChanges();
             }
         }
@@ -162,16 +163,50 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
     }
 
     private boolean canRun(SuperCircuitCutterRecipe recipe) {
-        if (!output.insertItem(0, recipe.output().copy(), true).isEmpty()) {
-            return false;
+        return getParallelOperations(recipe) > 0;
+    }
+
+    private int getParallelOperations(SuperCircuitCutterRecipe recipe) {
+        int operations = Math.min(MAX_PARALLEL_RECIPES, getOutputCapacity(recipe.output()));
+        if (operations == 0) {
+            return 0;
         }
-        var sample = recipe.input().sample();
         var stack = input.getStackInSlot(0).copy();
-        if (!sample.checkType(stack)) {
-            return false;
+        for (int operation = 0; operation < operations; operation++) {
+            var sample = recipe.input().sample();
+            if (!sample.checkType(stack)) {
+                return operation;
+            }
+            sample.consume(stack);
+            if (!sample.isEmpty()) {
+                return operation;
+            }
         }
-        sample.consume(stack);
-        return sample.isEmpty();
+        return operations;
+    }
+
+    private int getOutputCapacity(ItemStack recipeOutput) {
+        var currentOutput = output.getStackInSlot(0);
+        if (!currentOutput.isEmpty() && !ItemStack.isSameItemSameComponents(currentOutput, recipeOutput)) {
+            return 0;
+        }
+        int remainingSpace = (currentOutput.isEmpty() ? recipeOutput.getMaxStackSize() : currentOutput.getMaxStackSize())
+                - currentOutput.getCount();
+        return remainingSpace / recipeOutput.getCount();
+    }
+
+    private void consumeInputs(SuperCircuitCutterRecipe recipe, int operations) {
+        var stack = input.getStackInSlot(0);
+        for (int operation = 0; operation < operations; operation++) {
+            recipe.input().sample().consume(stack);
+        }
+        input.setItemDirect(0, stack);
+    }
+
+    private ItemStack createOutput(SuperCircuitCutterRecipe recipe, int operations) {
+        var outputStack = recipe.output().copy();
+        outputStack.setCount(outputStack.getCount() * operations);
+        return outputStack;
     }
 
     private boolean consumePower(double amount) {
