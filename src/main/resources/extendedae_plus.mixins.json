@@ -101,6 +101,7 @@
     "extendedae.accessor.TileAssemblerMatrixPatternAccessor",
     "extendedae.common.matrix.ClusterAssemblerMatrixMixin",
     "extendedae.common.PartExPatternProviderMixin",
+    "extendedae.common.TileCircuitCutterParallelMixin",
     "extendedae.common.TileExPatternProviderMixin",
     "extendedae.container.ContainerAssemblerMatrixPatternSlotTrackerMixin",
     "extendedae.container.ContainerExPatternProviderMixin",
