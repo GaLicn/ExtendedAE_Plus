@@ -3,17 +3,30 @@
   "pools": [{
     "rolls": 1.0,
     "entries": [{
-      "type": "minecraft:item",
-      "name": "extendedae_plus:lattra_crystal",
-      "functions": [
-        { "function": "minecraft:set_count", "count": 1.0, "add": false },
+      "type": "minecraft:alternatives",
+      "children": [
         {
-          "function": "minecraft:apply_bonus",
-          "enchantment": "minecraft:fortune",
-          "formula": "minecraft:uniform_bonus_count",
-          "parameters": { "bonusMultiplier": 1 }
+          "type": "minecraft:item",
+          "name": "extendedae_plus:lattra_crystal_cluster",
+          "conditions": [{
+            "condition": "minecraft:match_tool",
+            "predicate": { "predicates": { "minecraft:enchantments": [{ "enchantments": "minecraft:silk_touch", "levels": { "min": 1 } }] } }
+          }]
         },
-        { "function": "minecraft:explosion_decay" }
+        {
+          "type": "minecraft:item",
+          "name": "extendedae_plus:lattra_crystal",
+          "functions": [
+            { "function": "minecraft:set_count", "count": 4.0, "add": false },
+            {
+              "function": "minecraft:apply_bonus",
+              "enchantment": "minecraft:fortune",
+              "formula": "minecraft:uniform_bonus_count",
+              "parameters": { "bonusMultiplier": 1 }
+            },
+            { "function": "minecraft:explosion_decay" }
+          ]
+        }
       ]
     }]
   }]

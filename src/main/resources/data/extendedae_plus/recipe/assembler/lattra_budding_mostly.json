@@ -1,0 +1,30 @@
+{
+  "type": "extendedae_plus:crystal_assembler_plus",
+  "input_fluid": {
+    "amount": 100,
+    "ingredient": {
+      "fluid": "minecraft:lava"
+    }
+  },
+  "input_items": [
+    {
+      "ingredient": {
+        "item": "extendedae:entro_budding_fully"
+      }
+    },
+    {
+      "ingredient": {
+        "item": "extendedae_plus:lattra_crystal_block"
+      }
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:redstone_block"
+      }
+    }
+  ],
+  "output": {
+    "count": 1,
+    "id": "extendedae_plus:lattra_budding_mostly"
+  }
+}

@@ -172,9 +172,45 @@ public final class ModItems {
             "lattra_crystal",
             () -> new Item(new Item.Properties().rarity(Rarity.UNCOMMON))
     );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BLOCK = ITEMS.register(
+            "lattra_crystal_block",
+            () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BLOCK.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_DUST = ITEMS.register(
+            "lattra_dust",
+            () -> new Item(new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_HARDLY = ITEMS.register(
+            "lattra_budding_hardly",
+            () -> new BlockItem(ModBlocks.LATTRA_BUDDING_HARDLY.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_HALF = ITEMS.register(
+            "lattra_budding_half",
+            () -> new BlockItem(ModBlocks.LATTRA_BUDDING_HALF.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_MOSTLY = ITEMS.register(
+            "lattra_budding_mostly",
+            () -> new BlockItem(ModBlocks.LATTRA_BUDDING_MOSTLY.get(), new Item.Properties())
+    );
     public static final DeferredItem<Item> LATTRA_BUDDING_FULLY = ITEMS.register(
             "lattra_budding_fully",
             () -> new BlockItem(ModBlocks.LATTRA_BUDDING_FULLY.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_SMALL = ITEMS.register(
+            "lattra_crystal_bud_small",
+            () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_SMALL.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_MEDIUM = ITEMS.register(
+            "lattra_crystal_bud_medium",
+            () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_MEDIUM.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_LARGE = ITEMS.register(
+            "lattra_crystal_bud_large",
+            () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_LARGE.get(), new Item.Properties())
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_CLUSTER = ITEMS.register(
+            "lattra_crystal_cluster",
+            () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_CLUSTER.get(), new Item.Properties())
     );
     public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;

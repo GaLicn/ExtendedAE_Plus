@@ -2,7 +2,23 @@
   "type": "minecraft:block",
   "pools": [{
     "rolls": 1.0,
-    "conditions": [{ "condition": "minecraft:survives_explosion" }],
-    "entries": [{ "type": "minecraft:item", "name": "extendedae_plus:lattra_crystal" }]
+    "entries": [{
+      "type": "minecraft:alternatives",
+      "children": [
+        {
+          "type": "minecraft:item",
+          "name": "extendedae_plus:lattra_budding_hardly",
+          "conditions": [{
+            "condition": "minecraft:match_tool",
+            "predicate": { "predicates": { "minecraft:enchantments": [{ "enchantments": "minecraft:silk_touch", "levels": { "min": 1 } }] } }
+          }]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "extendedae_plus:lattra_crystal_block",
+          "conditions": [{ "condition": "minecraft:survives_explosion" }]
+        }
+      ]
+    }]
   }]
 }

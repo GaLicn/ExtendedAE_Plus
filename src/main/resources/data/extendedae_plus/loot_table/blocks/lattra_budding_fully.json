@@ -3,6 +3,9 @@
   "pools": [{
     "rolls": 1.0,
     "conditions": [{ "condition": "minecraft:survives_explosion" }],
-    "entries": [{ "type": "minecraft:item", "name": "extendedae_plus:lattra_crystal" }]
+    "entries": [{
+      "type": "minecraft:item",
+      "name": "extendedae_plus:lattra_budding_mostly"
+    }]
   }]
 }
