@@ -60,8 +60,9 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         implements IGridTickable, IUpgradeableObject, IConfigurableObject {
     public static final int SLOTS = 9;
     public static final int TANK_CAP = 16_000;
-    public static final int POWER_MAXIMUM_AMOUNT = 8_000;
+    public static final int POWER_MAXIMUM_AMOUNT = 64_000;
     public static final int MAX_PROGRESS = 200;
+    public static final int MAX_PARALLEL_RECIPES = 8;
 
     private final AppEngInternalInventory input = new AppEngInternalInventory(this, SLOTS, 64);
     private final AppEngInternalInventory output = new AppEngInternalInventory(this, 1, 64);
@@ -156,16 +157,18 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         }
 
         this.setWorking(true);
+        int operations = this.getParallelOperations(recipe.value());
         int speed = speedFor(this.upgrades.getInstalledUpgrades(AEItems.SPEED_CARD));
-        if (this.consumePower(10 * speed)) {
+        if (this.consumePower(10 * speed * operations)) {
             this.progress += speed;
         }
         if (this.progress >= MAX_PROGRESS) {
             this.progress = 0;
             // 完成时再次验证并消耗输入，避免库存变化造成物品复制。
-            if (this.canRun(recipe.value())) {
-                this.consumeInputs(recipe.value());
-                this.output.insertItem(0, recipe.value().output().copy(), false);
+            operations = this.getParallelOperations(recipe.value());
+            if (operations > 0) {
+                this.consumeInputs(recipe.value(), operations);
+                this.output.insertItem(0, this.createOutput(recipe.value(), operations), false);
                 this.saveChanges();
             }
         }
@@ -185,24 +188,48 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
     }
 
     private boolean canRun(SuperCrystalAssemblerRecipe recipe) {
-        if (!this.output.insertItem(0, recipe.output().copy(), true).isEmpty()) {
-            return false;
+        return this.getParallelOperations(recipe) > 0;
+    }
+
+    private int getParallelOperations(SuperCrystalAssemblerRecipe recipe) {
+        int operations = Math.min(MAX_PARALLEL_RECIPES, this.getOutputCapacity(recipe.output()));
+        if (operations == 0) {
+            return 0;
         }
         var available = this.copyInputs();
-        for (var requirement : this.requirements(recipe)) {
-            for (var stack : available) {
-                if (requirement.checkType(stack)) {
-                    requirement.consume(stack);
+        for (int operation = 0; operation < operations; operation++) {
+            for (var requirement : this.requirements(recipe)) {
+                for (var stack : available) {
+                    if (requirement.checkType(stack)) {
+                        requirement.consume(stack);
+                    }
+                    if (requirement.isEmpty()) {
+                        break;
+                    }
                 }
                 if (requirement.isEmpty()) {
-                    break;
+                    continue;
                 }
-            }
-            if (!requirement.isEmpty()) {
-                return false;
+                return operation;
             }
         }
-        return true;
+        return operations;
+    }
+
+    private int getOutputCapacity(ItemStack recipeOutput) {
+        var currentOutput = this.output.getStackInSlot(0);
+        if (!currentOutput.isEmpty() && !ItemStack.isSameItemSameComponents(currentOutput, recipeOutput)) {
+            return 0;
+        }
+        int remainingSpace = (currentOutput.isEmpty() ? recipeOutput.getMaxStackSize() : currentOutput.getMaxStackSize())
+                - currentOutput.getCount();
+        return remainingSpace / recipeOutput.getCount();
+    }
+
+    private ItemStack createOutput(SuperCrystalAssemblerRecipe recipe, int operations) {
+        var outputStack = recipe.output().copy();
+        outputStack.setCount(outputStack.getCount() * operations);
+        return outputStack;
     }
 
     private List<IngredientStack<?, ?>> requirements(SuperCrystalAssemblerRecipe recipe) {
@@ -230,25 +257,28 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return copied;
     }
 
-    private void consumeInputs(SuperCrystalAssemblerRecipe recipe) {
+    private void consumeInputs(SuperCrystalAssemblerRecipe recipe, int operations) {
         FluidStack fluidStack = null;
         var storedFluid = tank.getStack(0);
         if (storedFluid != null && storedFluid.what() instanceof AEFluidKey fluidKey) {
             fluidStack = fluidKey.toStack((int) storedFluid.amount());
         }
-        for (var requirement : this.requirements(recipe)) {
-            for (int slot = 0; slot < input.size(); slot++) {
-                var item = input.getStackInSlot(slot);
-                if (requirement.checkType(item)) {
-                    requirement.consume(item);
-                    input.setItemDirect(slot, item);
+        // 每一批独立构建需求，确保物品与流体均按并行次数扣除。
+        for (int operation = 0; operation < operations; operation++) {
+            for (var requirement : this.requirements(recipe)) {
+                for (int slot = 0; slot < input.size(); slot++) {
+                    var item = input.getStackInSlot(slot);
+                    if (requirement.checkType(item)) {
+                        requirement.consume(item);
+                        input.setItemDirect(slot, item);
+                    }
+                    if (requirement.isEmpty()) {
+                        break;
+                    }
                 }
-                if (requirement.isEmpty()) {
-                    break;
+                if (fluidStack != null && !requirement.isEmpty() && requirement.checkType(fluidStack)) {
+                    requirement.consume(fluidStack);
                 }
-            }
-            if (fluidStack != null && !requirement.isEmpty() && requirement.checkType(fluidStack)) {
-                requirement.consume(fluidStack);
             }
         }
         if (fluidStack != null) {
