@@ -42,7 +42,9 @@ public class LattraBuddingBlock extends Block {
                 .setValue(AmethystClusterBlock.FACING, direction)
                 .setValue(AmethystClusterBlock.WATERLOGGED, targetState.getFluidState().getType() == Fluids.WATER));
 
-        if (random.nextInt(DECAY_CHANCE) == 0) {
+        // 无暇母岩生长晶簇后保持品质，其余阶段仍可能退化。
+        if (state.getBlock() != ModBlocks.LATTRA_BUDDING_FULLY.get()
+                && random.nextInt(DECAY_CHANCE) == 0) {
             level.setBlockAndUpdate(pos, degradedBlock.defaultBlockState());
         }
     }

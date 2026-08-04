@@ -20,8 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 /** JEI 的超级电路切片机配方分类。 */
 public final class SuperCircuitCutterCategory extends AbstractRecipeCategory<RecipeHolder<SuperCircuitCutterRecipe>> {
+    // JEI 接收的配方对象是 RecipeHolder，泛型信息在运行时会被擦除。
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static final Class<RecipeHolder<SuperCircuitCutterRecipe>> RECIPE_HOLDER_CLASS = (Class) RecipeHolder.class;
     public static final RecipeType<RecipeHolder<SuperCircuitCutterRecipe>> TYPE =
-            RecipeType.createFromVanilla(SuperCircuitCutterRecipe.TYPE);
+            new RecipeType<>(SuperCircuitCutterRecipe.ID, RECIPE_HOLDER_CLASS);
     private final IDrawable background;
     private final IDrawableAnimated progress;
 

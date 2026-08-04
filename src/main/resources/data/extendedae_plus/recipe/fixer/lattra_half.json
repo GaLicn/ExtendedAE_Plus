@@ -1,0 +1,17 @@
+{
+  "type": "extendedae:crystal_fixer",
+  "chance": 7000,
+  "fuel": {
+    "ingredient": {
+      "item": "extendedae_plus:lattra_dust"
+    }
+  },
+  "input": {
+    "count": 1,
+    "id": "extendedae_plus:lattra_budding_half"
+  },
+  "output": {
+    "count": 1,
+    "id": "extendedae_plus:lattra_budding_mostly"
+  }
+}

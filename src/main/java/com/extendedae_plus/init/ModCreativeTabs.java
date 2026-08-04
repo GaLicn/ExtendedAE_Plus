@@ -54,6 +54,11 @@ public final class ModCreativeTabs {
                                 ModItems.SPATIAL_CORE.get().getDefaultInstance(),
                                 ModItems.INFINITY_CORE.get().getDefaultInstance(),
                                 ModItems.LATTRA_CRYSTAL.get().getDefaultInstance(),
+                                ModItems.LATTRA_CRYSTAL_BLOCK.get().getDefaultInstance(),
+                                ModItems.LATTRA_DUST.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_HARDLY.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_HALF.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_MOSTLY.get().getDefaultInstance(),
                                 ModItems.LATTRA_BUDDING_FULLY.get().getDefaultInstance()
                         ).forEach(output::accept);
 

@@ -20,8 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 /** JEI 中与原水晶装配器一致的 3×3 输入、液体输入和竖向进度布局。 */
 public final class SuperCrystalAssemblerCategory extends AbstractRecipeCategory<RecipeHolder<SuperCrystalAssemblerRecipe>> {
+    // JEI 接收的配方对象是 RecipeHolder，泛型信息在运行时会被擦除。
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static final Class<RecipeHolder<SuperCrystalAssemblerRecipe>> RECIPE_HOLDER_CLASS = (Class) RecipeHolder.class;
     public static final RecipeType<RecipeHolder<SuperCrystalAssemblerRecipe>> TYPE =
-            RecipeType.createFromVanilla(SuperCrystalAssemblerRecipe.TYPE);
+            new RecipeType<>(SuperCrystalAssemblerRecipe.ID, RECIPE_HOLDER_CLASS);
 
     private final IDrawableAnimated progress;
     private final IDrawable background;
