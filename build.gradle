@@ -78,6 +78,10 @@ dependencies {
     forge "net.minecraftforge:forge:${forge_version}"
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
 
+    // MixinExtras
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.4"))
+
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE

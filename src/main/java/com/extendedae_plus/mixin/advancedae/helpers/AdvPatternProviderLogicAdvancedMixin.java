@@ -6,6 +6,8 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.pedroksl.advanced_ae.common.logic.AdvPatternProviderLogic;
@@ -14,7 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
@@ -49,16 +50,17 @@ public class AdvPatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
         }
     }
 
-    // 在 pushPattern 中，重定向对 adapter.containsPatternInput(...) 的调用
-    @Redirect(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"))
-    private boolean eap$redirectBlockingContains(PatternProviderTarget adapter,
-                                                 java.util.Set<AEKey> patternInputs,
-                                                 IPatternDetails patternDetails,
-                                                 appeng.api.stacks.KeyCounter[] inputHolder) {
+    // 在 pushPattern 中，修改对 adapter.containsPatternInput(...) 的调用
+    @WrapOperation(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"))
+    private boolean eap$modifyBlockingContains(PatternProviderTarget adapter,
+                                               java.util.Set<AEKey> patternInputs,
+                                               Operation<Boolean> original,
+                                               IPatternDetails patternDetails,
+                                               appeng.api.stacks.KeyCounter[] inputHolder) {
         // 原版是否打开阻挡
-        boolean vanillaBlocking = ((AdvPatternProviderLogic)(Object)this).isBlocking();
+        boolean vanillaBlocking = ((AdvPatternProviderLogic) (Object) this).isBlocking();
         if (!vanillaBlocking) {
-            return adapter.containsPatternInput(patternInputs);
+            return original.call(adapter, patternInputs);
         }
 
         // 仅当高级阻挡启用时启用“匹配则不阻挡”
@@ -69,7 +71,7 @@ public class AdvPatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
             }
         }
         // 否则使用原判定
-        return adapter.containsPatternInput(patternInputs);
+        return original.call(adapter, patternInputs);
     }
 
     @Unique

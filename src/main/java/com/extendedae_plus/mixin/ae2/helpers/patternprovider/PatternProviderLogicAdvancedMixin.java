@@ -7,6 +7,8 @@ import appeng.api.stacks.GenericStack;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import com.extendedae_plus.api.advancedBlocking.IAdvancedBlocking;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,7 +16,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
@@ -50,15 +51,16 @@ public class PatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
     }
 
     // 在 pushPattern 中，重定向对 adapter.containsPatternInput(...) 的调用
-    @Redirect(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"))
+    @WrapOperation(method = "pushPattern", at = @At(value = "INVOKE", target = "Lappeng/helpers/patternprovider/PatternProviderTarget;containsPatternInput(Ljava/util/Set;)Z"))
     private boolean eap$redirectBlockingContains(PatternProviderTarget adapter,
                                                  java.util.Set<AEKey> patternInputs,
+                                                 Operation<Boolean> original,
                                                  IPatternDetails patternDetails,
                                                  appeng.api.stacks.KeyCounter[] inputHolder) {
         // 原版是否打开阻挡
-        boolean vanillaBlocking = ((PatternProviderLogic)(Object)this).isBlocking();
+        boolean vanillaBlocking = ((PatternProviderLogic) (Object) this).isBlocking();
         if (!vanillaBlocking) {
-            return adapter.containsPatternInput(patternInputs);
+            return original.call(adapter, patternInputs);
         }
 
         // 仅当高级阻挡启用时启用“匹配则不阻挡”
@@ -69,7 +71,7 @@ public class PatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
             }
         }
         // 否则使用原判定
-        return adapter.containsPatternInput(patternInputs);
+        return original.call(adapter, patternInputs);
     }
 
     @Unique
@@ -90,7 +92,9 @@ public class PatternProviderLogicAdvancedMixin implements IAdvancedBlocking {
         return true; // 每个输入槽都至少匹配了一个候选输入
     }
 
-    @Shadow public void saveChanges() {}
+    @Shadow
+    public void saveChanges() {
+    }
 
     @Inject(method = "exportSettings(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
     private void onExportSettings(CompoundTag output, CallbackInfo ci) {
