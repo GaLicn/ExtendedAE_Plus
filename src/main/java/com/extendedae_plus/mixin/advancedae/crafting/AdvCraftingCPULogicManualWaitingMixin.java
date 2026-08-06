@@ -8,18 +8,26 @@ import appeng.api.networking.crafting.ICraftingSubmitResult;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
+import appeng.crafting.inv.ListCraftingInventory;
 import com.extendedae_plus.api.crafting.IForcedCraftingPlan;
 import com.extendedae_plus.api.crafting.IManualCraftingState;
 import com.extendedae_plus.crafting.ForcedCraftingPlan;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.pedroksl.advanced_ae.common.cluster.AdvCraftingCPU;
 import net.pedroksl.advanced_ae.common.logic.AdvCraftingCPULogic;
+import net.pedroksl.advanced_ae.common.logic.ExecutingCraftingJob;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +35,34 @@ import java.util.Set;
 @Mixin(value = AdvCraftingCPULogic.class, remap = false)
 public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCraftingState {
     @Unique
+    private static final String EAP_MANUAL_WAITING_NBT_KEY = "extendedae_plus:manual_waiting";
+
+    @Shadow
+    private AdvCraftingCPU cpu;
+
+    @Shadow
+    private ExecutingCraftingJob job;
+
+    @Shadow
+    private ListCraftingInventory inventory;
+
+    @Shadow
+    protected abstract void postChange(AEKey what);
+
+    @Unique
     private final Map<AEKey, Long> eap$manualWaitingFor = new LinkedHashMap<>();
 
     @Override
     public void eap$setManualWaiting(KeyCounter manualWaiting) {
-        this.eap$clearManualWaitingInternal();
+        this.eap$clearManualWaitingInternal(false);
         for (var entry : manualWaiting) {
             if (entry.getKey() != null && entry.getLongValue() > 0) {
                 this.eap$manualWaitingFor.put(entry.getKey(), entry.getLongValue());
+                this.postChange(entry.getKey());
             }
+        }
+        if (!this.eap$manualWaitingFor.isEmpty()) {
+            this.cpu.markDirty();
         }
     }
 
@@ -69,14 +96,14 @@ public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCr
         if (manualMissing != null) {
             this.eap$setManualWaiting(manualMissing);
         } else {
-            this.eap$clearManualWaitingInternal();
+            this.eap$clearManualWaitingInternal(false);
         }
     }
 
     @Inject(method = "insert", at = @At("RETURN"), cancellable = true)
     private void eap$consumeManualWaitingAfterVanilla(AEKey what, long amount, Actionable type,
             CallbackInfoReturnable<Long> cir) {
-        if (what == null) {
+        if (what == null || this.job == null) {
             return;
         }
 
@@ -94,6 +121,9 @@ public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCr
         long consumed = Math.min(remainingAmount, manualWaiting);
         if (type == Actionable.MODULATE) {
             this.eap$decreaseManualWaiting(what, consumed);
+            this.cpu.markDirty();
+            this.postChange(what);
+            this.inventory.insert(what, consumed, Actionable.MODULATE);
         }
 
         cir.setReturnValue(vanillaInserted + consumed);
@@ -124,7 +154,41 @@ public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCr
 
     @Inject(method = "finishJob", at = @At("HEAD"))
     private void eap$clearManualWaitingOnFinish(boolean success, CallbackInfo ci) {
-        this.eap$clearManualWaitingInternal();
+        this.eap$clearManualWaitingInternal(true);
+    }
+
+    @Inject(method = "writeToNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
+    private void eap$writeManualWaitingToNbt(CompoundTag data, CallbackInfo ci) {
+        data.remove(EAP_MANUAL_WAITING_NBT_KEY);
+        if (this.job == null || this.eap$manualWaitingFor.isEmpty()) {
+            return;
+        }
+
+        var entries = new ListTag();
+        for (var entry : this.eap$manualWaitingFor.entrySet()) {
+            var entryTag = entry.getKey().toTagGeneric();
+            entryTag.putLong("#", entry.getValue());
+            entries.add(entryTag);
+        }
+        data.put(EAP_MANUAL_WAITING_NBT_KEY, entries);
+    }
+
+    @Inject(method = "readFromNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
+    private void eap$readManualWaitingFromNbt(CompoundTag data, CallbackInfo ci) {
+        this.eap$manualWaitingFor.clear();
+        if (this.job == null) {
+            return;
+        }
+
+        var entries = data.getList(EAP_MANUAL_WAITING_NBT_KEY, Tag.TAG_COMPOUND);
+        for (int i = 0; i < entries.size(); i++) {
+            var entryTag = entries.getCompound(i);
+            var key = AEKey.fromTagGeneric(entryTag);
+            long amount = entryTag.getLong("#");
+            if (key != null && amount > 0) {
+                this.eap$manualWaitingFor.put(key, amount);
+            }
+        }
     }
 
     @Unique
@@ -138,10 +202,18 @@ public abstract class AdvCraftingCPULogicManualWaitingMixin implements IManualCr
     }
 
     @Unique
-    private void eap$clearManualWaitingInternal() {
+    private void eap$clearManualWaitingInternal(boolean notifyChanges) {
         if (this.eap$manualWaitingFor.isEmpty()) {
             return;
         }
+
+        var previousKeys = new ArrayList<>(this.eap$manualWaitingFor.keySet());
         this.eap$manualWaitingFor.clear();
+        if (notifyChanges) {
+            for (var key : previousKeys) {
+                this.postChange(key);
+            }
+        }
+        this.cpu.markDirty();
     }
 }
