@@ -2,9 +2,9 @@ package com.extendedae_plus.mixin.ae2;
 
 import appeng.crafting.CraftingCalculation;
 import com.extendedae_plus.config.ModConfig;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.At;
 
 /**
  * Mixin 用于增加 CraftingCalculation.handlePausing() 中 incTime 的阈值。
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public abstract class CraftingCalculationMixin {
     // 可调节的阈值：在执行 pause 检查前 handlePausing 被调用的次数。
     // 增大此值可以减少 wait/notify 的频率（提升吞吐量但降低响应速度）。
-    @ModifyConstant(method = "handlePausing", constant = @Constant(intValue = 100))
+    @ModifyExpressionValue(method = "handlePausing", at = @At(value = "CONSTANT", args = "intValue=100"))
     private int modifyIncTimeThreshold(int original) {
         return ModConfig.INSTANCE.craftingPauseThreshold;
     }
