@@ -8,6 +8,7 @@ import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket
 import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.crafting.SetSearchTextS2CPacket;
+import com.extendedae_plus.network.jei.SyncNetworkInventoryS2CPacket;
 import com.extendedae_plus.network.meInterface.InterfaceAdjustConfigAmountC2SPacket;
 import com.extendedae_plus.network.pattern.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
@@ -245,6 +246,12 @@ public final class ModNetwork {
                 .encoder(TagInventoryFilterC2SPacket::encode)
                 .decoder(TagInventoryFilterC2SPacket::decode)
                 .consumerNetworkThread(TagInventoryFilterC2SPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SyncNetworkInventoryS2CPacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SyncNetworkInventoryS2CPacket::encode)
+                .decoder(SyncNetworkInventoryS2CPacket::decode)
+                .consumerNetworkThread(SyncNetworkInventoryS2CPacket::handle)
                 .add();
     }
 
