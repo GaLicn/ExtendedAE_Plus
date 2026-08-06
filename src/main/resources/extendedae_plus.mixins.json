@@ -4,7 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.extendedae_plus.mixin.ExtendedAEPlusMixinPlugin",
   "mixins": [
-    "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
+    "advancedae.AdvPatternProviderLogicContainsModifyMixin",
     "advancedae.AdvProcessingPatternMixin",
     "advancedae.accessor.AdvCraftingCPUAccessor",
     "advancedae.accessor.AdvCraftingCPULogicAccessor",
@@ -37,7 +37,7 @@
     "ae2.autopattern.CraftingServiceGetProvidersMixin",
     "ae2.autopattern.CraftingSimulationStateAccessor",
     "ae2.autopattern.CraftingSimulationStateMixin",
-    "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
+    "ae2.autopattern.PatternProviderLogicContainsModifyMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.compat.PatternProviderLogicVirtualCompletionMixin",
     "ae2.crafting.CraftingCpuLogicManualWaitingMixin",
