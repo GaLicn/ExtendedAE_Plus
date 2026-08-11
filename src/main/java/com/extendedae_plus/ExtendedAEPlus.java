@@ -19,6 +19,7 @@ import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.recipe.ModRecipeSerializers;
+import com.extendedae_plus.server.JeiSyncManager;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -67,6 +68,7 @@ public class ExtendedAEPlus {
 
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(JeiSyncManager.class);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);

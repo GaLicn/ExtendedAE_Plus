@@ -26,6 +26,7 @@ import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
 import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
 import com.extendedae_plus.network.crafting.ManualCraftingStatusS2CPacket;
+import com.extendedae_plus.network.jei.SyncNetworkInventoryS2CPacket;
 import com.extendedae_plus.network.packet.EAPConfigButtonPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -88,6 +89,9 @@ public class ModNetwork {
         registrar.playToClient(ManualCraftingStatusS2CPacket.TYPE,
                 ManualCraftingStatusS2CPacket.STREAM_CODEC,
                 ManualCraftingStatusS2CPacket::handle);
+        registrar.playToClient(SyncNetworkInventoryS2CPacket.TYPE,
+                SyncNetworkInventoryS2CPacket.STREAM_CODEC,
+                SyncNetworkInventoryS2CPacket::handle);
 
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
         registrar.playToServer(TagInventoryFilterC2SPacket.TYPE,

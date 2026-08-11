@@ -114,6 +114,7 @@
     "jei.AE2JeiEncodePatternTransferHandlerMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
+    "jei.IngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor"
   ],
   "injectors": {
