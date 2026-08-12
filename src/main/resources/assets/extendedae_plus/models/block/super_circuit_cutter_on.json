@@ -1,6 +1,6 @@
 {
 	"parent": "extendedae_plus:block/super_circuit_cutter_off",
 	"textures": {
-		"super_saw": "extendedae:block/circuit_cutter/saw_on"
+		"super_saw": "expatternprovider:block/circuit_cutter/saw_on"
 	}
 }

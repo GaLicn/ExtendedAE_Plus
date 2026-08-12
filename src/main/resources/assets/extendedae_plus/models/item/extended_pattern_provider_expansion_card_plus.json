@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "extendedae_plus:item/virtual_crafting_card"
+    "layer0": "extendedae_plus:item/extended_pattern_provider_expansion_card_plus"
   }
 }

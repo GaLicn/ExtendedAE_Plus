@@ -5,7 +5,7 @@
 	"texture_size": [64, 64],
 	"textures": {
 		"model": "extendedae_plus:block/super_circuit_cutter",
-		"super_saw": "extendedae:block/circuit_cutter/saw_off",
+		"super_saw": "expatternprovider:block/circuit_cutter/saw_off",
 		"particle": "extendedae_plus:block/super_circuit_cutter_back"
 	},
 	"elements": [
