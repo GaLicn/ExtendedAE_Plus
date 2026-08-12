@@ -14,6 +14,8 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import appeng.util.ConfigManager;
 import com.extendedae_plus.api.config.EAPSettings;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Final;
@@ -22,7 +24,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
@@ -46,8 +47,8 @@ public class PatternProviderLogicAdvancedMixin {
         configManager.registerSetting(EAPSettings.ADVANCED_BLOCKING, YesNo.NO);
     }
 
-    // 在 pushPattern 中，重定向对 adapter.containsPatternInput(...) 的调用
-    @Redirect(
+    // 在 pushPattern 中，修改对 adapter.containsPatternInput(...) 的调用
+    @WrapOperation(
             method = "pushPattern",
             at = @At(
                     value = "INVOKE",
@@ -56,11 +57,12 @@ public class PatternProviderLogicAdvancedMixin {
     )
     private boolean eap$redirectBlockingContains(PatternProviderTarget adapter,
                                                  Set<AEKey> patternInputs,
+                                                 Operation<Boolean> original,
                                                  IPatternDetails patternDetails,
                                                  KeyCounter[] inputHolder) {
         // 原版是否打开阻挡
         if (!this.isBlocking()) {
-            return adapter.containsPatternInput(patternInputs);
+            return original.call(adapter, patternInputs);
         }
 
         // 仅当高级阻挡启用时启用“匹配则不阻挡”
@@ -71,7 +73,7 @@ public class PatternProviderLogicAdvancedMixin {
             }
         }
         // 否则使用原判定
-        return adapter.containsPatternInput(patternInputs);
+        return original.call(adapter, patternInputs);
     }
 
     @Unique
