@@ -18,6 +18,7 @@ public final class SuperAssemblerMatrixCalculator {
 
     private static final int MAX_PARTS_TO_SCAN = 4096;
     private static final int MIN_DELTA = 2;
+    private static final int MAX_AXIS_LENGTH = 9;
 
     private SuperAssemblerMatrixCalculator() {
     }
@@ -81,6 +82,12 @@ public final class SuperAssemblerMatrixCalculator {
     }
 
     private static SuperAssemblerMatrixCluster verifyAndCreate(ServerLevel level, BlockPos min, BlockPos max) {
+        // 外框任一方向超过 9 格时，不允许形成超级装配矩阵。
+        if (max.getX() - min.getX() + 1 > MAX_AXIS_LENGTH
+                || max.getY() - min.getY() + 1 > MAX_AXIS_LENGTH
+                || max.getZ() - min.getZ() + 1 > MAX_AXIS_LENGTH) {
+            return null;
+        }
         if (max.getX() - min.getX() < MIN_DELTA
                 || max.getY() - min.getY() < MIN_DELTA
                 || max.getZ() - min.getZ() < MIN_DELTA) {
