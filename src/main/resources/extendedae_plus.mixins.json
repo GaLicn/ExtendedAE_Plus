@@ -41,7 +41,7 @@
     "extendedae.client.gui.GuiAssemblerMatrixPatternInfoMixin"
   ],
   "mixins": [
-    "advancedae.AdvPatternProviderLogicContainsRedirectMixin",
+    "advancedae.AdvPatternProviderLogicContainsModifyMixin",
     "advancedae.accessor.AdvPatternProviderLogicPatternsAccessor",
     "advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor",
     "advancedae.accessor.AdvCraftingCPULogicAccessor",
@@ -70,7 +70,7 @@
     "ae2.autopattern.CraftingServiceGetProvidersMixin",
     "ae2.autopattern.CraftingSimulationStateAccessor",
     "ae2.autopattern.CraftingSimulationStateMixin",
-    "ae2.autopattern.PatternProviderLogicContainsRedirectMixin",
+    "ae2.autopattern.PatternProviderLogicContainsModifyMixin",
     "ae2.compat.PatternProviderCompatMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
