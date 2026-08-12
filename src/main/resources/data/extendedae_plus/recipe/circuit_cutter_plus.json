@@ -5,8 +5,8 @@
     "A": { "item": "extendedae_plus:lattra_crystal_block" },
     "B": {"item": "extendedae_plus:oblivion_singularity"},
     "C": {"item": "ae2:cell_component_256k"},
-    "D": {"item": "extendedae:crystal_assembler"}
+    "D": {"item": "extendedae:circuit_cutter"}
   },
   "pattern": ["ABA", "CDC", "ABA"],
-  "result": { "count": 1, "id": "extendedae_plus:crystal_assembler_plus" }
+  "result": { "count": 1, "id": "extendedae_plus:circuit_cutter_plus" }
 }
