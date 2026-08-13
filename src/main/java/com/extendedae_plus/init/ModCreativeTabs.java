@@ -36,6 +36,7 @@ public final class ModCreativeTabs {
                                 ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get().getDefaultInstance(),
                                 ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get().getDefaultInstance(),
                                 ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance(),
