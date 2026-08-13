@@ -94,6 +94,14 @@ public final class ModBlocks {
             PatternCorePlusBlock::new
     );
 
+    // 超级装配矩阵混合核心目前仅作为装饰方块注册，不参与矩阵功能计算。
+    public static final RegistryObject<Block> ASSEMBLER_MATRIX_HYBRID_PLUS = BLOCKS.register(
+            "assembler_matrix_hybrid_plus",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .strength(1.5F, 6.0F)
+                    .requiresCorrectToolForDrops())
+    );
+
     public static final RegistryObject<SuperAssemblerMatrixFrameBlock> SUPER_ASSEMBLER_MATRIX_FRAME = BLOCKS.register(
             "super_assembler_matrix_frame",
             () -> new SuperAssemblerMatrixFrameBlock(

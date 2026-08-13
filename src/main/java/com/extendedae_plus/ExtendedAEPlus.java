@@ -6,6 +6,7 @@ import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.client.ModKeybindings;
+import com.extendedae_plus.client.model.MatrixFrameModel;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
@@ -214,6 +215,8 @@ public class ExtendedAEPlus {
 
         @SubscribeEvent
         public static void onRegisterGeometryLoaders(final ModelEvent.RegisterGeometryLoaders evt) {
+            // 框架的每个面都需要根据四周邻接关系动态选择连接材质。
+            evt.register("matrix_frame", new MatrixFrameModel.Loader());
             try {
                 ClientRegistrar.initBuiltInModels();
                 // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法

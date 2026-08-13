@@ -65,6 +65,11 @@ public final class ModItems {
             ()-> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), new Item.Properties())
     );
 
+    public static final RegistryObject<Item> ASSEMBLER_MATRIX_HYBRID_PLUS = ITEMS.register(
+            "assembler_matrix_hybrid_plus",
+            () -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_HYBRID_PLUS.get(), new Item.Properties())
+    );
+
     public static final RegistryObject<Item> SUPER_ASSEMBLER_MATRIX_FRAME = ITEMS.register(
             "super_assembler_matrix_frame",
             () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get(), new Item.Properties())

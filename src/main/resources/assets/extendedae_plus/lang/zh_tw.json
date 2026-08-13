@@ -80,6 +80,7 @@
   "block.extendedae_plus.assembler_matrix_speed_plus": "超級裝配矩陣速度核心",
   "block.extendedae_plus.assembler_matrix_crafter_plus": "超級裝配矩陣合成核心",
   "block.extendedae_plus.assembler_matrix_pattern_plus": "超級裝配矩陣樣板核心",
+  "block.extendedae_plus.assembler_matrix_hybrid_plus": "超級裝配矩陣混合核心",
   "gui.extendedae_plus.assembler_matrix.pattern": "超級裝配矩陣樣板核心",
   "block.extendedae_plus.labeled_wireless_transceiver": "標籤無線收發器",
 
