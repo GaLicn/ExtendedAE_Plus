@@ -38,7 +38,9 @@ public class SuperAssemblerMatrixFrameBlock extends SuperAssemblerMatrixBlock<Su
     public @NotNull BlockState updateShape(@NotNull BlockState state, @NotNull Direction direction,
             @NotNull BlockState neighborState, LevelAccessor level, @NotNull BlockPos pos,
             @NotNull BlockPos neighborPos) {
-        return this.getShapeType(state, level, pos);
+        // 动态连接材质依赖邻居数据，即使柱状状态不变也需要刷新模型。
+        var updatedState = super.updateShape(state, direction, neighborState, level, pos, neighborPos);
+        return this.getShapeType(updatedState, level, pos);
     }
 
     private BlockState getShapeType(BlockState baseState, LevelAccessor level, BlockPos pos) {

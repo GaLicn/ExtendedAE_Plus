@@ -1,6 +1,7 @@
 package com.extendedae_plus.client;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.model.MatrixFrameModel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -13,6 +14,12 @@ import net.minecraft.client.resources.model.ModelResourceLocation;
 @EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public final class ClientModelEvents {
     private ClientModelEvents() {}
+
+    @SubscribeEvent
+    public static void onRegisterGeometryLoaders(ModelEvent.RegisterGeometryLoaders event) {
+        // 框架的每个面都需要根据四周邻接关系动态选择连接材质。
+        event.register(ExtendedAEPlus.id("matrix_frame"), new MatrixFrameModel.Loader());
+    }
 
     @SubscribeEvent
     public static void onRegisterAdditional(ModelEvent.RegisterAdditional event) {
