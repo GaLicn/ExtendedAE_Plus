@@ -10,6 +10,7 @@ import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.content.decor.DollBlock;
 import com.extendedae_plus.content.cutter.SuperCircuitCutterBlock;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlock;
+import com.extendedae_plus.content.matrix.HybridCoreBlock;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlock;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlock;
 import com.extendedae_plus.content.matrix.UploadCoreBlock;
@@ -94,12 +95,10 @@ public final class ModBlocks {
             PatternCorePlusBlock::new
     );
 
-    // 超级装配矩阵混合核心目前仅作为装饰方块注册，不参与矩阵功能计算。
-    public static final RegistryObject<Block> ASSEMBLER_MATRIX_HYBRID_PLUS = BLOCKS.register(
+    // 超级装配矩阵混合核心：一个核心同时提供样板、合成与速度能力。
+    public static final RegistryObject<HybridCoreBlock> ASSEMBLER_MATRIX_HYBRID_PLUS = BLOCKS.register(
             "assembler_matrix_hybrid_plus",
-            () -> new Block(BlockBehaviour.Properties.of()
-                    .strength(1.5F, 6.0F)
-                    .requiresCorrectToolForDrops())
+            HybridCoreBlock::new
     );
 
     public static final RegistryObject<SuperAssemblerMatrixFrameBlock> SUPER_ASSEMBLER_MATRIX_FRAME = BLOCKS.register(

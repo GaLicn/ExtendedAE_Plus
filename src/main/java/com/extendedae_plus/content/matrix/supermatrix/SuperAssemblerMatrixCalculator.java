@@ -1,9 +1,6 @@
 package com.extendedae_plus.content.matrix.supermatrix;
 
-import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
 import net.minecraft.core.BlockPos;
@@ -87,8 +84,7 @@ public final class SuperAssemblerMatrixCalculator {
             return null;
         }
 
-        boolean anyCrafter = false;
-        boolean anyPattern = false;
+        boolean anyHybridCore = false;
         for (var pos : BlockPos.betweenClosed(min, max)) {
             var blockEntity = level.getBlockEntity(pos);
             if (!isStructureComponent(blockEntity)) {
@@ -98,8 +94,7 @@ public final class SuperAssemblerMatrixCalculator {
                 if (!isSuperFunction(blockEntity)) {
                     return null;
                 }
-                anyCrafter |= blockEntity instanceof CrafterCorePlusBlockEntity;
-                anyPattern |= blockEntity instanceof PatternCorePlusBlockEntity;
+                anyHybridCore |= blockEntity instanceof HybridCoreBlockEntity;
             } else if (isEdge(pos, min, max)) {
                 if (!(blockEntity instanceof SuperAssemblerMatrixFrameBlockEntity)) {
                     return null;
@@ -111,7 +106,7 @@ public final class SuperAssemblerMatrixCalculator {
                 }
             }
         }
-        return anyCrafter && anyPattern ? new SuperAssemblerMatrixCluster(min, max) : null;
+        return anyHybridCore ? new SuperAssemblerMatrixCluster(min, max) : null;
     }
 
     private static void clear(Set<SuperAssemblerMatrixPart> parts) {
@@ -181,10 +176,8 @@ public final class SuperAssemblerMatrixCalculator {
     }
 
     private static boolean isSuperFunction(BlockEntity blockEntity) {
-        return blockEntity instanceof CrafterCorePlusBlockEntity
-                || blockEntity instanceof PatternCorePlusBlockEntity
-                || blockEntity instanceof SpeedCorePlusBlockEntity
-                || blockEntity instanceof UploadCoreBlockEntity;
+        // 超级装配矩阵内部只允许混合核心，旧核心不再参与成型。
+        return blockEntity instanceof HybridCoreBlockEntity;
     }
 
     private static boolean isStructureComponent(BlockEntity blockEntity) {

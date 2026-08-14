@@ -99,6 +99,7 @@
   "block.extendedae_plus.assembler_matrix_pattern_plus": "超级装配矩阵样板核心",
   "block.extendedae_plus.assembler_matrix_hybrid_plus": "超级装配矩阵混合核心",
   "gui.extendedae_plus.assembler_matrix.pattern": "超级装配矩阵样板核心",
+  "gui.extendedae_plus.assembler_matrix.hybrid": "超级装配矩阵混合核心",
   "block.extendedae_plus.labeled_wireless_transceiver": "标签无线收发器",
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",

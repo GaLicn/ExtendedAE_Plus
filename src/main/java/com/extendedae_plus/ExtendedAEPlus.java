@@ -12,6 +12,7 @@ import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
 import com.glodblock.github.glodium.util.GlodUtil;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
@@ -128,6 +129,13 @@ public class ExtendedAEPlus {
             ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
                     PatternCorePlusBlockEntity.class,
                     ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_HYBRID_PLUS.get().setBlockEntity(
+                    HybridCoreBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_HYBRID_PLUS_BE.get(),
                     null,
                     null
             );

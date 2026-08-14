@@ -101,6 +101,7 @@
   "block.extendedae_plus.assembler_matrix_pattern_plus": "Assembler Matrix Pattern Core Plus",
   "block.extendedae_plus.assembler_matrix_hybrid_plus": "Super Assembler Matrix Hybrid Core",
   "gui.extendedae_plus.assembler_matrix.pattern": "Assembler Matrix Pattern Core Plus",
+  "gui.extendedae_plus.assembler_matrix.hybrid": "Super Assembler Matrix Hybrid Core",
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern uploaded to the assembly matrix",
