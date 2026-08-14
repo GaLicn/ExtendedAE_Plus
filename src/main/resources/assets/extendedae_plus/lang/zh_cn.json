@@ -123,6 +123,7 @@
   "block.extendedae_plus._feng": "_feng 玩偶",
   "block.extendedae_plus.xbai": "Xbai 玩偶",
   "gui.extendedae_plus.assembler_matrix.pattern": "超级装配矩阵样板核心",
+  "gui.extendedae_plus.assembler_matrix.hybrid": "超级装配矩阵混合核心",
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",

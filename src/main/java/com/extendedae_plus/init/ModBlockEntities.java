@@ -4,6 +4,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
@@ -83,6 +84,12 @@ public final class ModBlockEntities {
             BLOCK_ENTITY_TYPES.register("assembler_matrix_pattern_plus",
                     ()-> BlockEntityType.Builder.of(PatternCorePlusBlockEntity::new,
                             ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get()).build(null));
+
+    // 超级装配矩阵混合核心
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HybridCoreBlockEntity>> ASSEMBLER_MATRIX_HYBRID_PLUS_BE =
+            BLOCK_ENTITY_TYPES.register("assembler_matrix_hybrid_plus",
+                    () -> BlockEntityType.Builder.of(HybridCoreBlockEntity::new,
+                            ModBlocks.ASSEMBLER_MATRIX_HYBRID_PLUS.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SuperAssemblerMatrixFrameBlockEntity>> SUPER_ASSEMBLER_MATRIX_FRAME_BE =
             BLOCK_ENTITY_TYPES.register("super_assembler_matrix_frame",
