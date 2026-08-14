@@ -5,6 +5,7 @@ import appeng.api.networking.IInWorldGridNodeHost;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
@@ -80,6 +81,11 @@ public final class ModCapabilities {
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
                 (be, ctx) -> (PatternCorePlusBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.ASSEMBLER_MATRIX_HYBRID_PLUS_BE.get(),
+                (be, ctx) -> (HybridCoreBlockEntity) be
         );
         event.registerBlockEntity(
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,

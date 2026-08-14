@@ -11,10 +11,7 @@ import appeng.api.stacks.KeyCounter;
 import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.EncodedPatternItem;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
@@ -33,7 +30,7 @@ public class SuperAssemblerMatrixCluster {
     private final BlockPos boundsMin;
     private final BlockPos boundsMax;
     private final List<SuperAssemblerMatrixPart> parts = new ArrayList<>();
-    private final List<PatternCorePlusBlockEntity> patternCores = new ArrayList<>();
+    private final List<HybridCoreBlockEntity> patternCores = new ArrayList<>();
     private final Map<AEItemKey, BatchTask> batchQueue = new LinkedHashMap<>();
     private final List<VirtualThreadTask> fallbackThreads = new ArrayList<>();
     private final Object2LongLinkedOpenHashMap<AEKey> outputBuffer = new Object2LongLinkedOpenHashMap<>();
@@ -57,14 +54,11 @@ public class SuperAssemblerMatrixCluster {
         if (this.core == null && part instanceof SuperAssemblerMatrixBlockEntity blockEntity) {
             this.core = blockEntity;
         }
-        if (part instanceof PatternCorePlusBlockEntity patternCore) {
-            this.patternCores.add(patternCore);
-        } else if (part instanceof CrafterCorePlusBlockEntity) {
+        if (part instanceof HybridCoreBlockEntity hybridCore) {
+            // 每个混合核心等效于原先各一个合成、样板和速度核心。
+            this.patternCores.add(hybridCore);
             this.crafterCoreCount++;
-        } else if (part instanceof SpeedCorePlusBlockEntity) {
             this.speedCoreCount++;
-        } else if (part instanceof UploadCoreBlockEntity) {
-            this.uploadCoreCount++;
         }
     }
 
@@ -148,7 +142,7 @@ public class SuperAssemblerMatrixCluster {
         return inventories;
     }
 
-    public List<PatternCorePlusBlockEntity> getPatternCores() {
+    public List<HybridCoreBlockEntity> getPatternCores() {
         return java.util.Collections.unmodifiableList(this.patternCores);
     }
 
