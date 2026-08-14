@@ -59,7 +59,7 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
     public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
             @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
-            SuperAssemblerMatrixCalculator.recalculate(serverLevel, pos);
+            SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, pos);
         }
     }
 

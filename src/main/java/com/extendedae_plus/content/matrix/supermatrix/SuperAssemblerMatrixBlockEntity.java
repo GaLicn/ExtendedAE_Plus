@@ -89,7 +89,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         super.onReady();
         this.unloading = false;
         if (this.level instanceof ServerLevel serverLevel) {
-            SuperAssemblerMatrixCalculator.recalculate(serverLevel, this.worldPosition);
+            SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, this.worldPosition);
         }
     }
 
