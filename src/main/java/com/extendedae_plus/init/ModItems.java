@@ -9,6 +9,7 @@ import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
+import com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -136,6 +137,10 @@ public final class ModItems {
     public static final DeferredItem<MirrorPatternBindingToolItem> MIRROR_PATTERN_BINDING_TOOL = ITEMS.register(
             "mirror_pattern_binding_tool",
             () -> new MirrorPatternBindingToolItem(new Item.Properties())
+    );
+    public static final DeferredItem<UltimateSuperAssemblerMatrixBuilderItem> ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER = ITEMS.register(
+            "ultimate_super_assembler_matrix_builder",
+            () -> new UltimateSuperAssemblerMatrixBuilderItem(new Item.Properties().rarity(Rarity.EPIC))
     );
     static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
             "network_pattern_controller",

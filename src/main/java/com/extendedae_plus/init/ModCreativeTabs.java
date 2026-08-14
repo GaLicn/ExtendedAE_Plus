@@ -48,6 +48,7 @@ public final class ModCreativeTabs {
                                 ModItems._FENG.get().getDefaultInstance(),
                                 ModItems.XBAI.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_BINDING_TOOL.get().getDefaultInstance(),
+                                ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get().getDefaultInstance(),
                                 // 基础核心相关物品
                                 ModItems.OBLIVION_SINGULARITY.get().getDefaultInstance(),
                                 ModItems.BASIC_CORE.get().getDefaultInstance(),

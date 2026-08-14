@@ -194,10 +194,12 @@ public class SuperAssemblerMatrixMenu extends AEBaseMenu {
         if (cluster == null || cluster.isDestroyed()) {
             return;
         }
-        for (var patternCore : cluster.getPatternCores()) {
-            var tracker = new PatternSlotTracker(patternCore);
+        long trackingId = 0;
+        for (var source : cluster.getPatternInventorySources()) {
+            // 槽位来源可能是终极结构中被裁切的核心，使用菜单内唯一 ID 追踪。
+            var tracker = new PatternSlotTracker(source.host(), source.inventory(), trackingId++);
             this.trackers.add(tracker);
-            this.trackerMap.put(patternCore.getLocateID(), tracker);
+            this.trackerMap.put(tracker.id, tracker);
         }
     }
 
@@ -205,24 +207,26 @@ public class SuperAssemblerMatrixMenu extends AEBaseMenu {
         private final PatternCorePlusBlockEntity host;
         private final InternalInventory client;
         private final InternalInventory server;
+        private final long id;
         private final Int2ObjectMap<ItemStack> changed = new Int2ObjectOpenHashMap<>();
         private boolean initialized;
 
-        private PatternSlotTracker(PatternCorePlusBlockEntity host) {
+        private PatternSlotTracker(PatternCorePlusBlockEntity host, InternalInventory server, long id) {
             this.host = host;
-            this.client = new AppEngInternalInventory(host.getPatternInventory().size());
-            this.server = host.getPatternInventory();
+            this.client = new AppEngInternalInventory(server.size());
+            this.server = server;
+            this.id = id;
         }
 
         @Nullable
         private SuperAssemblerMatrixUpdateS2CPacket createPacket() {
             var map = this.getChangedMap();
             return map.isEmpty() ? null : new SuperAssemblerMatrixUpdateS2CPacket(
-                    this.host.getLocateID(), this.server.size(), map);
+                    this.id, this.server.size(), map);
         }
 
         private SuperAssemblerMatrixUpdateS2CPacket fullPacket() {
-            return new SuperAssemblerMatrixUpdateS2CPacket(this.host.getLocateID(), this.server.size(),
+            return new SuperAssemblerMatrixUpdateS2CPacket(this.id, this.server.size(),
                     this.getFullMap());
         }
 

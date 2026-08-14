@@ -4,7 +4,9 @@ public record SuperAssemblerMatrixStats(
         int crafterCores,
         int patternCores,
         int speedCores,
-        int uploadCores
+        int uploadCores,
+        int fixedParallelBudget,
+        int fixedPatternCapacity
 ) {
 
     public static final int PARALLEL_PER_CRAFTER_CORE = 512;
@@ -12,12 +14,22 @@ public record SuperAssemblerMatrixStats(
 
     private static final int[] CRAFT_TICKS = {20, 10, 5, 3, 2, 1};
 
+    public SuperAssemblerMatrixStats(int crafterCores, int patternCores, int speedCores, int uploadCores) {
+        this(crafterCores, patternCores, speedCores, uploadCores, -1, -1);
+    }
+
+    public static SuperAssemblerMatrixStats ultimate() {
+        return new SuperAssemblerMatrixStats(0, 0, 5, 4,
+                UltimateSuperAssemblerMatrixStructure.PARALLEL_BUDGET,
+                UltimateSuperAssemblerMatrixStructure.PATTERN_CAPACITY);
+    }
+
     public int parallelBudget() {
-        return this.crafterCores * PARALLEL_PER_CRAFTER_CORE;
+        return this.fixedParallelBudget >= 0 ? this.fixedParallelBudget : this.crafterCores * PARALLEL_PER_CRAFTER_CORE;
     }
 
     public int patternCapacity() {
-        return this.patternCores * PATTERN_SLOTS_PER_CORE;
+        return this.fixedPatternCapacity >= 0 ? this.fixedPatternCapacity : this.patternCores * PATTERN_SLOTS_PER_CORE;
     }
 
     public int speedTier() {
