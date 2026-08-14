@@ -313,5 +313,11 @@
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search pattern inputs or outputs",
   "gui.extendedae_plus.super_assembler_matrix.pattern": "Super Assembler Matrix",
   "block.extendedae_plus.circuit_cutter_plus": "Super Circuit Cutter",
-  "group.circuit_cutter_plus.name": "Super Circuit Cutter"
+  "group.circuit_cutter_plus.name": "Super Circuit Cutter",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder": "Ultimate Super Assembler Matrix Builder",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.preview": "Hold to preview the structure position",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.creative": "Creative-mode right-click builds the structure",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.creative_only": "This builder can only be used in creative mode",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked": "A required structure block position is obstructed",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built"
 }

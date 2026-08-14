@@ -14,6 +14,7 @@ import appeng.menu.AutoCraftingMenu;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -31,6 +32,7 @@ public class SuperAssemblerMatrixCluster {
 
     private final BlockPos boundsMin;
     private final BlockPos boundsMax;
+    private final boolean ultimate;
     private final List<SuperAssemblerMatrixPart> parts = new ArrayList<>();
     private final List<HybridCoreBlockEntity> patternCores = new ArrayList<>();
     private final Map<AEItemKey, BatchTask> batchQueue = new LinkedHashMap<>();
@@ -47,8 +49,17 @@ public class SuperAssemblerMatrixCluster {
     private long displayedConcurrentUntil;
 
     public SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax) {
+        this(boundsMin, boundsMax, false);
+    }
+
+    private SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax, boolean ultimate) {
         this.boundsMin = boundsMin.immutable();
         this.boundsMax = boundsMax.immutable();
+        this.ultimate = ultimate;
+    }
+
+    public static SuperAssemblerMatrixCluster ultimate(BlockPos boundsMin, BlockPos boundsMax) {
+        return new SuperAssemblerMatrixCluster(boundsMin, boundsMax, true);
     }
 
     public void addPart(SuperAssemblerMatrixPart part) {
@@ -61,6 +72,9 @@ public class SuperAssemblerMatrixCluster {
             this.patternCores.add(hybridCore);
             this.crafterCoreCount++;
             this.speedCoreCount++;
+        }
+        if (part instanceof UploadCoreBlockEntity) {
+            this.uploadCoreCount++;
         }
     }
 
@@ -107,6 +121,9 @@ public class SuperAssemblerMatrixCluster {
     }
 
     public SuperAssemblerMatrixStats getStats() {
+        if (this.ultimate) {
+            return SuperAssemblerMatrixStats.ultimate();
+        }
         return new SuperAssemblerMatrixStats(
                 this.crafterCoreCount,
                 this.patternCores.size(),

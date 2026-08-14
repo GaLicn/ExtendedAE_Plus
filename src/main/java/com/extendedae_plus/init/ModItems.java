@@ -12,6 +12,7 @@ import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
+import com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -78,6 +79,11 @@ public final class ModItems {
     public static final RegistryObject<Item> SUPER_ASSEMBLER_MATRIX_WALL = ITEMS.register(
             "super_assembler_matrix_wall",
             () -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get(), new Item.Properties())
+    );
+
+    public static final RegistryObject<UltimateSuperAssemblerMatrixBuilderItem> ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER = ITEMS.register(
+            "ultimate_super_assembler_matrix_builder",
+            () -> new UltimateSuperAssemblerMatrixBuilderItem(new Item.Properties())
     );
 
     // Crafting Accelerators

@@ -312,5 +312,11 @@
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索样板输入或输出",
   "gui.extendedae_plus.super_assembler_matrix.pattern": "超级装配矩阵",
   "block.extendedae_plus.circuit_cutter_plus": "超级电路切片机",
-  "group.circuit_cutter_plus.name": "超级电路切片机"
+  "group.circuit_cutter_plus.name": "超级电路切片机",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder": "终极超级装配矩阵搭建器",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.preview": "手持时预览结构位置",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.tooltip.creative": "创造模式右键一键搭建",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.creative_only": "仅创造模式可以使用此搭建器",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.blocked": "需要搭建的方块位置存在障碍物",
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建"
 }

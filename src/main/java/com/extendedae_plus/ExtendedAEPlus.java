@@ -6,6 +6,7 @@ import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.client.ModKeybindings;
+import com.extendedae_plus.client.UltimateSuperAssemblerMatrixPreviewRenderer;
 import com.extendedae_plus.client.model.MatrixFrameModel;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
@@ -203,6 +204,9 @@ public class ExtendedAEPlus {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(final FMLClientSetupEvent event) {
+            // 显式绑定预览渲染事件，确保 Forge 客户端加载搭建器预览。
+            MinecraftForge.EVENT_BUS.addListener(UltimateSuperAssemblerMatrixPreviewRenderer::onRenderLevelStage);
+
             // 直接在此处执行客户端一次性注册（UI/屏幕/渲染器绑定）
             // 注册客户端配置界面
 //            ClientRegistrar.registerConfigScreen();

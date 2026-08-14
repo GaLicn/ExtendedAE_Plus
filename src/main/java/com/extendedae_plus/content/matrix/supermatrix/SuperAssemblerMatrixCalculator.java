@@ -26,6 +26,13 @@ public final class SuperAssemblerMatrixCalculator {
         }
 
         var parts = collectSuperParts(level, positions);
+        var ultimateMatch = UltimateSuperAssemblerMatrixStructure.findMatch(level, positions);
+        if (ultimateMatch != null) {
+            form(level, parts, ultimateMatch.origin(), ultimateMatch.max(),
+                    SuperAssemblerMatrixCluster.ultimate(ultimateMatch.origin(), ultimateMatch.max()));
+            return;
+        }
+
         var min = min(positions);
         var max = max(positions);
         var cluster = verifyAndCreate(level, min, max);
@@ -34,6 +41,24 @@ public final class SuperAssemblerMatrixCalculator {
             return;
         }
 
+        form(level, parts, min, max, cluster);
+    }
+
+    /** 供固定结构的一键搭建器在全部方块落位后立即完成成型。 */
+    public static boolean formUltimate(ServerLevel level, BlockPos origin) {
+        if (!UltimateSuperAssemblerMatrixStructure.matchesAt(level, origin)) {
+            return false;
+        }
+
+        var match = new UltimateSuperAssemblerMatrixStructure.Match(origin);
+        var parts = collectSuperParts(level, match.origin(), match.max());
+        form(level, parts, match.origin(), match.max(),
+                SuperAssemblerMatrixCluster.ultimate(match.origin(), match.max()));
+        return true;
+    }
+
+    private static void form(ServerLevel level, Set<SuperAssemblerMatrixPart> parts, BlockPos min, BlockPos max,
+            SuperAssemblerMatrixCluster cluster) {
         destroyExisting(parts);
         for (var pos : BlockPos.betweenClosed(min, max)) {
             var part = asPart(level.getBlockEntity(pos));
@@ -69,6 +94,17 @@ public final class SuperAssemblerMatrixCalculator {
     private static Set<SuperAssemblerMatrixPart> collectSuperParts(ServerLevel level, Set<BlockPos> positions) {
         var parts = new HashSet<SuperAssemblerMatrixPart>();
         for (var pos : positions) {
+            var part = asPart(level.getBlockEntity(pos));
+            if (part != null) {
+                parts.add(part);
+            }
+        }
+        return parts;
+    }
+
+    private static Set<SuperAssemblerMatrixPart> collectSuperParts(ServerLevel level, BlockPos min, BlockPos max) {
+        var parts = new HashSet<SuperAssemblerMatrixPart>();
+        for (var pos : BlockPos.betweenClosed(min, max)) {
             var part = asPart(level.getBlockEntity(pos));
             if (part != null) {
                 parts.add(part);
