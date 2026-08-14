@@ -3,6 +3,7 @@ package com.extendedae_plus.content.matrix.supermatrix;
 import com.google.gson.JsonParser;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -14,9 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /** 终极超级装配矩阵的固定结构定义。 */
 public final class UltimateSuperAssemblerMatrixStructure {
@@ -40,21 +39,25 @@ public final class UltimateSuperAssemblerMatrixStructure {
     private UltimateSuperAssemblerMatrixStructure() {
     }
 
-    public static @Nullable Match findMatch(ServerLevel level, Set<BlockPos> connectedPositions) {
+    public static @Nullable Match findMatch(ServerLevel level, LongOpenHashSet connectedPositions) {
         var definition = getDefinition(level);
         if (definition == null) {
             return null;
         }
 
-        var checkedOrigins = new HashSet<BlockPos>();
-        for (var position : connectedPositions) {
+        var checkedOrigins = new LongOpenHashSet();
+        var position = new BlockPos.MutableBlockPos();
+        for (var iterator = connectedPositions.iterator(); iterator.hasNext();) {
+            long packedPosition = iterator.nextLong();
+            position.set(packedPosition);
             if (!(level.getBlockEntity(position) instanceof UploadCoreBlockEntity)) {
                 continue;
             }
             for (var anchor : UPLOAD_CORE_ANCHORS) {
-                var origin = position.subtract(anchor);
+                long origin = BlockPos.asLong(position.getX() - anchor.getX(), position.getY() - anchor.getY(),
+                        position.getZ() - anchor.getZ());
                 if (checkedOrigins.add(origin) && matches(level, origin, definition)) {
-                    return new Match(origin);
+                    return new Match(BlockPos.of(origin));
                 }
             }
         }
@@ -70,7 +73,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
         // 所有目标方块位确认安全后才开始放置，避免搭建一半时覆盖现有方块。
         for (var expected : definition) {
             if (!expected.air) {
-                level.setBlock(origin.offset(expected.offset), expected.block.defaultBlockState(), 3);
+                level.setBlock(origin.offset(expected.x, expected.y, expected.z), expected.block.defaultBlockState(), 3);
             }
         }
         // 一键搭建已知完整结构的原点，直接按固定定义成型，避免稀疏结构被连通扫描遗漏。
@@ -84,13 +87,18 @@ public final class UltimateSuperAssemblerMatrixStructure {
 
     public static boolean matchesAt(ServerLevel level, BlockPos origin) {
         var definition = getDefinition(level);
-        return definition != null && matches(level, origin, definition);
+        return definition != null && matches(level, origin.asLong(), definition);
     }
 
-    private static boolean matches(ServerLevel level, BlockPos origin, List<ExpectedBlock> definition) {
+    private static boolean matches(ServerLevel level, long origin, List<ExpectedBlock> definition) {
+        var position = new BlockPos.MutableBlockPos();
+        int originX = BlockPos.getX(origin);
+        int originY = BlockPos.getY(origin);
+        int originZ = BlockPos.getZ(origin);
         for (var expected : definition) {
             // 空气位不是结构部件，允许玩家在这些坐标保留其他方块。
-            if (!expected.air && !level.getBlockState(origin.offset(expected.offset)).is(expected.block)) {
+            if (!expected.air && !level.getBlockState(position.set(
+                    originX + expected.x, originY + expected.y, originZ + expected.z)).is(expected.block)) {
                 return false;
             }
         }
@@ -100,7 +108,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
     private static boolean isAreaClear(ServerLevel level, BlockPos origin, List<ExpectedBlock> definition) {
         for (var expected : definition) {
             // 结构中的空气仅代表无需搭建的位置，不限制玩家在其中放置其他方块。
-            if (!expected.air && !level.getBlockState(origin.offset(expected.offset)).isAir()) {
+            if (!expected.air && !level.getBlockState(origin.offset(expected.x, expected.y, expected.z)).isAir()) {
                 return false;
             }
         }
@@ -166,7 +174,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
                     ExtendedAEPlus.LOGGER.error("终极超级装配矩阵结构包含未知方块: {}", blockId);
                     return null;
                 }
-                definition.add(new ExpectedBlock(new BlockPos(x, y, z), block == Blocks.AIR, block));
+                definition.add(new ExpectedBlock(x, y, z, block == Blocks.AIR, block));
             }
             if (definition.size() != occupied.length) {
                 ExtendedAEPlus.LOGGER.error("终极超级装配矩阵结构没有定义全部坐标");
@@ -175,7 +183,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
             var loaded = List.copyOf(definition);
             previewBlocks = loaded.stream()
                     .filter(expected -> !expected.air)
-                    .map(expected -> new StructureBlock(expected.offset, expected.block))
+                    .map(expected -> new StructureBlock(new BlockPos(expected.x, expected.y, expected.z), expected.block))
                     .toList();
             return loaded;
         } catch (IOException | RuntimeException exception) {
@@ -193,6 +201,6 @@ public final class UltimateSuperAssemblerMatrixStructure {
     public record StructureBlock(BlockPos offset, Block block) {
     }
 
-    private record ExpectedBlock(BlockPos offset, boolean air, Block block) {
+    private record ExpectedBlock(int x, int y, int z, boolean air, Block block) {
     }
 }

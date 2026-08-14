@@ -3,12 +3,16 @@ package com.extendedae_plus.content.matrix.supermatrix;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Set;
 
 public final class SuperAssemblerMatrixCalculator {
@@ -16,12 +20,33 @@ public final class SuperAssemblerMatrixCalculator {
     private static final int MAX_PARTS_TO_SCAN = 4096;
     private static final int MIN_DELTA = 2;
     private static final int MAX_AXIS_LENGTH = 9;
+    private static final Map<ServerLevel, LongOpenHashSet> PENDING_RECALCULATIONS = new IdentityHashMap<>();
 
     private SuperAssemblerMatrixCalculator() {
     }
 
-    public static void recalculate(ServerLevel level, BlockPos start) {
-        var positions = collectConnectedPositions(level, start);
+    /** 将同一刻内的方块事件合并，避免巨构在一次搭建中重复完整校验。 */
+    public static void scheduleRecalculate(ServerLevel level, BlockPos start) {
+        PENDING_RECALCULATIONS.computeIfAbsent(level, ignored -> new LongOpenHashSet()).add(start.asLong());
+    }
+
+    /** 在世界刻末尾只检查每个连通结构一次。 */
+    public static void processScheduledRecalculations(ServerLevel level) {
+        var pending = PENDING_RECALCULATIONS.remove(level);
+        if (pending == null || pending.isEmpty()) {
+            return;
+        }
+
+        while (!pending.isEmpty()) {
+            long start = pending.iterator().nextLong();
+            pending.remove(start);
+            var positions = collectConnectedPositions(level, start);
+            pending.removeAll(positions);
+            recalculate(level, positions);
+        }
+    }
+
+    private static void recalculate(ServerLevel level, LongOpenHashSet positions) {
         if (positions.isEmpty()) {
             return;
         }
@@ -29,6 +54,9 @@ public final class SuperAssemblerMatrixCalculator {
         var parts = collectSuperParts(level, positions);
         var ultimateMatch = UltimateSuperAssemblerMatrixStructure.findMatch(level, positions);
         if (ultimateMatch != null) {
+            if (isAlreadyFormed(parts)) {
+                return;
+            }
             form(level, parts, ultimateMatch.origin(), ultimateMatch.max(),
                     SuperAssemblerMatrixCluster.ultimate(ultimateMatch.origin(), ultimateMatch.max()));
             return;
@@ -39,6 +67,9 @@ public final class SuperAssemblerMatrixCalculator {
         var cluster = verifyAndCreate(level, min, max);
         if (cluster == null) {
             clear(parts);
+            return;
+        }
+        if (isAlreadyFormed(parts)) {
             return;
         }
 
@@ -70,32 +101,37 @@ public final class SuperAssemblerMatrixCalculator {
         cluster.done();
     }
 
-    private static Set<BlockPos> collectConnectedPositions(ServerLevel level, BlockPos start) {
-        var result = new HashSet<BlockPos>();
-        var visited = new HashSet<BlockPos>();
-        var queue = new ArrayDeque<BlockPos>();
-        queue.add(start.immutable());
+    private static LongOpenHashSet collectConnectedPositions(ServerLevel level, long start) {
+        var result = new LongOpenHashSet();
+        var visited = new LongOpenHashSet();
+        var queue = new LongArrayFIFOQueue();
+        var position = new BlockPos.MutableBlockPos();
+        queue.enqueue(start);
 
         while (!queue.isEmpty() && result.size() < MAX_PARTS_TO_SCAN) {
-            var pos = queue.removeFirst();
-            if (!visited.add(pos)) {
+            long packedPosition = queue.dequeueLong();
+            if (!visited.add(packedPosition)) {
                 continue;
             }
-            if (!isStructureComponent(level.getBlockEntity(pos))) {
+            position.set(packedPosition);
+            if (!isStructureComponent(level.getBlockEntity(position))) {
                 continue;
             }
-            result.add(pos);
-            for (var direction : net.minecraft.core.Direction.values()) {
-                queue.add(pos.relative(direction));
+            result.add(packedPosition);
+            for (var direction : Direction.values()) {
+                queue.enqueue(BlockPos.asLong(position.getX() + direction.getStepX(),
+                        position.getY() + direction.getStepY(), position.getZ() + direction.getStepZ()));
             }
         }
         return result;
     }
 
-    private static Set<SuperAssemblerMatrixPart> collectSuperParts(ServerLevel level, Set<BlockPos> positions) {
+    private static Set<SuperAssemblerMatrixPart> collectSuperParts(ServerLevel level, LongOpenHashSet positions) {
         var parts = new HashSet<SuperAssemblerMatrixPart>();
-        for (var pos : positions) {
-            var part = asPart(level.getBlockEntity(pos));
+        var position = new BlockPos.MutableBlockPos();
+        for (var iterator = positions.iterator(); iterator.hasNext();) {
+            position.set(iterator.nextLong());
+            var part = asPart(level.getBlockEntity(position));
             if (part != null) {
                 parts.add(part);
             }
@@ -174,28 +210,46 @@ public final class SuperAssemblerMatrixCalculator {
         }
     }
 
-    private static BlockPos min(Set<BlockPos> positions) {
+    private static BlockPos min(LongOpenHashSet positions) {
         int x = Integer.MAX_VALUE;
         int y = Integer.MAX_VALUE;
         int z = Integer.MAX_VALUE;
-        for (var pos : positions) {
-            x = Math.min(x, pos.getX());
-            y = Math.min(y, pos.getY());
-            z = Math.min(z, pos.getZ());
+        for (var iterator = positions.iterator(); iterator.hasNext();) {
+            long pos = iterator.nextLong();
+            x = Math.min(x, BlockPos.getX(pos));
+            y = Math.min(y, BlockPos.getY(pos));
+            z = Math.min(z, BlockPos.getZ(pos));
         }
         return new BlockPos(x, y, z);
     }
 
-    private static BlockPos max(Set<BlockPos> positions) {
+    private static BlockPos max(LongOpenHashSet positions) {
         int x = Integer.MIN_VALUE;
         int y = Integer.MIN_VALUE;
         int z = Integer.MIN_VALUE;
-        for (var pos : positions) {
-            x = Math.max(x, pos.getX());
-            y = Math.max(y, pos.getY());
-            z = Math.max(z, pos.getZ());
+        for (var iterator = positions.iterator(); iterator.hasNext();) {
+            long pos = iterator.nextLong();
+            x = Math.max(x, BlockPos.getX(pos));
+            y = Math.max(y, BlockPos.getY(pos));
+            z = Math.max(z, BlockPos.getZ(pos));
         }
         return new BlockPos(x, y, z);
+    }
+
+    private static boolean isAlreadyFormed(Set<SuperAssemblerMatrixPart> parts) {
+        SuperAssemblerMatrixCluster cluster = null;
+        for (var part : parts) {
+            var partCluster = part.eap$getSuperMatrixCluster();
+            if (partCluster == null || partCluster.isDestroyed()) {
+                return false;
+            }
+            if (cluster == null) {
+                cluster = partCluster;
+            } else if (cluster != partCluster) {
+                return false;
+            }
+        }
+        return cluster != null;
     }
 
     private static boolean isInternal(BlockPos pos, BlockPos min, BlockPos max) {

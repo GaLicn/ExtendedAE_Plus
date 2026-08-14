@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import com.extendedae_plus.init.*;
@@ -38,6 +39,7 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -73,6 +75,7 @@ public class ExtendedAEPlus {
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelTick);
         // 注册配置：接入自定义的 ModConfigs
         modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
@@ -100,6 +103,12 @@ public class ExtendedAEPlus {
         if (storageManagerServer == event.getServer()) {
             storageManagerServer = null;
             storageManager = null;
+        }
+    }
+
+    private static void onLevelTick(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            SuperAssemblerMatrixCalculator.processScheduledRecalculations(serverLevel);
         }
     }
 
