@@ -12,6 +12,8 @@ import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.EncodedPatternItem;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
@@ -29,6 +31,7 @@ public class SuperAssemblerMatrixCluster {
 
     private final BlockPos boundsMin;
     private final BlockPos boundsMax;
+    private final boolean ultimate;
     private final List<SuperAssemblerMatrixPart> parts = new ArrayList<>();
     private final List<HybridCoreBlockEntity> patternCores = new ArrayList<>();
     private final Map<AEItemKey, BatchTask> batchQueue = new LinkedHashMap<>();
@@ -45,8 +48,17 @@ public class SuperAssemblerMatrixCluster {
     private long displayedConcurrentUntil;
 
     public SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax) {
+        this(boundsMin, boundsMax, false);
+    }
+
+    private SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax, boolean ultimate) {
         this.boundsMin = boundsMin.immutable();
         this.boundsMax = boundsMax.immutable();
+        this.ultimate = ultimate;
+    }
+
+    public static SuperAssemblerMatrixCluster ultimate(BlockPos boundsMin, BlockPos boundsMax) {
+        return new SuperAssemblerMatrixCluster(boundsMin, boundsMax, true);
     }
 
     public void addPart(SuperAssemblerMatrixPart part) {
@@ -59,6 +71,9 @@ public class SuperAssemblerMatrixCluster {
             this.patternCores.add(hybridCore);
             this.crafterCoreCount++;
             this.speedCoreCount++;
+        }
+        if (part instanceof UploadCoreBlockEntity) {
+            this.uploadCoreCount++;
         }
     }
 
@@ -105,6 +120,9 @@ public class SuperAssemblerMatrixCluster {
     }
 
     public SuperAssemblerMatrixStats getStats() {
+        if (this.ultimate) {
+            return SuperAssemblerMatrixStats.ultimate();
+        }
         return new SuperAssemblerMatrixStats(
                 this.crafterCoreCount,
                 this.patternCores.size(),
@@ -135,15 +153,28 @@ public class SuperAssemblerMatrixCluster {
     }
 
     public InternalInventory[] getPatternInventories() {
-        var inventories = new InternalInventory[this.patternCores.size()];
-        for (int i = 0; i < this.patternCores.size(); i++) {
-            inventories[i] = this.patternCores.get(i).getPatternInventory();
-        }
-        return inventories;
+        return this.getPatternInventorySources().stream()
+                .map(PatternInventorySource::inventory)
+                .toArray(InternalInventory[]::new);
     }
 
-    public List<HybridCoreBlockEntity> getPatternCores() {
-        return java.util.Collections.unmodifiableList(this.patternCores);
+    public List<PatternInventorySource> getPatternInventorySources() {
+        var sources = new ArrayList<PatternInventorySource>();
+        int remaining = this.ultimate ? UltimateSuperAssemblerMatrixStructure.PATTERN_CAPACITY : Integer.MAX_VALUE;
+        for (var patternCore : this.patternCores) {
+            var inventory = patternCore.getPatternInventory();
+            if (remaining >= inventory.size()) {
+                sources.add(new PatternInventorySource(patternCore, inventory));
+                remaining -= inventory.size();
+                continue;
+            }
+            // 终极结构的最后一个核心只开放剩余的 40 个样板槽。
+            for (int slot = 0; slot < remaining; slot++) {
+                sources.add(new PatternInventorySource(patternCore, inventory.getSlotInv(slot)));
+            }
+            break;
+        }
+        return sources;
     }
 
     public long getConcurrentExecutions() {
@@ -222,8 +253,8 @@ public class SuperAssemblerMatrixCluster {
         if (level == null) {
             return List.of();
         }
-        for (var patternCore : this.patternCores) {
-            for (var stack : patternCore.getPatternInventory()) {
+        for (var source : this.getPatternInventorySources()) {
+            for (var stack : source.inventory()) {
                 if (stack.getItem() instanceof EncodedPatternItem<?>) {
                     var details = PatternDetailsHelper.decodePattern(stack, level);
                     if (details instanceof IMolecularAssemblerSupportedPattern) {
@@ -485,5 +516,8 @@ public class SuperAssemblerMatrixCluster {
             this.grid = grid;
             this.amount = amount;
         }
+    }
+
+    public record PatternInventorySource(PatternCorePlusBlockEntity host, InternalInventory inventory) {
     }
 }
