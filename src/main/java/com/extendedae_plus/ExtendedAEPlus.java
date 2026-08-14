@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
@@ -248,6 +249,10 @@ public class ExtendedAEPlus {
     public static void worldTick(TickEvent.LevelTickEvent event) {
         if (event.phase == TickEvent.Phase.START && event.side.isServer()) {
             STORAGE_INSTANCE = InfinityStorageManager.getInstance(event.level.getServer());
+        }
+        if (event.phase == TickEvent.Phase.END && event.side.isServer()
+                && event.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            SuperAssemblerMatrixCalculator.processScheduledRecalculations(serverLevel);
         }
     }
 
