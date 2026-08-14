@@ -138,7 +138,6 @@ dependencies {
     implementation "de.mari_023:ae2wtlib_api:19.2.0"
     implementation "curse.maven:curios-309927:6529130"
 
-    compileOnly "curse.maven:ex-pattern-provider-892005:6863556"
     compileOnly "curse.maven:applied-flux-965012:5614830"
     compileOnly "dev.emi:emi-neoforge:1.1.10+1.21"
     compileOnly "curse.maven:mega-cells-622112:6005043"
@@ -163,7 +162,9 @@ dependencies {
     runtimeOnly "curse.maven:mekanism-268560:6895130"
     runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
 
-    runtimeOnly "curse.maven:ex-pattern-provider-892005:6863556"
+
+    //eae
+    implementation "curse.maven:ex-pattern-provider-892005:8511901"
 
     //aea
 //    compileOnly "curse.maven:advancedae-1084104:6932981"
