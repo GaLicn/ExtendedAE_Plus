@@ -40,6 +40,9 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private final InfinityBigIntegerCellItem cell;
     // 磁盘本身
     private final ItemStack self;
+    // UUID 在库存对象生命周期内不变，避免高频存取时复制 CustomData 的 NBT
+    @Nullable
+    private UUID cellUuid;
     @Nullable
     private final InfinityStorageManager storageManager;
     // AE2 提供的保存提供者，用于在容器中批量保存时触发回调
@@ -59,6 +62,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
                                             @Nullable InfinityStorageManager storageManager) {
         this.cell = cell;
         this.self = stack;
+        this.cellUuid = this.readUUIDFromStack();
         this.container = saveProvider;
         this.storageManager = storageManager;
 
@@ -194,6 +198,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         // backward compat
         tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
         this.self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        this.cellUuid = null;
         this.isPersisted = true;
 
         if (this.container != null) {
@@ -220,6 +225,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         UUID newUUID = UUID.randomUUID();
         tag.putUUID(InfinityConstants.INFINITY_CELL_UUID, newUUID);
         this.self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        this.cellUuid = newUUID;
         return newUUID;
     }
 
@@ -234,16 +240,24 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     }
 
     private boolean hasUUID() {
+        return this.cellUuid != null;
+    }
+
+    @Nullable
+    private UUID readUUIDFromStack() {
         CustomData data = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        return !data.isEmpty() && data.copyTag().contains(InfinityConstants.INFINITY_CELL_UUID);
+        if (data.isEmpty()) {
+            return null;
+        }
+
+        CompoundTag tag = data.copyTag();
+        return tag.contains(InfinityConstants.INFINITY_CELL_UUID)
+                ? tag.getUUID(InfinityConstants.INFINITY_CELL_UUID)
+                : null;
     }
 
     public UUID getUUID() {
-        CustomData data = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        if (!data.isEmpty() && data.copyTag().contains(InfinityConstants.INFINITY_CELL_UUID)) {
-            return data.copyTag().getUUID(InfinityConstants.INFINITY_CELL_UUID);
-        }
-        return null;
+        return this.cellUuid;
     }
 
     private Object2ObjectMap<AEKey, BigInteger> getCellStoredMap() {
