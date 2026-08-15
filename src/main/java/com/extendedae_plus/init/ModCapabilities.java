@@ -2,6 +2,8 @@ package com.extendedae_plus.init;
 
 import appeng.api.AECapabilities;
 import appeng.api.networking.IInWorldGridNodeHost;
+import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
@@ -107,6 +109,18 @@ public final class ModCapabilities {
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                 (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
+        );
+
+        // 将 AE2 内部电池暴露为 FE 能力，使超级机器可从 FE 网络充电。
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                (be, side) -> ((SuperCrystalAssemblerBlockEntity) be).getEnergyStorage(side)
+        );
+        event.registerBlockEntity(
+                Capabilities.EnergyStorage.BLOCK,
+                ModBlockEntities.CIRCUIT_CUTTER_PLUS_BE.get(),
+                (be, side) -> ((SuperCircuitCutterBlockEntity) be).getEnergyStorage(side)
         );
         // 如果还有其他实现了 IInWorldGridNodeHost 的方块实体，也在这里一并注册
         // event.registerBlockEntity(AECapabilities.IN_WORLD_GRID_NODE_HOST, ModBlockEntities.NETWORK_PATTERN_CONTROLLER_BE.get(), (be, ctx) -> (IInWorldGridNodeHost) be);
