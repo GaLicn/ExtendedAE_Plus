@@ -3,6 +3,7 @@ package com.extendedae_plus.content.matrix.supermatrix;
 import com.google.gson.JsonParser;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import appeng.api.stacks.AEItemKey;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /** 终极超级装配矩阵的固定结构定义。 */
@@ -35,6 +37,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
 
     private static @Nullable List<ExpectedBlock> expectedBlocks;
     private static @Nullable List<StructureBlock> previewBlocks;
+    private static @Nullable List<RequiredItem> requiredItems;
 
     private UltimateSuperAssemblerMatrixStructure() {
     }
@@ -66,7 +69,7 @@ public final class UltimateSuperAssemblerMatrixStructure {
 
     public static boolean placeIfClear(ServerLevel level, BlockPos origin) {
         var definition = getDefinition(level.getServer().getResourceManager());
-        if (definition == null || !isAreaClear(level, origin, definition)) {
+        if (definition == null || findFirstObstruction(level, origin, definition) != null) {
             return false;
         }
 
@@ -80,9 +83,18 @@ public final class UltimateSuperAssemblerMatrixStructure {
         return SuperAssemblerMatrixCalculator.formUltimate(level, origin);
     }
 
+    public static @Nullable BlockPos findFirstObstruction(ServerLevel level, BlockPos origin) {
+        var definition = getDefinition(level.getServer().getResourceManager());
+        return definition == null ? null : findFirstObstruction(level, origin, definition);
+    }
+
     public static List<StructureBlock> getPreviewBlocks(ResourceManager resourceManager) {
         var definition = getDefinition(resourceManager);
         return definition == null ? List.of() : previewBlocks;
+    }
+
+    public static List<RequiredItem> getRequiredItems(ServerLevel level) {
+        return getDefinition(level) == null ? List.of() : requiredItems;
     }
 
     public static boolean matchesAt(ServerLevel level, BlockPos origin) {
@@ -105,14 +117,15 @@ public final class UltimateSuperAssemblerMatrixStructure {
         return true;
     }
 
-    private static boolean isAreaClear(ServerLevel level, BlockPos origin, List<ExpectedBlock> definition) {
+    private static @Nullable BlockPos findFirstObstruction(ServerLevel level, BlockPos origin,
+            List<ExpectedBlock> definition) {
         for (var expected : definition) {
             // 结构中的空气仅代表无需搭建的位置，不限制玩家在其中放置其他方块。
             if (!expected.air && !level.getBlockState(origin.offset(expected.x, expected.y, expected.z)).isAir()) {
-                return false;
+                return origin.offset(expected.x, expected.y, expected.z);
             }
         }
-        return true;
+        return null;
     }
 
     private static @Nullable List<ExpectedBlock> getDefinition(ServerLevel level) {
@@ -185,6 +198,20 @@ public final class UltimateSuperAssemblerMatrixStructure {
                     .filter(expected -> !expected.air)
                     .map(expected -> new StructureBlock(new BlockPos(expected.x, expected.y, expected.z), expected.block))
                     .toList();
+            var materials = new LinkedHashMap<AEItemKey, Long>();
+            for (var expected : loaded) {
+                if (!expected.air) {
+                    var itemKey = AEItemKey.of(expected.block);
+                    if (itemKey == null) {
+                        ExtendedAEPlus.LOGGER.error("终极超级装配矩阵结构方块没有对应物品: {}", expected.block);
+                        return null;
+                    }
+                    materials.merge(itemKey, 1L, Long::sum);
+                }
+            }
+            requiredItems = materials.entrySet().stream()
+                    .map(entry -> new RequiredItem(entry.getKey(), entry.getValue()))
+                    .toList();
             return loaded;
         } catch (IOException | RuntimeException exception) {
             ExtendedAEPlus.LOGGER.error("读取终极超级装配矩阵结构失败", exception);
@@ -199,6 +226,9 @@ public final class UltimateSuperAssemblerMatrixStructure {
     }
 
     public record StructureBlock(BlockPos offset, Block block) {
+    }
+
+    public record RequiredItem(AEItemKey key, long amount) {
     }
 
     private record ExpectedBlock(int x, int y, int z, boolean air, Block block) {

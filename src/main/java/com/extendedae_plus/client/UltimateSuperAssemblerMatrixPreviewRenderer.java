@@ -7,6 +7,7 @@ import com.extendedae_plus.content.matrix.supermatrix.UltimateSuperAssemblerMatr
 import com.extendedae_plus.init.ModBlocks;
 import com.extendedae_plus.init.ModItems;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -32,13 +33,18 @@ public final class UltimateSuperAssemblerMatrixPreviewRenderer {
         }
         var minecraft = Minecraft.getInstance();
         var player = minecraft.player;
-        if (player == null || minecraft.level == null || !player.getAbilities().instabuild
+        if (player == null || minecraft.level == null
                 || !(minecraft.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)
                 || !isHoldingBuilder(player)) {
             return;
         }
 
-        var origin = hit.getBlockPos().relative(hit.getDirection());
+        var builderStack = player.getMainHandItem().is(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                ? player.getMainHandItem() : player.getOffhandItem();
+        var selectedOrigin = com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem
+                .getSelectedOrigin(builderStack);
+        var origin = selectedOrigin != null && selectedOrigin.dimension().equals(minecraft.level.dimension())
+                ? selectedOrigin.pos() : hit.getBlockPos().relative(hit.getDirection());
         PoseStack poseStack = event.getPoseStack();
         var camera = event.getCamera().getPosition();
         MultiBufferSource.BufferSource bufferSource = minecraft.renderBuffers().bufferSource();
@@ -46,14 +52,25 @@ public final class UltimateSuperAssemblerMatrixPreviewRenderer {
 
         poseStack.pushPose();
         poseStack.translate(-camera.x, -camera.y, -camera.z);
-        for (var block : UltimateSuperAssemblerMatrixStructure.getPreviewBlocks(minecraft.getResourceManager())) {
-            var position = origin.offset(block.offset());
-            var box = new AABB(position).inflate(OUTLINE_INFLATE);
-            if (!event.getFrustum().isVisible(box)) {
-                continue;
+        var bounds = new AABB(origin.getX(), origin.getY(), origin.getZ(), origin.getX() + 14,
+                origin.getY() + 16, origin.getZ() + 14).inflate(OUTLINE_INFLATE);
+        var boundsColor = selectedOrigin == null ? new float[] {0.30F, 0.80F, 1.0F} : new float[] {0.35F, 1.0F, 0.45F};
+        LevelRenderer.renderLineBox(poseStack, consumer, bounds, boundsColor[0], boundsColor[1], boundsColor[2], 0.90F);
+        LevelRenderer.renderLineBox(poseStack, consumer, new AABB(origin).inflate(OUTLINE_INFLATE),
+                1.0F, 0.95F, 0.30F, 1.0F);
+
+        // 仅在需要核对细节时绘制部件线框，常规预览保持清晰易读。
+        if (Screen.hasControlDown()) {
+            for (var block : UltimateSuperAssemblerMatrixStructure.getPreviewBlocks(minecraft.getResourceManager())) {
+                // 细节线框单独下移，和外框预览保持清晰的层次关系。
+                var position = origin.offset(block.offset()).below();
+                var box = new AABB(position).inflate(OUTLINE_INFLATE);
+                if (!event.getFrustum().isVisible(box)) {
+                    continue;
+                }
+                var color = colorFor(block.block());
+                LevelRenderer.renderLineBox(poseStack, consumer, box, color[0], color[1], color[2], 0.70F);
             }
-            var color = colorFor(block.block());
-            LevelRenderer.renderLineBox(poseStack, consumer, box, color[0], color[1], color[2], 0.85F);
         }
         poseStack.popPose();
         bufferSource.endBatch(RenderType.lines());
