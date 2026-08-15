@@ -72,6 +72,15 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern imple
     }
 
     @Override
+    public void onChangeInventory(InternalInventory inv, int slot) {
+        super.onChangeInventory(inv, slot);
+        // 样板库存变化后立即刷新 AE 供应器缓存，确保新编码样板可被网络识别。
+        if (this.superMatrixCluster != null) {
+            this.superMatrixCluster.refreshCraftingProvider();
+        }
+    }
+
+    @Override
     public void onChunkUnloaded() {
         this.eap$destroySuperMatrixClusterQuietly();
         super.onChunkUnloaded();
