@@ -39,6 +39,8 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private final InfinityBigIntegerCellItem cell;
     // 磁盘本身
     private final ItemStack self;
+    // UUID 在库存对象生命周期内不变，避免高频存取时重复读取 NBT
+    private UUID cellUuid;
     // AE2 提供的保存提供者，用于在容器中批量保存时触发回调
     private final ISaveProvider container;
     private final IPartitionList partitionList;
@@ -56,6 +58,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     public InfinityBigIntegerCellInventory(InfinityBigIntegerCellItem cell, ItemStack stack, ISaveProvider saveProvider) {
         this.cell = cell;
         this.self = stack;
+        this.cellUuid = this.readUUIDFromStack();
         this.container = saveProvider;
 
         var builder = IPartitionList.builder();
@@ -150,14 +153,18 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     }
 
     public boolean hasUUID() {
-        return self.hasTag() && self.getOrCreateTag().contains(InfinityConstants.INFINITY_CELL_UUID);
+        return this.cellUuid != null;
     }
 
     public UUID getUUID() {
-        if (this.hasUUID()) {
-            return self.getOrCreateTag().getUUID(InfinityConstants.INFINITY_CELL_UUID);
-        }
-        return null;
+        return this.cellUuid;
+    }
+
+    private UUID readUUIDFromStack() {
+        CompoundTag tag = self.getTag();
+        return tag != null && tag.contains(InfinityConstants.INFINITY_CELL_UUID)
+                ? tag.getUUID(InfinityConstants.INFINITY_CELL_UUID)
+                : null;
     }
 
     private void refreshCachedStateFromStorage() {
@@ -239,6 +246,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         CompoundTag tag = self.getOrCreateTag();
         UUID newUUID = UUID.randomUUID();
         tag.putUUID(InfinityConstants.INFINITY_CELL_UUID, newUUID);
+        this.cellUuid = newUUID;
         return newUUID;
     }
 
@@ -258,6 +266,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         tag.remove(InfinityConstants.INFINITY_ITEM_TYPES);
         // backward compat
         tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
+        this.cellUuid = null;
         this.isPersisted = true;
 
         if (this.container != null) {
