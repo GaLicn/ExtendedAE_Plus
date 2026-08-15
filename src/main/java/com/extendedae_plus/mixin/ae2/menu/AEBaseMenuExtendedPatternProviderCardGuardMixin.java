@@ -2,7 +2,9 @@ package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -47,7 +49,9 @@ public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
         int currentCards = this.eap$countInstalledExpansionCards();
         int requiredCards = this.eap$getRequiredExpansionCards();
         if (currentCards - 1 < requiredCards) {
-            int remainingUnlockedSlots = Math.max(0, currentCards * EAP$SLOTS_PER_PAGE);
+            int remainingUnlockedSlots = Math.max(
+                    this.eap$getLegacyUnlockedPatternSlots(),
+                    currentCards * EAP$SLOTS_PER_PAGE);
             if (this.eap$tryCompactPatternsForCardRemoval(remainingUnlockedSlots)) {
                 requiredCards = this.eap$getRequiredExpansionCards();
             }
@@ -97,7 +101,23 @@ public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
         }
 
         int requiredPages = highestUsedSlot / EAP$SLOTS_PER_PAGE + 1;
-        return Math.max(0, requiredPages - 1);
+        return Math.max(0, requiredPages - this.eap$getLegacyUnlockedPages());
+    }
+
+    @Unique
+    private int eap$getLegacyUnlockedPages() {
+        return Math.max(1, (this.eap$getLegacyUnlockedPatternSlots() + EAP$SLOTS_PER_PAGE - 1)
+                / EAP$SLOTS_PER_PAGE);
+    }
+
+    @Unique
+    private int eap$getLegacyUnlockedPatternSlots() {
+        AEBaseMenu menu = (AEBaseMenu) (Object) this;
+        if (menu instanceof PatternProviderMenuAccessor accessor
+                && accessor.eap$logic() instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge.eap$getLegacyUnlockedPatternSlots();
+        }
+        return 0;
     }
 
     @Unique

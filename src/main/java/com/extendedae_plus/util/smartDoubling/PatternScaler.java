@@ -53,6 +53,7 @@ public final class PatternScaler {
         if (advAvailable && advIfaceClass != null && advCtor != null) {
             try {
                 if (advIfaceClass.isInstance(base)) {
+                    // 通过反射创建可选扩展样板，避免未安装 Advanced AE 时触发类链接错误。
                     return (ScaledProcessingPattern) advCtor.newInstance(base, multiplier);
                 }
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException ignored) {

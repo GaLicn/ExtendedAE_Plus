@@ -332,5 +332,6 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_missing": "AE network is missing these materials:",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.material_missing_entry": "- %s x %s",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_changed": "AE network inventory changed; build was not performed",
-  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built"
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built",
+  "extendedae_plus.message.pattern_provider.legacy_migration_notice": "ATTENTION!! [EAEP] The Extended Pattern Provider slot multiplier configuration has been removed since version 1.6.0. Use expansion cards to add pages instead: legacy patterns on pages 1-4 remain available; patterns from page 5 onward are safely stored and will drop when the provider is broken."
 }

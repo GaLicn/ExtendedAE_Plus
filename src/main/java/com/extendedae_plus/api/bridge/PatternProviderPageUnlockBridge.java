@@ -9,4 +9,7 @@ public interface PatternProviderPageUnlockBridge {
     int eap$getUnlockedPatternPages();
 
     int eap$getUnlockedPatternSlots();
+
+    /** 返回旧倍率页迁移后保留的槽位数；新放置的供应器始终为 0。 */
+    int eap$getLegacyUnlockedPatternSlots();
 }
