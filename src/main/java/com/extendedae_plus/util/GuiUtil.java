@@ -6,11 +6,10 @@ import appeng.client.gui.me.patternaccess.PatternContainerRecord;
 import appeng.client.gui.me.patternaccess.PatternSlot;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
+import appeng.core.AEConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -67,28 +66,31 @@ public class GuiUtil {
     }
 
     /**
-     * 在槽位右下角绘制数量文本
+     * 在槽位右下角绘制数量文本，字号与定位对齐 AE2 的 StackSizeRenderer，
+     * 通过 {@link AEConfig#isUseLargeFonts()} 读取 useTerminalUseLargeFont 配置。
+     * 额外将 Z 提升至 300，避免扩展样板供应器中的物品图标遮住数量文本。
+     *
      * @param guiGraphics GUI图形上下文
      * @param font 字体
      * @param text 要绘制的文本
      * @param slotX 槽位X坐标
      * @param slotY 槽位Y坐标
-     * @param scale 缩放比例
      */
-    public static void drawAmountText(GuiGraphics guiGraphics, Font font, String text, int slotX, int slotY, float scale) {
+    public static void drawAmountText(GuiGraphics guiGraphics, Font font, String text, int slotX, int slotY) {
         if (text.isEmpty()) {
             return;
         }
 
-        // 计算缩放后的字体宽度，确保右对齐
-        int scaledWidth = (int)(font.width(text) * scale);
-        int textX = slotX + 16 - scaledWidth;
-        int textY = slotY + 11; // 右下角显示
+        // 与 AE2 的 StackSizeRenderer 保持相同的字号和定位规则（1.21 规则：大 0.85 / 小 0.666）
+        boolean largeFont = AEConfig.instance().isUseLargeFonts();
+        float scale = largeFont ? 0.85f : 0.666f;
+        int offset = largeFont ? 0 : -1;
 
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 300); // 提升 Z，确保在最上层
-        guiGraphics.pose().scale(scale, scale, 1.0f); // 缩小字体
-        guiGraphics.drawString(font, text, (int)(textX / scale), (int)(textY / scale), 0xFFFFFFFF, true);
+        // 先以槽位右下角为原点，再缩放文字，避免绝对坐标除以缩放值时的累计取整偏差
+        guiGraphics.pose().translate(slotX + offset + 16, slotY + offset + 16, 300);
+        guiGraphics.pose().scale(scale, scale, 1.0f);
+        guiGraphics.drawString(font, text, -font.width(text), -5, 0xFFFFFFFF, true);
         guiGraphics.pose().popPose();
     }
 
