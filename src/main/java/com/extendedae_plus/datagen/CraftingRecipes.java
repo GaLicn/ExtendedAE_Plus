@@ -154,6 +154,54 @@ public class CraftingRecipes extends RecipeProvider {
                 .define('C', Items.REDSTONE)
                 .define('D', AEItems.CALCULATION_PROCESSOR)
                 .save(consumer);
+
+        //超级装配矩阵框架
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A',Items.GOLD_INGOT)
+                .define('B',Items.IRON_INGOT)
+                .define('C',EPPItemAndBlock.ASSEMBLER_MATRIX_FRAME)
+                .unlockedBy("has_super_assembler_matrix_frame",has(ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get()))
+                .save(consumer);
+
+        //超级装配矩阵墙壁
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A',Items.GOLD_INGOT)
+                .define('B',Items.IRON_INGOT)
+                .define('C',EPPItemAndBlock.ASSEMBLER_MATRIX_WALL)
+                .unlockedBy("has_super_assembler_matrix_frame",has(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get()))
+                .save(consumer);
+
+        //超级装配矩阵混合核心
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+                .requires(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+                .requires(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+                .unlockedBy("has_assembler_matrix_hybrid_plus",has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get()))
+                .save(consumer);
+
+        //超级扩展样板供应器扩展卡
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get())
+                .requires(EPPItemAndBlock.EX_PATTERN_PROVIDER)
+                .requires(AEItems.BASIC_CARD)
+                .unlockedBy("has_extended_pattern_provider_expansion_card_plus",has(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get()))
+                .save(consumer);
+
+        //终极超级装配矩阵搭建器
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                .pattern(" A ")
+                .pattern("ABA")
+                .pattern(" A ")
+                .define('A',Items.STICK)
+                .define('B',Items.GOLD_INGOT)
+                .unlockedBy("has_ultimate_super_assembler_matrix_builder",has(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get()))
+                .save(consumer);
+
+
     }
 
     private void addCraftingAccelerators(Consumer<FinishedRecipe> consumer) {
