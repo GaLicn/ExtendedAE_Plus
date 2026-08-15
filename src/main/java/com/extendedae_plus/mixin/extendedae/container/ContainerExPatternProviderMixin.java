@@ -9,7 +9,7 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
-import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.world.entity.player.Inventory;
@@ -127,9 +127,14 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
 
     @Unique
     private int eap$getUnlockedPages() {
-        return UpgradeSlotCompat.getUnlockedExtendedPatternProviderPages(this.getSlots(SlotSemantics.UPGRADE).stream()
-                .map(Slot::getItem)
-                .toList());
+        if (!this.isServerSide()) {
+            return Math.max(1, this.eap$unlockedMaxPage);
+        }
+
+        if (this.logic instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge.eap$getUnlockedPatternPages();
+        }
+        return 1;
     }
 
     @Unique

@@ -6,7 +6,6 @@ import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
-import com.extendedae_plus.api.crafting.ScaledProcessingPatternAdv;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import net.neoforged.fml.loading.LoadingModList;
 
@@ -58,7 +57,8 @@ public final class PatternScaler {
         if (advAvailable && advIfaceClass != null && advCtor != null) {
             try {
                 if (advIfaceClass.isInstance(base)) {
-                    return (ScaledProcessingPatternAdv) advCtor.newInstance(base, multiplier);
+                    // 不能直接引用可选的 AdvancedAE 类，否则未安装时 JVM 会在此处链接失败。
+                    return (IPatternDetails) advCtor.newInstance(base, multiplier);
                 }
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException ignored) {
                 // 出错退回普通逻辑
