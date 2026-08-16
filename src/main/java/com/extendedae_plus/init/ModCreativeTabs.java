@@ -37,7 +37,7 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.TAG_INVENTORY_ME_INTERFACE.get());
                         output.accept(ModItems.C_H716.get());
                         output.accept(ModItems.FISH_DAN.get());
-                        output.accept(ModItems._FENG.get());
+                        output.accept(ModItems._LENG.get());
                         output.accept(ModItems.XBAI.get());
                         output.accept(ModItems.MIRROR_PATTERN_BINDING_TOOL.get());
 

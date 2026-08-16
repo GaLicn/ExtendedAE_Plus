@@ -184,7 +184,7 @@ public final class ModBlocks {
 
     public static final RegistryObject<Block> C_H716 = registerDollBlock("c-h716");
     public static final RegistryObject<Block> FISH_DAN = registerDollBlock("fish_dan_");
-    public static final RegistryObject<Block> _FENG = registerDollBlock("_feng");
+    public static final RegistryObject<Block> _LENG = registerDollBlock("_leng");
     public static final RegistryObject<Block> XBAI = registerDollBlock("xbai");
 
     private static RegistryObject<Block> registerDollBlock(String name) {

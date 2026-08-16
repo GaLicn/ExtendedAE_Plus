@@ -132,9 +132,9 @@ public final class ModItems {
             () -> new BlockItem(ModBlocks.FISH_DAN.get(), new Item.Properties())
     );
 
-    public static final RegistryObject<Item> _FENG = ITEMS.register(
-            "_feng",
-            () -> new BlockItem(ModBlocks._FENG.get(), new Item.Properties())
+    public static final RegistryObject<Item> _LENG = ITEMS.register(
+            "_leng",
+            () -> new BlockItem(ModBlocks._LENG.get(), new Item.Properties())
     );
 
     public static final RegistryObject<Item> XBAI = ITEMS.register(
