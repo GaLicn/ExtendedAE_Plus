@@ -88,7 +88,7 @@ public class GuiUtil {
 
         guiGraphics.pose().pushPose();
         // 先以槽位右下角为原点，再缩放文字，避免绝对坐标除以缩放值时的累计取整偏差
-        guiGraphics.pose().translate(slotX + offset + 16, slotY + offset + 16, 300);
+        guiGraphics.pose().translate(slotX + offset + 16 + 1, slotY + offset + 16, 300);
         guiGraphics.pose().scale(scale, scale, 1.0f);
         guiGraphics.drawString(font, text, -font.width(text), -5, 0xFFFFFFFF, true);
         guiGraphics.pose().popPose();
@@ -220,4 +220,4 @@ public class GuiUtil {
         });
         return input;
     }
-} 
+}
