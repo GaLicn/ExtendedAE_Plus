@@ -68,6 +68,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # 保留提交历史，用于计算本次提交新增的 CHANGELOG 内容。
+          fetch-depth: 0
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -119,11 +122,27 @@ jobs:
         id: changelog
         shell: bash
         run: |
+          head_commit="${{ github.sha }}"
+          base_commit="${{ github.event.before }}"
+
+          # 手动触发没有 event.before，使用当前提交的父提交作为比较基准。
+          if [[ -z "${base_commit}" || "${base_commit}" =~ ^0+$ ]]; then
+            base_commit="$(git rev-parse "${head_commit}^" 2>/dev/null || true)"
+          fi
+
+          changelog_content=""
+          if [[ -n "${base_commit}" ]] && git cat-file -e "${base_commit}^{commit}" 2>/dev/null; then
+            changelog_content="$(git diff --unified=0 "${base_commit}" "${head_commit}" -- CHANGELOG.md \
+              | awk '/^\+\+\+ / { next } /^\+/ { sub(/^\+/, ""); print }')"
+          fi
+
+          if [[ -z "${changelog_content}" ]]; then
+            changelog_content="本次提交未检测到 CHANGELOG.md 新增内容。"
+          fi
+
           {
             echo "content<<EOF"
-            echo "更新日志请前往 GitHub 仓库查看。"
-            echo
-            echo "Please check the GitHub repository for the changelog."
+            printf '%s\n' "${changelog_content}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -211,4 +230,3 @@ jobs:
             ${{ needs.build.outputs.mod_loader }}
           game-versions: |
             ${{ needs.build.outputs.mc_version }}
-
