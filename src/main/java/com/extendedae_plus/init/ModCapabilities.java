@@ -4,6 +4,7 @@ import appeng.api.AECapabilities;
 import appeng.api.networking.IInWorldGridNodeHost;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
@@ -109,6 +110,16 @@ public final class ModCapabilities {
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                 (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                (be,ctx)->(SuperCrystalAssemblerBlockEntity) be
+        );
+        event.registerBlockEntity(
+                AECapabilities.IN_WORLD_GRID_NODE_HOST,
+                ModBlockEntities.CIRCUIT_CUTTER_PLUS_BE.get(),
+                (be,ctx)->(SuperCircuitCutterBlockEntity) be
         );
 
         // 将 AE2 内部电池暴露为 FE 能力，使超级机器可从 FE 网络充电。
