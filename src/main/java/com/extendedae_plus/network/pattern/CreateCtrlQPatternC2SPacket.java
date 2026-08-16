@@ -8,16 +8,11 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -164,55 +159,8 @@ public class CreateCtrlQPatternC2SPacket {
             return false;
         }
 
-        IGrid grid;
-        boolean usedWtHost;
-
-        String curiosSlotId = located.getCuriosSlotId();
-        int curiosIndex = located.getCuriosIndex();
-
-        if (curiosSlotId != null && curiosIndex >= 0) {
-            try {
-                String current = WUTHandler.getCurrentTerminal(terminal);
-                WTDefinition def = WUTHandler.wirelessTerminals.get(current);
-                if (def != null) {
-                    WTMenuHost wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {
-                    });
-                    if (wtHost != null) {
-                        var node = wtHost.getActionableNode();
-                        if (node != null) {
-                            grid = node.getGrid();
-                            if (grid != null && wtHost.drainPower()) {
-                                usedWtHost = true;
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            } catch (Exception e) {
-                return false;
-            }
-        } else {
-            WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-            WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-            if (wt == null) {
-                return false;
-            }
-            grid = wt.getLinkedGrid(terminal, player.serverLevel(), player);
-            if (grid == null) {
-                return false;
-            }
-            if (!wt.hasPower(player, 0.5, terminal)) {
-                return false;
-            }
-            usedWtHost = false;
-        }
+        IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+        if (grid == null) return false;
 
         AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
         IEnergyService energy = grid.getEnergyService();
@@ -227,13 +175,7 @@ public class CreateCtrlQPatternC2SPacket {
         );
 
         if (extracted > 0) {
-            if (!usedWtHost) {
-                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-                if (wt2 != null) {
-                    wt2.usePower(player, 0.5, terminal);
-                }
-            }
+            WirelessTerminalLocator.useTerminalPower(player, located, 0.5);
             located.commit();
             return true;
         }

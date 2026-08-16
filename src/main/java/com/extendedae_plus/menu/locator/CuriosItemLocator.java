@@ -2,12 +2,15 @@ package com.extendedae_plus.menu.locator;
 
 import appeng.api.implementations.menuobjects.IMenuItem;
 import appeng.api.implementations.menuobjects.ItemMenuHost;
+import appeng.api.storage.ISubMenuHost;
 import appeng.helpers.WirelessTerminalMenuHost;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocator;
 import appeng.menu.me.common.MEStorageMenu;
-import com.extendedae_plus.menu.host.CuriosWTMenuHost;
+import com.extendedae_plus.menu.host.CuriosWTSubMenuHost;
+import com.extendedae_plus.menu.host.CuriosWirelessCraftingTerminalMenuHost;
 import com.extendedae_plus.menu.host.CuriosWirelessTerminalMenuHost;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
 import de.mari_023.ae2wtlib.wut.WTDefinition;
@@ -39,14 +42,16 @@ public record CuriosItemLocator(String slotId, int index) implements MenuLocator
                         String current = WUTHandler.getCurrentTerminal(it);
                         WTDefinition def = WUTHandler.wirelessTerminals.get(current);
                         if (def != null) {
-                            WTMenuHost wtHost = new CuriosWTMenuHost(
-                                    player,
-                                    null,
-                                    it,
-                                    stacksHandler,
-                                    index,
-                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this)
-                            );
+                            WTMenuHost wtHost;
+                            if (hostInterface == ISubMenuHost.class) {
+                                // 下单菜单必须保留 WTLib 的量子桥宿主，不能回退成 AE2 基础宿主。
+                                wtHost = new CuriosWTSubMenuHost(player, null, it, stacksHandler, index,
+                                        (p, sub) -> reopenWtTerminal(p));
+                            } else {
+                                // 主菜单会要求 WCT/WET 等具体宿主类型，必须使用终端注册时的工厂创建。
+                                wtHost = def.wTMenuHostFactory().create(player, null, it,
+                                        (p, sub) -> reopenWtTerminal(p));
+                            }
                             if (hostInterface.isInstance(wtHost)) {
                                 return hostInterface.cast(wtHost);
                             }
@@ -54,13 +59,27 @@ public record CuriosItemLocator(String slotId, int index) implements MenuLocator
 
                         // 2) 回退：AE2 原生无线终端
                         if (it.getItem() instanceof WirelessTerminalItem) {
+                            if (it.getItem() instanceof WirelessCraftingTerminalItem craftingTerminal
+                                    && hostInterface != ISubMenuHost.class) {
+                                // 无线合成终端的主菜单要求 WirelessCraftingTerminalMenuHost。
+                                var host = new CuriosWirelessCraftingTerminalMenuHost(
+                                        player,
+                                        it,
+                                        stacksHandler,
+                                        index,
+                                        (p, sub) -> MenuOpener.open(craftingTerminal.getMenuType(), p, this, true)
+                                );
+                                if (hostInterface.isInstance(host)) {
+                                    return hostInterface.cast(host);
+                                }
+                            }
                             // 首选：为 CraftAmountMenu 等需要网络/能量上下文的菜单提供 WirelessTerminalMenuHost
                             WirelessTerminalMenuHost host = new CuriosWirelessTerminalMenuHost(
                                     player,
                                     it,
                                     stacksHandler,
                                     index,
-                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this)
+                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this, true)
                             );
                             if (hostInterface.isInstance(host)) {
                                 return hostInterface.cast(host);
@@ -78,6 +97,11 @@ public record CuriosItemLocator(String slotId, int index) implements MenuLocator
         } catch (Throwable ignored) {
         }
         return null;
+    }
+
+    private void reopenWtTerminal(Player player) {
+        // 返回子菜单时重新读取 Curios 槽位，避免使用确认界面创建前的旧物品引用。
+        WUTHandler.open(player, this, true);
     }
 
     public void writeToPacket(FriendlyByteBuf buf) {

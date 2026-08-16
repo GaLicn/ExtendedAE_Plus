@@ -7,19 +7,11 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
-import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
@@ -57,34 +49,9 @@ public class PullFromJeiOrCraftC2SPacket {
             ItemStack terminal = located.stack;
             if (terminal.isEmpty()) return;
 
-            IGrid grid;
-            boolean usedWtHost = false;
-            // Curios 情况优先通过 WTMenuHost 获取网络并由其处理能量
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            WTMenuHost wtHost = null;
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                String current = WUTHandler.getCurrentTerminal(terminal);
-                WTDefinition def = WUTHandler.wirelessTerminals.get(current);
-                if (def == null) return;
-                wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {});
-                if (wtHost == null) return;
-                var node = wtHost.getActionableNode();
-                if (node == null) return;
-                grid = node.getGrid();
-                if (grid == null) return;
-                if (!wtHost.drainPower()) return;
-                usedWtHost = true;
-            } else {
-                // 原生路径
-                ServerLevel level = player.serverLevel();
-                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-                if (wt == null) return;
-                grid = wt.getLinkedGrid(terminal, level, player);
-                if (grid == null) return;
-                if (!wt.hasPower(player, 0.5, terminal)) return;
-            }
+            // WTLib 和原生终端均由各自的 API 完成连接检查。
+            IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+            if (grid == null) return;
 
             // 仅放入背包空槽位
             var inv = player.getInventory();
@@ -98,14 +65,7 @@ public class PullFromJeiOrCraftC2SPacket {
             long extracted = StorageHelper.poweredExtraction(energy, storage, itemKey, targetMax, new PlayerSource(player));
             if (extracted > 0) {
                 inv.setItem(free, itemKey.toStack((int) extracted));
-                if (!usedWtHost) {
-                    // 扣能：与 PickFromWirelessC2SPacket 保持一致
-                    WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-                    WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-                    if (wt2 != null) {
-                        wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
-                    }
-                }
+                WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
                 located.commit();
                 player.containerMenu.broadcastChanges();
                 return;
@@ -115,16 +75,9 @@ public class PullFromJeiOrCraftC2SPacket {
             var craftingService = grid.getCraftingService();
             if (!craftingService.isCraftable(what)) return;
 
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, 1);
-            } else {
-                var hand = located.getHand();
-                int slot = located.getSlotIndex();
-                if (hand != null) {
-                    CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), what, 1);
-                } else if (slot >= 0) {
-                    CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, 1);
-                }
+            var locator = located.createMenuLocator(player);
+            if (locator != null) {
+                CraftAmountMenu.open(player, locator, what, 1);
             }
         });
         context.setPacketHandled(true);

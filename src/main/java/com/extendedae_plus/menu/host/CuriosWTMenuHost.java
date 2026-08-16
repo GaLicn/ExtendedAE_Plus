@@ -39,7 +39,8 @@ public class CuriosWTMenuHost extends WTMenuHost {
     protected boolean ensureItemStillInSlot() {
         try {
             ItemStack cur = curiosHandler.getStacks().getStackInSlot(curiosIndex);
-            return !cur.isEmpty();
+            // Curios 槽被替换为其他物品时关闭菜单，避免旧终端继续访问网络。
+            return !cur.isEmpty() && ItemStack.isSameItem(cur, getItemStack());
         } catch (Throwable ignored) {
             return false;
         }

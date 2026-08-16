@@ -5,17 +5,10 @@ import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
-import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
@@ -77,53 +70,9 @@ public class PickFromWirelessC2SPacket {
                 return;
             }
 
-            IGrid grid;
-            boolean usedWtHost = false;
-            // 若来自 Curios：优先通过 ae2wtlib 的 WTMenuHost 获取量子桥网络，绕过距离限制
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            WTMenuHost wtHost = null;
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                String current = WUTHandler.getCurrentTerminal(terminal);
-                WTDefinition def = WUTHandler.wirelessTerminals.get(current);
-                if (def != null) {
-                    wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {});
-                    if (wtHost != null) {
-                        var node = wtHost.getActionableNode();
-                        if (node != null) {
-                            grid = node.getGrid();
-                            if (grid == null) {
-                                return;
-                            }
-                            // 通过 WTMenuHost 的电力处理以兼容量子卡补能
-                            if (!wtHost.drainPower()) {
-                                return;
-                            }
-                            usedWtHost = true;
-                        } else {
-                            return;
-                        }
-                    } else {
-                        return;
-                    }
-                } else {
-                    return;
-                }
-            } else {
-                // 非 Curios：按 AE2 原生路径处理
-                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-                if (wt == null) {
-                    return;
-                }
-                grid = wt.getLinkedGrid(terminal, level, player);
-                if (grid == null) {
-                    return;
-                }
-                if (!wt.hasPower(player, 0.5, terminal)) {
-                    return;
-                }
-            }
+            // 使用终端 API 获取网络，防止 Curios 中的量子终端被当成普通物品处理。
+            IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+            if (grid == null) return;
 
             // 计算 pick 对应的物品：使用客户端实际命中位置，保证多部件方块（AE2 CableBus/部件）能返回正确克隆物品
             BlockHitResult bhr = new BlockHitResult(msg.hitLoc, msg.face, msg.pos, true);
@@ -180,16 +129,9 @@ public class PickFromWirelessC2SPacket {
                     var craftingService = grid.getCraftingService();
                     if (craftingService.isCraftable(targetKey)) {
                         // 主手为空一组
-                        if (curiosSlotId != null && curiosIndex >= 0) {
-                            CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), targetKey, 64);
-                        } else {
-                            var hand = located.getHand();
-                            int slot = located.getSlotIndex();
-                            if (hand != null) {
-                                CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), targetKey, 64);
-                            } else if (slot >= 0) {
-                                CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), targetKey, 64);
-                            }
+                        var locator = located.createMenuLocator(player);
+                        if (locator != null) {
+                            CraftAmountMenu.open(player, locator, targetKey, 64);
                         }
                         return; // 打开界面后直接结束，不执行后面的放物品逻辑
                     }
@@ -217,16 +159,7 @@ public class PickFromWirelessC2SPacket {
                 inv.setItem(free, targetKey.toStack((int) extracted));
             }
 
-            if (usedWtHost) {
-                // WTMenuHost 已在 drainPower 中处理能量消耗/回充，此处不重复扣除
-            } else {
-                // 原生 AE2 扣能
-                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-                if (wt2 != null) {
-                    wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
-                }
-            }
+            WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
             // 确保写回（若位于 Curios 等需要显式写回的容器）
             located.commit();
             player.containerMenu.broadcastChanges();

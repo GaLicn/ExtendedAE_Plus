@@ -2,11 +2,9 @@ package com.extendedae_plus.server;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingService;
-import appeng.api.networking.security.IActionHost;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.jei.SyncNetworkInventoryS2CPacket;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
@@ -46,7 +44,7 @@ public class JeiSyncManager {
             return;
         }
 
-        IGrid grid = getGridFromTerminal(located, sp);
+        IGrid grid = WirelessTerminalLocator.getConnectedGrid(sp, located);
         if (grid == null) {
             if (state.wasConnected) {
                 sendClear(sp);
@@ -156,30 +154,6 @@ public class JeiSyncManager {
     private static void sendClear(ServerPlayer sp) {
         var packet = new SyncNetworkInventoryS2CPacket(true, Collections.emptyList());
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), packet);
-    }
-
-    private static IGrid getGridFromTerminal(WirelessTerminalLocator.LocatedTerminal located, ServerPlayer player) {
-        var stack = located.stack;
-        if (stack.isEmpty()) return null;
-
-        if (stack.getItem() instanceof WirelessTerminalItem wt) {
-            try {
-                var grid = wt.getLinkedGrid(stack, player.level(), player);
-                return grid != null ? grid : null;
-            } catch (Exception e) {
-                return null;
-            }
-        }
-
-        // Try ae2wtlib/ExtendedAE wireless terminals
-        try {
-            if (stack.getItem() instanceof IActionHost actionHost) {
-                var node = actionHost.getActionableNode();
-                return node != null ? node.getGrid() : null;
-            }
-        } catch (Exception ignored) {}
-
-        return null;
     }
 
     private static class PlayerSyncState {

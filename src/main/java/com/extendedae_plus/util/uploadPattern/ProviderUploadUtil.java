@@ -6,7 +6,6 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
@@ -17,9 +16,6 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.wut.WUTHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -414,38 +410,7 @@ public final class ProviderUploadUtil {
 
     private static IGrid findPlayerGrid(ServerPlayer player) {
         WirelessTerminalLocator.LocatedTerminal located = WirelessTerminalLocator.find(player);
-        ItemStack terminal = located.stack;
-        if (terminal.isEmpty()) {
-            return null;
-        }
-
-        String curiosSlotId = located.getCuriosSlotId();
-        int curiosIndex = located.getCuriosIndex();
-
-        if (curiosSlotId != null && curiosIndex >= 0) {
-            try {
-                String current = WUTHandler.getCurrentTerminal(terminal);
-                WTDefinition def = WUTHandler.wirelessTerminals.get(current);
-                if (def != null) {
-                    WTMenuHost wtHost = def.wTMenuHostFactory().create(player, null, terminal, (p, sub) -> {});
-                    if (wtHost != null) {
-                        IGridNode node = wtHost.getActionableNode();
-                        if (node != null) {
-                            return node.getGrid();
-                        }
-                    }
-                }
-            } catch (Exception ignored) {
-                return null;
-            }
-        } else {
-            WirelessTerminalItem wt = terminal.getItem() instanceof WirelessTerminalItem t ? t : null;
-            if (wt != null) {
-                return wt.getLinkedGrid(terminal, player.serverLevel(), player);
-            }
-        }
-
-        return null;
+        return WirelessTerminalLocator.getConnectedGrid(player, located);
     }
 
     public static PatternContainer findProviderContainer(ServerPlayer player, LastUploadRecord record) {
