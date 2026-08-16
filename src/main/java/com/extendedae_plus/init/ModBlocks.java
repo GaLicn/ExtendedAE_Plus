@@ -201,7 +201,7 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Block> C_H716 = registerDollBlock("c-h716");
     public static final DeferredBlock<Block> FISH_DAN = registerDollBlock("fish_dan_");
-    public static final DeferredBlock<Block> _FENG = registerDollBlock("_feng");
+    public static final DeferredBlock<Block> _LENG = registerDollBlock("_leng");
     public static final DeferredBlock<Block> XBAI = registerDollBlock("xbai");
 
     public static final DeferredBlock<Block> LATTRA_CRYSTAL_BLOCK = BLOCKS.register(
