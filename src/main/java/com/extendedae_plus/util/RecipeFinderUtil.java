@@ -3,7 +3,7 @@ package com.extendedae_plus.util;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
-import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;
@@ -46,8 +46,8 @@ public final class RecipeFinderUtil {
 			return List.of();
 		}
 
-		Object runtimeObj = JeiRuntimeProxy.get();
-		if (!(runtimeObj instanceof IJeiRuntime jeiRuntime)) {
+		IJeiRuntime jeiRuntime = JeiRuntimeCompat.getRuntime();
+		if (jeiRuntime == null) {
 			LOGGER.warn("[RecipeFinder] JEI runtime not available");
 			return List.of();
 		}

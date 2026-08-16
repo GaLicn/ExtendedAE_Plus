@@ -3,10 +3,9 @@ package com.extendedae_plus.client.event;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
-import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
-import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
@@ -52,18 +51,18 @@ public final class CtrlQPatternKeyHandler {
 			return;
 		}
 
-		if (JeiRuntimeProxy.get() == null) {
+		if (JeiRuntimeCompat.getRuntime() == null) {
 			return;
 		}
 
-		Optional<?> recipeBookmark = JeiRuntimeProxy.getRecipeBookmarkUnderMouse();
+		Optional<?> recipeBookmark = JeiRuntimeCompat.getRecipeBookmarkUnderMouse();
 		if (recipeBookmark.isPresent()) {
 			handleRecipeBookmark(recipeBookmark.get(), isAllowSubstitutes, isFluidSubstitutes);
 			event.setCanceled(true);
 			return;
 		}
 
-		Optional<ITypedIngredient<?>> ingredient = castTypedIngredient(JeiRuntimeProxy.getIngredientUnderMouse());
+		Optional<ITypedIngredient<?>> ingredient = castTypedIngredient(JeiRuntimeCompat.getIngredientUnderMouse());
 		if (ingredient.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
@@ -228,7 +227,7 @@ public final class CtrlQPatternKeyHandler {
 	}
 
 	private static List<RecipeInfo> findRecipeInfosForBookmark(Object recipeBookmark) {
-		Optional<ITypedIngredient<?>> hovered = castTypedIngredient(JeiRuntimeProxy.getIngredientUnderMouse());
+		Optional<ITypedIngredient<?>> hovered = castTypedIngredient(JeiRuntimeCompat.getIngredientUnderMouse());
 		if (hovered.isPresent()) {
 			List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(hovered.get());
 			if (!infos.isEmpty()) {
@@ -373,7 +372,7 @@ public final class CtrlQPatternKeyHandler {
 	}
 
 	private static List<ItemStack> selectIngredientsWithJeiPriority(RecipeInfo recipeInfo) {
-		List<?> bookmarks = JeiRuntimeProxy.getBookmarkList();
+		List<?> bookmarks = JeiRuntimeCompat.getBookmarkList();
 		Map<Item, Integer> priorities = new HashMap<>();
 		AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
 

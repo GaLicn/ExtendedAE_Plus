@@ -120,7 +120,8 @@
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
     "jei.IngredientListRendererMixin",
-    "jei.accessor.BookmarkOverlayAccessor"
+    "jei.accessor.BookmarkOverlayAccessor",
+    "jei.accessor.BookmarkListAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
