@@ -18,6 +18,7 @@ import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
@@ -760,6 +761,18 @@ public class ExtendedAEPatternUploadUtil {
         List<MatrixInventoryTarget> result = new ArrayList<>();
         if(grid== null) return result;
         try {
+            // 超级矩阵由主控聚合所有混合核心库存，不依赖装配矩阵上传核心。
+            for (SuperAssemblerMatrixBlockEntity superMatrix : findSuperMatrices(grid)) {
+                if (superMatrix == null || !superMatrix.isVisibleInTerminal() || superMatrix.getGrid() != grid) {
+                    continue;
+                }
+                InternalInventory inventory = superMatrix.getTerminalPatternInventory();
+                if (inventory != null && inventory.size() > 0) {
+                    result.add(new MatrixInventoryTarget(inventory, inventory,
+                            superMatrix.getBlockPos(), true));
+                }
+            }
+
             Set<TileAssemblerMatrixPattern> allTiles = grid.getMachines(TileAssemblerMatrixPattern.class);
             Set<PatternCorePlusBlockEntity> myAllTiles = grid.getMachines(PatternCorePlusBlockEntity.class);
 
@@ -825,6 +838,28 @@ public class ExtendedAEPatternUploadUtil {
             } catch (Throwable ignored) {
             }
         } catch (Throwable t) {
+        }
+        return result;
+    }
+
+    /**
+     * AE2 按节点实际类索引机器，需遍历框架/墙等具体子类才能找到超级矩阵主控。
+     */
+    private static List<SuperAssemblerMatrixBlockEntity> findSuperMatrices(IGrid grid) {
+        var result = new ArrayList<SuperAssemblerMatrixBlockEntity>();
+        if (grid == null) {
+            return result;
+        }
+
+        for (Class<?> machineClass : grid.getMachineClasses()) {
+            if (!SuperAssemblerMatrixBlockEntity.class.isAssignableFrom(machineClass)) {
+                continue;
+            }
+            for (Object machine : grid.getMachines(machineClass)) {
+                if (machine instanceof SuperAssemblerMatrixBlockEntity superMatrix) {
+                    result.add(superMatrix);
+                }
+            }
         }
         return result;
     }
