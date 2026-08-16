@@ -1,8 +1,9 @@
 package com.extendedae_plus.content.ae2;
 
-import appeng.api.config.Settings;
+import appeng.api.config.Setting;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IManagedGridNode;
+import appeng.api.util.IConfigManager;
 import appeng.block.crafting.PatternProviderBlock;
 import appeng.block.crafting.PushDirection;
 import appeng.blockentity.crafting.PatternProviderBlockEntity;
@@ -11,6 +12,7 @@ import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.AEBasePart;
 import appeng.util.SettingsFrom;
+import appeng.util.CustomNameUtil;
 import appeng.util.inv.AppEngInternalInventory;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
@@ -376,16 +378,36 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             return false;
         }
 
-        var settingsTag = new CompoundTag();
-        exportMasterSettings(master, settingsTag);
-        super.importSettings(SettingsFrom.MEMORY_CARD, settingsTag, null);
-        this.getLogic().getConfigManager().readFromNBT(settingsTag);
+        var changed = false;
+        var masterName = getCustomName(master);
+        if (!Objects.equals(this.getCustomName(), masterName)) {
+            // 仅导入名称，避免内存卡格式携带整套样板库存。
+            var nameTag = new CompoundTag();
+            CustomNameUtil.setCustomName(nameTag, masterName);
+            super.importSettings(SettingsFrom.MEMORY_CARD, nameTag, null);
+            changed = true;
+        }
+
+        changed |= syncConfigSettings(master.getLogic().getConfigManager(), this.getLogic().getConfigManager());
 
         if (this.getPriority() != master.getPriority()) {
             this.setPriority(master.getPriority());
+            changed = true;
         }
 
-        return true;
+        if (supportsPushDirectionState(master)) {
+            var masterPushDirection = getPushDirection(master);
+            if (this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != masterPushDirection) {
+                var level = this.getLevel();
+                if (level != null) {
+                    level.setBlockAndUpdate(this.getBlockPos(), this.getBlockState().setValue(
+                            PatternProviderBlock.PUSH_DIRECTION, masterPushDirection));
+                    changed = true;
+                }
+            }
+        }
+
+        return changed;
     }
 
     private boolean resetMirroredSettingsToInitialState() {
@@ -395,15 +417,9 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private boolean hasDifferentMirroredSettings(PatternProviderLogicHost master) {
-        var mirrorSettings = new CompoundTag();
-        var masterSettings = new CompoundTag();
-
-        this.exportSettings(SettingsFrom.MEMORY_CARD, mirrorSettings, null);
-        exportMasterSettings(master, masterSettings);
-
         return !Objects.equals(this.getCustomName(), getCustomName(master))
                 || this.getPriority() != master.getPriority()
-                || !Objects.equals(mirrorSettings, masterSettings)
+                || !haveSameConfigSettings(this.getLogic().getConfigManager(), master.getLogic().getConfigManager())
                 || supportsPushDirectionState(master)
                 && this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != getPushDirection(master);
     }
@@ -567,14 +583,6 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return null;
     }
 
-    private static void exportMasterSettings(PatternProviderLogicHost master, CompoundTag output) {
-        if (master instanceof PatternProviderBlockEntity blockEntity) {
-            blockEntity.exportSettings(SettingsFrom.MEMORY_CARD, output, null);
-        } else if (master instanceof AEBasePart part) {
-            part.exportSettings(SettingsFrom.MEMORY_CARD, output);
-        }
-    }
-
     @Nullable
     private static Component getCustomName(PatternProviderLogicHost host) {
         if (host instanceof PatternProviderBlockEntity blockEntity) {
@@ -597,6 +605,41 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
     private static boolean supportsPushDirectionState(PatternProviderLogicHost host) {
         return host instanceof PatternProviderBlockEntity;
+    }
+
+    private static boolean haveSameConfigSettings(IConfigManager left, IConfigManager right) {
+        if (!left.getSettings().equals(right.getSettings())) {
+            return false;
+        }
+
+        for (var setting : left.getSettings()) {
+            if (!Objects.equals(getConfigValue(left, setting), getConfigValue(right, setting))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean syncConfigSettings(IConfigManager source, IConfigManager target) {
+        var changed = false;
+        for (var setting : source.getSettings()) {
+            if (target.hasSetting(setting) && !Objects.equals(getConfigValue(source, setting), getConfigValue(target, setting))) {
+                copyConfigValue(source, target, setting);
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static Enum<?> getConfigValue(IConfigManager manager, Setting setting) {
+        return manager.getSetting(setting);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void copyConfigValue(IConfigManager source, IConfigManager target, Setting setting) {
+        target.putSetting(setting, source.getSetting(setting));
     }
 
     private Component appendMasterSide(MutableComponent component) {

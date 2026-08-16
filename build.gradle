@@ -143,6 +143,10 @@ dependencies {
 
     //建筑手杖
     modImplementation "curse.maven:construction-wand-399558:4684054"
+
+
+    //runtimeonlt lib
+    modRuntimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 }
 
 compileJava {
