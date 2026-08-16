@@ -13,6 +13,7 @@ import appeng.client.gui.style.Text;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
+import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -20,7 +21,6 @@ import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAcces
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.crafting.CraftingMonitorOpenProviderC2SPacket;
-import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
@@ -30,9 +30,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -158,7 +158,7 @@ public abstract class AEBaseScreenMixin {
 
         // 在槽位右下角绘制数量文本
         Font font = ((ScreenAccessor) this).eap$getFont();
-        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
+        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y);
 
         try {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level, false);
