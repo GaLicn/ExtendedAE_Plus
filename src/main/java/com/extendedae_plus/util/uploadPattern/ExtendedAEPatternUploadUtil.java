@@ -1669,10 +1669,24 @@ public class ExtendedAEPatternUploadUtil {
             return 0;
         }
         int size = inventory.size();
-        if (container instanceof PatternProviderPageUnlockBridge bridge && bridge.eap$isExtendedPatternProviderHost()) {
+        PatternProviderPageUnlockBridge bridge = getPatternProviderPageUnlockBridge(container);
+        if (bridge != null && bridge.eap$isExtendedPatternProviderHost()) {
             return Math.max(0, Math.min(size, bridge.eap$getUnlockedPatternSlots()));
         }
         return size;
+    }
+
+    private static PatternProviderPageUnlockBridge getPatternProviderPageUnlockBridge(PatternContainer container) {
+        if (container instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge;
+        }
+
+        // AE2 终端枚举的是宿主方块/部件，扩容页状态实际保存在内部逻辑对象上。
+        if (container instanceof PatternProviderLogicHost host
+                && host.getLogic() instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge;
+        }
+        return null;
     }
 
     private static ItemStack insertIntoAccessiblePatternSlots(InternalInventory inventory, int slotLimit, ItemStack stack, IAEItemFilter filter) {
