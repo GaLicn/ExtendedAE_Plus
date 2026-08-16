@@ -4,12 +4,8 @@ import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.helpers.patternprovider.PatternContainer;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.util.inv.filter.IAEItemFilter;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
-import de.mari_023.ae2wtlib.api.registration.WTDefinition;
-import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -86,40 +82,10 @@ public final class CtrlQPendingUploadUtil {
 		return listAvailableProvidersFromGrid(findPlayerGrid(player));
 	}
 
-	public static IGrid findPlayerGrid(ServerPlayer player) {
-		WirelessTerminalLocator.LocatedTerminal located = WirelessTerminalLocator.find(player);
-		ItemStack terminal = located.stack;
-		if (terminal.isEmpty()) {
-			return null;
-		}
-
-		WirelessTerminalItem wt = terminal.getItem() instanceof WirelessTerminalItem t ? t : null;
-		if (wt != null) {
-			return wt.getLinkedGrid(terminal, player.serverLevel(), null);
-		}
-
-		String curiosSlotId = located.getCuriosSlotId();
-		int curiosIndex = located.getCuriosIndex();
-		if (curiosSlotId != null && curiosIndex >= 0) {
-			try {
-				WTDefinition def = WTDefinition.ofOrNull(terminal);
-				if (def == null) return null;
-				WTMenuHost wtHost = def.wTMenuHostFactory().create(
-					def.item(),
-					player,
-					new CuriosItemLocator(curiosSlotId, curiosIndex),
-					(p, sub) -> {
-					}
-				);
-				if (wtHost == null || wtHost.getActionableNode() == null) return null;
-				return wtHost.getActionableNode().getGrid();
-			} catch (Throwable ignored) {
-				return null;
-			}
-		}
-
-		return null;
-	}
+    public static IGrid findPlayerGrid(ServerPlayer player) {
+        WirelessTerminalLocator.LocatedTerminal located = WirelessTerminalLocator.find(player);
+        return WirelessTerminalLocator.getConnectedGrid(player, located);
+    }
 
 	public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
 		List<PatternContainer> list = new ArrayList<>();
@@ -224,4 +190,3 @@ public final class CtrlQPendingUploadUtil {
 		}
 	}
 }
-

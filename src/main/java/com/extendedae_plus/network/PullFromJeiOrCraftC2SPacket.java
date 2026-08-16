@@ -7,19 +7,14 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
-import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -51,15 +46,9 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
             ItemStack terminal = located.stack;
             if (terminal.isEmpty()) return;
 
-            IGrid grid;
-            // 统一 AE2 原生路径
-            ServerLevel level = player.serverLevel();
-            WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-            WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-            if (wt == null) return;
-            grid = wt.getLinkedGrid(terminal, level, null);
+            // WTLib 终端由其菜单主机校验无线接入点与量子桥状态。
+            IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
             if (grid == null) return;
-            if (!wt.hasPower(player, 0.5, terminal)) return;
 
             var inv = player.getInventory();
             int free = inv.getFreeSlot();
@@ -72,11 +61,7 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
             long extracted = StorageHelper.poweredExtraction(energy, storage, itemKey, targetMax, new PlayerSource(player));
             if (extracted > 0) {
                 inv.setItem(free, itemKey.toStack((int) extracted));
-                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-                if (wt2 != null) {
-                    wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
-                }
+                WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
                 located.commit();
                 player.containerMenu.broadcastChanges();
                 return;
@@ -85,20 +70,9 @@ public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
             var craftingService = grid.getCraftingService();
             if (!craftingService.isCraftable(what)) return;
 
-            // Curios 槽位优先：使用 CuriosItemLocator 打开数量界面
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, 1);
-                return;
-            }
-
-            var hand = located.getHand();
-            int slot = located.getSlotIndex();
-            if (hand != null) {
-                CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), what, 1);
-            } else if (slot >= 0) {
-                CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, 1);
+            var locator = located.createMenuLocator(player);
+            if (locator != null) {
+                CraftAmountMenu.open(player, locator, what, 1);
             }
         });
     }

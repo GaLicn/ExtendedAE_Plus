@@ -5,21 +5,15 @@ import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
-import appeng.items.tools.powered.WirelessCraftingTerminalItem;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
-import de.mari_023.ae2wtlib.api.registration.WTDefinition;
-import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -61,7 +55,7 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (player.isCreative()) return;
 
-            ServerLevel level = player.serverLevel();
+            var level = player.serverLevel();
             BlockState state = level.getBlockState(msg.pos);
             if (state == null || state.isAir()) return;
 
@@ -70,41 +64,9 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
             ItemStack terminal = located.stack;
             if (terminal.isEmpty()) return;
 
-            IGrid grid;
-            boolean usedWtHost = false;
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                // 与 PullFromJeiOrCraftC2SPacket 保持一致：优先走 AE2 原生路径
-                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-                if (wt != null) {
-                    grid = wt.getLinkedGrid(terminal, level, null);
-                    if (grid == null) return;
-                    if (!wt.hasPower(player, 0.5, terminal)) return;
-                } else {
-                    // 非 AE2 原生无线终端（极少数情况），再尝试 wtlib host
-                    WTDefinition def = WTDefinition.ofOrNull(terminal);
-                    if (def == null) return;
-                    WTMenuHost wtHost = def.wTMenuHostFactory().create(
-                            def.item(),
-                            player,
-                            new CuriosItemLocator(curiosSlotId, curiosIndex),
-                            (p, sub) -> {}
-                    );
-                    if (wtHost == null || wtHost.getActionableNode() == null || wtHost.getActionableNode().getGrid() == null) return;
-                    grid = wtHost.getActionableNode().getGrid();
-                    usedWtHost = true;
-                }
-            } else {
-                // AE2 原生路径
-                WirelessCraftingTerminalItem wct = terminal.getItem() instanceof WirelessCraftingTerminalItem c ? c : null;
-                WirelessTerminalItem wt = wct != null ? wct : (terminal.getItem() instanceof WirelessTerminalItem t ? t : null);
-                if (wt == null) return;
-                grid = wt.getLinkedGrid(terminal, level, null);
-                if (grid == null) return;
-                if (!wt.hasPower(player, 0.5, terminal)) return;
-            }
+            // 使用终端实现提供的连接逻辑，避免绕过 WTLib 的量子桥判断。
+            IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+            if (grid == null) return;
 
             // 计算 pick 对应的物品：使用客户端实际命中位置，保证多部件方块能返回正确克隆物品
             BlockHitResult bhr = new BlockHitResult(msg.hitLoc, msg.face, msg.pos, true);
@@ -159,13 +121,7 @@ public class PickFromWirelessC2SPacket implements CustomPacketPayload {
                 inv.setItem(free, targetKey.toStack((int) extracted));
             }
 
-            if (!usedWtHost) {
-                WirelessCraftingTerminalItem wct2 = terminal.getItem() instanceof WirelessCraftingTerminalItem c2 ? c2 : null;
-                WirelessTerminalItem wt2 = wct2 != null ? wct2 : (terminal.getItem() instanceof WirelessTerminalItem t2 ? t2 : null);
-                if (wt2 != null) {
-                    wt2.usePower(player, Math.max(0.5, extracted * 0.05), terminal);
-                }
-            }
+            WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
             located.commit();
             player.containerMenu.broadcastChanges();
         });

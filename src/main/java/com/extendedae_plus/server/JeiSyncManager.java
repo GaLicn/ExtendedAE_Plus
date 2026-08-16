@@ -5,7 +5,6 @@ import appeng.api.networking.crafting.ICraftingService;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import com.extendedae_plus.network.jei.SyncNetworkInventoryS2CPacket;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.server.level.ServerPlayer;
@@ -44,7 +43,7 @@ public final class JeiSyncManager {
         state.tickCounter = 0;
 
         var terminal = WirelessTerminalLocator.find(player);
-        IGrid grid = terminal.isEmpty() ? null : getGridFromTerminal(terminal, player);
+        IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, terminal);
         if (grid == null) {
             if (state.wasConnected) {
                 sendClear(player);
@@ -142,13 +141,6 @@ public final class JeiSyncManager {
 
     private static void sendClear(ServerPlayer player) {
         PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(true, List.of()));
-    }
-
-    private static IGrid getGridFromTerminal(WirelessTerminalLocator.LocatedTerminal terminal, ServerPlayer player) {
-        if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
-            return wirelessTerminal.getLinkedGrid(terminal.stack, player.serverLevel(), null);
-        }
-        return null;
     }
 
     private static final class PlayerSyncState {

@@ -7,7 +7,6 @@ import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
-import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.me.helpers.PlayerSource;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
@@ -198,18 +197,11 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 			return false;
 		}
 
-		WirelessTerminalItem wt = terminal.getItem() instanceof WirelessTerminalItem t ? t : null;
-		if (wt == null) {
-			return false;
-		}
-
-		IGrid grid = wt.getLinkedGrid(terminal, player.serverLevel(), null);
-		if (grid == null) {
-			return false;
-		}
-		if (!wt.hasPower(player, 0.5, terminal)) {
-			return false;
-		}
+        // 与无线终端 GUI 保持同一套连接校验逻辑。
+        IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+        if (grid == null) {
+            return false;
+        }
 
 		IEnergyService energy = grid.getEnergyService();
 		MEStorage storage = grid.getStorageService().getInventory();
@@ -221,8 +213,8 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 			new PlayerSource(player)
 		);
 		if (extracted > 0) {
-			wt.usePower(player, 0.5, terminal);
-			located.commit();
+            WirelessTerminalLocator.useTerminalPower(player, located, 0.5);
+            located.commit();
 			return true;
 		}
 		return false;
