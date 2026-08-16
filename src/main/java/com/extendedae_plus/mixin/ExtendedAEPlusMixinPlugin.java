@@ -46,6 +46,10 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("cn.dancingsnow.neoecoae.NeoECOAE");
 	}
 
+	private static boolean isAe2WtLibPresent() {
+		return isClassPresent("de.mari_023.ae2wtlib.api.registration.WTDefinition");
+	}
+
 	@Override
 	public void onLoad(String mixinPackage) { }
 
@@ -54,6 +58,9 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 
 	@Override
 	public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+		if (!isAe2WtLibPresent() && mixinClassName.startsWith("com.extendedae_plus.mixin.ae2WTlib.")) {
+			return false;
+		}
 		if (!isAppfluxPresent() && mixinClassName.startsWith("com.extendedae_plus.mixin.appflux.")) {
 			return false;
 		}

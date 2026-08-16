@@ -2,16 +2,16 @@ package com.extendedae_plus.menu.locator;
 
 import appeng.api.implementations.menuobjects.IMenuItem;
 import appeng.api.implementations.menuobjects.ItemMenuHost;
+import appeng.api.storage.ISubMenuHost;
+import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
-import appeng.menu.MenuOpener;
 import appeng.menu.locator.ItemMenuHostLocator;
-import appeng.menu.me.common.MEStorageMenu;
-import de.mari_023.ae2wtlib.api.registration.WTDefinition;
-import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
+import com.extendedae_plus.compat.ae2wtlib.AE2WTLibCompat;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
@@ -26,132 +26,52 @@ public record CuriosItemLocator(String slotId, int index) implements ItemMenuHos
     @Nullable
     public <T> T locate(Player player, Class<T> hostInterface) {
         try {
-            // 先用 locateItem 取得实际物品，避免某些情况下 stacksHandler 为空
-            ItemStack it0 = locateItem(player);
-            if (it0 != null && !it0.isEmpty()) {
-                // 0) AE2 原生：若是 WirelessTerminalItem，先尝试其原生 Host（与背包一致）
-                if (it0.getItem() instanceof appeng.items.tools.powered.WirelessTerminalItem wtAe2) {
-                    var aeHost = wtAe2.getMenuHost(player, this, null);
-                    if (aeHost != null && hostInterface.isInstance(aeHost)) {
-                        try { return hostInterface.cast(aeHost); } catch (Throwable t) { }
-                    }
-                    if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                        var subHost2 = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost2(wtAe2, player, this,
-                                (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                        try { return hostInterface.cast(subHost2); } catch (Throwable t) { }
-                    }
-                }
+            ItemStack stack = locateItem(player);
+            if (stack.isEmpty()) {
+                return null;
+            }
 
-                WTDefinition def0 = WTDefinition.ofOrNull(it0);
-                if (def0 != null) {
-                    WTMenuHost wtHost = def0.wTMenuHostFactory().create(def0.item(), player, this,
-                            (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                    if (wtHost != null && hostInterface.isInstance(wtHost)) {
-                        try { return hostInterface.cast(wtHost); } catch (Throwable t) { }
-                    }
-                    if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                        var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(def0.item(), player, this,
-                                (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                        try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                    }
-                } else if (it0.getItem() instanceof de.mari_023.ae2wtlib.api.terminal.ItemWT wtItem0) {
-                    if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                        var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(wtItem0, player, this,
-                                (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                        try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                    }
-                } else {
-                    // 额外兜底：尝试使用 WTDefinition.of(it0)（可能在 ofOrNull 为 null 时仍可获取）
-                    try {
-                        WTDefinition defStrict = WTDefinition.of(it0);
-                        if (defStrict != null && "appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                            var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(defStrict.item(), player, this,
-                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                            try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                        }
-                    } catch (Throwable t) {
-                        
-                    }
+            if (hostInterface == ISubMenuHost.class
+                    && stack.getItem() instanceof WirelessCraftingTerminalItem craftingTerminal) {
+                // 与背包槽位保持同一 AE2 宿主类型，只增加 Curios 槽位定位能力。
+                var subHost = new com.extendedae_plus.menu.host.CuriosWirelessCraftingTerminalMenuHost(
+                        craftingTerminal, player, this,
+                        (p, sub) -> craftingTerminal.openFromInventory(p, this));
+                return hostInterface.cast(subHost);
+            }
+
+            if (stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
+                ItemMenuHost host = wirelessTerminal.getMenuHost(player, this, null);
+                if (host != null && hostInterface.isInstance(host)) {
+                    return hostInterface.cast(host);
+                }
+                if (hostInterface == ISubMenuHost.class
+                        && (!ModList.get().isLoaded("ae2wtlib") || !AE2WTLibCompat.isWirelessTerminal(stack))) {
+                    // WTLib 终端必须继续走下面的 WTLib 宿主，不能被 AE2 基础宿主提前截断。
+                    var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost2(wirelessTerminal, player, this,
+                            (p, sub) -> wirelessTerminal.openFromInventory(p, this));
+                    return hostInterface.cast(subHost);
                 }
             }
 
-            var opt = CuriosApi.getCuriosInventory(player);
-            if (opt.isPresent()) {
-                var handler = opt.get();
-                ICurioStacksHandler stacksHandler = handler.getCurios().get(slotId);
-                if (stacksHandler != null) {
-                    ItemStack it = stacksHandler.getStacks().getStackInSlot(index);
-                    if (!it.isEmpty()) {
-                        // 1) wtlib 优先：WTDefinition 构造 WTMenuHost
-                        // 0) AE2 原生：若是 WirelessTerminalItem，先尝试其原生 Host（与背包一致）
-                        if (it.getItem() instanceof appeng.items.tools.powered.WirelessTerminalItem wtAe2) {
-                            var aeHost = wtAe2.getMenuHost(player, this, null);
-                            if (aeHost != null && hostInterface.isInstance(aeHost)) {
-                                try { return hostInterface.cast(aeHost); } catch (Throwable t) { }
-                            }
-                            if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                                var subHost2 = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost2(wtAe2, player, this,
-                                        (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                                try { return hostInterface.cast(subHost2); } catch (Throwable t) { }
-                            }
-                        }
-
-                        WTDefinition def = WTDefinition.ofOrNull(it);
-                        if (def != null) {
-                            WTMenuHost wtHost = def.wTMenuHostFactory().create(
-                                    def.item(), player, this,
-                                    (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                            if (wtHost != null && hostInterface.isInstance(wtHost)) {
-                                try { return hostInterface.cast(wtHost); } catch (Throwable t) { }
-                            }
-                            // 桥接 ISubMenuHost
-                            if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                                var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(def.item(), player, this,
-                                        (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                                try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                            }
-                        } else {
-                            // 2) def==null，但物品是 wtlib 的 ItemWT：直接桥接 ISubMenuHost
-                            if (it.getItem() instanceof de.mari_023.ae2wtlib.api.terminal.ItemWT wtItem) {
-                                if ("appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                                    var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(wtItem, player, this,
-                                            (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                                    try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                                }
-                            } else {
-                                // 再次兜底：尝试 WTDefinition.of(it) 强制获取
-                                try {
-                                    WTDefinition defStrict2 = WTDefinition.of(it);
-                                    if (defStrict2 != null && "appeng.api.storage.ISubMenuHost".equals(hostInterface.getName())) {
-                                        var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost(defStrict2.item(), player, this,
-                                                (p, sub) -> MenuOpener.open(MEStorageMenu.WIRELESS_TYPE, p, this));
-                                        try { return hostInterface.cast(subHost); } catch (Throwable t) { }
-                                    }
-                                } catch (Throwable t) {
-                                    
-                                }
-                            }
-                        }
-
-                        // 3) 回退：AE2 原生无线终端（IMenuItem）
-                        if (it.getItem() instanceof WirelessTerminalItem) {
-                            if (it.getItem() instanceof IMenuItem guiItem) {
-                                ItemMenuHost menuHost = guiItem.getMenuHost(player, this, null);
-                                if (menuHost != null && hostInterface.isInstance(menuHost)) {
-                                    try { return hostInterface.cast(menuHost); } catch (Throwable t) { }
-                                }
-                            }
-                        } else if (it.getItem() instanceof IMenuItem guiItem) {
-                            ItemMenuHost menuHost = guiItem.getMenuHost(player, this, null);
-                            if (menuHost != null && hostInterface.isInstance(menuHost)) {
-                                try { return hostInterface.cast(menuHost); } catch (Throwable t) { }
-                            }
-                        }
-
-                    }
+            if (ModList.get().isLoaded("ae2wtlib")) {
+                // 仅在终端自身没有返回兼容宿主时，使用 WTLib 的宿主定义。
+                T wtHost = AE2WTLibCompat.locateMenuHost(stack, player, this, hostInterface,
+                        (p, sub) -> AE2WTLibCompat.reopenTerminal(p, this));
+                if (wtHost != null) {
+                    return wtHost;
                 }
             }
-        } catch (Throwable ignored) {
+
+            if (stack.getItem() instanceof IMenuItem guiItem) {
+                ItemMenuHost host = guiItem.getMenuHost(player, this, null);
+                if (host != null && hostInterface.isInstance(host)) {
+                    return hostInterface.cast(host);
+                }
+            }
+        } catch (Throwable error) {
+            // 保留异常上下文，避免 Curios 菜单宿主失败时只能看到“没有反应”。
+            ItemMenuHostLocator.LOG.error("Failed to locate Curios terminal menu host", error);
         }
         return null;
     }

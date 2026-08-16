@@ -2,9 +2,17 @@ package com.extendedae_plus.util.wireless;
 
 import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
+import appeng.api.networking.IGrid;
+import appeng.api.implementations.menuobjects.ItemMenuHost;
+import appeng.helpers.WirelessTerminalMenuHost;
+import appeng.menu.locator.ItemMenuHostLocator;
+import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.compat.ae2wtlib.AE2WTLibCompat;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
+import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
@@ -26,11 +34,11 @@ public final class WirelessTerminalLocator {
 
         // 1) 先检查主手/副手
         var main = player.getMainHandItem();
-        if (!main.isEmpty() && (main.getItem() instanceof WirelessCraftingTerminalItem || main.getItem() instanceof WirelessTerminalItem)) {
+        if (isWirelessTerminal(main)) {
             return new LocatedTerminal(main, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ns), -1, net.minecraft.world.InteractionHand.MAIN_HAND);
         }
         var off = player.getOffhandItem();
-        if (!off.isEmpty() && (off.getItem() instanceof WirelessCraftingTerminalItem || off.getItem() instanceof WirelessTerminalItem)) {
+        if (isWirelessTerminal(off)) {
             return new LocatedTerminal(off, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ns), -1, net.minecraft.world.InteractionHand.OFF_HAND);
         }
 
@@ -39,7 +47,7 @@ public final class WirelessTerminalLocator {
         int size = inv.getContainerSize();
         for (int i = 0; i < size; i++) {
             ItemStack st = inv.getItem(i);
-            if (!st.isEmpty() && (st.getItem() instanceof WirelessCraftingTerminalItem || st.getItem() instanceof WirelessTerminalItem)) {
+            if (isWirelessTerminal(st)) {
                 final int slot = i;
                 return new LocatedTerminal(st, (ns) -> inv.setItem(slot, ns), slot);
             }
@@ -58,7 +66,7 @@ public final class WirelessTerminalLocator {
                         int slots = stacks.getSlots();
                         for (int i = 0; i < slots; i++) {
                             ItemStack st = stacks.getStackInSlot(i);
-                            if (!st.isEmpty() && (st.getItem() instanceof WirelessCraftingTerminalItem || st.getItem() instanceof WirelessTerminalItem)) {
+                            if (isWirelessTerminal(st)) {
                                 final int slot = i;
                                 java.util.function.Consumer<ItemStack> setter = (ns) -> stacks.setStackInSlot(slot, ns);
                                 return new LocatedTerminal(st, setter, -1, null, slotId, slot);
@@ -72,6 +80,58 @@ public final class WirelessTerminalLocator {
         }
 
         return new LocatedTerminal(ItemStack.EMPTY, s -> {}, -1, null);
+    }
+
+    /**
+     * 通过终端所属模组的菜单主机获取可访问网络，兼容 WTLib 的量子桥逻辑。
+     */
+    @Nullable
+    public static IGrid getConnectedGrid(Player player, LocatedTerminal terminal) {
+        if (player == null || terminal.isEmpty()) {
+            return null;
+        }
+
+        var locator = terminal.createMenuLocator(player);
+        if (locator == null) {
+            return null;
+        }
+
+        // 优先调用物品自己的宿主 API。EAE 终端虽由 WTLib 注册，但这里会保留它的专用宿主类型。
+        if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
+            ItemMenuHost menuHost = wirelessTerminal.getMenuHost(player, locator, null);
+            if (menuHost instanceof WirelessTerminalMenuHost<?> wirelessHost) {
+                if (wirelessHost.getLinkStatus().connected() && wirelessHost.getActionableNode() != null) {
+                    return wirelessHost.getActionableNode().getGrid();
+                }
+                return null;
+            }
+        }
+
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+            // 只有物品没有原生 AE2 宿主时，才通过 WTLib 兼容层构造菜单宿主。
+            return AE2WTLibCompat.getConnectedGrid(player, terminal.stack, locator);
+        }
+
+        return null;
+    }
+
+    /**
+     * WTLib 菜单主机会自行维护能耗，原版 AE2 终端才在快捷操作后额外扣电。
+     */
+    public static boolean useTerminalPower(Player player, LocatedTerminal terminal, double amount) {
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+            return true;
+        }
+        if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
+            return wirelessTerminal.usePower(player, amount, terminal.stack);
+        }
+        return false;
+    }
+
+    private static boolean isWirelessTerminal(ItemStack stack) {
+        return !stack.isEmpty() && (stack.getItem() instanceof WirelessCraftingTerminalItem
+                || stack.getItem() instanceof WirelessTerminalItem
+                || (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(stack)));
     }
 
     public static final class LocatedTerminal {
@@ -117,5 +177,19 @@ public final class WirelessTerminalLocator {
         public String getCuriosSlotId() { return this.curiosSlotId; }
         /** Curios 组内索引，未知时为 -1。 */
         public int getCuriosIndex() { return this.curiosIndex; }
+
+        @Nullable
+        public ItemMenuHostLocator createMenuLocator(Player player) {
+            if (this.curiosSlotId != null && this.curiosIndex >= 0) {
+                return new CuriosItemLocator(this.curiosSlotId, this.curiosIndex);
+            }
+            if (this.hand != null) {
+                return MenuLocators.forHand(player, this.hand);
+            }
+            if (this.slotIndex >= 0) {
+                return MenuLocators.forInventorySlot(this.slotIndex);
+            }
+            return null;
+        }
     }
 }

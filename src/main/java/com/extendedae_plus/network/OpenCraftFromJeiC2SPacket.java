@@ -1,12 +1,8 @@
 package com.extendedae_plus.network;
 
-import appeng.api.networking.IGrid;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
-import appeng.items.tools.powered.WirelessTerminalItem;
-import appeng.menu.locator.MenuLocators;
 import appeng.menu.me.crafting.CraftAmountMenu;
-import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -45,71 +41,14 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
             var located = WirelessTerminalLocator.find(player);
             if (located.isEmpty()) return;
 
-            // 若为 Curios 槽位：根据终端类型分别处理
-            String curiosSlotId = located.getCuriosSlotId();
-            int curiosIndex = located.getCuriosIndex();
-            if (curiosSlotId != null && curiosIndex >= 0) {
-                // 兼容 ae2wtlib 与 AE2 原生无线终端
-                var stack = located.stack;
-                // AE2 原生无线终端路径需要做与背包一致的前置校验，避免打开后立即失败
-                if (stack.getItem() instanceof WirelessTerminalItem wt) {
-                    var grid = wt.getLinkedGrid(stack, player.level(), null);
-                    if (grid == null) { return; }
-                    if (!wt.hasPower(player, 0.5, stack)) { return; }
-                    var craftingService = grid.getCraftingService();
-                    if (!craftingService.isCraftable(what)) { return; }
-                    int initial = 1;
-                    CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
-                    return;
-                }
-
-                // wtlib 路径：先通过 WTMenuHost 获取 Grid 并检查是否可合成，再打开数量界面
-                try {
-                    de.mari_023.ae2wtlib.api.registration.WTDefinition def = de.mari_023.ae2wtlib.api.registration.WTDefinition.ofOrNull(stack);
-                    if (def == null) { return; }
-                    var wtHost = def.wTMenuHostFactory().create(
-                            def.item(),
-                            player,
-                            new com.extendedae_plus.menu.locator.CuriosItemLocator(curiosSlotId, curiosIndex),
-                            (p, sub) -> {}
-                    );
-                    if (wtHost == null) { return; }
-                    if (wtHost.getActionableNode() == null) { return; }
-                    if (wtHost.getActionableNode().getGrid() == null) { return; }
-                    var grid2 = wtHost.getActionableNode().getGrid();
-                    boolean craftable = grid2.getCraftingService().isCraftable(what);
-                    if (!craftable) return;
-                    int initial = 1;
-                    CraftAmountMenu.open(player, new CuriosItemLocator(curiosSlotId, curiosIndex), what, initial);
-                    return;
-                } catch (Throwable ignored) {
-                    return;
-                }
-            }
-
-            // 非 Curios（主手/副手/背包）仍按原先流程做前置校验，保持行为一致。
-            if (!(located.stack.getItem() instanceof WirelessTerminalItem wt)) return;
-
-            // 基本前置校验：联网、电量
-            IGrid grid = wt.getLinkedGrid(located.stack, player.level(), null);
+            var grid = WirelessTerminalLocator.getConnectedGrid(player, located);
             if (grid == null) return;
-            if (!wt.hasPower(player, 0.5, located.stack)) return;
-
-            // 该 Key 是否可被网络自动合成
             var craftingService = grid.getCraftingService();
             if (!craftingService.isCraftable(what)) return;
 
-            var hand = located.getHand();
-            int slot = located.getSlotIndex();
-            if (hand != null) {
-                int initial = 1;
-                CraftAmountMenu.open(player, MenuLocators.forHand(player, hand), what, initial);
-            } else if (slot >= 0) {
-                // 直接基于物品槽位作为菜单宿主打开数量输入界面
-                int initial = 1; // 初始数量，避免依赖具体 Key 的单位定义
-                CraftAmountMenu.open(player, MenuLocators.forInventorySlot(slot), what, initial);
-            } else {
-                // 未知宿主（回退忽略）
+            var locator = located.createMenuLocator(player);
+            if (locator != null) {
+                CraftAmountMenu.open(player, locator, what, 1);
             }
         });
     }
