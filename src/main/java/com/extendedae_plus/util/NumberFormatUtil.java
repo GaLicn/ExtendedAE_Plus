@@ -28,7 +28,9 @@ public class NumberFormatUtil {
         }
 
         String formatted;
-        if (Math.abs(value - Math.round(value)) < 0.001) {
+        if (value >= 100) {
+            formatted = String.valueOf((long) value);
+        } else if (Math.abs(value - Math.round(value)) < 0.001) {
             formatted = String.valueOf(Math.round(value));
         } else {
             DecimalFormat df = new DecimalFormat("0.00");
