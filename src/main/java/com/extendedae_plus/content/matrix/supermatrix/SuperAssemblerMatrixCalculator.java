@@ -4,6 +4,7 @@ import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
 import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,9 +20,16 @@ public final class SuperAssemblerMatrixCalculator {
 
     private static final int MAX_PARTS_TO_SCAN = 4096;
     private static final int MIN_DELTA = 2;
+    private static final int[] ULTIMATE_LOAD_RECALCULATION_DELAYS = { 1, 20, 100, 300 };
     private static final Map<ServerLevel, LongOpenHashSet> PENDING_RECALCULATIONS = new IdentityHashMap<>();
+    private static final Map<ServerLevel, Long2ObjectOpenHashMap<LongOpenHashSet>> DELAYED_RECALCULATIONS = new IdentityHashMap<>();
 
     private SuperAssemblerMatrixCalculator() {
+    }
+
+    public static void clearScheduledRecalculations() {
+        PENDING_RECALCULATIONS.clear();
+        DELAYED_RECALCULATIONS.clear();
     }
 
     /** 将同一刻内的方块事件合并，避免巨构在一次搭建中重复完整校验。 */
@@ -29,8 +37,43 @@ public final class SuperAssemblerMatrixCalculator {
         PENDING_RECALCULATIONS.computeIfAbsent(level, ignored -> new LongOpenHashSet()).add(start.asLong());
     }
 
+    /** 上传核心随区块载入后分阶段复核，覆盖跨区块方块实体的异步初始化。 */
+    public static void scheduleUltimateLoadRecalculate(ServerLevel level, BlockPos uploadCorePos) {
+        for (int delay : ULTIMATE_LOAD_RECALCULATION_DELAYS) {
+            scheduleDelayedRecalculate(level, uploadCorePos, delay);
+        }
+    }
+
+    private static void scheduleDelayedRecalculate(ServerLevel level, BlockPos start, int delay) {
+        long dueTick = level.getGameTime() + delay;
+        DELAYED_RECALCULATIONS.computeIfAbsent(level, ignored -> new Long2ObjectOpenHashMap<>())
+                .computeIfAbsent(dueTick, ignored -> new LongOpenHashSet())
+                .add(start.asLong());
+    }
+
     /** 在世界刻末尾只检查每个连通结构一次。 */
     public static void processScheduledRecalculations(ServerLevel level) {
+        var delayed = DELAYED_RECALCULATIONS.get(level);
+        if (delayed != null) {
+            long gameTime = level.getGameTime();
+            var dueTicks = new LongOpenHashSet();
+            for (var iterator = delayed.keySet().iterator(); iterator.hasNext();) {
+                long dueTick = iterator.nextLong();
+                if (dueTick <= gameTime) {
+                    dueTicks.add(dueTick);
+                }
+            }
+            for (var iterator = dueTicks.iterator(); iterator.hasNext();) {
+                var positions = delayed.remove(iterator.nextLong());
+                if (positions != null) {
+                    PENDING_RECALCULATIONS.computeIfAbsent(level, ignored -> new LongOpenHashSet()).addAll(positions);
+                }
+            }
+            if (delayed.isEmpty()) {
+                DELAYED_RECALCULATIONS.remove(level);
+            }
+        }
+
         var pending = PENDING_RECALCULATIONS.remove(level);
         if (pending == null || pending.isEmpty()) {
             return;
@@ -39,6 +82,11 @@ public final class SuperAssemblerMatrixCalculator {
         while (!pending.isEmpty()) {
             long start = pending.iterator().nextLong();
             pending.remove(start);
+            // 上传核心是终极结构的固定锚点，直接校验以绕过稀疏内部的连通扫描。
+            if (tryFormUltimate(level, UltimateSuperAssemblerMatrixStructure.findMatchAtUploadCore(level,
+                    BlockPos.of(start)))) {
+                continue;
+            }
             var positions = collectConnectedPositions(level, start);
             pending.removeAll(positions);
             recalculate(level, positions);
@@ -53,11 +101,7 @@ public final class SuperAssemblerMatrixCalculator {
         var parts = collectSuperParts(level, positions);
         var ultimateMatch = UltimateSuperAssemblerMatrixStructure.findMatch(level, positions);
         if (ultimateMatch != null) {
-            if (isAlreadyFormed(parts)) {
-                return;
-            }
-            form(level, parts, ultimateMatch.origin(), ultimateMatch.max(),
-                    SuperAssemblerMatrixCluster.ultimate(ultimateMatch.origin(), ultimateMatch.max()));
+            tryFormUltimate(level, ultimateMatch);
             return;
         }
 
@@ -80,9 +124,24 @@ public final class SuperAssemblerMatrixCalculator {
         if (!UltimateSuperAssemblerMatrixStructure.matchesAt(level, origin)) {
             return false;
         }
+        return tryFormUltimate(level, new UltimateSuperAssemblerMatrixStructure.Match(origin));
+    }
 
-        var match = new UltimateSuperAssemblerMatrixStructure.Match(origin);
-        var parts = collectSuperParts(level, match.origin(), match.max());
+    private static boolean tryFormUltimate(ServerLevel level, @org.jetbrains.annotations.Nullable UltimateSuperAssemblerMatrixStructure.Match match) {
+        if (match == null) {
+            return false;
+        }
+
+        var parts = collectUltimateParts(level, match.origin(), match.max());
+        if (isAlreadyFormed(parts)) {
+            return true;
+        }
+        // 终极结构已通过固定定义校验，清除原版矩阵加载期间生成的临时集群。
+        for (var part : parts) {
+            if (part instanceof TileAssemblerMatrixBase matrixPart) {
+                matrixPart.disconnect(false);
+            }
+        }
         form(level, parts, match.origin(), match.max(),
                 SuperAssemblerMatrixCluster.ultimate(match.origin(), match.max()));
         return true;
@@ -143,6 +202,17 @@ public final class SuperAssemblerMatrixCalculator {
         for (var pos : BlockPos.betweenClosed(min, max)) {
             var part = asPart(level.getBlockEntity(pos));
             if (part != null) {
+                parts.add(part);
+            }
+        }
+        return parts;
+    }
+
+    private static Set<SuperAssemblerMatrixPart> collectUltimateParts(ServerLevel level, BlockPos min, BlockPos max) {
+        var parts = new HashSet<SuperAssemblerMatrixPart>();
+        for (var pos : BlockPos.betweenClosed(min, max)) {
+            var blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof SuperAssemblerMatrixPart part) {
                 parts.add(part);
             }
         }

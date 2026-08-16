@@ -2,11 +2,13 @@ package com.extendedae_plus.content.matrix;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCluster;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixPart;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixFunction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -29,6 +31,15 @@ public class UploadCoreBlockEntity extends TileAssemblerMatrixFunction implement
     public void add(ClusterAssemblerMatrix c) {
         // 无需修改集群，仅作为存在性标记。
         // 若后续需要限制为“最多一个”，可在 ExtendedAE_Plus 工具类或事件中做校验与提示。
+    }
+
+    @Override
+    public void onReady() {
+        super.onReady();
+        if (this.level instanceof ServerLevel serverLevel) {
+            // 上传核心用于定位终极结构，必须在载入后触发一次完整校验。
+            SuperAssemblerMatrixCalculator.scheduleUltimateLoadRecalculate(serverLevel, this.worldPosition);
+        }
     }
 
     @Override

@@ -58,12 +58,30 @@ public final class UltimateSuperAssemblerMatrixStructure {
             if (!(level.getBlockEntity(position) instanceof UploadCoreBlockEntity)) {
                 continue;
             }
-            for (var anchor : UPLOAD_CORE_ANCHORS) {
-                long origin = BlockPos.asLong(position.getX() - anchor.getX(), position.getY() - anchor.getY(),
-                        position.getZ() - anchor.getZ());
-                if (checkedOrigins.add(origin) && matches(level, origin, definition)) {
-                    return new Match(BlockPos.of(origin));
-                }
+            var match = findMatchAtUploadCore(level, position, definition, checkedOrigins);
+            if (match != null) {
+                return match;
+            }
+        }
+        return null;
+    }
+
+    /** 以上传核心为固定锚点校验，避免稀疏结构被连通扫描分割。 */
+    public static @Nullable Match findMatchAtUploadCore(ServerLevel level, BlockPos uploadCorePos) {
+        var definition = getDefinition(level);
+        if (definition == null || !(level.getBlockEntity(uploadCorePos) instanceof UploadCoreBlockEntity)) {
+            return null;
+        }
+        return findMatchAtUploadCore(level, uploadCorePos, definition, new LongOpenHashSet());
+    }
+
+    private static @Nullable Match findMatchAtUploadCore(ServerLevel level, BlockPos uploadCorePos,
+            List<ExpectedBlock> definition, LongOpenHashSet checkedOrigins) {
+        for (var anchor : UPLOAD_CORE_ANCHORS) {
+            long origin = BlockPos.asLong(uploadCorePos.getX() - anchor.getX(), uploadCorePos.getY() - anchor.getY(),
+                    uploadCorePos.getZ() - anchor.getZ());
+            if (checkedOrigins.add(origin) && matches(level, origin, definition)) {
+                return new Match(BlockPos.of(origin));
             }
         }
         return null;

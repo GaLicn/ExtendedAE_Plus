@@ -88,6 +88,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkBlockEnti
         super.onReady();
         this.unloading = false;
         if (this.level instanceof ServerLevel serverLevel) {
+            // 与 1.21 保持一致，方块实体就绪后立即进入本 Tick 的合并重算。
             SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, this.worldPosition);
         }
     }

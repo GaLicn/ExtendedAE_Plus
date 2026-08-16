@@ -30,6 +30,7 @@ import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -77,6 +78,7 @@ public class ExtendedAEPlus {
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
+        MinecraftForge.EVENT_BUS.addListener(ExtendedAEPlus::onChunkLoad);
         // 注册 JEI 网络存量同步
         MinecraftForge.EVENT_BUS.register(JeiSyncManager.class);
         // 注册通用配置
@@ -191,6 +193,19 @@ public class ExtendedAEPlus {
 
     private static void onServerStopped(ServerStoppedEvent event) {
         serverStopping = false;
+        SuperAssemblerMatrixCalculator.clearScheduledRecalculations();
+    }
+
+    private static void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return;
+        }
+        for (var pos : event.getChunk().getBlockEntitiesPos()) {
+            // 区块事件不依赖 AE2 的 onReady，直接从方块状态恢复终极结构锚点。
+            if (event.getChunk().getBlockState(pos).is(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get())) {
+                SuperAssemblerMatrixCalculator.scheduleUltimateLoadRecalculate(serverLevel, pos);
+            }
+        }
     }
 
     /**
