@@ -45,7 +45,7 @@ public final class ModCreativeTabs {
                                 ModItems.CIRCUIT_CUTTER_PLUS.get().getDefaultInstance(),
                                 ModItems.C_H716.get().getDefaultInstance(),
                                 ModItems.FISH_DAN.get().getDefaultInstance(),
-                                ModItems._FENG.get().getDefaultInstance(),
+                                ModItems._LENG.get().getDefaultInstance(),
                                 ModItems.XBAI.get().getDefaultInstance(),
                                 ModItems.MIRROR_PATTERN_BINDING_TOOL.get().getDefaultInstance(),
                                 ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get().getDefaultInstance(),

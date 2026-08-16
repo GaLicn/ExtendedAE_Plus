@@ -126,9 +126,9 @@ public final class ModItems {
             "fish_dan_",
             () -> new BlockItem(ModBlocks.FISH_DAN.get(), new Item.Properties())
     );
-    public static final DeferredItem<Item> _FENG = ITEMS.register(
-            "_feng",
-            () -> new BlockItem(ModBlocks._FENG.get(), new Item.Properties())
+    public static final DeferredItem<Item> _LENG = ITEMS.register(
+            "_leng",
+            () -> new BlockItem(ModBlocks._LENG.get(), new Item.Properties())
     );
     public static final DeferredItem<Item> XBAI = ITEMS.register(
             "xbai",
