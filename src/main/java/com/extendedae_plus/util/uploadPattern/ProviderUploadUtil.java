@@ -614,16 +614,51 @@ public final class ProviderUploadUtil {
         return slot >= 0 && slot < getAccessiblePatternSlotCount(container);
     }
 
+    /** 返回当前可写入页中的空槽位数。 */
+    public static int getAvailableSlots(PatternContainer container) {
+        if (container == null) {
+            return -1;
+        }
+
+        InternalInventory inventory = container.getTerminalPatternInventory();
+        if (inventory == null) {
+            return -1;
+        }
+
+        int available = 0;
+        int slotLimit = getAccessiblePatternSlotCount(container, inventory);
+        for (int i = 0; i < slotLimit; i++) {
+            if (inventory.getStackInSlot(i).isEmpty()) {
+                available++;
+            }
+        }
+        return available;
+    }
+
     private static int getAccessiblePatternSlotCount(PatternContainer container, InternalInventory inventory) {
         if (inventory == null) {
             return 0;
         }
 
         int size = inventory.size();
-        if (container instanceof PatternProviderPageUnlockBridge bridge && bridge.eap$isExtendedPatternProviderHost()) {
+        PatternProviderPageUnlockBridge bridge = getPatternProviderPageUnlockBridge(container);
+        if (bridge != null && bridge.eap$isExtendedPatternProviderHost()) {
             return Math.max(0, Math.min(size, bridge.eap$getUnlockedPatternSlots()));
         }
         return size;
+    }
+
+    private static PatternProviderPageUnlockBridge getPatternProviderPageUnlockBridge(PatternContainer container) {
+        if (container instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge;
+        }
+
+        // AE2 终端枚举的是宿主方块/部件，扩容页状态实际保存在内部逻辑对象上。
+        if (container instanceof PatternProviderLogicHost host
+                && host.getLogic() instanceof PatternProviderPageUnlockBridge bridge) {
+            return bridge;
+        }
+        return null;
     }
 
     private static ItemStack insertIntoAccessiblePatternSlots(PatternContainer container, ItemStack stack,

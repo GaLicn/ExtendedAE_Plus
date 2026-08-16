@@ -41,7 +41,7 @@ public class RequestProvidersListC2SPacket {
                 for (int i = 0; i < containers.size(); i++) {
                     var c = containers.get(i);
                     if (c == null) continue;
-                    int empty = PatternProviderDataUtil.getAvailableSlots(c);
+                    int empty = ProviderUploadUtil.getAvailableSlots(c);
                     if (empty <= 0) continue;
                     long encodedId = -1L - i;
                     idxIds.add(encodedId);
@@ -65,7 +65,8 @@ public class RequestProvidersListC2SPacket {
                 for (Long id : ids) {
                     if (id == null) continue;
                     if (!PatternProviderDataUtil.isProviderAvailable(id, accessMenu)) continue;
-                    int empty = PatternProviderDataUtil.getAvailableSlots(id, accessMenu);
+                    PatternContainer container = PatternTerminalUtil.getPatternContainerById(accessMenu, id);
+                    int empty = ProviderUploadUtil.getAvailableSlots(container);
                     if (empty <= 0) continue; // 只列出有空位的
                     filteredIds.add(id);
                     names.add(PatternProviderDataUtil.getProviderDisplayName(id, accessMenu));
@@ -84,7 +85,7 @@ public class RequestProvidersListC2SPacket {
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);
                 if (c == null) continue;
-                int empty = PatternProviderDataUtil.getAvailableSlots(c);
+                int empty = ProviderUploadUtil.getAvailableSlots(c);
                 if (empty <= 0) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
