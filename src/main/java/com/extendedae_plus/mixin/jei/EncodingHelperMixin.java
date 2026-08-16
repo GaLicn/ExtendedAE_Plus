@@ -6,10 +6,10 @@ import appeng.api.stacks.AEKey;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.common.GridInventoryEntry;
 import appeng.menu.me.common.MEStorageMenu;
-import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.api.neoforge.NeoForgeTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -27,7 +27,7 @@ public class EncodingHelperMixin {
     private static void epp$addJeiIngredientPriorities(MEStorageMenu menu, Comparator<GridInventoryEntry> comparator, CallbackInfoReturnable<Map<AEKey, Integer>> cir){
         Map<AEKey, Integer> result = cir.getReturnValue();
         AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
-        		List<? extends ITypedIngredient<?>> list = (List<? extends ITypedIngredient<?>>) (List<?>) JeiRuntimeProxy.getBookmarkList();
+		List<ITypedIngredient<?>> list = JeiRuntimeCompat.getBookmarkList();
 		for (ITypedIngredient<?> ingredient : list) {
             ingredient.getIngredient(VanillaTypes.ITEM_STACK).ifPresent(itemStack -> result.put(AEItemKey.of(itemStack), index.getAndDecrement()));
             ingredient.getIngredient(NeoForgeTypes.FLUID_STACK).ifPresent(fluidStack -> result.put(AEFluidKey.of(fluidStack), index.getAndDecrement()));
