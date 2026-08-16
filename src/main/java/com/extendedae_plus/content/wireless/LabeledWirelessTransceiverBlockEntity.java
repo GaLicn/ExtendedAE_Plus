@@ -174,10 +174,10 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
             return;
         }
         var registry = LabelNetworkRegistry.get(sl);
-        var network = registry.getNetwork(sl, labelForDisplay, placerId);
-        if (network == null && ensureRegister) {
-            network = registry.register(sl, labelForDisplay, placerId, this);
-        }
+        // 加载时必须重新登记端点；SavedData 可能只保留了网络定义而没有当前端点。
+        var network = ensureRegister
+                ? registry.register(sl, labelForDisplay, placerId, this)
+                : registry.getNetwork(sl, labelForDisplay, placerId);
         if (network == null) {
             this.frequency = 0L;
             this.labelLink.clearTarget();
@@ -200,7 +200,8 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
 
     @Override
     public void onChunkUnloaded() {
-        cleanupForRemoval();
+        // 区块卸载是临时生命周期，不应注销持久化标签端点或销毁 AE 节点。
+        this.labelLink.onUnloadOrRemove();
         super.onChunkUnloaded();
     }
 
@@ -275,10 +276,12 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
 
     @Override
     public void onLoad() {
+        this.beingRemoved = false;
         super.onLoad();
         ServerLevel sl = getServerLevel();
         if (sl == null) return;
         GridHelper.onFirstTick(this, be -> {
+            // AE2 节点在区块重新加载时需要再次绑定到当前世界。
             be.managedNode.create(be.getLevel(), be.getBlockPos());
             be.refreshLabel(true);
             be.labelLink.updateStatus();
