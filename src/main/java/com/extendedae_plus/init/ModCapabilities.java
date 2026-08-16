@@ -122,6 +122,18 @@ public final class ModCapabilities {
                 (be,ctx)->(SuperCircuitCutterBlockEntity) be
         );
 
+        // 对齐 EAE 原机：将受输入/输出规则限制的自动化库存暴露给漏斗和物流模组。
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                (be, side) -> ((SuperCrystalAssemblerBlockEntity) be).getExposedItemHandler(side)
+        );
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.CIRCUIT_CUTTER_PLUS_BE.get(),
+                (be, side) -> ((SuperCircuitCutterBlockEntity) be).getExposedItemHandler(side)
+        );
+
         // 将 AE2 内部电池暴露为 FE 能力，使超级机器可从 FE 网络充电。
         event.registerBlockEntity(
                 Capabilities.EnergyStorage.BLOCK,
