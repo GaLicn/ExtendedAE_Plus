@@ -52,7 +52,6 @@ public abstract class PatternProviderLogicTickerMixin {
             return;
         }
         if (this.extendedae_plus$getOuterLogic() instanceof IInterfaceWirelessLinkBridge bridge) {
-            bridge.eap$updateWirelessLink();
             if (bridge.eap$shouldKeepTicking() && cir.getReturnValue() == TickRateModulation.SLEEP) {
                 cir.setReturnValue(TickRateModulation.SLOWER);
             }

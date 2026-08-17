@@ -14,7 +14,6 @@ import appeng.blockentity.AEBaseBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
@@ -24,7 +23,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.ExecutingCraftingJobAccessor;
 import com.extendedae_plus.util.Logger;
-import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
+import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -41,7 +40,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * PatternProviderLogic的兼容性Mixin
@@ -66,23 +64,9 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Unique
     private IUpgradeInventory eap$compatUpgrades = UpgradeInventories.empty();
 
+    /** 频道卡连接状态统一由控制器持有。 */
     @Unique
-    private WirelessSlaveLink eap$compatLink;
-
-    @Unique
-    private long eap$compatLastChannel = -1;
-
-    @Unique
-    private UUID eap$compatLastOwner;
-
-    @Unique
-    private boolean eap$compatClientConnected = false;
-
-    @Unique
-    private boolean eap$compatHasInitialized = false;
-
-    @Unique
-    private int eap$compatDelayedInitTicks = 0;
+    private ChannelCardConnectionController eap$channelController;
 
     @Final
     @Shadow
@@ -122,12 +106,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             this.eap$compatNotifyHostChanged();
             eap$compatSyncVirtualCraftingState();
             this.updatePatterns();
-            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                eap$compatLastChannel = -1;
-                eap$compatLastOwner = null;
-                eap$compatHasInitialized = false;
-                eap$compatInitializeChannelLink();
-            }
+            this.eap$getChannelCardController().onUpgradesChanged();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级变更处理失败", e);
         }
@@ -199,12 +178,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         try {
             eap$compatSyncVirtualCraftingState();
             this.updatePatterns();
-            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                eap$compatLastChannel = -1;
-                eap$compatLastOwner = null;
-                eap$compatHasInitialized = false;
-                eap$compatInitializeChannelLink();
-            }
+            this.eap$getChannelCardController().onUpgradesChanged();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("监听appflux升级变化失败", e);
         }
@@ -274,12 +248,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades");
             }
 
-            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                eap$compatLastChannel = -1;
-                eap$compatLastOwner = null;
-                eap$compatHasInitialized = false;
-                eap$compatInitializeChannelLink();
-            }
+            this.eap$getChannelCardController().onLoaded();
             eap$compatSyncVirtualCraftingState();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级加载失败", e);
@@ -317,6 +286,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             if (UpgradeSlotCompat.shouldEnableChannelCard()) {
                 eap$compatVirtualCraftingEnabled = false;
             }
+            this.eap$getChannelCardController().onUnloaded();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级清理失败", e);
         }
@@ -483,113 +453,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         eap$compatTryVirtualCompletion(patternDetails);
     }
 
-    @Override
-    public void eap$updateWirelessLink() {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return;
-        }
-        
-        try {
-            if (eap$compatLink != null) {
-                boolean wasConnected = eap$compatLink.isConnected();
-                eap$compatLink.updateStatus();
-                if (wasConnected != eap$compatLink.isConnected()) {
-                    this.eap$compatNotifyHostChanged();
-                }
-            }
-        } catch (Exception e) {
-            Logger.EAP$LOGGER.error("兼容性无线链接更新失败", e);
-        }
-    }
-
-    @Unique
-    private void eap$compatInitializeChannelLink() {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return;
-        }
-        
-        try {
-            // 客户端早退
-            if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
-                return;
-            }
-
-            // 避免重复初始化
-            if (eap$compatHasInitialized) {
-                return;
-            }
-
-            // 等待网格完成引导
-            if (!mainNode.hasGridBooted()) {
-                eap$compatDelayedInitTicks = Math.max(eap$compatDelayedInitTicks, 5);
-                try {
-                    mainNode.ifPresent((grid, node) -> {
-                        try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
-                    });
-                } catch (Throwable ignored) {}
-                return;
-            }
-
-            long channel = 0L;
-            boolean found = false;
-            UUID ownerUUID = null;
-            
-            // 获取升级槽 - 如果装了appflux则从appflux获取，否则从我们自己的获取
-            IUpgradeInventory upgrades = eap$compatGetEffectiveUpgradeInventory();
-
-            var boundChannel = ChannelCardLinkHelper.findBoundChannel(upgrades, this::eap$getFallbackOwner);
-            if (boundChannel != null) {
-                channel = boundChannel.channel();
-                ownerUUID = boundChannel.owner();
-                found = true;
-            }
-
-            if (!found) {
-                // 无频道卡：断开并视为初始化完成
-                ChannelCardLinkHelper.disconnect(eap$compatLink);
-                eap$compatHasInitialized = true;
-                eap$compatLastChannel = 0L;
-                eap$compatLastOwner = null;
-                this.eap$compatNotifyHostChanged();
-                return;
-            }
-
-            if (eap$compatLink != null
-                    && ChannelCardLinkHelper.sameTarget(eap$compatLastChannel, eap$compatLastOwner, boundChannel)) {
-                if (eap$compatLink.isConnected()) {
-                    eap$compatHasInitialized = true;
-                }
-                return;
-            }
-
-            if (eap$compatLink == null) {
-                var endpoint = new GenericNodeEndpointImpl(() -> host.getBlockEntity(), () -> this.mainNode.getNode());
-                eap$compatLink = new WirelessSlaveLink(endpoint);
-            }
-
-            eap$compatLink.setPlacerId(ownerUUID);
-            eap$compatLink.setFrequency(channel);
-            eap$compatLink.updateStatus();
-            eap$compatLastChannel = channel;
-            eap$compatLastOwner = ownerUUID;
-            this.eap$compatNotifyHostChanged();
-
-            if (eap$compatLink.isConnected()) {
-                eap$compatHasInitialized = true;
-            } else {
-                eap$compatHasInitialized = false;
-                eap$compatDelayedInitTicks = Math.max(eap$compatDelayedInitTicks, 5);
-                try {
-                    mainNode.ifPresent((grid, node) -> {
-                        try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
-                    });
-                } catch (Throwable ignored) {}
-            }
-        } catch (Exception e) {
-            Logger.EAP$LOGGER.error("兼容性频道链接初始化失败", e);
-        }
-    }
-
     @Unique
     private IUpgradeInventory eap$compatGetEffectiveUpgradeInventory() {
         if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
@@ -608,123 +471,41 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
     }
 
-    @Override
-    public boolean eap$shouldKeepTicking() {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return false;
-        }
-
-        try {
-            if (host.getBlockEntity() == null || host.getBlockEntity().getLevel() == null
-                    || host.getBlockEntity().getLevel().isClientSide) {
-                return false;
-            }
-            return ChannelCardLinkHelper.shouldKeepTicking(
-                    eap$compatGetEffectiveUpgradeInventory(),
-                    eap$compatLink,
-                    eap$compatHasInitialized);
-        } catch (Throwable ignored) {
-        }
-        return false;
-    }
-
-    @Override
-    public void eap$setClientWirelessState(boolean connected) {
-        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-            eap$compatClientConnected = connected;
-        }
-    }
-
-    @Override
-    public boolean eap$isWirelessConnected() {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return false;
-        }
-        
-        try {
-            if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
-                return eap$compatClientConnected;
-            } else {
-                return eap$compatLink != null && eap$compatLink.isConnected();
-            }
-        } catch (Exception e) {
-            Logger.EAP$LOGGER.error("检查兼容性无线连接状态失败", e);
-            return false;
-        }
-    }
-
-    @Override
-    public boolean eap$hasTickInitialized() {
-        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return eap$compatHasInitialized;
-        }
-        return true;
-    }
-
-    @Override
-    public void eap$setTickInitialized(boolean initialized) {
-        if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-            eap$compatHasInitialized = initialized;
-        }
-    }
-
-    @Override
-    public void eap$handleDelayedInit() {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return;
-        }
-        
-        try {
-            // 仅服务端
-            if (host.getBlockEntity() != null && host.getBlockEntity().getLevel() != null && host.getBlockEntity().getLevel().isClientSide) {
-                return;
-            }
-            if (!eap$compatHasInitialized) {
-                if (!mainNode.hasGridBooted()) {
-                    if (eap$compatDelayedInitTicks > 0) {
-                        eap$compatDelayedInitTicks--;
-                    }
-                    if (eap$compatDelayedInitTicks == 0) {
-                        eap$compatDelayedInitTicks = 5;
-                        try {
-                            mainNode.ifPresent((grid, node) -> {
-                                try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
-                            });
-                        } catch (Throwable ignored) {}
-                    }
-                } else {
-                    eap$compatInitializeChannelLink();
-                    eap$compatSyncVirtualCraftingState();
-                }
-            }
-        } catch (Exception e) {
-            Logger.EAP$LOGGER.error("兼容性延迟初始化失败", e);
-        }
-    }
-
     @Inject(method = "onMainNodeStateChanged", at = @At("TAIL"))
     private void eap$compatOnMainNodeStateChangedTail(CallbackInfo ci) {
-        if (!UpgradeSlotCompat.shouldEnableChannelCard()) {
-            return;
+        this.eap$getChannelCardController().onNodeChanged();
+    }
+
+    @Override
+    public ChannelCardConnectionController eap$getChannelCardController() {
+        if (this.eap$channelController == null) {
+            this.eap$channelController = new ChannelCardConnectionController(
+                    this::eap$compatGetEffectiveUpgradeInventory,
+                    this::eap$getFallbackOwner,
+                    () -> new GenericNodeEndpointImpl(this.host::getBlockEntity, this.mainNode::getNode),
+                    this::eap$compatNotifyHostChanged,
+                    this::eap$wakeNode,
+                    this::eap$isClientSide);
+            if (this.host.getBlockEntity() != null) {
+                ChannelCardConnectionController.register(this.host.getBlockEntity(), this.eap$channelController);
+            }
         }
-        
-        try {
-            eap$compatLastChannel = -1;
-            eap$compatLastOwner = null;
-            eap$compatHasInitialized = false;
-            eap$compatDelayedInitTicks = 10;
-            try {
-                mainNode.ifPresent((grid, node) -> {
-                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored) {}
-                });
-            } catch (Throwable ignored) {}
-        } catch (Exception e) {
-            Logger.EAP$LOGGER.error("兼容性主节点状态变更处理失败", e);
-        }
+        return this.eap$channelController;
     }
 
     @Unique
-    private UUID eap$getFallbackOwner() {
+    private boolean eap$isClientSide() {
+        var blockEntity = this.host.getBlockEntity();
+        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide;
+    }
+
+    @Unique
+    private void eap$wakeNode() {
+        this.mainNode.ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
+    }
+
+    @Unique
+    private java.util.UUID eap$getFallbackOwner() {
         if (this.mainNode != null && this.mainNode.getNode() != null) {
             return this.mainNode.getNode().getOwningPlayerProfileId();
         }

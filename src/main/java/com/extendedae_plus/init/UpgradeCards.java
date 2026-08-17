@@ -6,6 +6,8 @@ import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.core.localization.GuiText;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraft.world.level.ItemLike;
 
 import static com.glodblock.github.extendedae.common.EPPItemAndBlock.*;
 
@@ -63,6 +65,36 @@ public final class UpgradeCards {
             //EAE 的扩展输入/输出总线支持频道卡（部件）
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_IMPORT_BUS, 1, ioBusGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), EX_EXPORT_BUS, 1, ioBusGroup);
+
+            // AdvancedAE 的大小型高级样板供应器共用同一套频道卡逻辑。
+            if (ModList.get().isLoaded("advanced_ae")) {
+                registerAdvancedPatternProviderCards();
+            }
         });
+    }
+
+    /** 用反射读取可选模组定义，避免未安装 AdvancedAE 时加载失败。 */
+    private static void registerAdvancedPatternProviderCards() {
+        String group = "group.pattern_provider.name";
+        String[] blockFields = {"ADV_PATTERN_PROVIDER", "SMALL_ADV_PATTERN_PROVIDER"};
+        String[] itemFields = {"ADV_PATTERN_PROVIDER", "SMALL_ADV_PATTERN_PROVIDER"};
+        try {
+            Class<?> blocks = Class.forName("net.pedroksl.advanced_ae.common.definitions.AAEBlocks");
+            Class<?> items = Class.forName("net.pedroksl.advanced_ae.common.definitions.AAEItems");
+            for (String fieldName : blockFields) {
+                Object definition = blocks.getField(fieldName).get(null);
+                if (definition instanceof ItemLike itemLike) {
+                    Upgrades.add(ModItems.CHANNEL_CARD.get(), itemLike, 1, group);
+                }
+            }
+            for (String fieldName : itemFields) {
+                Object definition = items.getField(fieldName).get(null);
+                if (definition instanceof ItemLike itemLike) {
+                    Upgrades.add(ModItems.CHANNEL_CARD.get(), itemLike, 1, group);
+                }
+            }
+        } catch (ReflectiveOperationException | LinkageError e) {
+            com.extendedae_plus.util.Logger.EAP$LOGGER.warn("AdvancedAE 频道卡注册跳过：未找到供应器定义", e);
+        }
     }
 }
