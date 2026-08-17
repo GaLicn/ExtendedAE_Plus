@@ -16,6 +16,7 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.Tags;
 import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
 import net.pedroksl.advanced_ae.common.definitions.AAEItems;
 import net.pedroksl.advanced_ae.recipes.ReactionChamberRecipeBuilder;
@@ -201,6 +202,16 @@ public class CrafterRecipe extends RecipeProvider {
                 .define('A',Items.STICK)
                 .define('B',ModItems.LATTRA_CRYSTAL.get())
                 .unlockedBy("has_ultimate_super_assembler_matrix_builder",has(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get()))
+                .save(output);
+
+        //伪装适用方块
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DISGUISED_BLOCK.get(),32)
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .define('A', Tags.Items.STONES)
+                .define('B',ModItems.LATTRA_CRYSTAL)
+                .unlockedBy("has_disguised_block",has(ModItems.DISGUISED_BLOCK.get()))
                 .save(output);
     }
 

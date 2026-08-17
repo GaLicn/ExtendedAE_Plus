@@ -199,6 +199,15 @@ public final class ModBlocks {
                     .noOcclusion())
     );
 
+    // 伪装功能可使用的基础方块，暂不附加额外交互逻辑。
+    public static final DeferredBlock<Block> DISGUISED_BLOCK = BLOCKS.register(
+            "disguised_block",
+            () -> new Block(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.METAL)
+                    .strength(1.5F, 6.0F)
+                    .requiresCorrectToolForDrops())
+    );
+
     public static final DeferredBlock<Block> C_H716 = registerDollBlock("c-h716");
     public static final DeferredBlock<Block> FISH_DAN = registerDollBlock("fish_dan_");
     public static final DeferredBlock<Block> _LENG = registerDollBlock("_leng");

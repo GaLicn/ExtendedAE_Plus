@@ -43,6 +43,7 @@ public final class ModCreativeTabs {
                                 ModItems.TAG_INVENTORY_ME_INTERFACE.get().getDefaultInstance(),
                                 ModItems.CRYSTAL_ASSEMBLER_PLUS.get().getDefaultInstance(),
                                 ModItems.CIRCUIT_CUTTER_PLUS.get().getDefaultInstance(),
+                                ModItems.DISGUISED_BLOCK.get().getDefaultInstance(),
                                 ModItems.C_H716.get().getDefaultInstance(),
                                 ModItems.FISH_DAN.get().getDefaultInstance(),
                                 ModItems._LENG.get().getDefaultInstance(),

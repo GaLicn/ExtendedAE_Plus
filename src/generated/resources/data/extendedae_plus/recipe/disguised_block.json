@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "tag": "c:stones"
+    },
+    "B": {
+      "item": "extendedae_plus:lattra_crystal"
+    }
+  },
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "result": {
+    "count": 32,
+    "id": "extendedae_plus:disguised_block"
+  }
+}
