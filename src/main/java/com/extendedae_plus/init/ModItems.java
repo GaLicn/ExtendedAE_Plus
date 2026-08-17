@@ -1,6 +1,9 @@
 package com.extendedae_plus.init;
 
+import appeng.api.parts.PartModels;
+import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
@@ -251,6 +254,11 @@ public final class ModItems {
     }
 
     private ModItems() {}
+
+    /** 在 AE2 冻结 CableBus 模型依赖前登记实体加速器的全部部件模型。 */
+    public static void registerPartModels() {
+        PartModels.registerModels(PartModelsHelper.createModels(EntitySpeedTickerPart.class));
+    }
 
     /**
      * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
