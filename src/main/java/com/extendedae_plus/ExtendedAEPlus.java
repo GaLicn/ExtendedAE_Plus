@@ -1,11 +1,8 @@
 package com.extendedae_plus;
 
-import appeng.api.parts.IPart;
-import appeng.api.parts.PartModels;
 import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
-import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
@@ -63,6 +60,8 @@ public class ExtendedAEPlus {
 
         // 注册本模组方块/物品/创造物品栏
         ModBlocks.BLOCKS.register(modEventBus);
+        // AE2 会在模型加载前冻结部件模型集合，必须在模组构造阶段完成登记。
+        ModItems.registerPartModels();
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
@@ -230,13 +229,6 @@ public class ExtendedAEPlus {
             try {
                 // 注册升级卡
                 new UpgradeCards(event);
-
-                // 为 PartItem 注册 AE2 部件模型
-                PartModels.registerModels(
-                        PartModelsHelper.createModels(
-                                ModItems.ENTITY_TICKER_PART_ITEM.get().getPartClass().asSubclass(IPart.class)
-                        )
-                );
 
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
                 try {
