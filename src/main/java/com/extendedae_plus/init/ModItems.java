@@ -118,6 +118,10 @@ public final class ModItems {
             "circuit_cutter_plus",
             () -> new BlockItem(ModBlocks.CIRCUIT_CUTTER_PLUS.get(), new Item.Properties())
     );
+    public static final DeferredItem<Item> DISGUISED_BLOCK = ITEMS.register(
+            "disguised_block",
+            () -> new BlockItem(ModBlocks.DISGUISED_BLOCK.get(), new Item.Properties())
+    );
     public static final DeferredItem<Item> C_H716 = ITEMS.register(
             "c-h716",
             () -> new BlockItem(ModBlocks.C_H716.get(), new Item.Properties())

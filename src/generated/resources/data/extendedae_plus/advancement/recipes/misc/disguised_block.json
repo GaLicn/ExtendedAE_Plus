@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_disguised_block": {
+      "conditions": {
+        "items": [
+          {
+            "items": "extendedae_plus:disguised_block"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:disguised_block"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_disguised_block"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:disguised_block"
+    ]
+  }
+}
