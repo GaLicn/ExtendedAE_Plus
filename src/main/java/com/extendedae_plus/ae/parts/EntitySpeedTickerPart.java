@@ -32,17 +32,16 @@ import appeng.util.SettingsFrom;
 import appeng.util.inv.PlayerInternalInventory;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
+import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenCustomHashMap;
 import net.minecraft.core.BlockPos;
@@ -92,12 +91,8 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
     private YesNo networkEnergySufficient = YesNo.YES; // 网络能量是否充足
-    private WirelessSlaveLink wirelessLink;
-    private long lastChannel = -1;
-    private UUID lastOwner;
-    private boolean clientWirelessConnected = false;
-    private boolean hasInitializedWireless = false;
-    private int delayedInitTicks = 0;
+    /** 频道卡连接统一交给控制器。 */
+    private ChannelCardConnectionController channelCardController;
 
     /**
      * 构造函数，初始化部件并设置网络节点属性。
@@ -245,7 +240,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @Override
     public TickingRequest getTickingRequest(IGridNode iGridNode) {
         // 每 1 tick 执行一次
-        return new TickingRequest(1, 1, this.isSleeping());
+        return new TickingRequest(1, 1, this.isSleeping() && !this.eap$getChannelCardController().shouldKeepTicking());
     }
 
     /**
@@ -258,11 +253,7 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @Override
     public TickRateModulation tickingRequest(IGridNode iGridNode, int ticksSinceLastCall) {
         if (!this.isClientSide()) {
-            if (!this.hasInitializedWireless) {
-                this.initializeWirelessLink();
-            } else if (this.wirelessLink != null && this.lastChannel != 0L) {
-                this.wirelessLink.updateStatus();
-            }
+            this.eap$getChannelCardController().tick();
         }
         if (!this.isAccelerate()) {
             return TickRateModulation.IDLE;
@@ -476,80 +467,72 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         if (this.isClientSide()) {
             return;
         }
-        this.hasInitializedWireless = false;
-        this.lastChannel = -1;
-        this.lastOwner = null;
-        this.initializeWirelessLink();
+        this.eap$getChannelCardController().onUpgradesChanged();
     }
 
     @Override
     public void eap$updateWirelessLink() {
-        if (this.isClientSide()) {
-            return;
-        }
-        if (this.wirelessLink != null) {
-            this.wirelessLink.updateStatus();
-        }
+        this.eap$getChannelCardController().updateWirelessLink();
     }
 
     @Override
     public boolean eap$isWirelessConnected() {
-        if (this.isClientSide()) {
-            return this.clientWirelessConnected;
-        }
-        return this.wirelessLink != null && this.wirelessLink.isConnected();
+        return this.eap$getChannelCardController().isConnected();
     }
 
     @Override
     public void eap$setClientWirelessState(boolean connected) {
-        this.clientWirelessConnected = connected;
+        this.eap$getChannelCardController().setClientConnected(connected);
     }
 
     @Override
     public boolean eap$hasTickInitialized() {
-        return this.hasInitializedWireless;
+        return this.eap$getChannelCardController().isInitialized();
     }
 
     @Override
     public void eap$setTickInitialized(boolean initialized) {
-        this.hasInitializedWireless = initialized;
+        this.eap$getChannelCardController().setInitialized(initialized);
     }
 
     @Override
     public void eap$initializeChannelLink() {
-        this.initializeWirelessLink();
+        this.eap$getChannelCardController().initialize();
     }
 
     @Override
     public void eap$handleDelayedInit() {
-        if (this.isClientSide()) {
-            return;
-        }
-        if (!this.hasInitializedWireless) {
-            this.initializeWirelessLink();
-            return;
-        }
-        if (this.delayedInitTicks > 0) {
-            this.delayedInitTicks--;
-            if (this.delayedInitTicks == 0 && this.wirelessLink != null && !this.wirelessLink.isConnected()) {
-                this.hasInitializedWireless = false;
-                this.initializeWirelessLink();
-            }
-        }
+        this.eap$getChannelCardController().tick();
     }
 
     @Override
     public boolean eap$shouldKeepTicking() {
-        if (this.isClientSide()) {
-            return false;
+        return this.eap$getChannelCardController().shouldKeepTicking();
+    }
+
+    @Override
+    public ChannelCardConnectionController eap$getChannelCardController() {
+        if (this.channelCardController == null) {
+            this.channelCardController = new ChannelCardConnectionController(
+                    this::getUpgrades,
+                    this::getFallbackOwner,
+                    () -> new GenericNodeEndpointImpl(
+                            () -> this.getHost().getBlockEntity(),
+                            () -> this.getMainNode().getNode()),
+                    () -> this.getHost().markForUpdate(),
+                    () -> {
+                        var node = this.getMainNode();
+                        if (node != null && node.getGrid() != null) {
+                            node.getGrid().getTickManager().wakeDevice(node.getNode());
+                        }
+                    },
+                    this::isClientSide);
+            if (this.getHost().getBlockEntity() != null) {
+                ChannelCardConnectionController.register(
+                        this.getHost().getBlockEntity(), this.channelCardController);
+            }
         }
-        if (!this.hasInitializedWireless) {
-            return true;
-        }
-        if (this.lastChannel == 0L) {
-            return false;
-        }
-        return this.wirelessLink == null || !this.wirelessLink.isConnected();
+        return this.channelCardController;
     }
 
     private boolean extractPower(double requiredPower) {
@@ -575,88 +558,6 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
         }
         this.setNetworkEnergySufficient(false);
         return false;
-    }
-
-    private void initializeWirelessLink() {
-        if (this.isClientSide()) {
-            return;
-        }
-        var node = this.getMainNode();
-        if (node == null || node.getNode() == null) {
-            this.hasInitializedWireless = false;
-            return;
-        }
-
-        long channel = 0L;
-        UUID owner = null;
-        boolean found = false;
-        for (ItemStack stack : this.getUpgrades()) {
-            if (!stack.isEmpty() && stack.getItem() == ModItems.CHANNEL_CARD.get()) {
-                channel = ChannelCardItem.getChannel(stack);
-                owner = ChannelCardItem.getOwnerUUID(stack);
-                if (owner == null) {
-                    owner = this.getFallbackOwner();
-                }
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) {
-            this.disconnectWirelessLink();
-            this.lastChannel = 0L;
-            this.lastOwner = null;
-            this.hasInitializedWireless = true;
-            this.delayedInitTicks = 0;
-            try {
-                this.getHost().markForUpdate();
-            } catch (Throwable ignored) {
-            }
-            return;
-        }
-
-        boolean sameOwner = (this.lastOwner == null && owner == null)
-                || (this.lastOwner != null && this.lastOwner.equals(owner));
-        if (this.wirelessLink != null && this.lastChannel == channel && sameOwner) {
-            if (this.wirelessLink.isConnected()) {
-                this.hasInitializedWireless = true;
-            } else {
-                this.delayedInitTicks = Math.max(this.delayedInitTicks, 5);
-            }
-            return;
-        }
-
-        if (this.wirelessLink == null) {
-            var endpoint = new GenericNodeEndpointImpl(
-                    () -> this.getHost().getBlockEntity(),
-                    () -> this.getMainNode().getNode()
-            );
-            this.wirelessLink = new WirelessSlaveLink(endpoint);
-        }
-
-        this.wirelessLink.setPlacerId(owner);
-        this.wirelessLink.setFrequency(channel);
-        this.wirelessLink.updateStatus();
-        this.lastChannel = channel;
-        this.lastOwner = owner;
-        this.hasInitializedWireless = this.wirelessLink.isConnected();
-        if (!this.hasInitializedWireless) {
-            this.delayedInitTicks = 5;
-        } else {
-            this.delayedInitTicks = 0;
-        }
-        try {
-            this.getHost().markForUpdate();
-        } catch (Throwable ignored) {
-        }
-    }
-
-    private void disconnectWirelessLink() {
-        if (this.wirelessLink != null) {
-            this.wirelessLink.setPlacerId(null);
-            this.wirelessLink.setFrequency(0L);
-            this.wirelessLink.updateStatus();
-        }
     }
 
     private UUID getFallbackOwner() {
