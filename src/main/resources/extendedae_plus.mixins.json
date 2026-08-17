@@ -12,6 +12,7 @@
     "advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor",
     "advancedae.accessor.AdvPatternProviderLogicPatternsAccessor",
     "advancedae.accessor.AdvPatternProviderMenuAdvancedAccessor",
+    "advancedae.compat.AdvPatternProviderLogicHostMirrorBridgeMixin",
     "advancedae.compat.PatternProviderLogicVirtualCompletionMixin",
     "advancedae.crafting.AdvCraftingCPULogicManualWaitingMixin",
     "advancedae.helpers.AdvPatternProviderLogicAdvancedMixin",
