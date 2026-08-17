@@ -1,13 +1,15 @@
 package com.extendedae_plus.mixin.ae2.helpers;
 
+import appeng.api.networking.IManagedGridNode;
 import appeng.api.upgrades.IUpgradeInventory;
+import appeng.blockentity.AEBaseBlockEntity;
 import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
-import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
 import com.extendedae_plus.ae.wireless.endpoint.InterfaceNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
-import com.extendedae_plus.util.wireless.ChannelCardLinkHelper;
-import java.util.UUID;
+import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,244 +17,78 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/** AE2 接口只负责把宿主生命周期转发给统一频道卡控制器。 */
 @Mixin(InterfaceLogic.class)
 public abstract class InterfaceLogicChannelCardMixin implements InterfaceWirelessLinkBridge {
-
-    static {
-        // InterfaceLogicChannelCardMixin 已加载
-    }
-
     @Shadow(remap = false) protected InterfaceLogicHost host;
-    @Shadow(remap = false) protected appeng.api.networking.IManagedGridNode mainNode;
-    @Unique
-    private WirelessSlaveLink eap$link;
-    @Unique
-    private long eap$lastChannel = -1;
-    @Unique
-    private UUID eap$lastOwner;
-    @Unique
-    private boolean eap$clientConnected = false;
-    @Unique
-    private boolean eap$hasInitialized = false;
-    @Unique
-    private int eap$delayedInitTicks = 0;
+    @Shadow(remap = false) protected IManagedGridNode mainNode;
+
+    @Unique private ChannelCardConnectionController eap$channelController;
 
     @Shadow(remap = false)
     public abstract IUpgradeInventory getUpgrades();
 
-    @Shadow(remap = false)
-    public abstract appeng.api.networking.IGridNode getActionableNode();
-
     @Inject(method = "onUpgradesChanged", at = @At("TAIL"), remap = false)
-    private void eap$onUpgradesChangedTail(CallbackInfo ci) {
-        // 升级变更时重置标志并尝试初始化
-        this.eap$lastChannel = -1;
-        this.eap$hasInitialized = false;
-        this.eap$initializeChannelLink();
+    private void eap$onUpgradesChanged(CallbackInfo ci) {
+        this.eap$getChannelCardController().onUpgradesChanged();
     }
 
     @Inject(method = "gridChanged", at = @At("TAIL"), remap = false)
-    private void eap$afterGridChanged(CallbackInfo ci) {
-        // 网格状态变化时重置标志并设置延迟初始化
-        this.eap$lastChannel = -1;
-        this.eap$hasInitialized = false;
-        this.eap$delayedInitTicks = 10; // 适当增加延迟tick，等待网格完成引导
-        // 尝试唤醒设备，确保后续还能继续tick
-        if (this.mainNode != null) {
-            this.mainNode.ifPresent((grid, node) -> {
-                try {
-                    grid.getTickManager().wakeDevice(node);
-                } catch (Throwable ignored) {
-                }
-            });
-        }
+    private void eap$onGridChanged(CallbackInfo ci) {
+        this.eap$getChannelCardController().onNodeChanged();
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"), remap = false)
-    private void eap$afterReadNBT(net.minecraft.nbt.CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
-        // 从 NBT加载时重置标志
-        this.eap$lastChannel = -1;
-        this.eap$hasInitialized = false;
-        // 直接尝试初始化
-        this.eap$initializeChannelLink();
+    private void eap$onLoaded(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
+        this.eap$getChannelCardController().onLoaded();
     }
 
     @Inject(method = "clearContent", at = @At("HEAD"), remap = false)
-    private void eap$onClearContent(CallbackInfo ci) {
-        if (this.eap$link != null) {
-            this.eap$link.onUnloadOrRemove();
+    private void eap$onContentCleared(CallbackInfo ci) {
+        this.eap$getChannelCardController().onUnloaded();
+    }
+
+    @Override
+    public ChannelCardConnectionController eap$getChannelCardController() {
+        if (this.eap$channelController == null) {
+            this.eap$channelController = new ChannelCardConnectionController(
+                    this::getUpgrades,
+                    this::eap$getFallbackOwner,
+                    () -> new InterfaceNodeEndpointImpl(this.host, this.mainNode::getNode),
+                    this::eap$notifyHostChanged,
+                    this::eap$wakeNode,
+                    this::eap$isClientSide);
+            if (this.host.getBlockEntity() != null) {
+                ChannelCardConnectionController.register(this.host.getBlockEntity(), this.eap$channelController);
+            }
         }
+        return this.eap$channelController;
     }
 
-    @Override
-    public void eap$updateWirelessLink() {
-        if (this.eap$link != null) {
-            this.eap$link.updateStatus();
-        }
-    }
-
-    @Override
-    public boolean eap$isWirelessConnected() {
-        // InterfaceLogic没有isClientSide方法，需要通过host判断
-        if (this.host.getBlockEntity() != null && this.host.getBlockEntity().getLevel() != null && this.host.getBlockEntity().getLevel().isClientSide) {
-            return this.eap$clientConnected;
-        } else {
-            return this.eap$link != null && this.eap$link.isConnected();
-        }
-    }
-
-    @Override
-    public void eap$setClientWirelessState(boolean connected) {
-        this.eap$clientConnected = connected;
-    }
-
-    @Override
-    public boolean eap$hasTickInitialized() {
-        return this.eap$hasInitialized;
-    }
-
-    @Override
-    public void eap$setTickInitialized(boolean initialized) {
-        this.eap$hasInitialized = initialized;
-    }
-
-    @Override
-    public boolean eap$shouldKeepTicking() {
-        return ChannelCardLinkHelper.shouldKeepTicking(this.getUpgrades(), this.eap$link, this.eap$hasInitialized);
-    }
-
-    @Override
     @Unique
-    public void eap$initializeChannelLink() {
-        // 仅在服务端执行，避免在渲染线程/客户端触发任何初始化路径
-        if (this.host.getBlockEntity() != null && this.host.getBlockEntity().getLevel() != null && this.host.getBlockEntity().getLevel().isClientSide) {
-            return;
-        }
-
-        // 避免重复初始化
-        if (this.eap$hasInitialized) {
-            return;
-        }
-
-        // 仅要求节点对象可用；不要依赖 isActive（无线连接本身会建立连接与激活节点）
-        if (this.mainNode == null || this.mainNode.getNode() == null) {
-            return;
-        }
-
-        try {
-            var boundChannel = ChannelCardLinkHelper.findBoundChannel(this.getUpgrades(), this::eap$getFallbackOwner);
-            long channel = boundChannel != null ? boundChannel.channel() : 0L;
-            boolean found = boundChannel != null;
-            UUID owner = boundChannel != null ? boundChannel.owner() : null;
-
-            if (!found) {
-                // 无频道卡：断开并视为初始化完成
-                ChannelCardLinkHelper.disconnect(this.eap$link);
-                this.eap$hasInitialized = true;
-                this.eap$lastChannel = 0L;
-                this.eap$lastOwner = null;
-                // 保存一次状态
-                try {
-                    this.host.saveChanges();
-                } catch (Throwable ignored) {
-                }
-                // 唤醒设备以刷新客户端/邻居
-                try {
-                    this.mainNode.ifPresent((grid, node) -> {
-                        try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
-                    });
-                } catch (Throwable ignored2) {}
-                return;
-            }
-
-            if (this.eap$link != null
-                    && ChannelCardLinkHelper.sameTarget(this.eap$lastChannel, this.eap$lastOwner, boundChannel)) {
-                this.eap$hasInitialized = this.eap$link.isConnected();
-                return;
-            }
-
-            if (this.eap$link == null) {
-                var endpoint = new InterfaceNodeEndpointImpl(this.host, () -> this.mainNode.getNode());
-                this.eap$link = new WirelessSlaveLink(endpoint);
-            }
-
-            this.eap$link.setPlacerId(owner);
-            this.eap$link.setFrequency(channel);
-            this.eap$link.updateStatus();
-            this.eap$lastChannel = channel;
-            this.eap$lastOwner = owner;
-            try {
-                this.host.saveChanges();
-            } catch (Throwable ignored) {
-            }
-            // 唤醒设备，加速后续 tick 以完成连接
-            try {
-                this.mainNode.ifPresent((grid, node) -> {
-                    try { grid.getTickManager().wakeDevice(node); } catch (Throwable ignored2) {}
-                });
-            } catch (Throwable ignored2) {}
-
-            if (this.eap$link.isConnected()) {
-                this.eap$hasInitialized = true; // 设置初始化完成标志
-            } else {
-                // 不标记为完成，允许后续tick重试
-                this.eap$hasInitialized = false;
-                // 设置一个短延迟窗口，避免每tick刷屏
-                this.eap$delayedInitTicks = Math.max(this.eap$delayedInitTicks, 5);
-                try {
-                    this.mainNode.ifPresent((grid, node) -> {
-                        try {
-                            grid.getTickManager().wakeDevice(node);
-                        } catch (Throwable ignored) {
-                        }
-                    });
-                } catch (Throwable ignored) {
-                }
-            }
-        } catch (Exception ignored) {
-        }
+    private boolean eap$isClientSide() {
+        var blockEntity = this.host.getBlockEntity();
+        return blockEntity != null && blockEntity.getLevel() != null && blockEntity.getLevel().isClientSide;
     }
-    
-    @Override
-    public void eap$handleDelayedInit() {
-        // 仅在服务端执行延迟初始化，避免在渲染线程/客户端触发任何初始化路径
-        if (this.host.getBlockEntity() != null && this.host.getBlockEntity().getLevel() != null && this.host.getBlockEntity().getLevel().isClientSide) {
-            return;
-        }
 
-        // 若尚未初始化，则持续尝试，直到网格完成引导
-        if (!this.eap$hasInitialized) {
-            // 若节点对象尚未就绪，则等待；无需等待 isActive（无线接入后会激活）
-            if (this.mainNode == null || this.mainNode.getNode() == null) {
-                // 仍在引导，消耗计时器
-                if (this.eap$delayedInitTicks > 0) {
-                    this.eap$delayedInitTicks--;
-                }
-                if (this.eap$delayedInitTicks == 0) {
-                    // 重新设定一个短延迟窗口，并唤醒设备，以保证后续还能继续 tick
-                    this.eap$delayedInitTicks = 5;
-                    try {
-                        this.mainNode.ifPresent((grid, node) -> {
-                            try {
-                                grid.getTickManager().wakeDevice(node);
-                            } catch (Throwable ignored) {
-                            }
-                        });
-                    } catch (Throwable ignored) {
-                    }
-                }
-            } else {
-                // 网格已引导完成，执行初始化
-                this.eap$initializeChannelLink();
-            }
-        }
-    }
-    
     @Unique
-    private UUID eap$getFallbackOwner() {
-        if (this.mainNode != null && this.mainNode.getNode() != null) {
-            return this.mainNode.getNode().getOwningPlayerProfileId();
+    private java.util.UUID eap$getFallbackOwner() {
+        var node = this.mainNode != null ? this.mainNode.getNode() : null;
+        return node != null ? node.getOwningPlayerProfileId() : null;
+    }
+
+    @Unique
+    private void eap$notifyHostChanged() {
+        this.host.saveChanges();
+        if (this.host.getBlockEntity() instanceof AEBaseBlockEntity blockEntity) {
+            blockEntity.markForUpdate();
         }
-        return null;
+    }
+
+    @Unique
+    private void eap$wakeNode() {
+        if (this.mainNode != null) {
+            this.mainNode.ifPresent((grid, node) -> grid.getTickManager().wakeDevice(node));
+        }
     }
 }

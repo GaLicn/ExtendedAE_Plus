@@ -5,7 +5,11 @@ import appeng.core.definitions.AEBlocks;
 import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.core.localization.GuiText;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Items;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.ModList;
 
 /**
  * 
@@ -78,6 +82,27 @@ public class UpgradeCards {
             // 超大接口
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.OVERSIZE_INTERFACE, 1, interfaceGroup);
             Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.OVERSIZE_INTERFACE_PART, 1, interfaceGroup);
+
+            registerAdvancedAePatternProviderChannelCards(patternProviderGroup);
         });
+    }
+
+    /** AdvancedAE 为可选前置，仅在其物品已注册时添加频道卡规则。 */
+    private static void registerAdvancedAePatternProviderChannelCards(String patternProviderGroup) {
+        if (!ModList.get().isLoaded("advanced_ae")) {
+            return;
+        }
+
+        registerChannelCardFor("advanced_ae", "adv_pattern_provider", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "small_adv_pattern_provider", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "adv_pattern_provider_part", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "small_adv_pattern_provider_part", patternProviderGroup);
+    }
+
+    private static void registerChannelCardFor(String namespace, String path, String group) {
+        var item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(namespace, path));
+        if (item != Items.AIR) {
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), item, 1, group);
+        }
     }
 }
