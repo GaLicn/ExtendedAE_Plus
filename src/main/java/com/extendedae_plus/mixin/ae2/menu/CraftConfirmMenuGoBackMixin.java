@@ -5,7 +5,8 @@ import appeng.api.stacks.AEItemKey;
 import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
-import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.compat.AppliedMekanisticsCompat;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,21 +48,11 @@ public class CraftConfirmMenuGoBackMixin {
                 if (entry.getMissingAmount() > 0) {
                     var what = entry.getWhat();
                     if (what instanceof AEItemKey aeItemKey) {
-                        JeiRuntimeProxy.addBookmark(aeItemKey.getReadOnlyStack());
+                        JeiRuntimeCompat.addBookmark(aeItemKey.getReadOnlyStack());
                     } else if (what instanceof AEFluidKey aeFluidKey) {
-                        JeiRuntimeProxy.addBookmark(aeFluidKey.toStack(1000));
+                        JeiRuntimeCompat.addBookmark(aeFluidKey.toStack(1000));
                     } else if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
-                        try {
-                            if (what != null) {
-                                // avoid compile-time dependency on MekanismKey by reflection
-                                Class<?> mekanismKeyCls = Class.forName("me.ramidzkh.mekae2.ae2.MekanismKey");
-                                if (mekanismKeyCls.isInstance(what)) {
-                                    java.lang.reflect.Method m = mekanismKeyCls.getMethod("getStack");
-                                    Object stack = m.invoke(what);
-                                    JeiRuntimeProxy.addBookmark(stack);
-                                }
-                            }
-                        } catch (Throwable ignored) {}
+                        AppliedMekanisticsCompat.addBookmark(what);
                     }
                 }
             }

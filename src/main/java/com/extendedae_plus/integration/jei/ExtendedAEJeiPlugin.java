@@ -1,29 +1,30 @@
 package com.extendedae_plus.integration.jei;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
+import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
-import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
-import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
-import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
-import mezz.jei.api.ingredients.subtypes.UidContext;
-import mezz.jei.api.registration.ISubtypeRegistration;
-import mezz.jei.api.registration.IRecipeCategoryRegistration;
-import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.IRecipeCatalystRegistration;
-import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
+import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
+import mezz.jei.api.ingredients.subtypes.UidContext;
+import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.registration.IRecipeCatalystRegistration;
+import mezz.jei.api.registration.IRecipeCategoryRegistration;
+import mezz.jei.api.registration.IRecipeRegistration;
+import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -34,13 +35,13 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
     private static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "jei_plugin");
 
     @Override
-    public ResourceLocation getPluginUid() {
+    public @NotNull ResourceLocation getPluginUid() {
         return UID;
     }
 
     @Override
-    public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
-        JeiRuntimeProxy.setRuntime(jeiRuntime);
+    public void onRuntimeAvailable(@NotNull IJeiRuntime jeiRuntime) {
+        JeiRuntimeCompat.setRuntime(jeiRuntime);
     }
 
     @Override

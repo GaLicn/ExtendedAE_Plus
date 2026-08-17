@@ -28,7 +28,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.inventory.Slot;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -36,6 +35,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nullable;
 
 @Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class AEBaseScreenMixin {
@@ -170,9 +171,9 @@ public abstract class AEBaseScreenMixin {
             return;
         }
 
-        // 在槽位右下角绘制数量文本
+        // 在槽位右下角绘制数量文本（字号随 AE2 的 useTerminalUseLargeFont 配置）
         Font font = eap$getFont(self);
-        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y, 0.6f);
+        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y);
 
         try {
             var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level);

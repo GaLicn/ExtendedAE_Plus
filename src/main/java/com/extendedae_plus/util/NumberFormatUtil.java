@@ -65,6 +65,10 @@ public class NumberFormatUtil {
      * @return 格式化后的字符串
      */
     private static String formatDecimal(double value, String suffix) {
+        if (value >= 100) {
+            return (long) value + suffix;
+        }
+
         // 对于接近整数的值，使用整数显示
         if (Math.abs(value - Math.round(value)) < 0.001) {
             return String.valueOf(Math.round(value)) + suffix;
@@ -74,4 +78,4 @@ public class NumberFormatUtil {
             return formatted + suffix;
         }
     }
-} 
+}
