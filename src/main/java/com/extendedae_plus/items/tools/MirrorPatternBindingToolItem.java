@@ -3,6 +3,7 @@ package com.extendedae_plus.items.tools;
 import appeng.blockentity.networking.CableBusBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.AEBasePart;
+import com.extendedae_plus.api.bridge.MirrorPatternProviderMasterBridge;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity.MasterLocation;
 import net.minecraft.core.BlockPos;
@@ -318,7 +319,8 @@ public class MirrorPatternBindingToolItem extends Item {
             return null;
         }
 
-        if (blockEntity instanceof PatternProviderLogicHost) {
+        if (blockEntity instanceof PatternProviderLogicHost
+                || blockEntity instanceof MirrorPatternProviderMasterBridge) {
             return new MasterLocation(level.dimension(), pos, null);
         }
 
@@ -327,7 +329,8 @@ public class MirrorPatternBindingToolItem extends Item {
             Vec3 hitInBlock = new Vec3(hitVec.x - pos.getX(), hitVec.y - pos.getY(), hitVec.z - pos.getZ());
             var selectedPart = cableBus.getCableBus().selectPartLocal(hitInBlock).part;
             if (selectedPart instanceof AEBasePart basePart
-                    && selectedPart instanceof PatternProviderLogicHost) {
+                    && (selectedPart instanceof PatternProviderLogicHost
+                    || selectedPart instanceof MirrorPatternProviderMasterBridge)) {
                 return new MasterLocation(level.dimension(), pos, basePart.getSide());
             }
         }

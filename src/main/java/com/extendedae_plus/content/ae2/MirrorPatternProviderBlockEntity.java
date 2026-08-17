@@ -14,6 +14,7 @@ import appeng.parts.AEBasePart;
 import appeng.util.SettingsFrom;
 import appeng.util.CustomNameUtil;
 import appeng.util.inv.AppEngInternalInventory;
+import com.extendedae_plus.api.bridge.MirrorPatternProviderMasterBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
@@ -75,7 +76,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
     }
 
-    private record ResolvedMaster(MasterLocation location, PatternProviderLogicHost host) {
+    private record ResolvedMaster(MasterLocation location, MirrorPatternProviderMasterBridge host) {
     }
 
     public MirrorPatternProviderBlockEntity(BlockPos pos, BlockState blockState) {
@@ -215,6 +216,13 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
 
     @Nullable
     public PatternProviderLogicHost getMaster() {
+        var master = this.getMirrorMaster();
+        return master instanceof Ae2MasterAdapter adapter ? adapter.host : null;
+    }
+
+    /** 返回当前实际主机；高级样板供应器会通过兼容桥接暴露在这里。 */
+    @Nullable
+    public MirrorPatternProviderMasterBridge getMirrorMaster() {
         if (!(this.getLevel() instanceof ServerLevel serverLevel)) {
             return null;
         }
@@ -373,13 +381,13 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return changed;
     }
 
-    private boolean syncMirroredSettings(PatternProviderLogicHost master) {
+    private boolean syncMirroredSettings(MirrorPatternProviderMasterBridge master) {
         if (!this.hasDifferentMirroredSettings(master)) {
             return false;
         }
 
         var changed = false;
-        var masterName = getCustomName(master);
+        var masterName = master.eap$getMirrorCustomName();
         if (!Objects.equals(this.getCustomName(), masterName)) {
             // 仅导入名称，避免内存卡格式携带整套样板库存。
             var nameTag = new CompoundTag();
@@ -388,15 +396,15 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             changed = true;
         }
 
-        changed |= syncConfigSettings(master.getLogic().getConfigManager(), this.getLogic().getConfigManager());
+        changed |= syncSharedConfigSettings(master.eap$getMirrorConfigManager(), this.getLogic().getConfigManager());
 
-        if (this.getPriority() != master.getPriority()) {
-            this.setPriority(master.getPriority());
+        if (this.getLogic().getPriority() != master.eap$getMirrorPriority()) {
+            this.getLogic().setPriority(master.eap$getMirrorPriority());
             changed = true;
         }
 
-        if (supportsPushDirectionState(master)) {
-            var masterPushDirection = getPushDirection(master);
+        if (master.eap$supportsMirrorPushDirection()) {
+            var masterPushDirection = master.eap$getMirrorPushDirection();
             if (this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != masterPushDirection) {
                 var level = this.getLevel();
                 if (level != null) {
@@ -413,27 +421,28 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     private boolean resetMirroredSettingsToInitialState() {
         var defaultState = this.getBlockState().getBlock().defaultBlockState();
         var defaultMirror = new MirrorPatternProviderBlockEntity(this.getBlockPos(), defaultState);
-        return this.syncMirroredSettings(defaultMirror);
+        return this.syncMirroredSettings(new Ae2MasterAdapter(defaultMirror));
     }
 
-    private boolean hasDifferentMirroredSettings(PatternProviderLogicHost master) {
-        return !Objects.equals(this.getCustomName(), getCustomName(master))
-                || this.getPriority() != master.getPriority()
-                || !haveSameConfigSettings(this.getLogic().getConfigManager(), master.getLogic().getConfigManager())
-                || supportsPushDirectionState(master)
-                && this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != getPushDirection(master);
+    private boolean hasDifferentMirroredSettings(MirrorPatternProviderMasterBridge master) {
+        var mirrorLogic = this.getLogic();
+        return !Objects.equals(this.getCustomName(), master.eap$getMirrorCustomName())
+                || mirrorLogic.getPriority() != master.eap$getMirrorPriority()
+                || !haveSameSharedConfigSettings(mirrorLogic.getConfigManager(), master.eap$getMirrorConfigManager())
+                || master.eap$supportsMirrorPushDirection()
+                && this.getBlockState().getValue(PatternProviderBlock.PUSH_DIRECTION) != master.eap$getMirrorPushDirection();
     }
 
-    private boolean syncMirroredPatterns(PatternProviderLogicHost master, boolean forceSync) {
-        var masterPatternVersion = getPatternSyncVersion(master);
+    private boolean syncMirroredPatterns(MirrorPatternProviderMasterBridge master, boolean forceSync) {
+        var masterPatternVersion = master.eap$getMirrorPatternSyncVersion();
         if (!forceSync && masterPatternVersion != UNKNOWN_PATTERN_SYNC_VERSION
                 && masterPatternVersion == this.lastSyncedPatternVersion) {
             return false;
         }
 
         var mirrorInventory = this.getPatternInventory();
-        var masterInventory = asPatternInventory(master.getLogic().getPatternInv());
-        var masterUnlockedSlots = getUnlockedPatternSlots(master.getLogic());
+        var masterInventory = master.eap$getMirrorPatternInventory();
+        var masterUnlockedSlots = master.eap$getMirrorUnlockedPatternSlots();
         var mirrorSize = mirrorInventory.size();
         var masterSize = masterInventory.size();
         var changed = false;
@@ -550,7 +559,13 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             return null;
         }
 
-        if (partSide == null && blockEntity instanceof PatternProviderLogicHost host && isValidMasterHost(host)) {
+        MirrorPatternProviderMasterBridge host = null;
+        if (partSide == null && blockEntity instanceof PatternProviderLogicHost ae2Host) {
+            host = new Ae2MasterAdapter(ae2Host);
+        } else if (partSide == null && blockEntity instanceof MirrorPatternProviderMasterBridge bridge) {
+            host = bridge;
+        }
+        if (host != null && isValidMasterHost(host)) {
             var level = blockEntity.getLevel();
             if (level == null) {
                 return null;
@@ -570,50 +585,32 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     @Nullable
     private static ResolvedMaster resolvePartMaster(CableBusBlockEntity cableBus, Direction side) {
         var part = cableBus.getCableBus().getPart(side);
-        if (part instanceof AEBasePart basePart && isValidMasterHost(basePart)) {
+        MirrorPatternProviderMasterBridge host = null;
+        if (part instanceof AEBasePart basePart && basePart instanceof PatternProviderLogicHost ae2Host) {
+            host = new Ae2MasterAdapter(ae2Host);
+        } else if (part instanceof MirrorPatternProviderMasterBridge bridge) {
+            host = bridge;
+        }
+        if (host != null && isValidMasterHost(host)) {
             var level = cableBus.getLevel();
             if (level == null) {
                 return null;
             }
             return new ResolvedMaster(
                     new MasterLocation(level.dimension(), cableBus.getBlockPos(), side),
-                    (PatternProviderLogicHost) basePart);
+                    host);
         }
 
         return null;
     }
 
-    @Nullable
-    private static Component getCustomName(PatternProviderLogicHost host) {
-        if (host instanceof PatternProviderBlockEntity blockEntity) {
-            return blockEntity.getCustomName();
-        }
-        if (host instanceof AEBasePart part) {
-            return part.getCustomName();
-        }
-        return null;
-    }
-
-    private static PushDirection getPushDirection(PatternProviderLogicHost host) {
-        Direction target = null;
-        var targets = host.getTargets();
-        if (targets.size() == 1) {
-            target = targets.iterator().next();
-        }
-        return PushDirection.fromDirection(target);
-    }
-
-    private static boolean supportsPushDirectionState(PatternProviderLogicHost host) {
-        return host instanceof PatternProviderBlockEntity;
-    }
-
-    private static boolean haveSameConfigSettings(IConfigManager left, IConfigManager right) {
-        if (!left.getSettings().equals(right.getSettings())) {
-            return false;
-        }
-
-        for (var setting : left.getSettings()) {
-            if (!Objects.equals(getConfigValue(left, setting), getConfigValue(right, setting))) {
+    /**
+     * AdvancedAE 含有普通供应器不支持的配置项；仅比较双方共有项，避免无意义的周期性重载。
+     */
+    private static boolean haveSameSharedConfigSettings(IConfigManager mirror, IConfigManager master) {
+        for (var setting : master.getSettings()) {
+            if (mirror.hasSetting(setting)
+                    && !Objects.equals(getConfigValue(mirror, setting), getConfigValue(master, setting))) {
                 return false;
             }
         }
@@ -621,7 +618,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return true;
     }
 
-    private static boolean syncConfigSettings(IConfigManager source, IConfigManager target) {
+    private static boolean syncSharedConfigSettings(IConfigManager source, IConfigManager target) {
         var changed = false;
         for (var setting : source.getSettings()) {
             if (target.hasSetting(setting) && !Objects.equals(getConfigValue(source, setting), getConfigValue(target, setting))) {
@@ -649,10 +646,6 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return component;
     }
 
-    private static AppEngInternalInventory asPatternInventory(Object inventory) {
-        return (AppEngInternalInventory) inventory;
-    }
-
     private static int getMirrorPatternSlotCapacity() {
         return Math.max(AE2_PATTERN_SLOTS, UpgradeSlotCompat.getExtendedPatternProviderPatternCapacity());
     }
@@ -674,22 +667,12 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         return ItemStack.isSameItemSameTags(left, right) && left.getCount() == right.getCount();
     }
 
-    private static long getPatternSyncVersion(PatternProviderLogicHost master) {
-        if (master.getLogic() instanceof PatternProviderLogicSyncBridge bridge) {
-            return bridge.eap$getPatternSyncVersion();
+    private static boolean isValidMasterHost(Object host) {
+        if (host instanceof Ae2MasterAdapter adapter) {
+            return isValidMasterHost(adapter.host);
         }
 
-        return UNKNOWN_PATTERN_SYNC_VERSION;
-    }
-
-    public static boolean isSupportedMaster(@Nullable BlockEntity blockEntity) {
-        return blockEntity instanceof PatternProviderBlockEntity
-                && !(blockEntity instanceof MirrorPatternProviderBlockEntity)
-                && !blockEntity.isRemoved();
-    }
-
-    private static boolean isValidMasterHost(Object host) {
-        if (!(host instanceof PatternProviderLogicHost)) {
+        if (!(host instanceof MirrorPatternProviderMasterBridge) && !(host instanceof PatternProviderLogicHost)) {
             return false;
         }
 
@@ -702,6 +685,77 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         return host instanceof AEBasePart part && part.getBlockEntity() != null && !part.getBlockEntity().isRemoved();
+    }
+
+    /** 普通 AE2 供应器适配到统一镜像主机接口。 */
+    private static final class Ae2MasterAdapter implements MirrorPatternProviderMasterBridge {
+        private final PatternProviderLogicHost host;
+
+        private Ae2MasterAdapter(PatternProviderLogicHost host) {
+            this.host = host;
+        }
+
+        @Override
+        public InternalInventory eap$getMirrorPatternInventory() {
+            return host.getLogic().getPatternInv();
+        }
+
+        @Override
+        public IConfigManager eap$getMirrorConfigManager() {
+            return host.getConfigManager();
+        }
+
+        @Override
+        public int eap$getMirrorPriority() {
+            return host.getPriority();
+        }
+
+        @Override
+        public java.util.EnumSet<Direction> eap$getMirrorTargets() {
+            return host.getTargets();
+        }
+
+        @Override
+        public @Nullable Component eap$getMirrorCustomName() {
+            if (host instanceof PatternProviderBlockEntity blockEntity) {
+                return blockEntity.getCustomName();
+            }
+            if (host instanceof AEBasePart part) {
+                return part.getCustomName();
+            }
+            return null;
+        }
+
+        @Override
+        public boolean eap$supportsMirrorPushDirection() {
+            return host instanceof PatternProviderBlockEntity;
+        }
+
+        @Override
+        public @Nullable PushDirection eap$getMirrorPushDirection() {
+            Direction target = null;
+            var targets = host.getTargets();
+            if (targets.size() == 1) {
+                target = targets.iterator().next();
+            }
+            return PushDirection.fromDirection(target);
+        }
+
+        @Override
+        public long eap$getMirrorPatternSyncVersion() {
+            return host.getLogic() instanceof PatternProviderLogicSyncBridge bridge
+                    ? bridge.eap$getPatternSyncVersion() : UNKNOWN_PATTERN_SYNC_VERSION;
+        }
+
+        @Override
+        public int eap$getMirrorUnlockedPatternSlots() {
+            var logic = host.getLogic();
+            if (logic instanceof PatternProviderPageUnlockBridge bridge && bridge.eap$isExtendedPatternProviderHost()) {
+                return Math.max(0, bridge.eap$getUnlockedPatternSlots());
+            }
+            var inventory = logic.getPatternInv();
+            return inventory == null ? 0 : inventory.size();
+        }
     }
 
     private static final class MirrorLogic extends PatternProviderLogic {

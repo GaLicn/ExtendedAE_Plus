@@ -48,6 +48,7 @@
     "advancedae.accessor.AdvExecutingCraftingJobAccessor",
     "advancedae.crafting.AdvCraftingCPULogicManualWaitingMixin",
     "advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor",
+    "advancedae.compat.AdvPatternProviderLogicHostMirrorBridgeMixin",
     "advancedae.helpers.AdvPatternProviderLogicAdvancedMixin",
     "advancedae.helpers.AdvPatternProviderLogicDoublingMixin",
     "advancedae.menu.AdvPatternProviderMenuAdvancedMixin",
