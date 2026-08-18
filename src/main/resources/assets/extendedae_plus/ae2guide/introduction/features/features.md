@@ -100,7 +100,7 @@ A multiplication control button is added in the pattern provider GUI, allowing p
 
 ### 1. Fast Pattern Upload
 
-- **Auto-detect Assembly Matrix:** If an assembly matrix exists in the network, patterns completed in the Pattern Encoding Terminal (for crafting, smelting, or cutting) are automatically uploaded. Existing identical patterns are detected and returned, avoiding duplicates.(Pressing shift can not trigger automatic uploads)  
+- **Auto-detect Assembly Matrix:** If an assembly matrix exists in the network, patterns completed in the Pattern Encoding Terminal (for crafting, smithing, or cutting) are automatically uploaded. Existing identical patterns are detected and returned, avoiding duplicates.(Pressing shift can not trigger automatic uploads)  
 
 <br/>
 

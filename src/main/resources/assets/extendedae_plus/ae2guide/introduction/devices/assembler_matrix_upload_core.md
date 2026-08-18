@@ -18,7 +18,7 @@ The **Assembler Matrix Upload Core** is a functional module that adds the abilit
 
 ## Feature Overview
 
-When installed in an Assembler Matrix, patterns created in the Pattern Encoding Terminal — including **crafting patterns**, **smelter patterns**, or **stonecutter patterns** — are automatically uploaded into the Assembler Matrix storage without manual transfer.
+When installed in an Assembler Matrix, patterns created in the Pattern Encoding Terminal — including **crafting patterns**, **smithing table patterns**, or **stonecutter patterns** — are automatically uploaded into the Assembler Matrix storage without manual transfer.
 
 ## Version History & Important Changes
 
