@@ -331,6 +331,5 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_missing": "AE 网络材料不足，缺少：",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.material_missing_entry": "- %s x %s",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_changed": "AE 网络库存已变化，未执行搭建",
-  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建",
-  "extendedae_plus.message.pattern_provider.legacy_migration_notice": "注意！！[EAEP] 扩展样板供应器槽位倍增配置自1.6.0版本已移除，改用扩容卡增加页数：旧存档前四页样板会保留可用，第五页及以后样板已安全暂存，挖掘供应器即可取回。"
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建"
 }
