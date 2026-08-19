@@ -88,7 +88,7 @@ public class ProviderSelectScreen extends Screen {
 
     // 页面
     private int page = 0;
-    private static final int MIN_PAGE_SIZE = 4;
+    private static final int MIN_PAGE_SIZE = 2;
     private int pageSize = 6;
 
     // 按钮池
@@ -133,13 +133,13 @@ public class ProviderSelectScreen extends Screen {
         int buttonHeight = 20;
         int gap = 5;
         int entryUnitHeight = buttonHeight + gap;
-        int reservedHeight = 30 + 30 + 30 + 20 + 40;
+        int reservedHeight = 30 + 30 + 30 + 20 + 65;
         int availableHeight = this.height - reservedHeight;
         this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
         
         // 动态计算起始高度，使内容垂直居中
         int totalEntriesHeight = this.pageSize * entryUnitHeight;
-        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 45;
         int startY = (this.height - contentHeight) / 2 + 30;
         
         // 重新初始化按钮索引映射数组
@@ -192,68 +192,50 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
 
-        // 映射按钮和输入框
-        // 统一按钮宽度
-        int btnWidth2 = 80;
-        int inputWidth = 120;
-        int btnGap = 5;
-
-        // 总宽度 = 重载按钮 + 输入框 + 添加 + 删除 + 关闭按钮 + 间距
-        int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
-        int startX = centerX - totalWidth / 2;
-
-        // 两个切换按钮从关闭按钮左侧开始，平分剩余空间（到删除映射按钮右侧）
-        int toggleStartX = startX + btnWidth2 + btnGap + inputWidth + btnGap;
-        // 删除映射按钮的右侧位置 = 重载 + 间距 + 输入框 + 间距 + 关闭 + 间距 + 添加 + 间距 + 删除
-        int delByCnEndX = startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap + btnWidth2 + btnGap + btnWidth2;
-        int toggleAvailableWidth = delByCnEndX - toggleStartX;
+        int controlsWidth = 240;
+        int controlsX = centerX - controlsWidth / 2;
         int toggleGap = 5;
-        int toggleWidth = (toggleAvailableWidth - toggleGap) / 2;
+        int toggleWidth = (controlsWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
         this.processingButtonsToggleButton = Button.builder(buildProcessingButtonsToggleLabel(), b -> toggleProcessingButtons())
-                .bounds(toggleStartX, toggleY, toggleWidth, 20)
+                .bounds(controlsX, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
         this.autoUploadToggleButton = Button.builder(buildAutoUploadToggleLabel(), b -> toggleAutoUploadUniqueMatch())
-                .bounds(toggleStartX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
+                .bounds(controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.autoUploadToggleButton);
 
-        // 重载映射按钮
-        Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> reloadMapping())
-                .bounds(startX, navY + 55, btnWidth2, 20)
-                .build();
-        this.addRenderableWidget(reload);
-
-        // 中文名输入框（用于新增映射的值）
+        int quickMappingY = navY + 55;
+        int quickInputWidth = 150;
         if (cnInput == null) {
-            cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 55, inputWidth, 20, Component.translatable("extendedae_plus.screen.upload.name"));
+            cnInput = new EditBox(this.font, controlsX, quickMappingY, quickInputWidth, 20,
+                    Component.translatable("extendedae_plus.screen.upload.name"));
         } else {
-            cnInput.setX(startX + btnWidth2 + btnGap);
-            cnInput.setY(navY + 55);
-            cnInput.setWidth(inputWidth);
+            cnInput.setX(controlsX);
+            cnInput.setY(quickMappingY);
+            cnInput.setWidth(quickInputWidth);
         }
         this.addRenderableWidget(cnInput);
 
-        // 关闭按钮
-        Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 55, btnWidth2, 20)
-                .build();
-        this.addRenderableWidget(close);
-
         // 添加映射按钮（使用当前搜索关键字 -> 中文）
         Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> addMappingFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 55, btnWidth2, 20)
+                .bounds(controlsX + quickInputWidth + 5, quickMappingY, 85, 20)
                 .build();
         this.addRenderableWidget(addMap);
 
-        // 删除映射按钮（按中文值精确匹配删除）按钮
-        Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.delete_mapping"), b -> deleteMappingByCnFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 55, btnWidth2, 20)
+        Button mappingManagement = Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.button"),
+                        b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)))
+                .bounds(controlsX, navY + 80, 155, 20)
                 .build();
-        this.addRenderableWidget(delByCn);
+        this.addRenderableWidget(mappingManagement);
+
+        Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
+                .bounds(controlsX + 160, navY + 80, 80, 20)
+                .build();
+        this.addRenderableWidget(close);
 
         refreshButtons(); // 初始化完成后刷新按钮状态
         tryAutoUploadIfUniqueMatch();
@@ -285,16 +267,6 @@ public class ProviderSelectScreen extends Screen {
         }
         if (prevButton != null) prevButton.active = page > 0;
         if (nextButton != null) nextButton.active = fIds.size() > (page + 1) * pageSize;
-    }
-
-    private void reloadMapping() {
-        try {
-            RecipeTypeNameConfig.loadRecipeTypeNames();
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_success"));
-            // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
-        } catch (Throwable t) {
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.reload_mapping_fail", t.getClass().getSimpleName()));
-        }
     }
 
     private Component buildAutoUploadToggleLabel() {
@@ -640,11 +612,11 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         if (val.isEmpty()) {
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name"));
+            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_name"));
             return;
         }
 
-        boolean ok = RecipeTypeNameConfig.addOrUpdateAliasMapping(key, val);
+        boolean ok = RecipeTypeNameConfig.addOrUpdateRecipeTypeMapping(key, val);
         if (ok) {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added", key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
@@ -658,24 +630,6 @@ public class ProviderSelectScreen extends Screen {
             refreshButtons();
         } else {
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_failed"));
-        }
-    }
-
-    // 使用中文值精确匹配删除映射
-    private void deleteMappingByCnFromUI() {
-        String val = cnInput == null ? "" : cnInput.getValue().trim();
-        if (val.isEmpty()) {
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.enter_cn_name_delete"));
-            return;
-        }
-        int removed = RecipeTypeNameConfig.removeMappingsByCnValue(val);
-        if (removed > 0) {
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_deleted",val,removed));
-            applyFilter();
-            page = 0;
-            refreshButtons();
-        } else {
-            sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_not_found", val));
         }
     }
 

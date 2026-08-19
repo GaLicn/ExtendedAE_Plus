@@ -13,10 +13,12 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
@@ -32,6 +34,8 @@ public final class RecipeTypeNameConfig {
     // 允许使用最终搜索关键字（通常为 path 或自定义短语）作为键，例如："assembler": "组装机"
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    public record RecipeTypeMapping(String key, String value) {}
 
     static {
         try {
@@ -176,6 +180,59 @@ public final class RecipeTypeNameConfig {
         } catch (IOException | JsonSyntaxException e) {
             sendPlayerMessage(Component.translatable("extendedae_plus.message.config_update_failed", e.getMessage()));            return false;
         }
+    }
+
+    public static boolean addOrUpdateRecipeTypeMapping(String key, String value) {
+        return addOrUpdateAliasMapping(key, value);
+    }
+
+    /** 返回当前生效的映射快照，供可视化管理界面展示。 */
+    public static List<RecipeTypeMapping> getRecipeTypeMappings() {
+        List<RecipeTypeMapping> mappings = new ArrayList<>();
+        CUSTOM_NAMES.forEach((key, value) -> mappings.add(new RecipeTypeMapping(key.toString(), value)));
+        CUSTOM_ALIASES.forEach((key, value) -> mappings.add(new RecipeTypeMapping(key, value)));
+        mappings.sort(Comparator.comparing(RecipeTypeMapping::key, String.CASE_INSENSITIVE_ORDER));
+        return List.copyOf(mappings);
+    }
+
+    /** 按配置键删除单条映射，别名键匹配时忽略大小写。 */
+    public static synchronized boolean removeRecipeTypeMapping(String mappingKey) {
+        if (mappingKey == null || mappingKey.isBlank()) {
+            return false;
+        }
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(CONFIG_PATH);
+            if (!Files.exists(cfgPath)) {
+                return false;
+            }
+            JsonObject config = loadJsonConfig(cfgPath);
+            String requested = mappingKey.trim();
+            String storedKey = config.keySet().stream()
+                    .filter(key -> mappingKeysEqual(key, requested))
+                    .findFirst()
+                    .orElse(null);
+            if (storedKey == null) {
+                return false;
+            }
+
+            config.remove(storedKey);
+            saveJsonConfig(cfgPath, config);
+            loadRecipeTypeNames();
+            return true;
+        } catch (IOException | JsonSyntaxException ignored) {
+            return false;
+        }
+    }
+
+    private static boolean mappingKeysEqual(String first, String second) {
+        if (first.contains(":") || second.contains(":")) {
+            try {
+                return Objects.equals(new ResourceLocation(first), new ResourceLocation(second));
+            } catch (RuntimeException ignored) {
+                return false;
+            }
+        }
+        return first.equalsIgnoreCase(second);
     }
 
     /**
