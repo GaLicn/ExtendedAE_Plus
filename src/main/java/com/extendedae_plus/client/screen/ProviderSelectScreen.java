@@ -114,7 +114,8 @@ public class ProviderSelectScreen extends Screen {
         try {
             String recent = RecipeTypeNameConfig.consumeLastProviderSearchKey();
             if (recent != null && !recent.isBlank()) {
-                this.query = recent;
+                // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
+                this.query = RecipeTypeNameConfig.resolveProviderSearchKey(recent);
                 this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
@@ -417,11 +418,12 @@ public class ProviderSelectScreen extends Screen {
         lastExactMatchCount = 0;
         lastFilterUsedFallback = false;
         String q = query == null ? "" : query.trim();
-        String qLower = q.toLowerCase(Locale.ROOT);
+        String searchKey = RecipeTypeNameConfig.resolveProviderSearchKey(q);
+        String qLower = searchKey.toLowerCase(Locale.ROOT);
 
         for (int i = 0; i < gIds.size(); i++) {
             String name = gNames.get(i);
-            if (q.isEmpty() || nameMatches(name, q, qLower)) {
+            if (searchKey.isEmpty() || nameMatches(name, searchKey, qLower)) {
                 fIds.add(gIds.get(i));
                 fNames.add(name);
                 fTotalSlots.add(gTotalSlots.get(i));
