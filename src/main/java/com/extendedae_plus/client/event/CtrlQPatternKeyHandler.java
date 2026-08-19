@@ -350,6 +350,10 @@ public final class CtrlQPatternKeyHandler {
 		
 		if (recipeBase instanceof Recipe<?> recipe) {
 			name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+			if (name == null || name.isBlank()) {
+				// 注册表反查失败时按配方类名保底，保证供应器搜索词不会为空。
+				name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+			}
 		} else if (recipeBase != null
 			&& "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
 			name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(recipeBase);

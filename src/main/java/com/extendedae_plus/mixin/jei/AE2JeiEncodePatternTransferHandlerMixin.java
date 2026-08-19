@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.jei;
 
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import net.minecraft.world.entity.player.Player;
@@ -37,15 +38,23 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternE
             // 部分模组（如 Oritech）向 JEI 注册的是未包装的 Recipe 对象而非 RecipeHolder
             recipe = r;
         }
-        if (recipe != null) {
-            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
-                ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
-                return;
+        if (recipe != null && EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+            ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+            return;
+        }
+
+        // JEI 分类标题最接近玩家看到的机器名称，且适用于所有注册到 JEI 的配方。
+        name = JeiRuntimeCompat.getRecipeCategorySearchKey(recipeBase);
+        if (name == null || name.isBlank()) {
+            if (recipe != null) {
+                name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+                if (name == null || name.isBlank()) {
+                    // 类型 ID 无法解析时再按通用对象信息生成搜索词。
+                    name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+                }
+            } else {
+                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
             }
-            name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
-        } else {
-            // 非原版 Recipe<?> 的显示，尝试从 recipeBase 类名/包名推导关键词
-            name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
         }
         if (name != null && !name.isBlank()) {
             ExtendedAEPatternUploadUtil.setLastProcessingName(name);

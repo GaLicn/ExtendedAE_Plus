@@ -93,7 +93,7 @@ public class ExtendedAEPatternUploadUtil {
         try {
             loadRecipeTypeNames();
         } catch (Throwable t) {
-            // 安静失败，使用内置映射
+            // 配置加载失败时保持空映射，不影响配方记录流程。
         }
     }
 
@@ -109,21 +109,9 @@ public class ExtendedAEPatternUploadUtil {
             Path cfgDir = FMLPaths.CONFIGDIR.get();
             Path cfgPath = cfgDir.resolve(CONFIG_RELATIVE);
             if (!Files.exists(cfgPath)) {
-                // 创建目录并写入模板
+                // 默认不预置映射，分类标题由配方查看器统一提供。
                 Files.createDirectories(cfgPath.getParent());
-                JsonObject tmpl = new JsonObject();
-                // 提供一些常见原版默认（仅作为示例，实际仍以内置 switch 为兜底）
-                tmpl.addProperty("minecraft:smelting", "熔炉");
-                tmpl.addProperty("minecraft:blasting", "高炉");
-                tmpl.addProperty("minecraft:smoking", "烟熏");
-                tmpl.addProperty("minecraft:campfire_cooking", "营火");
-                // GTCEu 示例占位
-                tmpl.addProperty("gtceu:assembler", "组装机");
-                tmpl.addProperty("gtceu:arc_furnace", "电弧炉");
-                tmpl.addProperty("gtceu:chemical_reactor", "化学反应器");
-                // 也支持别名（最终搜索关键字）形式，例如：
-                tmpl.addProperty("assembler", "组装机");
-                Files.writeString(cfgPath, GSON.toJson(tmpl));
+                Files.writeString(cfgPath, GSON.toJson(new JsonObject()));
             }
 
             String json = Files.readString(cfgPath);
@@ -377,34 +365,6 @@ public class ExtendedAEPatternUploadUtil {
         }
     }
 
-    public static String mapRecipeTypeToCn(Recipe<?> recipe) {
-        if (recipe == null) return null;
-        RecipeType<?> type = recipe.getType();
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
-        if (key == null) return null;
-        // 1) 自定义配置优先
-        String custom = CUSTOM_NAMES.get(key);
-        if (custom != null && !custom.isBlank()) {
-            return custom;
-        }
-        String id = key.toString();
-        String path = key.getPath();
-        // 常见原版类型映射
-        switch (path) {
-            case "smelting":
-                return "熔炉"; // 熔炉
-            case "blasting":
-                return "高炉";
-            case "smoking":
-                return "烟熏";
-            case "campfire_cooking":
-                return "营火";
-            default:
-                // 其他模组类型，若未配置中文则返回原始ID（namespace:path）作为英文回退
-                return id;
-        }
-    }
-
     /**
      * 供搜索使用的关键字映射：
      * - 有中文映射则返回中文；
@@ -427,17 +387,34 @@ public class ExtendedAEPatternUploadUtil {
 
     public static String mapRecipeTypeToSearchKey(Recipe<?> recipe) {
         if (recipe == null) return null;
-        RecipeType<?> type = recipe.getType();
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        return resolveRecipeTypeSearchKey(resolveRecipeTypeId(recipe.getType()), null);
+    }
+
+    /** 统一解析配方类型，优先配置映射，其次使用配方查看器提供的分类标题。 */
+    public static String resolveRecipeTypeSearchKey(ResourceLocation key, String displayName) {
         if (key == null) return null;
-        String resolvedPath = resolveSearchKeyAlias(key.getPath());
-        if (resolvedPath != null) return resolvedPath;
-        // 再查完整ID映射
+
         String custom = CUSTOM_NAMES.get(key);
         if (custom != null && !custom.isBlank()) {
             return custom;
         }
-        return key.getPath();
+
+        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase(Locale.ROOT));
+        if (alias != null && !alias.isBlank()) {
+            return alias;
+        }
+
+        return displayName != null && !displayName.isBlank() ? displayName : key.getPath();
+    }
+
+    /** 注册表反查失败时，RecipeType.simple 创建的类型仍会通过 toString 暴露其 ID。 */
+    private static ResourceLocation resolveRecipeTypeId(RecipeType<?> type) {
+        if (type == null) return null;
+        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        if (key != null) {
+            return key;
+        }
+        return ResourceLocation.tryParse(type.toString());
     }
 
     // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
@@ -481,9 +458,9 @@ public class ExtendedAEPatternUploadUtil {
         try {
             Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
             if (type instanceof RecipeType<?> rt) {
-                ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(rt);
+                ResourceLocation key = resolveRecipeTypeId(rt);
                 if (key != null) {
-                    String resolved = resolveSearchKeyAlias(key.getPath());
+                    String resolved = resolveRecipeTypeSearchKey(key, null);
                     if (resolved != null && !resolved.isBlank()) return resolved;
                 }
             }
