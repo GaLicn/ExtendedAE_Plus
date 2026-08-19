@@ -89,6 +89,8 @@ public class ExtendedAEPatternUploadUtil {
                                          BlockPos pos,
                                          boolean plus) {}
 
+    public record RecipeTypeMapping(String key, String value) {}
+
     static {
         try {
             loadRecipeTypeNames();
@@ -299,6 +301,59 @@ public class ExtendedAEPatternUploadUtil {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public static boolean addOrUpdateRecipeTypeMapping(String key, String value) {
+        return addOrUpdateAliasMapping(key, value);
+    }
+
+    /** 返回当前生效的映射快照，供可视化管理界面展示。 */
+    public static List<RecipeTypeMapping> getRecipeTypeMappings() {
+        List<RecipeTypeMapping> mappings = new ArrayList<>();
+        CUSTOM_NAMES.forEach((key, value) -> mappings.add(new RecipeTypeMapping(key.toString(), value)));
+        CUSTOM_ALIASES.forEach((key, value) -> mappings.add(new RecipeTypeMapping(key, value)));
+        mappings.sort(Comparator.comparing(RecipeTypeMapping::key, String.CASE_INSENSITIVE_ORDER));
+        return List.copyOf(mappings);
+    }
+
+    /** 按配置键删除单条映射，别名键匹配时忽略大小写。 */
+    public static synchronized boolean removeRecipeTypeMapping(String mappingKey) {
+        if (mappingKey == null || mappingKey.isBlank()) {
+            return false;
+        }
+        try {
+            Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(CONFIG_RELATIVE);
+            if (!Files.exists(cfgPath)) {
+                return false;
+            }
+            JsonObject obj = GSON.fromJson(Files.readString(cfgPath), JsonObject.class);
+            if (obj == null) {
+                return false;
+            }
+
+            String requested = mappingKey.trim();
+            String storedKey = obj.keySet().stream()
+                    .filter(key -> mappingKeysEqual(key, requested))
+                    .findFirst()
+                    .orElse(null);
+            if (storedKey == null) {
+                return false;
+            }
+
+            obj.remove(storedKey);
+            Files.writeString(cfgPath, GSON.toJson(obj));
+            loadRecipeTypeNames();
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    private static boolean mappingKeysEqual(String first, String second) {
+        if (first.contains(":") || second.contains(":")) {
+            return Objects.equals(ResourceLocation.tryParse(first), ResourceLocation.tryParse(second));
+        }
+        return first.equalsIgnoreCase(second);
     }
 
     /**

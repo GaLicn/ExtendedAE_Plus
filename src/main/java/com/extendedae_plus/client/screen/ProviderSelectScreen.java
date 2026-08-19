@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  * 展示若干个可点击的供应器条目，点击后发送带 providerId 的上传请求。
  */
 public class ProviderSelectScreen extends Screen {
-    private static final int MIN_PAGE_SIZE = 4;
+    private static final int MIN_PAGE_SIZE = 2;
     private int pageSize = 6;
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
     private static Boolean JEC_AVAILABLE = null;
@@ -66,7 +66,7 @@ public class ProviderSelectScreen extends Screen {
     private final List<Button> entryButtons = new ArrayList<>();
     // 搜索框
     private EditBox searchBox;
-    // 中文名输入框（用于添加映射）
+    // 快捷映射值输入框，映射键使用当前供应器搜索词。
     private EditBox cnInput;
     private Button processingButtonsToggleButton;
     private Button autoUploadToggleButton;
@@ -132,22 +132,6 @@ public class ProviderSelectScreen extends Screen {
         this.page = newPage;
         // 避免在回调中直接重建 UI，改为下帧刷新
         this.needsRefresh = true;
-    }
-
-    private void reloadMapping() {
-        try {
-            ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
-            var player = Minecraft.getInstance().player;
-            if (player != null) {
-                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.reload_success"));
-            }
-            // 重载后不强制刷新筛选，但如需立即应用到名称匹配，可手动编辑搜索框或翻页
-        } catch (Throwable t) {
-            var player = Minecraft.getInstance().player;
-            if (player != null) {
-                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.reload_fail", t.getClass().getSimpleName()));
-            }
-        }
     }
 
     private Component buildAutoUploadToggleLabel() {
@@ -330,13 +314,13 @@ public class ProviderSelectScreen extends Screen {
         int buttonHeight = 20;
         int gap = 5;
         int entryUnitHeight = buttonHeight + gap;
-        int reservedHeight = 30 + 30 + 30 + 20 + 40;
+        int reservedHeight = 30 + 30 + 30 + 20 + 65;
         int availableHeight = this.height - reservedHeight;
         this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
         
         // 动态计算起始高度，使内容垂直居中
         int totalEntriesHeight = this.pageSize * entryUnitHeight;
-        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 45;
         int startY = (this.height - contentHeight) / 2 + 30;
 
         // 搜索框（置于条目上方）
@@ -388,68 +372,49 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
 
-        // 映射按钮和输入框
-        // 统一按钮宽度
-        int btnWidth2 = 80;
-        int inputWidth = 120;
-        int btnGap = 5;
-
-        // 总宽度 = 重载按钮 + 输入框 + 添加 + 删除 + 关闭按钮 + 间距
-        int totalWidth = btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap + btnWidth2;
-        int startX = centerX - totalWidth / 2;
-
-        // 两个切换按钮从关闭按钮左侧开始，平分剩余空间（到删除映射按钮右侧）
-        int toggleStartX = startX + btnWidth2 + btnGap + inputWidth + btnGap;
-        // 删除映射按钮的右侧位置 = 重载 + 间距 + 输入框 + 间距 + 关闭 + 间距 + 添加 + 间距 + 删除
-        int delByCnEndX = startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap + btnWidth2 + btnGap + btnWidth2;
-        int toggleAvailableWidth = delByCnEndX - toggleStartX;
+        int controlsWidth = 240;
+        int controlsX = centerX - controlsWidth / 2;
         int toggleGap = 5;
-        int toggleWidth = (toggleAvailableWidth - toggleGap) / 2;
+        int toggleWidth = (controlsWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
         this.processingButtonsToggleButton = Button.builder(this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons())
-                .bounds(toggleStartX, toggleY, toggleWidth, 20)
+                .bounds(controlsX, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
         this.autoUploadToggleButton = Button.builder(this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch())
-                .bounds(toggleStartX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
+                .bounds(controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
         this.addRenderableWidget(this.autoUploadToggleButton);
 
-        // 重载映射按钮
-        Button reload = Button.builder(Component.translatable("extendedae_plus.screen.reload_mapping"), b -> this.reloadMapping())
-                .bounds(startX, navY + 55, btnWidth2, 20)
-                .build();
-        this.addRenderableWidget(reload);
-
-        // 中文名输入框（用于新增映射的值）
+        int quickMappingY = navY + 55;
+        int quickInputWidth = 150;
         if (this.cnInput == null) {
-            this.cnInput = new EditBox(this.font, startX + btnWidth2 + btnGap, navY + 55, inputWidth, 20, Component.translatable("extendedae_plus.screen.cn_name"));
+            this.cnInput = new EditBox(this.font, controlsX, quickMappingY, quickInputWidth, 20,
+                    Component.translatable("extendedae_plus.screen.cn_name"));
         } else {
-            this.cnInput.setX(startX + btnWidth2 + btnGap);
-            this.cnInput.setY(navY + 55);
-            this.cnInput.setWidth(inputWidth);
+            this.cnInput.setX(controlsX);
+            this.cnInput.setY(quickMappingY);
+            this.cnInput.setWidth(quickInputWidth);
         }
         this.addRenderableWidget(this.cnInput);
+        this.addRenderableWidget(Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"),
+                        b -> this.addMappingFromUI())
+                .bounds(controlsX + quickInputWidth + 5, quickMappingY, 85, 20)
+                .build());
 
-        // 关闭按钮
+        // 完整编辑和删除操作集中到独立的可视化管理页面。
+        Button mappingManagement = Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.button"),
+                        b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)))
+                .bounds(controlsX, navY + 80, 155, 20)
+                .build();
+        this.addRenderableWidget(mappingManagement);
+
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> this.onClose())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap, navY + 55, btnWidth2, 20)
+                .bounds(controlsX + 160, navY + 80, 80, 20)
                 .build();
         this.addRenderableWidget(close);
-
-        // 添加映射按钮（使用当前搜索关键字 -> 中文）
-        Button addMap = Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"), b -> this.addMappingFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 + btnGap, navY + 55, btnWidth2, 20)
-                .build();
-        this.addRenderableWidget(addMap);
-
-        // 删除映射按钮（按中文值精确匹配删除）按钮
-        Button delByCn = Button.builder(Component.translatable("extendedae_plus.screen.remove_mapping"), b -> this.deleteMappingByCnFromUI())
-                .bounds(startX + btnWidth2 + btnGap + inputWidth + btnGap + btnWidth2 * 2 + btnGap * 2, navY + 55, btnWidth2, 20)
-                .build();
-        this.addRenderableWidget(delByCn);
 
         this.tryAutoUploadIfUniqueMatch();
     }
@@ -524,50 +489,36 @@ public class ProviderSelectScreen extends Screen {
 
     private void addMappingFromUI() {
         String key = this.query == null ? "" : this.query.trim();
-        String val = this.cnInput == null ? "" : this.cnInput.getValue().trim();
+        String value = this.cnInput == null ? "" : this.cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (key.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.search_required"));
-            return;
-        }
-        if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.cn_required"));
-            return;
-        }
-        boolean ok = ExtendedAEPatternUploadUtil.addOrUpdateAliasMapping(key, val);
-        if (ok) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_success", key, val));
-            // 将刚添加的中文名写入搜索框，作为当前查询
-            this.query = val;
-            if (this.searchBox != null) {
-                this.searchBox.setValue(val);
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.search_required"));
             }
-            // 更新本地过滤显示（若名称包含中文可被搜索）
-            this.applyFilter();
-            // 回到第一页以展示最新筛选结果
-            this.page = 0;
-            this.needsRefresh = true;
-        } else {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_fail"));
-        }
-    }
-
-    // 使用中文值精确匹配删除映射
-    private void deleteMappingByCnFromUI() {
-        String val = this.cnInput == null ? "" : this.cnInput.getValue().trim();
-        var player = Minecraft.getInstance().player;
-        if (val.isEmpty()) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_cn_required"));
             return;
         }
-        int removed = ExtendedAEPatternUploadUtil.removeMappingsByCnValue(val);
-        if (removed > 0) {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_success", val, removed));
-            this.applyFilter();
-            this.needsRefresh = true;
-        } else {
-            if (player != null) player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.delete_not_found", val));
+        if (value.isEmpty()) {
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.cn_required"));
+            }
+            return;
         }
+
+        if (!ExtendedAEPatternUploadUtil.addOrUpdateRecipeTypeMapping(key, value)) {
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_fail"));
+            }
+            return;
+        }
+
+        if (player != null) {
+            player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_success", key, value));
+        }
+        this.query = value;
+        this.searchBox.setValue(value);
+        this.applyFilter();
+        this.page = 0;
+        this.needsRefresh = true;
     }
 
     // 切换供应器的置顶状态
