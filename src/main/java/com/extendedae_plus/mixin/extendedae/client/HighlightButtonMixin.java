@@ -1,85 +1,65 @@
 package com.extendedae_plus.mixin.extendedae.client;
 
+import com.extendedae_plus.api.IExPatternTerminalSelection;
+import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
+import com.extendedae_plus.mixin.extendedae.accessor.HighlightButtonAccessor;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Mixin(value = HighlightButton.class, priority = 1000)
 public abstract class HighlightButtonMixin {
-	@Shadow(remap = false)
-	private static void highlight(Button btn) {}
+    private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAEPlus");
 
-	private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAEPlus");
+    @Inject(method = "highlight", at = @At("TAIL"), remap = false)
+    private static void eap$onHighlight(Button button, CallbackInfo ci) {
+        if (!(button instanceof HighlightButton highlightButton)) {
+            return;
+        }
 
-	@Inject(method = "highlight", at = @At("TAIL"), remap = false)
-	private static void onHighlight(Button btn, CallbackInfo ci) {
-		if (btn instanceof HighlightButton hb) {
-			var minecraft = net.minecraft.client.Minecraft.getInstance();
-			if (minecraft.screen instanceof GuiExPatternTerminal<?> terminal) {
-				try {
-					var fPos = HighlightButton.class.getDeclaredField("pos");
-					fPos.setAccessible(true);
-					Object btnPos = fPos.get(hb);
-					if (btnPos == null) {
-						return;
-					}
-					var fFace = HighlightButton.class.getDeclaredField("face");
-					fFace.setAccessible(true);
-					Object btnFace = fFace.get(hb); // 允许为 null：方块形
+        Minecraft minecraft = Minecraft.getInstance();
+        if (!(minecraft.screen instanceof GuiExPatternTerminal<?> terminal)) {
+            return;
+        }
 
-					var infoMapField = GuiExPatternTerminal.class.getDeclaredField("infoMap");
-					infoMapField.setAccessible(true);
-					@SuppressWarnings("unchecked")
-					var infoMap = (java.util.Map<Long, Object>) infoMapField.get(terminal);
+        try {
+            HighlightButtonAccessor buttonAccessor = (HighlightButtonAccessor) (Object) highlightButton;
+            BlockPos buttonPos = buttonAccessor.eap$getPos();
+            Direction buttonFace = buttonAccessor.eap$getFace();
+            if (buttonPos == null) {
+                return;
+            }
 
-					for (var entry : infoMap.entrySet()) {
-						var info = entry.getValue();
-						var mPos = info.getClass().getMethod("pos");
-						mPos.setAccessible(true);
-						Object infoPos = mPos.invoke(info);
+            GuiExPatternTerminalAccessor terminalAccessor = (GuiExPatternTerminalAccessor) (Object) terminal;
+            for (Map.Entry<Long, GuiExPatternTerminal.PatternProviderInfo> entry
+                    : terminalAccessor.eap$getInfoMap().entrySet()) {
+                GuiExPatternTerminal.PatternProviderInfo info = entry.getValue();
+                boolean samePosition = Objects.equals(buttonPos, info.pos());
+                boolean sameFace = (buttonFace == null && info.face() == null)
+                        || Objects.equals(buttonFace, info.face());
+                if (!samePosition || !sameFace) {
+                    continue;
+                }
 
-						var mFace = info.getClass().getMethod("face");
-						mFace.setAccessible(true);
-						Object infoFace = mFace.invoke(info); // 允许为 null：方块形
-
-						// 匹配规则：pos 必须相等；face 允许为 null，null 仅与 null 匹配
-						boolean posEqual = Objects.equals(btnPos, infoPos);
-						boolean faceEqual = (btnFace == null && infoFace == null) || Objects.equals(btnFace, infoFace);
-						if (posEqual && faceEqual) {
-							// 选中当前供应器：使用 mixin 新增的 setter（通过反射调用以兼容编译期）
-							try {
-								long serverId = (long) entry.getKey();
-								var setter = terminal.getClass().getMethod("setCurrentlyChoicePatternProvider", long.class);
-								setter.setAccessible(true);
-								setter.invoke(terminal, serverId);
-
-								// 提示玩家已选择供应器
-								if (minecraft.player != null) {
-									minecraft.player.displayClientMessage(
-										Component.translatable("extendedae_plus.message.provider.selected", serverId),
-										true
-									);
-								}
-							} catch (Throwable t2) {
-								LOGGER.warn("设置当前样板供应器ID失败", t2);
-							}
-							break;
-						}
-					}
-				} catch (Throwable t) {
-					LOGGER.warn("HighlightButton onHighlight 处理异常", t);
-				}
-			}
-		}
-	}
+                if (terminal instanceof IExPatternTerminalSelection selection) {
+                    selection.eap$setCurrentlyChoicePatternProvider(entry.getKey());
+                }
+                break;
+            }
+        } catch (Throwable error) {
+            LOGGER.debug("Unable to update the selected pattern provider", error);
+        }
+    }
 }

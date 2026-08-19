@@ -5,4 +5,6 @@ package com.extendedae_plus.api;
  */
 public interface IExPatternPage {
     int eap$getCurrentPage();
+
+    void eap$setCurrentPage(int page);
 }

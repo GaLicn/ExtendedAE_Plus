@@ -13,4 +13,5 @@ public interface AbstractContainerScreenAccessor<T extends AbstractContainerMenu
     @Accessor("imageWidth") int eap$getImageWidth();
     @Accessor("imageHeight") int eap$getImageHeight();
     @Accessor("hoveredSlot") Slot eap$getHoveredSlot();
+    @Accessor("hoveredSlot") void eap$setHoveredSlot(Slot slot);
 }
