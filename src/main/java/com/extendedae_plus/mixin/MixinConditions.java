@@ -36,6 +36,11 @@ public class MixinConditions implements IMixinConfigPlugin {
                 return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
             }
 
+            // WTLib 兼容目标类只在 WTLib 存在时应用，避免伪目标解析触发硬依赖。
+            if (mixinClassName.startsWith("com.extendedae_plus.mixin.ae2WTlib")) {
+                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AE2WTLIB);
+            }
+
             // === AppFlux 兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.appflux")) {
                 return ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX);

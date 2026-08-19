@@ -5,14 +5,11 @@ import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.MenuLocator;
 import appeng.menu.locator.MenuLocators;
-import com.extendedae_plus.menu.host.CuriosWTMenuHost;
+import com.extendedae_plus.compat.ae2wtlib.AE2WTLibCompat;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
-import de.mari_023.ae2wtlib.terminal.WTMenuHost;
-import de.mari_023.ae2wtlib.wut.WTDefinition;
-import de.mari_023.ae2wtlib.wut.WUTHandler;
+import net.minecraftforge.fml.ModList;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.ModList;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
@@ -145,14 +142,10 @@ public final class WirelessTerminalLocator {
             return null;
         }
 
-        WTMenuHost wtHost = createWtHost(player, terminal);
-        if (wtHost != null) {
-            // rangeCheck 同时覆盖普通无线范围和量子桥连接状态。
-            if (!wtHost.rangeCheck()) {
-                return null;
-            }
-            var node = wtHost.getActionableNode();
-            return node == null ? null : node.getGrid();
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+            return AE2WTLibCompat.getConnectedGrid(player, terminal.stack, terminal.createMenuLocator(player),
+                    terminal.slotIndex >= 0 ? terminal.slotIndex : null,
+                    terminal.curiosSlotId, terminal.curiosIndex);
         }
 
         if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
@@ -176,9 +169,10 @@ public final class WirelessTerminalLocator {
             return false;
         }
 
-        WTMenuHost wtHost = createWtHost(player, terminal);
-        if (wtHost != null) {
-            return wtHost.rangeCheck() && wtHost.drainPower();
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+            return AE2WTLibCompat.useTerminalPower(player, terminal.stack, terminal.createMenuLocator(player),
+                    terminal.slotIndex >= 0 ? terminal.slotIndex : null,
+                    terminal.curiosSlotId, terminal.curiosIndex);
         }
 
         if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
@@ -194,44 +188,6 @@ public final class WirelessTerminalLocator {
         if (stack.getItem() instanceof WirelessCraftingTerminalItem || stack.getItem() instanceof WirelessTerminalItem) {
             return true;
         }
-        return getWtDefinition(stack) != null;
-    }
-
-    private static WTDefinition getWtDefinition(ItemStack stack) {
-        try {
-            return WUTHandler.wirelessTerminals.get(WUTHandler.getCurrentTerminal(stack));
-        } catch (Throwable ignored) {
-            return null;
-        }
-    }
-
-    private static WTMenuHost createWtHost(Player player, LocatedTerminal terminal) {
-        WTDefinition definition = getWtDefinition(terminal.stack);
-        if (definition == null) {
-            return null;
-        }
-
-        try {
-            if (terminal.curiosSlotId != null && terminal.curiosIndex >= 0) {
-                var resolved = CuriosApi.getCuriosInventory(player).resolve();
-                if (resolved.isEmpty()) {
-                    return null;
-                }
-                ICurioStacksHandler handler = resolved.get().getCurios().get(terminal.curiosSlotId);
-                if (handler == null) {
-                    return null;
-                }
-                // Curios 宿主负责将奇点槽及电量 NBT 写回实际饰品槽。
-                return new CuriosWTMenuHost(player, null, terminal.stack, handler, terminal.curiosIndex,
-                        (ignoredPlayer, ignoredMenu) -> WUTHandler.open(ignoredPlayer,
-                                new CuriosItemLocator(terminal.curiosSlotId, terminal.curiosIndex), true));
-            }
-            Integer inventorySlot = terminal.slotIndex >= 0 ? terminal.slotIndex : null;
-            return definition.wTMenuHostFactory().create(player, inventorySlot, terminal.stack,
-                    (ignoredPlayer, ignoredMenu) -> {
-                    });
-        } catch (Throwable ignored) {
-            return null;
-        }
+        return ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(stack);
     }
 }
