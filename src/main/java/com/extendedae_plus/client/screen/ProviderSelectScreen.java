@@ -13,6 +13,7 @@ import com.google.gson.JsonSyntaxException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -201,11 +202,13 @@ public class ProviderSelectScreen extends Screen {
         this.processingButtonsToggleButton = Button.builder(buildProcessingButtonsToggleLabel(), b -> toggleProcessingButtons())
                 .bounds(controlsX, toggleY, toggleWidth, 20)
                 .build();
+        this.processingButtonsToggleButton.setTooltip(buildProcessingButtonsTooltip());
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
         this.autoUploadToggleButton = Button.builder(buildAutoUploadToggleLabel(), b -> toggleAutoUploadUniqueMatch())
                 .bounds(controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
                 .build();
+        this.autoUploadToggleButton.setTooltip(buildAutoUploadTooltip());
         this.addRenderableWidget(this.autoUploadToggleButton);
 
         int quickMappingY = navY + 55;
@@ -285,6 +288,22 @@ public class ProviderSelectScreen extends Screen {
                 Component.translatable(stateKey));
     }
 
+    private Tooltip buildProcessingButtonsTooltip() {
+        String stateKey = showProcessingButtonsEnabled
+                ? "config.extendedae_plus.option.state_on"
+                : "config.extendedae_plus.option.state_off";
+        return Tooltip.create(Component.translatable("extendedae_plus.screen.show_processing_buttons.tooltip",
+                Component.translatable(stateKey)));
+    }
+
+    private Tooltip buildAutoUploadTooltip() {
+        String stateKey = autoUploadUniqueMatchEnabled
+                ? "config.extendedae_plus.option.state_on"
+                : "config.extendedae_plus.option.state_off";
+        return Tooltip.create(Component.translatable("extendedae_plus.screen.auto_upload_unique_match.tooltip",
+                Component.translatable(stateKey)));
+    }
+
     public static boolean isProcessingButtonsEnabled() {
         return showProcessingButtonsEnabled;
     }
@@ -294,6 +313,7 @@ public class ProviderSelectScreen extends Screen {
         savePinnedProviders();
         if (this.processingButtonsToggleButton != null) {
             this.processingButtonsToggleButton.setMessage(buildProcessingButtonsToggleLabel());
+            this.processingButtonsToggleButton.setTooltip(buildProcessingButtonsTooltip());
         }
     }
 
@@ -302,6 +322,7 @@ public class ProviderSelectScreen extends Screen {
         savePinnedProviders();
         if (this.autoUploadToggleButton != null) {
             this.autoUploadToggleButton.setMessage(buildAutoUploadToggleLabel());
+            this.autoUploadToggleButton.setTooltip(buildAutoUploadTooltip());
         }
     }
 

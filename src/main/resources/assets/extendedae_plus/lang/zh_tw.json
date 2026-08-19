@@ -126,6 +126,8 @@
   "extendedae_plus.screen.delete_mapping": "刪除對映",
   "extendedae_plus.screen.show_processing_buttons": "樣板終端按鈕顯示: %s",
   "extendedae_plus.screen.auto_upload_unique_match": "唯一匹配時自動上傳: %s",
+  "extendedae_plus.screen.show_processing_buttons.tooltip": "是否顯示樣板終端中的處理樣板操作按鈕: %s",
+  "extendedae_plus.screen.auto_upload_unique_match.tooltip": "僅有一個供應器匹配時自動上傳樣板: %s",
   "extendedae_plus.screen.mapping_management.button": "對映管理",
   "extendedae_plus.screen.mapping_management.title": "配方類型對映管理",
   "extendedae_plus.screen.mapping_management.filter": "篩選鍵或搜尋詞",

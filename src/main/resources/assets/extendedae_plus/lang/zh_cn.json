@@ -147,6 +147,8 @@
   "extendedae_plus.screen.delete_mapping": "删除映射",
   "extendedae_plus.screen.show_processing_buttons": "样板终端按钮显示: %s",
   "extendedae_plus.screen.auto_upload_unique_match": "唯一匹配时自动上传: %s",
+  "extendedae_plus.screen.show_processing_buttons.tooltip": "是否显示样板终端中的处理样板操作按钮: %s",
+  "extendedae_plus.screen.auto_upload_unique_match.tooltip": "仅有一个供应器匹配时自动上传样板: %s",
   "extendedae_plus.screen.mapping_management.button": "映射管理",
   "extendedae_plus.screen.mapping_management.title": "配方类型映射管理",
   "extendedae_plus.screen.mapping_management.filter": "筛选键或搜索词",
