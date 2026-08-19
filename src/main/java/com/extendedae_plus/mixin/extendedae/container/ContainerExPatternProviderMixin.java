@@ -9,6 +9,7 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
+import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
@@ -26,7 +27,8 @@ import java.util.List;
 
 @Pseudo
 @Mixin(value = ContainerExPatternProvider.class, priority = 3000, remap = false)
-public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu {
+public abstract class ContainerExPatternProviderMixin extends PatternProviderMenu
+        implements ExPatternProviderMenuPageBridge {
 
     // 使用高位唯一ID，避免与其他模组在同一类上的 @GuiSync 冲突
     @GuiSync(31415)
@@ -115,12 +117,18 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    public int getPage() {
+    @Override
+    public int eap$getPage() {
         return this.eap$page;
     }
 
-    @Unique
-    public void setPage(int page) {
+    @Override
+    public int eap$getUnlockedMaxPage() {
+        return this.eap$unlockedMaxPage;
+    }
+
+    @Override
+    public void eap$setPage(int page) {
         this.eap$page = page;
         this.eap$showPage();
     }
