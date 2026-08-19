@@ -365,6 +365,5 @@
   "gui.extendedae_plus.super_assembler_matrix": "超级装配矩阵",
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "并发执行数：%s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "取消当前任务",
-  "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板",
-  "extendedae_plus.message.pattern_provider.legacy_migration_notice": "注意！！[EAEP] 扩展样板供应器槽位倍增配置自1.6.0版本已移除，改用扩容卡增加页数：旧存档前四页样板会保留可用，第五页及以后样板已安全暂存，挖掘供应器即可取回。"
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板"
 }

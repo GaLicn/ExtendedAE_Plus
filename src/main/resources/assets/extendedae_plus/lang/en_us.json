@@ -369,6 +369,5 @@
   "gui.extendedae_plus.super_assembler_matrix": "Super Assembler Matrix",
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Current Jobs",
-  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns",
-  "extendedae_plus.message.pattern_provider.legacy_migration_notice": "ATTENTION!! [EAEP] The Extended Pattern Provider slot multiplier configuration has been removed since version 1.6.0. Use expansion cards to add pages instead: legacy patterns on pages 1-4 remain available; patterns from page 5 onward are safely stored and will drop when the provider is broken."
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns"
 }
