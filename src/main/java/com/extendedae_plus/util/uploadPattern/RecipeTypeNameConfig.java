@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,35 +72,6 @@ public final class RecipeTypeNameConfig {
     }
 
     /**
-     * 生成默认的配方类型映射，用于配置文件模板。
-     *
-     * @return 默认映射
-     */
-    private static Map<String, String> getDefaultMappings() {
-        Map<String, String> mappings = new HashMap<>();
-        // 添加原版和常见模组的默认映射
-        mappings.put("minecraft:smelting", "熔炉");
-        mappings.put("minecraft:blasting", "高炉");
-        mappings.put("minecraft:smoking", "烟熏");
-        mappings.put("minecraft:campfire_cooking", "营火");
-        mappings.put("gtceu:assembler", "组装机");
-        mappings.put("assembler", "组装机");
-        return mappings;
-    }
-
-    /**
-     * 创建默认配置文件模板。
-     *
-     * @return 默认的 JSON 对象
-     */
-    private static JsonObject createDefaultTemplate() {
-        JsonObject tmpl = new JsonObject();
-        // 将默认映射写入 JSON
-        getDefaultMappings().forEach(tmpl::addProperty);
-        return tmpl;
-    }
-
-    /**
      * 加载 JSON 配置文件，若文件不存在返回空对象。
      *
      * @param cfgPath 文件路径
@@ -130,7 +102,7 @@ public final class RecipeTypeNameConfig {
     }
 
     /**
-     * 加载配方类型名称映射。如果配置文件不存在，则生成默认模板。
+     * 加载配方类型名称映射。如果配置文件不存在，则生成空配置。
      * 支持 ResourceLocation 格式（namespace:path）和别名格式（仅 path）。
      *
      * @throws IOException 如果文件读写失败
@@ -138,12 +110,11 @@ public final class RecipeTypeNameConfig {
     public static synchronized void loadRecipeTypeNames() throws IOException {
         // 获取配置文件路径
         Path cfgPath = FMLPaths.CONFIGDIR.get().resolve(CONFIG_PATH);
-        JsonObject config = loadJsonConfig(cfgPath);
-        if (config.entrySet().isEmpty()) {
-            // 文件为空或不存在时生成默认模板
-            config = createDefaultTemplate();
-            saveJsonConfig(cfgPath, config);
+        if (!Files.exists(cfgPath)) {
+            // 默认不预置映射，分类标题由配方查看器统一提供。
+            saveJsonConfig(cfgPath, new JsonObject());
         }
+        JsonObject config = loadJsonConfig(cfgPath);
 
         Map<ResourceLocation, String> nameMap = new HashMap<>();
         Map<String, String> alias = new HashMap<>();
@@ -272,15 +243,38 @@ public final class RecipeTypeNameConfig {
 
     public static String mapRecipeTypeToSearchKey(Recipe<?> recipe) {
         if (recipe == null) return null;
-        RecipeType<?> type = recipe.getType();
-        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        return resolveRecipeTypeSearchKey(resolveRecipeTypeId(recipe.getType()), null);
+    }
+
+    /** 统一解析配方类型，优先配置映射，其次使用配方查看器提供的分类标题。 */
+    public static String resolveRecipeTypeSearchKey(ResourceLocation key, String displayName) {
         if (key == null) return null;
-        String resolvedPath = resolveSearchKeyAlias(key.getPath());
-        if (resolvedPath != null) {
-            return resolvedPath;
-        }
+
         String custom = CUSTOM_NAMES.get(key);
-        return custom != null && !custom.isBlank() ? custom : key.getPath();
+        if (custom != null && !custom.isBlank()) {
+            return custom;
+        }
+
+        String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase(Locale.ROOT));
+        if (alias != null && !alias.isBlank()) {
+            return alias;
+        }
+
+        return displayName != null && !displayName.isBlank() ? displayName : key.getPath();
+    }
+
+    /** 注册表反查失败时，RecipeType.simple 创建的类型仍会通过 toString 暴露其 ID。 */
+    private static ResourceLocation resolveRecipeTypeId(RecipeType<?> type) {
+        if (type == null) return null;
+        ResourceLocation key = BuiltInRegistries.RECIPE_TYPE.getKey(type);
+        if (key != null) {
+            return key;
+        }
+        try {
+            return new ResourceLocation(type.toString());
+        } catch (RuntimeException ignored) {
+            return null;
+        }
     }
 
     /**
@@ -322,6 +316,15 @@ public final class RecipeTypeNameConfig {
      */
     public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
         if (recipeBase == null) return null;
+        try {
+            Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
+            if (type instanceof RecipeType<?> recipeType) {
+                ResourceLocation key = resolveRecipeTypeId(recipeType);
+                String resolved = resolveRecipeTypeSearchKey(key, null);
+                if (resolved != null && !resolved.isBlank()) return resolved;
+            }
+        } catch (Throwable ignored) {
+        }
         try {
             Class<?> cls = recipeBase.getClass();
             String simple = cls.getSimpleName();

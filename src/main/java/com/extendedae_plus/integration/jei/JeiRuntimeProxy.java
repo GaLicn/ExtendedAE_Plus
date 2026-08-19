@@ -1,7 +1,10 @@
 package com.extendedae_plus.integration.jei;
 
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.api.recipe.IRecipeManager;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
@@ -13,6 +16,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -32,6 +36,48 @@ public final class JeiRuntimeProxy {
     @Nullable
     public static IJeiRuntime get() {
         return RUNTIME;
+    }
+
+    /** 根据 JEI 实际注册的配方对象统一解析分类标题，不依赖具体模组实现。 */
+    public static String getRecipeCategorySearchKey(Object recipe) {
+        IJeiRuntime runtime = RUNTIME;
+        if (runtime == null || recipe == null) {
+            return null;
+        }
+
+        try {
+            IRecipeManager recipeManager = runtime.getRecipeManager();
+            List<RecipeType<?>> candidates = runtime.getJeiHelpers().getAllRecipeTypes()
+                    .filter(type -> type.getRecipeClass().isInstance(recipe))
+                    .toList();
+            RecipeType<?> matched = candidates.size() == 1
+                    ? candidates.get(0)
+                    : candidates.stream()
+                            .filter(type -> containsRecipe(recipeManager, type, recipe))
+                            .findFirst()
+                            .orElse(null);
+            if (matched == null) {
+                return null;
+            }
+
+            String title = getCategoryTitle(recipeManager, matched);
+            return RecipeTypeNameConfig.resolveRecipeTypeSearchKey(matched.getUid(), title);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static boolean containsRecipe(IRecipeManager recipeManager, RecipeType<?> type, Object recipe) {
+        return recipeManager.createRecipeLookup((RecipeType) type)
+                .includeHidden()
+                .get()
+                .anyMatch(candidate -> candidate == recipe || Objects.equals(candidate, recipe));
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static String getCategoryTitle(IRecipeManager recipeManager, RecipeType<?> type) {
+        return recipeManager.getRecipeCategory((RecipeType) type).getTitle().getString();
     }
 
     public static Optional<ITypedIngredient<?>> getIngredientUnderMouse() {

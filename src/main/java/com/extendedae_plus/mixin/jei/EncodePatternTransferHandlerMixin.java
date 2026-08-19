@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.jei;
 import appeng.integration.modules.jei.transfer.EncodePatternTransferHandler;
 import appeng.integration.modules.jeirei.EncodingHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.recipe.transfer.IRecipeTransferError;
@@ -29,29 +30,21 @@ public abstract class EncodePatternTransferHandlerMixin {
                                                        CallbackInfoReturnable<IRecipeTransferError> cir) {
         if (!doTransfer) return;
         String name = null;
-        if (recipeBase instanceof Recipe<?> recipe) {
-            if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
-                RecipeTypeNameConfig.presetCraftingProviderSearchKey();
-                return;
-            }
-            name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
-        } else if (recipeBase != null &&
-                   "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
-            // 反射路径：GTCEu 专用，从 GTRecipeType 提取注册ID并映射为中文或path
-            name = RecipeTypeNameConfig.mapGTCEuRecipeToSearchKey(recipeBase);
-        } else if ("com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
-            // 通过反射处理 GTCEu JEI 包装类，避免硬依赖
-            try {
-                var field = recipeBase.getClass().getField("recipe"); // public final GTRecipe recipe;
-                Object inner = field.get(recipeBase);
-                // 反射路径：将内部 GTRecipe 以 Object 传入
-                name = RecipeTypeNameConfig.mapGTCEuRecipeToSearchKey(inner);
-            } catch (Throwable ignored) {
-                // 反射失败则继续走通用回退
-            }
-        } else {
-            // 非原版 Recipe<?> 的 JEI 条目，尝试从类名/包名推导关键词
-            name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipeBase);
+        Recipe<?> recipe = recipeBase instanceof Recipe<?> value ? value : null;
+        if (recipe != null && EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+            RecipeTypeNameConfig.presetCraftingProviderSearchKey();
+            return;
+        }
+
+        // 所有 JEI 配方统一使用其实际分类标题，不再按具体模组区分处理。
+        name = JeiRuntimeProxy.getRecipeCategorySearchKey(recipeBase);
+        if (name == null || name.isBlank()) {
+            name = recipe != null
+                    ? RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe)
+                    : RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipeBase);
+        }
+        if ((name == null || name.isBlank()) && recipe != null) {
+            name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipe);
         }
         if (name != null && !name.isBlank()) {
             RecipeTypeNameConfig.setLastProcessingName(name);
