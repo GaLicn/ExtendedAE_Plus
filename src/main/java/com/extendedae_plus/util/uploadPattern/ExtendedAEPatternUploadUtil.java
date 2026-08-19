@@ -160,7 +160,8 @@ public class ExtendedAEPatternUploadUtil {
             return;
         }
         String trimmed = name.trim();
-        lastProviderSearchKey = trimmed.isEmpty() ? null : trimmed;
+        String resolved = resolveProviderSearchKey(trimmed);
+        lastProviderSearchKey = resolved.isEmpty() ? null : resolved;
     }
 
     public static void presetCraftingProviderSearchKey() {
@@ -436,6 +437,28 @@ public class ExtendedAEPatternUploadUtil {
         String alias = CUSTOM_ALIASES.get(normalized.toLowerCase());
         if (alias != null && !alias.isBlank()) {
             return alias;
+        }
+        return normalized;
+    }
+
+    /** 将供应器界面的原始输入转换为映射后的实际搜索关键字。 */
+    public static String resolveProviderSearchKey(String rawKey) {
+        String normalized = rawKey == null ? "" : rawKey.trim();
+        if (normalized.isEmpty()) {
+            return normalized;
+        }
+
+        String alias = resolveSearchKeyAlias(normalized);
+        if (!normalized.equals(alias)) {
+            return alias;
+        }
+
+        ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
+        if (recipeType != null) {
+            String mapped = resolveRecipeTypeSearchKey(recipeType, null);
+            if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
+                return mapped;
+            }
         }
         return normalized;
     }

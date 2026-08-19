@@ -88,7 +88,8 @@ public class ProviderSelectScreen extends Screen {
         try {
             String recent = ExtendedAEPatternUploadUtil.consumeLastProviderSearchKey();
             if (recent != null && !recent.isBlank()) {
-                this.query = recent;
+                // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
+                this.query = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(recent);
                 this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
@@ -246,9 +247,11 @@ public class ProviderSelectScreen extends Screen {
         this.fCount.clear();
         this.lastExactMatchCount = 0;
         String q = this.query == null ? "" : this.query.trim();
+        // 输入内容命中配方类型映射时，供应器名称按映射值进行过滤。
+        String searchKey = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(q);
         for (int i = 0; i < this.gIds.size(); i++) {
             String name = this.gNames.get(i);
-            if (q.isEmpty() || nameMatches(name, q)) {
+            if (searchKey.isEmpty() || nameMatches(name, searchKey)) {
                 this.fIds.add(this.gIds.get(i));
                 this.fNames.add(name);
                 this.fTotalSlots.add(this.gTotalSlots.get(i));
