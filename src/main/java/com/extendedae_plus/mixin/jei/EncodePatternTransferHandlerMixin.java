@@ -33,6 +33,10 @@ public abstract class EncodePatternTransferHandlerMixin {
                 return;
             }
             name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+            if (name == null || name.isBlank()) {
+                // 注册表反查失败时仍按配方类名生成搜索词，避免搜索框完全为空。
+                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+            }
         } else {
             // 非原版 Recipe<?> 的显示，尝试从 display 类名/包名推导关键词
             name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(display);
