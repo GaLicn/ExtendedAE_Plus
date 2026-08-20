@@ -69,6 +69,7 @@
     "ae2.menu.PatternProviderMenuDoublingMixin",
     "ae2.menu.PatternProviderMenuUpgradesMixin",
     "ae2.network.PatternAccessTerminalPacketMixin",
+    "ae2.network.PatternAccessTermContainerTrackerMixin",
     "ae2.parts.automation.IOBusPartChannelCardMixin",
     "ae2.parts.ChannelCardPartLifecycleMixin",
     "ae2.parts.InterfacePartChannelCardHostMixin",
