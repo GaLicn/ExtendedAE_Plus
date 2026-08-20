@@ -1,40 +1,32 @@
-package com.extendedae_plus.mixin.jei;
+package com.extendedae_plus.compat.jei;
 
 import appeng.api.stacks.AEItemKey;
 import com.extendedae_plus.client.jei.NetworkItemCache;
 import com.extendedae_plus.util.GuiUtil;
 import com.extendedae_plus.util.NumberFormatUtil;
 import mezz.jei.api.constants.VanillaTypes;
-import mezz.jei.gui.overlay.IngredientListRenderer;
-import mezz.jei.gui.overlay.IngredientListSlot;
 import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(value = IngredientListRenderer.class, remap = false)
-public class IngredientListRendererMixin {
-    @Shadow @Final private List<IngredientListSlot> slots;
+public final class IngredientListOverlayHelper {
+    private IngredientListOverlayHelper() {
+    }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo callbackInfo) {
+    public static void render(GuiGraphics guiGraphics, List<?> slots) {
         if (!NetworkItemCache.INSTANCE.isConnected()) {
             return;
         }
-        for (IngredientListSlot slot : slots) {
-            if (slot.isBlocked() || slot.getOptionalElement().isEmpty()) {
+        for (Object rawSlot : slots) {
+            if (!(rawSlot instanceof IngredientListSlotAccessor slot)
+                    || slot.eap$isBlocked()
+                    || slot.eap$getOptionalElement().isEmpty()) {
                 continue;
             }
-            IElement<?> element = slot.getOptionalElement().get();
+            IElement<?> element = slot.eap$getOptionalElement().get();
             var typedIngredient = element.getTypedIngredient();
             if (typedIngredient.getType() != VanillaTypes.ITEM_STACK) {
                 continue;
@@ -49,15 +41,15 @@ public class IngredientListRendererMixin {
             if (amount <= 0 && !craftable) {
                 continue;
             }
-            var area = slot.getArea();
-            int padding = slot.getPadding();
+            var area = slot.eap$getArea();
+            int padding = slot.eap$getPadding();
             int x = area.getX() + padding;
             int y = area.getY() + padding;
             var font = Minecraft.getInstance().font;
             if (amount > 0) {
                 GuiUtil.drawAmountText(guiGraphics, font, NumberFormatUtil.formatNumber(amount), x, y);
                 if (craftable) {
-                    eap$renderCraftableMarker(guiGraphics, x, y);
+                    renderCraftableMarker(guiGraphics, x, y);
                 }
             } else {
                 GuiUtil.drawAmountText(guiGraphics, font, "Craft", x, y);
@@ -65,8 +57,8 @@ public class IngredientListRendererMixin {
         }
     }
 
-    @Unique
-    private static void eap$renderCraftableMarker(GuiGraphics guiGraphics, int slotX, int slotY) {
+    private static void renderCraftableMarker(GuiGraphics guiGraphics, int slotX, int slotY) {
+        // 提升绘制层级，避免 JEI 的物品图标覆盖合成标记。
         var poseStack = guiGraphics.pose();
         poseStack.pushPose();
         poseStack.translate(0, 0, 200);

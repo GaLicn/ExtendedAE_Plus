@@ -132,9 +132,12 @@
     "jei.AE2JeiEncodePatternTransferHandlerMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
-    "jei.IngredientListRendererMixin",
+    "jei.LegacyIngredientListRendererMixin",
+    "jei.ModernIngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor",
-    "jei.accessor.BookmarkListAccessor"
+    "jei.accessor.BookmarkListAccessor",
+    "jei.accessor.LegacyIngredientListSlotMixin",
+    "jei.accessor.ModernIngredientListSlotMixin"
   ],
   "injectors": {
     "defaultRequire": 1
