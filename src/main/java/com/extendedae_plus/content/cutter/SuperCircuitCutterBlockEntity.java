@@ -106,7 +106,7 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
 
     @Override
     public Set<Direction> getGridConnectableSides(BlockOrientation orientation) {
-        return EnumSet.complementOf(EnumSet.of(orientation.getSide(RelativeSide.FRONT), orientation.getSide(RelativeSide.BACK)));
+        return EnumSet.complementOf(EnumSet.of(orientation.getSide(RelativeSide.TOP)));
     }
 
     @Override
