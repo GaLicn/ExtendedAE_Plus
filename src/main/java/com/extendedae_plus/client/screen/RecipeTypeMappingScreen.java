@@ -1,10 +1,13 @@
 package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.style.StyleManager;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -15,14 +18,19 @@ import java.util.Locale;
 /** 可视化管理配方类型到供应器搜索词的自定义映射。 */
 public class RecipeTypeMappingScreen extends Screen {
     private static final int ROW_HEIGHT = 22;
+    // AE2 文本框背景纹理宽度固定为 128，输入框不能直接拉伸到整栏。
+    private static final int AE_TEXT_FIELD_WIDTH = 128;
+    // 使用 AE2 原生文本框的 12px 高度。
+    private static final int AE_SEARCH_FIELD_HEIGHT = 12;
 
     private final Screen parent;
+    private final ScreenStyle aeStyle;
     private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> mappings = new ArrayList<>();
     private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> filteredMappings = new ArrayList<>();
 
-    private EditBox filterInput;
-    private EditBox keyInput;
-    private EditBox valueInput;
+    private AETextField filterInput;
+    private AETextField keyInput;
+    private AETextField valueInput;
     private String selectedKey;
     private Component status = Component.empty();
     private int statusColor = 0xFFAAAAAA;
@@ -33,11 +41,15 @@ public class RecipeTypeMappingScreen extends Screen {
     public RecipeTypeMappingScreen(Screen parent) {
         super(Component.translatable("extendedae_plus.screen.mapping_management.title"));
         this.parent = parent;
+        this.aeStyle = StyleManager.loadStyleDoc("/screens/common/common.json");
         this.reloadMappings(false);
     }
 
     @Override
     protected void init() {
+        boolean filterWasFocused = this.filterInput != null && this.filterInput.isFocused();
+        boolean keyWasFocused = this.keyInput != null && this.keyInput.isFocused();
+        boolean valueWasFocused = this.valueInput != null && this.valueInput.isFocused();
         this.clearWidgets();
 
         int panelWidth = Math.min(600, this.width - 20);
@@ -50,7 +62,9 @@ public class RecipeTypeMappingScreen extends Screen {
         this.pageSize = Math.max(1, (panelHeight - 166) / ROW_HEIGHT);
         this.page = Math.min(this.page, Math.max(0, (this.filteredMappings.size() - 1) / this.pageSize));
 
-        this.filterInput = this.prepareInput(this.filterInput, innerX, panelY + 28, innerWidth, 20,
+        int filterX = panelX + (panelWidth - AE_TEXT_FIELD_WIDTH) / 2;
+        this.filterInput = this.prepareInput(this.filterInput, filterX, panelY + 28,
+                AE_TEXT_FIELD_WIDTH, AE_SEARCH_FIELD_HEIGHT,
                 "extendedae_plus.screen.mapping_management.filter");
         this.filterInput.setResponder(value -> {
             this.page = 0;
@@ -58,41 +72,54 @@ public class RecipeTypeMappingScreen extends Screen {
             this.needsRefresh = true;
         });
         this.addRenderableWidget(this.filterInput);
+        if (filterWasFocused) {
+            this.setFocused(this.filterInput);
+        }
 
         int saveWidth = 76;
         int gap = 5;
-        int inputWidth = Math.max(70, (innerWidth - saveWidth - gap * 2) / 2);
-        int inputY = panelY + 64;
-        this.keyInput = this.prepareInput(this.keyInput, innerX, inputY, inputWidth, 20,
+        int inputWidth = Math.min(AE_TEXT_FIELD_WIDTH,
+                Math.max(70, (innerWidth - saveWidth - gap * 2) / 2));
+        int formWidth = inputWidth * 2 + saveWidth + gap * 2;
+        int formX = panelX + (panelWidth - formWidth) / 2;
+        int inputY = panelY + 52;
+        this.keyInput = this.prepareInput(this.keyInput, formX, inputY, inputWidth, AE_SEARCH_FIELD_HEIGHT,
                 "extendedae_plus.screen.mapping_management.key");
-        this.valueInput = this.prepareInput(this.valueInput, innerX + inputWidth + gap, inputY, inputWidth, 20,
+        this.valueInput = this.prepareInput(this.valueInput, formX + inputWidth + gap, inputY, inputWidth,
+                AE_SEARCH_FIELD_HEIGHT,
                 "extendedae_plus.screen.mapping_management.value");
         this.addRenderableWidget(this.keyInput);
         this.addRenderableWidget(this.valueInput);
-        this.addRenderableWidget(Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.save"),
-                        button -> this.saveMapping())
-                .bounds(innerX + inputWidth * 2 + gap * 2, inputY, saveWidth, 20)
-                .build());
+        if (keyWasFocused) {
+            this.setFocused(this.keyInput);
+        } else if (valueWasFocused) {
+            this.setFocused(this.valueInput);
+        }
+        this.addRenderableWidget(new AE2Button(
+                formX + inputWidth * 2 + gap * 2, inputY, saveWidth, 20,
+                Component.translatable("extendedae_plus.screen.mapping_management.save"),
+                button -> this.saveMapping()));
 
-        int rowsY = panelY + 94;
+        int rowsY = panelY + 82;
         int start = this.page * this.pageSize;
         int end = Math.min(start + this.pageSize, this.filteredMappings.size());
         for (int index = start; index < end; index++) {
             ExtendedAEPatternUploadUtil.RecipeTypeMapping mapping = this.filteredMappings.get(index);
             String prefix = mapping.key().equals(this.selectedKey) ? "▶ " : "";
             String label = prefix + mapping.key() + "  →  " + mapping.value();
-            this.addRenderableWidget(Button.builder(Component.literal(label), button -> this.selectMapping(mapping))
-                    .bounds(innerX, rowsY + (index - start) * ROW_HEIGHT, innerWidth, 20)
-                    .build());
+            this.addRenderableWidget(new AE2Button(
+                    innerX, rowsY + (index - start) * ROW_HEIGHT, innerWidth, 20,
+                    Component.literal(label), button -> this.selectMapping(mapping)));
         }
 
         int navY = panelY + panelHeight - 54;
-        Button previous = Button.builder(Component.literal("<"), button -> this.changePage(-1))
-                .bounds(panelX + panelWidth / 2 - 62, navY, 24, 20)
-                .build();
-        Button next = Button.builder(Component.literal(">"), button -> this.changePage(1))
-                .bounds(panelX + panelWidth / 2 + 38, navY, 24, 20)
-                .build();
+        int navOffset = 90;
+        Button previous = new AE2Button(
+                panelX + panelWidth / 2 - navOffset - 12, navY, 24, 20,
+                Component.literal("<"), button -> this.changePage(-1));
+        Button next = new AE2Button(
+                panelX + panelWidth / 2 + navOffset - 12, navY, 24, 20,
+                Component.literal(">"), button -> this.changePage(1));
         previous.active = this.page > 0;
         next.active = (this.page + 1) * this.pageSize < this.filteredMappings.size();
         this.addRenderableWidget(previous);
@@ -101,35 +128,34 @@ public class RecipeTypeMappingScreen extends Screen {
         int actionY = panelY + panelHeight - 28;
         int actionGap = 5;
         int actionWidth = (innerWidth - actionGap * 3) / 4;
-        this.addRenderableWidget(Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.new"),
-                        button -> this.clearSelection())
-                .bounds(innerX, actionY, actionWidth, 20)
-                .build());
-        Button delete = Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.delete"),
-                        button -> this.deleteSelectedMapping())
-                .bounds(innerX + actionWidth + actionGap, actionY, actionWidth, 20)
-                .build();
+        this.addRenderableWidget(new AE2Button(
+                innerX, actionY, actionWidth, 20,
+                Component.translatable("extendedae_plus.screen.mapping_management.new"),
+                button -> this.clearSelection()));
+        Button delete = new AE2Button(
+                innerX + actionWidth + actionGap, actionY, actionWidth, 20,
+                Component.translatable("extendedae_plus.screen.mapping_management.delete"),
+                button -> this.deleteSelectedMapping());
         delete.active = this.selectedKey != null;
         this.addRenderableWidget(delete);
-        this.addRenderableWidget(Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.reload"),
-                        button -> this.reloadMappings(true))
-                .bounds(innerX + (actionWidth + actionGap) * 2, actionY, actionWidth, 20)
-                .build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> this.onClose())
-                .bounds(innerX + (actionWidth + actionGap) * 3, actionY, actionWidth, 20)
-                .build());
+        this.addRenderableWidget(new AE2Button(
+                innerX + (actionWidth + actionGap) * 2, actionY, actionWidth, 20,
+                Component.translatable("extendedae_plus.screen.mapping_management.reload"),
+                button -> this.reloadMappings(true)));
+        this.addRenderableWidget(new AE2Button(
+                innerX + (actionWidth + actionGap) * 3, actionY, actionWidth, 20,
+                Component.translatable("gui.back"), button -> this.onClose()));
     }
 
-    private EditBox prepareInput(EditBox input, int x, int y, int width, int height, String narrationKey) {
-        if (input == null) {
-            input = new EditBox(this.font, x, y, width, height, Component.translatable(narrationKey));
-            input.setMaxLength(256);
-        } else {
-            input.setX(x);
-            input.setY(y);
-            input.setWidth(width);
-        }
-        return input;
+    private AETextField prepareInput(AETextField input, int x, int y, int width, int height, String narrationKey) {
+        String value = input == null ? "" : input.getValue();
+        var result = new AETextField(this.aeStyle, this.font, x, y, width, height);
+        // 与 AE2 终端一致，避免原版 EditBox 的黑色背景覆盖 AE2 纹理。
+        result.setBordered(false);
+        result.setMaxLength(256);
+        result.setValue(value);
+        result.setPlaceholder(Component.translatable(narrationKey));
+        return result;
     }
 
     private void reloadMappings(boolean showStatus) {
@@ -228,6 +254,64 @@ public class RecipeTypeMappingScreen extends Screen {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 显式转发 AETextField 点击，确保点击纹理边缘也能获得焦点。
+        if (this.filterInput != null && this.filterInput.mouseClicked(mouseX, mouseY, button)) {
+            this.setFocused(this.filterInput);
+            return true;
+        }
+        if (this.keyInput != null && this.keyInput.mouseClicked(mouseX, mouseY, button)) {
+            this.setFocused(this.keyInput);
+            return true;
+        }
+        if (this.valueInput != null && this.valueInput.mouseClicked(mouseX, mouseY, button)) {
+            this.setFocused(this.valueInput);
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.filterInput != null && this.filterInput.isFocused()
+                && keyCode == 65 && hasControlDown()) {
+            // Ctrl+A 只修改选区，不触发列表重建，避免全选状态被刷新清掉。
+            this.filterInput.selectAll();
+            return true;
+        }
+        if (this.filterInput != null && this.filterInput.isFocused()
+                && this.filterInput.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if (this.keyInput != null && this.keyInput.isFocused()
+                && this.keyInput.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        if (this.valueInput != null && this.valueInput.isFocused()
+                && this.valueInput.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.filterInput != null && this.filterInput.isFocused()
+                && this.filterInput.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        if (this.keyInput != null && this.keyInput.isFocused()
+                && this.keyInput.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        if (this.valueInput != null && this.valueInput.isFocused()
+                && this.valueInput.charTyped(codePoint, modifiers)) {
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
     public void tick() {
         super.tick();
         if (this.needsRefresh) {
@@ -243,16 +327,10 @@ public class RecipeTypeMappingScreen extends Screen {
         int panelX = (this.width - panelWidth) / 2;
         int panelY = (this.height - panelHeight) / 2;
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, 0xE0101010);
-        graphics.renderOutline(panelX, panelY, panelWidth, panelHeight, 0xFF808080);
         super.render(graphics, mouseX, mouseY, partialTick);
 
+        // 仅使用原版模糊背景，避免额外绘制不透明面板遮住世界背景。
         graphics.drawCenteredString(this.font, this.title, this.width / 2, panelY + 9, 0xFFFFFFFF);
-        graphics.drawString(this.font, Component.translatable("extendedae_plus.screen.mapping_management.key"),
-                panelX + 12, panelY + 53, 0xFFB0B0B0, false);
-        graphics.drawString(this.font, Component.translatable("extendedae_plus.screen.mapping_management.value"),
-                panelX + 17 + this.keyInput.getWidth(), panelY + 53, 0xFFB0B0B0, false);
-
         Component pageText = Component.translatable("extendedae_plus.screen.mapping_management.page",
                 this.filteredMappings.isEmpty() ? 0 : this.page + 1,
                 Math.max(1, (this.filteredMappings.size() + this.pageSize - 1) / this.pageSize),
