@@ -87,11 +87,12 @@ public class RecipeTypeMappingScreen extends Screen {
         }
 
         int navY = panelY + panelHeight - 54;
+        int navOffset = 90;
         Button previous = Button.builder(Component.literal("<"), button -> changePage(-1))
-                .bounds(panelX + panelWidth / 2 - 62, navY, 24, 20)
+                .bounds(panelX + panelWidth / 2 - navOffset - 12, navY, 24, 20)
                 .build();
         Button next = Button.builder(Component.literal(">"), button -> changePage(1))
-                .bounds(panelX + panelWidth / 2 + 38, navY, 24, 20)
+                .bounds(panelX + panelWidth / 2 + navOffset - 12, navY, 24, 20)
                 .build();
         previous.active = this.page > 0;
         next.active = (this.page + 1) * this.pageSize < this.filteredMappings.size();

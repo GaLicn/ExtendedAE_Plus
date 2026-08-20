@@ -135,13 +135,13 @@ public class ProviderSelectScreen extends Screen {
         int buttonHeight = 20;
         int gap = 5;
         int entryUnitHeight = buttonHeight + gap;
-        int reservedHeight = 30 + 30 + 30 + 20 + 65;
+        int reservedHeight = 30 + 30 + 30 + 20 + 40;
         int availableHeight = this.height - reservedHeight;
         this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
         
         // 动态计算起始高度，使内容垂直居中
         int totalEntriesHeight = this.pageSize * entryUnitHeight;
-        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 45;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
         int startY = (this.height - contentHeight) / 2 + 30;
         
         // 重新初始化按钮索引映射数组
@@ -194,7 +194,8 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
 
-        int controlsWidth = 240;
+        // 将映射输入、增加映射、映射管理和取消按钮放在同一行。
+        int controlsWidth = Math.min(500, Math.max(240, this.width - 20));
         int controlsX = centerX - controlsWidth / 2;
         int toggleGap = 5;
         int toggleWidth = (controlsWidth - toggleGap) / 2;
@@ -232,12 +233,12 @@ public class ProviderSelectScreen extends Screen {
 
         Button mappingManagement = Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.button"),
                         b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)))
-                .bounds(controlsX, navY + 80, 155, 20)
+                .bounds(controlsX + quickInputWidth + 5 + 85 + 5, quickMappingY, 155, 20)
                 .build();
         this.addRenderableWidget(mappingManagement);
 
         Button close = Button.builder(Component.translatable("gui.cancel"), b -> onClose())
-                .bounds(controlsX + 160, navY + 80, 80, 20)
+                .bounds(controlsX + quickInputWidth + 5 + 85 + 5 + 155 + 5, quickMappingY, 80, 20)
                 .build();
         this.addRenderableWidget(close);
 
