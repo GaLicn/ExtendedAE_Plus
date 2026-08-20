@@ -184,7 +184,7 @@ jobs:
         run: test -f "${{ needs.build.outputs.artifact_path }}"
 
       - name: Upload to CurseForge
-        uses: Kir-Antipov/mc-publish@v3.3.0
+        uses: Kira-NT/mc-publish@v3.3.1
         with:
           name: ${{ needs.build.outputs.release_name }}
           version: ${{ needs.build.outputs.release_version }}
@@ -195,6 +195,7 @@ jobs:
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
           loaders: |
             ${{ needs.build.outputs.mod_loader }}
+          environment: client | server
           game-versions: |
             ${{ needs.build.outputs.mc_version }}
 
@@ -216,7 +217,7 @@ jobs:
         run: test -f "${{ needs.build.outputs.artifact_path }}"
 
       - name: Upload to Modrinth
-        uses: Kir-Antipov/mc-publish@v3.3.0
+        uses: Kira-NT/mc-publish@v3.3.1
         with:
           name: ${{ needs.build.outputs.release_name }}
           version: ${{ needs.build.outputs.release_version }}
