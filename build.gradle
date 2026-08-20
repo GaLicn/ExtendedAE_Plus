@@ -137,7 +137,7 @@ dependencies {
     // jarJar configuration not set in this build; use implementation for API for now
     implementation "curse.maven:curios-309927:6529130"
 
-    compileOnly "curse.maven:applied-flux-965012:5614830"
+    compileOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "dev.emi:emi-neoforge:1.1.10+1.21"
     compileOnly "curse.maven:mega-cells-622112:6005043"
     compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
@@ -152,7 +152,7 @@ dependencies {
     compileOnly "curse.maven:ae2-jei-integration-1074338:5748513"
 
     // runtime test
-    runtimeOnly "curse.maven:applied-flux-965012:5614830"
+    runtimeOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "de.mari_023:ae2wtlib_api:19.2.0"
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
     runtimeOnly "curse.maven:mega-cells-622112:6005043"

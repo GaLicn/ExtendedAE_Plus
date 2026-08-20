@@ -4,9 +4,12 @@ import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.google.gson.*;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.style.StyleManager;
+import appeng.client.gui.widgets.AE2Button;
+import appeng.client.gui.widgets.AETextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -26,6 +29,10 @@ import java.util.regex.Pattern;
  */
 public class ProviderSelectScreen extends Screen {
     private static final int MIN_PAGE_SIZE = 2;
+    // AE2 文本框纹理的可视宽度上限，超过后背景中段不会完整平铺。
+    private static final int AE_TEXT_FIELD_WIDTH = 128;
+    // 使用 AE2 原生文本框的 12px 高度。
+    private static final int AE_SEARCH_FIELD_HEIGHT = 12;
     private int pageSize = 6;
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
     private static Boolean JEC_AVAILABLE = null;
@@ -50,6 +57,7 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private final Screen parent;
+    private final ScreenStyle aeStyle;
     // 原始数据
     private final List<Long> ids;
     private final List<Component> names; // 改为 Component
@@ -66,9 +74,9 @@ public class ProviderSelectScreen extends Screen {
     private final List<Integer> fCount = new ArrayList<>();
     private final List<Button> entryButtons = new ArrayList<>();
     // 搜索框
-    private EditBox searchBox;
+    private AETextField searchBox;
     // 快捷映射值输入框，映射键使用当前供应器搜索词。
-    private EditBox cnInput;
+    private AETextField cnInput;
     private Button processingButtonsToggleButton;
     private Button autoUploadToggleButton;
     private String query = "";
@@ -77,10 +85,10 @@ public class ProviderSelectScreen extends Screen {
     private boolean autoUploadRequestedFromPresetSearch = false;
     private boolean autoUploadAttempted = false;
     private int lastExactMatchCount = 0;
-
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
         this.parent = parent;
+        this.aeStyle = StyleManager.loadStyleDoc("/screens/common/common.json");
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
@@ -331,29 +339,27 @@ public class ProviderSelectScreen extends Screen {
 
         int centerX = this.width / 2;
         
-        // 动态计算页面大小，确保所有元素都能显示
-        // 布局结构：搜索框(30) + 条目按钮 + 分页按钮(30) + 切换按钮(30) + 其他按钮(20) + 边距(40)
+        // 动态计算页面大小，确保所有元素都能显示；底部控件压缩为两排。
         int buttonHeight = 20;
         int gap = 5;
         int entryUnitHeight = buttonHeight + gap;
-        int reservedHeight = 30 + 30 + 30 + 20 + 65;
+        int reservedHeight = 30 + 30 + 30 + 20 + 40;
         int availableHeight = this.height - reservedHeight;
         this.pageSize = Math.max(MIN_PAGE_SIZE, availableHeight / entryUnitHeight);
         
         // 动态计算起始高度，使内容垂直居中
         int totalEntriesHeight = this.pageSize * entryUnitHeight;
-        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 45;
+        int contentHeight = 30 + totalEntriesHeight + 30 + 30 + 20;
         int startY = (this.height - contentHeight) / 2 + 30;
 
         // 搜索框（置于条目上方）
-        if (this.searchBox == null) {
-            this.searchBox = new EditBox(this.font, centerX - 120, startY - 25, 240, 18, Component.translatable("extendedae_plus.screen.search"));
-        } else {
-            // 重新定位，保持输入值
-            this.searchBox.setX(centerX - 120);
-            this.searchBox.setY(startY - 25);
-            this.searchBox.setWidth(240);
-        }
+        int searchX = centerX - AE_TEXT_FIELD_WIDTH / 2;
+        this.searchBox = new AETextField(this.aeStyle, this.font, searchX, startY - 25,
+                AE_TEXT_FIELD_WIDTH, AE_SEARCH_FIELD_HEIGHT);
+        // AE2 终端关闭 EditBox 默认填充，只绘制 AE2 文本框纹理。
+        this.searchBox.setBordered(false);
+        this.searchBox.setMaxLength(256);
+        this.searchBox.setPlaceholder(Component.translatable("extendedae_plus.screen.search"));
         this.searchBox.setValue(this.query);
         this.searchBox.setResponder(text -> {
             // 只有当输入真正发生变化时，才重置页码与过滤
@@ -374,70 +380,65 @@ public class ProviderSelectScreen extends Screen {
         for (int i = start; i < end; i++) {
             int idx = i;
             String label = this.buildLabel(idx);
-            Button btn = Button.builder(Component.literal(label), b -> this.onChoose(idx))
-                    .bounds(centerX - buttonWidth / 2, startY + (i - start) * (buttonHeight + gap), buttonWidth, buttonHeight)
-                    .build();
+            Button btn = new AE2Button(
+                    centerX - buttonWidth / 2, startY + (i - start) * (buttonHeight + gap), buttonWidth, buttonHeight,
+                    Component.literal(label), b -> this.onChoose(idx));
             this.entryButtons.add(btn);
             this.addRenderableWidget(btn);
         }
 
         // 分页按钮
         int navY = startY + this.pageSize * (buttonHeight + gap) + 10;
-        Button prev = Button.builder(Component.literal("<"), b -> this.changePage(-1))
-                .bounds(centerX - 60, navY, 20, 20)
-                .build();
-        Button next = Button.builder(Component.literal(">"), b -> this.changePage(1))
-                .bounds(centerX + 40, navY, 20, 20)
-                .build();
+        Button prev = new AE2Button(centerX - 60, navY, 20, 20, Component.literal("<"), b -> this.changePage(-1));
+        Button next = new AE2Button(centerX + 40, navY, 20, 20, Component.literal(">"), b -> this.changePage(1));
         prev.active = this.page > 0;
         next.active = (this.page + 1) * this.pageSize < this.fIds.size();
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
 
-        int controlsWidth = 240;
+        // 底部第二排依次放置中文名、增加映射、映射管理和取消按钮。
+        int controlsWidth = Math.min(480, Math.max(240, this.width - 20));
         int controlsX = centerX - controlsWidth / 2;
         int toggleGap = 5;
         int toggleWidth = (controlsWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
-        this.processingButtonsToggleButton = Button.builder(this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons())
-                .bounds(controlsX, toggleY, toggleWidth, 20)
-                .build();
+        this.processingButtonsToggleButton = new AE2Button(
+                controlsX, toggleY, toggleWidth, 20,
+                this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons());
         this.processingButtonsToggleButton.setTooltip(this.buildProcessingButtonsTooltip());
         this.addRenderableWidget(this.processingButtonsToggleButton);
 
-        this.autoUploadToggleButton = Button.builder(this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch())
-                .bounds(controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
-                .build();
+        this.autoUploadToggleButton = new AE2Button(
+                controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20,
+                this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch());
         this.autoUploadToggleButton.setTooltip(this.buildAutoUploadTooltip());
         this.addRenderableWidget(this.autoUploadToggleButton);
 
         int quickMappingY = navY + 55;
-        int quickInputWidth = 150;
-        if (this.cnInput == null) {
-            this.cnInput = new EditBox(this.font, controlsX, quickMappingY, quickInputWidth, 20,
-                    Component.translatable("extendedae_plus.screen.cn_name"));
-        } else {
-            this.cnInput.setX(controlsX);
-            this.cnInput.setY(quickMappingY);
-            this.cnInput.setWidth(quickInputWidth);
-        }
+        int quickInputWidth = AE_TEXT_FIELD_WIDTH;
+        String cnValue = this.cnInput == null ? "" : this.cnInput.getValue();
+        this.cnInput = new AETextField(this.aeStyle, this.font, controlsX, quickMappingY,
+                quickInputWidth, AE_SEARCH_FIELD_HEIGHT);
+        this.cnInput.setBordered(false);
+        this.cnInput.setMaxLength(256);
+        this.cnInput.setPlaceholder(Component.translatable("extendedae_plus.screen.cn_name"));
+        this.cnInput.setValue(cnValue);
         this.addRenderableWidget(this.cnInput);
-        this.addRenderableWidget(Button.builder(Component.translatable("extendedae_plus.screen.add_mapping"),
-                        b -> this.addMappingFromUI())
-                .bounds(controlsX + quickInputWidth + 5, quickMappingY, 85, 20)
-                .build());
+        this.addRenderableWidget(new AE2Button(
+                controlsX + quickInputWidth + 5, quickMappingY, 85, 20,
+                Component.translatable("extendedae_plus.screen.add_mapping"), b -> this.addMappingFromUI()));
 
         // 完整编辑和删除操作集中到独立的可视化管理页面。
-        Button mappingManagement = Button.builder(Component.translatable("extendedae_plus.screen.mapping_management.button"),
-                        b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)))
-                .bounds(controlsX, navY + 80, 155, 20)
-                .build();
+        Button mappingManagement = new AE2Button(
+                controlsX + quickInputWidth + 5 + 85 + 5, quickMappingY, 155, 20,
+                Component.translatable("extendedae_plus.screen.mapping_management.button"),
+                b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)));
         this.addRenderableWidget(mappingManagement);
 
-        Button close = Button.builder(Component.translatable("gui.cancel"), b -> this.onClose())
-                .bounds(controlsX + 160, navY + 80, 80, 20)
-                .build();
+        Button close = new AE2Button(
+                controlsX + quickInputWidth + 5 + 85 + 5 + 155 + 5, quickMappingY, 80, 20,
+                Component.translatable("gui.cancel"), b -> this.onClose());
         this.addRenderableWidget(close);
 
         this.tryAutoUploadIfUniqueMatch();
@@ -462,11 +463,10 @@ public class ProviderSelectScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // 右键点击搜索框区域时，清空搜索框内容并刷新
         if (button == 1 && this.searchBox != null) {
-            int x = this.searchBox.getX();
-            int y = this.searchBox.getY();
-            int w = this.searchBox.getWidth();
-            int h = this.searchBox.getHeight();
-            if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+            // AETextField 的 getX/getWidth 是内部 EditBox 边界，右键清空需使用完整可视区域。
+            var bounds = this.searchBox.getTooltipArea();
+            if (mouseX >= bounds.getX() && mouseX < bounds.getX() + bounds.getWidth()
+                    && mouseY >= bounds.getY() && mouseY < bounds.getY() + bounds.getHeight()) {
                 if (!this.searchBox.getValue().isEmpty()) {
                     this.searchBox.setValue("");
                 }

@@ -156,6 +156,7 @@
   "extendedae_plus.screen.auto_upload_unique_match": "Auto Upload: %s",
   "extendedae_plus.screen.show_processing_buttons.tooltip": "Pattern Terminal Buttons Display: %s",
   "extendedae_plus.screen.auto_upload_unique_match.tooltip": "Auto Upload on Unique Match: %s",
+  "extendedae_plus.screen.search": "Search",
   "extendedae_plus.screen.cn_name": "Chinese Name",
   "extendedae_plus.screen.mapping_management.button": "Mapping Management",
   "extendedae_plus.screen.mapping_management.title": "Recipe Type Mapping Management",
