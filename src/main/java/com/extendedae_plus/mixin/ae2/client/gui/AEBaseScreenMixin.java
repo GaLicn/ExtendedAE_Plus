@@ -6,10 +6,14 @@ import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.StackWithBounds;
 import appeng.client.gui.TextOverride;
+import appeng.client.gui.WidgetContainer;
+import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
+import appeng.client.gui.widgets.ToolboxPanel;
+import appeng.menu.SlotSemantics;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
@@ -17,6 +21,7 @@ import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.WidgetContainerAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.crafting.CraftingMonitorJumpC2SPacket;
@@ -35,6 +40,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,6 +48,43 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AEBaseScreen.class)
 public abstract class AEBaseScreenMixin {
+
+    /** 在样板供应器初始化前统一移除其它模组注入的工具箱面板。 */
+    @Inject(method = "init", at = @At("HEAD"), remap = false)
+    private void eap$hidePatternProviderToolbox(CallbackInfo ci) {
+        Object self = this;
+        if (!(self instanceof PatternProviderScreen<?>)) {
+            return;
+        }
+
+        try {
+            AEBaseScreen<?> screen = (AEBaseScreen<?>) self;
+            screen.setSlotsHidden(SlotSemantics.TOOLBOX, true);
+
+            WidgetContainer widgets = ((AEBaseScreenAccessor<?>) self).eap$getWidgets();
+            WidgetContainerAccessor accessor = (WidgetContainerAccessor) widgets;
+            accessor.eap$getWidgetsMap().keySet().removeIf(AEBaseScreenMixin::eap$isToolboxId);
+            accessor.eap$getCompositeWidgetsMap().entrySet().removeIf(entry ->
+                    eap$isToolboxId(entry.getKey()) || entry.getValue() instanceof ToolboxPanel);
+        } catch (Throwable ignored) {
+            // 兼容其它界面实现，过滤失败时不影响界面打开。
+        }
+    }
+
+    @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
+    private void eap$keepPatternProviderToolboxHidden(CallbackInfo ci) {
+        eap$hidePatternProviderToolbox(ci);
+    }
+
+    @Unique
+    private static boolean eap$isToolboxId(String id) {
+        if (id == null) {
+            return false;
+        }
+        String normalized = id.replace("_", "").replace("-", "");
+        return normalized.equalsIgnoreCase("toolbox") || normalized.endsWith("toolbox");
+    }
+
     /**
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+点击操作。
      * 左键：发送 CraftingMonitorJumpC2SPacket（跳转至样板所在界面）。
