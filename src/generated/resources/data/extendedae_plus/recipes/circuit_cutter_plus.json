@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "minecraft:gold_block"
+    },
+    "B": {
+      "item": "extendedae_plus:oblivion_singularity"
+    },
+    "C": {
+      "item": "ae2:cell_component_256k"
+    },
+    "D": {
+      "item": "expatternprovider:circuit_cutter"
+    }
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "item": "extendedae_plus:circuit_cutter_plus"
+  },
+  "show_notification": true
+}
