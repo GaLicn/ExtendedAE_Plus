@@ -7,6 +7,8 @@ import appeng.api.config.YesNo;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.orientation.BlockOrientation;
+import appeng.api.orientation.RelativeSide;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.GenericStack;
 import appeng.core.definitions.AEItems;
@@ -14,6 +16,7 @@ import com.extendedae_plus.init.ModBlocks;
 import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
 import com.glodblock.github.extendedae.recipe.CircuitCutterRecipe;
 import com.glodblock.github.extendedae.util.FCUtil;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,7 +26,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 @Mixin(value = TileCircuitCutter.class, remap = false)
 public abstract class TileCircuitCutterParallelMixin {
@@ -36,6 +41,16 @@ public abstract class TileCircuitCutterParallelMixin {
         var host = (TileCircuitCutter) (Object) this;
         if (isSuperCutter(host)) {
             host.setInternalMaxPower(SUPER_POWER_CAPACITY);
+        }
+    }
+
+    @Inject(method = "getGridConnectableSides", at = @At("HEAD"), cancellable = true)
+    private void eap$allowSuperCutterCableConnections(BlockOrientation orientation,
+            CallbackInfoReturnable<Set<Direction>> cir) {
+        var host = (TileCircuitCutter) (Object) this;
+        if (isSuperCutter(host)) {
+            // 超级切片机仅顶面不可接线，其余五个面均向 AE2 网络暴露。
+            cir.setReturnValue(EnumSet.complementOf(EnumSet.of(orientation.getSide(RelativeSide.TOP))));
         }
     }
 
