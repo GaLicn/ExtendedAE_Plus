@@ -2,12 +2,12 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
+import com.extendedae_plus.client.widget.ResizableAETextField;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.google.gson.*;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.gui.widgets.AE2Button;
-import appeng.client.gui.widgets.AETextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -31,8 +31,7 @@ public class ProviderSelectScreen extends Screen {
     private static final int MIN_PAGE_SIZE = 2;
     // AE2 文本框纹理的可视宽度上限，超过后背景中段不会完整平铺。
     private static final int AE_TEXT_FIELD_WIDTH = 128;
-    // 使用 AE2 原生文本框的 12px 高度。
-    private static final int AE_SEARCH_FIELD_HEIGHT = 12;
+    private static final int AE_SEARCH_FIELD_HEIGHT = 20;
     private int pageSize = 6;
     // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
     private static Boolean JEC_AVAILABLE = null;
@@ -74,9 +73,9 @@ public class ProviderSelectScreen extends Screen {
     private final List<Integer> fCount = new ArrayList<>();
     private final List<Button> entryButtons = new ArrayList<>();
     // 搜索框
-    private AETextField searchBox;
+    private ResizableAETextField searchBox;
     // 快捷映射值输入框，映射键使用当前供应器搜索词。
-    private AETextField cnInput;
+    private ResizableAETextField cnInput;
     private Button processingButtonsToggleButton;
     private Button autoUploadToggleButton;
     private String query = "";
@@ -354,7 +353,7 @@ public class ProviderSelectScreen extends Screen {
 
         // 搜索框（置于条目上方）
         int searchX = centerX - AE_TEXT_FIELD_WIDTH / 2;
-        this.searchBox = new AETextField(this.aeStyle, this.font, searchX, startY - 25,
+        this.searchBox = new ResizableAETextField(this.aeStyle, this.font, searchX, startY - 25,
                 AE_TEXT_FIELD_WIDTH, AE_SEARCH_FIELD_HEIGHT);
         // AE2 终端关闭 EditBox 默认填充，只绘制 AE2 文本框纹理。
         this.searchBox.setBordered(false);
@@ -418,7 +417,7 @@ public class ProviderSelectScreen extends Screen {
         int quickMappingY = navY + 55;
         int quickInputWidth = AE_TEXT_FIELD_WIDTH;
         String cnValue = this.cnInput == null ? "" : this.cnInput.getValue();
-        this.cnInput = new AETextField(this.aeStyle, this.font, controlsX, quickMappingY,
+        this.cnInput = new ResizableAETextField(this.aeStyle, this.font, controlsX, quickMappingY,
                 quickInputWidth, AE_SEARCH_FIELD_HEIGHT);
         this.cnInput.setBordered(false);
         this.cnInput.setMaxLength(256);

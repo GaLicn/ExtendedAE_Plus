@@ -1,10 +1,10 @@
 package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.client.widget.ResizableAETextField;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.gui.widgets.AE2Button;
-import appeng.client.gui.widgets.AETextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -20,17 +20,16 @@ public class RecipeTypeMappingScreen extends Screen {
     private static final int ROW_HEIGHT = 22;
     // AE2 文本框背景纹理宽度固定为 128，输入框不能直接拉伸到整栏。
     private static final int AE_TEXT_FIELD_WIDTH = 128;
-    // 使用 AE2 原生文本框的 12px 高度。
-    private static final int AE_SEARCH_FIELD_HEIGHT = 12;
+    private static final int AE_SEARCH_FIELD_HEIGHT = 20;
 
     private final Screen parent;
     private final ScreenStyle aeStyle;
     private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> mappings = new ArrayList<>();
     private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> filteredMappings = new ArrayList<>();
 
-    private AETextField filterInput;
-    private AETextField keyInput;
-    private AETextField valueInput;
+    private ResizableAETextField filterInput;
+    private ResizableAETextField keyInput;
+    private ResizableAETextField valueInput;
     private String selectedKey;
     private Component status = Component.empty();
     private int statusColor = 0xFFAAAAAA;
@@ -147,9 +146,10 @@ public class RecipeTypeMappingScreen extends Screen {
                 Component.translatable("gui.back"), button -> this.onClose()));
     }
 
-    private AETextField prepareInput(AETextField input, int x, int y, int width, int height, String narrationKey) {
+    private ResizableAETextField prepareInput(ResizableAETextField input, int x, int y, int width, int height,
+                                              String narrationKey) {
         String value = input == null ? "" : input.getValue();
-        var result = new AETextField(this.aeStyle, this.font, x, y, width, height);
+        var result = new ResizableAETextField(this.aeStyle, this.font, x, y, width, height);
         // 与 AE2 终端一致，避免原版 EditBox 的黑色背景覆盖 AE2 纹理。
         result.setBordered(false);
         result.setMaxLength(256);
