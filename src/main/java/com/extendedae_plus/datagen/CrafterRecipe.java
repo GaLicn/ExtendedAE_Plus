@@ -37,83 +37,93 @@ public class CrafterRecipe extends RecipeProvider {
     @Override
     protected void buildRecipes(@NotNull RecipeOutput output) {
         // 高级合成加速器拆解：只返还对应存储核心，不返还基础壳子
-        addAcceleratorCoreRecoveryRecipe(output, "4x_crafting_accelerator", ModItems.ACCELERATOR_4x.get(), AEItems.CELL_COMPONENT_4K);
-        addAcceleratorCoreRecoveryRecipe(output, "16x_crafting_accelerator", ModItems.ACCELERATOR_16x.get(), AEItems.CELL_COMPONENT_16K);
-        addAcceleratorCoreRecoveryRecipe(output, "64x_crafting_accelerator", ModItems.ACCELERATOR_64x.get(), AEItems.CELL_COMPONENT_64K);
-        addAcceleratorCoreRecoveryRecipe(output, "256x_crafting_accelerator", ModItems.ACCELERATOR_256x.get(), AEItems.CELL_COMPONENT_256K);
+        addAcceleratorCoreRecoveryRecipe(output, "4x_crafting_accelerator", ModItems.ACCELERATOR_4x.get(),
+                                         AEItems.CELL_COMPONENT_4K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "16x_crafting_accelerator", ModItems.ACCELERATOR_16x.get(),
+                                         AEItems.CELL_COMPONENT_16K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "64x_crafting_accelerator", ModItems.ACCELERATOR_64x.get(),
+                                         AEItems.CELL_COMPONENT_64K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "256x_crafting_accelerator", ModItems.ACCELERATOR_256x.get(),
+                                         AEItems.CELL_COMPONENT_256K
+        );
 
         //超级装配矩阵速度核心
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
-                .pattern("BRB")
-                .pattern("RLR")
-                .pattern("BRB")
-                .define('R', EAESingletons.ASSEMBLER_MATRIX_SPEED)
-                .define('L', Items.NETHER_STAR)
-                .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
-                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
-                .save(output);
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_SPEED)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
 
         //超级装配矩阵合成核心
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
-                .pattern("BRB")
-                .pattern("RLR")
-                .pattern("BRB")
-                .define('R', EAESingletons.ASSEMBLER_MATRIX_CRAFTER)
-                .define('L', Items.NETHER_STAR)
-                .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
-                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
-                .save(output);
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_CRAFTER)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
 
         //超级装配矩阵样板核心
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
-                .pattern("BRB")
-                .pattern("RLR")
-                .pattern("BRB")
-                .define('R', EAESingletons.ASSEMBLER_MATRIX_PATTERN)
-                .define('L', Items.NETHER_STAR)
-                .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
-                .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
-                .save(output);
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_PATTERN)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
 
         //标签无线收发器
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
-                .pattern("CAC")
-                .pattern("ABA")
-                .pattern("CAC")
-                .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
-                .define('A', Items.PAPER)
-                .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
-                .define('C',Items.EMERALD)
-                .save(output);
+                           .pattern("CAC")
+                           .pattern("ABA")
+                           .pattern("CAC")
+                           .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
+                           .define('A', Items.PAPER)
+                           .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                           .define('C', Items.EMERALD)
+                           .save(output);
 
         //镜像样板供应器
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_PROVIDER.get())
-                .pattern("AAA")
-                .pattern("ABA")
-                .pattern("AAA")
-                .unlockedBy("has_mirror_pattern_provider",has(ModItems.MIRROR_PATTERN_PROVIDER.get()))
-                .define('A',Items.GLASS)
-                .define('B',AEBlocks.PATTERN_PROVIDER)
-                .save(output);
+                           .pattern("AAA")
+                           .pattern("ABA")
+                           .pattern("AAA")
+                           .unlockedBy("has_mirror_pattern_provider", has(ModItems.MIRROR_PATTERN_PROVIDER.get()))
+                           .define('A', Items.GLASS)
+                           .define('B', AEBlocks.PATTERN_PROVIDER)
+                           .save(output);
 
         //镜像样板绑定工具
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
-                .pattern("  A")
-                .pattern("BCD")
-                .pattern("BBB")
-                .unlockedBy("has_mirror_pattern_binding_tool",has(ModItems.MIRROR_PATTERN_BINDING_TOOL.get()))
-                .define('A', AEItems.WIRELESS_RECEIVER)
-                .define('B', Items.IRON_INGOT)
-                .define('C', Items.REDSTONE)
-                .define('D', AEItems.CALCULATION_PROCESSOR)
-                .save(output);
+                           .pattern("  A")
+                           .pattern("BCD")
+                           .pattern("BBB")
+                           .unlockedBy("has_mirror_pattern_binding_tool",
+                                       has(ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
+                           )
+                           .define('A', AEItems.WIRELESS_RECEIVER)
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', Items.REDSTONE)
+                           .define('D', AEItems.CALCULATION_PROCESSOR)
+                           .save(output);
 
         // 标签库存 ME 接口
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
-                .requires(AEBlocks.INTERFACE)
-                .requires(EAESingletons.TAG_EXPORT_BUS)
-                .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
-                .save(output);
+                              .requires(AEBlocks.INTERFACE)
+                              .requires(EAESingletons.TAG_EXPORT_BUS)
+                              .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
+                              .save(output);
 
         // 湮灭奇点 - 爆炸转换
         TransformRecipeBuilder.transform(output,
@@ -133,17 +143,17 @@ public class CrafterRecipe extends RecipeProvider {
 
         // 基础核心配方
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.BASIC_CORE.get())
-                .pattern("ABA")
-                .pattern("CDE")
-                .pattern("AFA")
-                .define('A', Items.NETHERITE_BLOCK)
-                .define('B', Items.NETHER_STAR)
-                .define('C', AEItems.LOGIC_PROCESSOR)
-                .define('D', AEItems.FLUIX_PEARL)
-                .define('E', AEItems.ENGINEERING_PROCESSOR)
-                .define('F', AEItems.CALCULATION_PROCESSOR)
-                .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
-                .save(output);
+                           .pattern("ABA")
+                           .pattern("CDE")
+                           .pattern("AFA")
+                           .define('A', Items.NETHERITE_BLOCK)
+                           .define('B', Items.NETHER_STAR)
+                           .define('C', AEItems.LOGIC_PROCESSOR)
+                           .define('D', AEItems.FLUIX_PEARL)
+                           .define('E', AEItems.ENGINEERING_PROCESSOR)
+                           .define('F', AEItems.CALCULATION_PROCESSOR)
+                           .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
+                           .save(output);
 
         // 吞噬盘
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get())
@@ -160,65 +170,104 @@ public class CrafterRecipe extends RecipeProvider {
 
         //超级装配矩阵框架
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
-                .pattern("ABA")
-                .pattern("BCB")
-                .pattern("ABA")
-                .define('A',ModItems.LATTRA_CRYSTAL.get())
-                .define('B',Items.IRON_INGOT)
-                .define('C',EAESingletons.ASSEMBLER_MATRIX_FRAME)
-                .unlockedBy("has_super_assembler_matrix_frame",has(ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get()))
-                .save(output);
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ABA")
+                           .define('A', ModItems.LATTRA_CRYSTAL.get())
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', EAESingletons.ASSEMBLER_MATRIX_FRAME)
+                           .unlockedBy("has_super_assembler_matrix_frame",
+                                       has(ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
+                           )
+                           .save(output);
 
         //超级装配矩阵墙壁
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
-                .pattern("ABA")
-                .pattern("BCB")
-                .pattern("ABA")
-                .define('A',ModItems.LATTRA_CRYSTAL.get())
-                .define('B',Items.IRON_INGOT)
-                .define('C',EAESingletons.ASSEMBLER_MATRIX_WALL)
-                .unlockedBy("has_super_assembler_matrix_frame",has(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get()))
-                .save(output);
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ABA")
+                           .define('A', ModItems.LATTRA_CRYSTAL.get())
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_super_assembler_matrix_frame",
+                                       has(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
+                           )
+                           .save(output);
 
         //超级装配矩阵混合核心
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
-                .requires(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
-                .requires(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
-                .unlockedBy("has_assembler_matrix_hybrid_plus",has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get()))
-                .save(output);
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+                              .requires(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+                              .requires(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+                              .unlockedBy("has_assembler_matrix_hybrid_plus",
+                                          has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+                              )
+                              .save(output);
 
         //超级扩展样板供应器扩展卡
-        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get())
-                .requires(EAESingletons.EX_PATTERN_PROVIDER)
-                .requires(AEItems.BASIC_CARD)
-                .unlockedBy("has_extended_pattern_provider_expansion_card_plus",has(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get()))
-                .save(output);
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC,
+                                         ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get()
+                              )
+                              .requires(EAESingletons.EX_PATTERN_PROVIDER)
+                              .requires(AEItems.BASIC_CARD)
+                              .unlockedBy("has_extended_pattern_provider_expansion_card_plus",
+                                          has(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get())
+                              )
+                              .save(output);
 
         //终极超级装配矩阵搭建器
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
-                .pattern(" A ")
-                .pattern("ABA")
-                .pattern(" A ")
-                .define('A',Items.STICK)
-                .define('B',ModItems.LATTRA_CRYSTAL.get())
-                .unlockedBy("has_ultimate_super_assembler_matrix_builder",has(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get()))
-                .save(output);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                           .pattern(" A ")
+                           .pattern("ABA")
+                           .pattern(" A ")
+                           .define('A', Items.STICK)
+                           .define('B', ModItems.LATTRA_CRYSTAL.get())
+                           .unlockedBy("has_ultimate_super_assembler_matrix_builder",
+                                       has(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                           )
+                           .save(output);
 
         //伪装适用方块
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC,ModItems.DISGUISED_BLOCK.get(),32)
-                .pattern("AAA")
-                .pattern("ABA")
-                .pattern("AAA")
-                .define('A', Tags.Items.STONES)
-                .define('B',ModItems.LATTRA_CRYSTAL)
-                .unlockedBy("has_disguised_block",has(ModItems.DISGUISED_BLOCK.get()))
-                .save(output);
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.DISGUISED_BLOCK.get(), 32)
+                           .pattern("AAA")
+                           .pattern("ABA")
+                           .pattern("AAA")
+                           .define('A', Tags.Items.STONES)
+                           .define('B', ModItems.LATTRA_CRYSTAL)
+                           .unlockedBy("has_disguised_block", has(ModItems.DISGUISED_BLOCK.get()))
+                           .save(output);
+
+        // iava 人偶
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.C_H716.get(), 1)
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ADA")
+                           .define('A', Items.NETHERITE_BLOCK)
+                           .define('B', ModItems.OBLIVION_SINGULARITY)
+                           .define('C', ModItems.INFINITY_CORE)
+                           .define('D', ModItems.INFINITY_BIGINTEGER_CELL_ITEM)
+                           .unlockedBy("has_infinity_biginteger_cell", has(ModItems.INFINITY_BIGINTEGER_CELL_ITEM))
+                           .save(output);
+
+        // Xbai 玩偶
+        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.XBAI.get(), 1)
+                           .pattern("ABA")
+                           .pattern("CDE")
+                           .pattern("AFA")
+                           .define('A', ModItems.SUPER_ASSEMBLER_MATRIX_FRAME)
+                           .define('B', ModItems.MIRROR_PATTERN_PROVIDER)
+                           .define('C', ModItems.WIRELESS_TRANSCEIVER)
+                           .define('D', ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS)
+                           .define('E', ModItems.LABELED_WIRELESS_TRANSCEIVER)
+                           .define('F', ModItems.CRYSTAL_ASSEMBLER_PLUS)
+                           .unlockedBy("has_assembler_matrix_hybrid_plus", has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS))
+                           .save(output);
     }
 
-    private void addAcceleratorCoreRecoveryRecipe(RecipeOutput output, String acceleratorName, ItemLike accelerator, ItemLike component) {
+    private void addAcceleratorCoreRecoveryRecipe(RecipeOutput output, String acceleratorName, ItemLike accelerator,
+                                                  ItemLike component) {
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, component)
-                .requires(accelerator)
-                .unlockedBy("has_" + acceleratorName, has(accelerator))
-                .save(output, ExtendedAEPlus.id(acceleratorName + "_core_recovery"));
+                              .requires(accelerator)
+                              .unlockedBy("has_" + acceleratorName, has(accelerator))
+                              .save(output, ExtendedAEPlus.id(acceleratorName + "_core_recovery"));
     }
 }
