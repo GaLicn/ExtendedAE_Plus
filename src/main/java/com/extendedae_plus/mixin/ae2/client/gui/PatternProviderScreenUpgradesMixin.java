@@ -3,19 +3,13 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 import appeng.api.upgrades.Upgrades;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.implementations.PatternProviderScreen;
-import appeng.client.gui.layout.SlotGridLayout;
-import appeng.client.gui.style.Blitter;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.style.SlotPosition;
-import appeng.client.gui.style.WidgetStyle;
-import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.core.localization.GuiText;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.IStyleAccessor;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -52,29 +46,6 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
             return;
         }
 
-        var sp = new SlotPosition();
-        sp.setBottom(84);
-        sp.setRight(1);
-        sp.setGrid(SlotGridLayout.BREAK_AFTER_3COLS);
-        var ws = new WidgetStyle();
-        ws.setRight(2);
-        ws.setBottom(90);
-        ws.setWidth(59);
-        ws.setHeight(66);
-        style.getSlots().put("TOOLBOX", sp);
-        ((IStyleAccessor) style).getImages().put("toolbox", Blitter.texture("guis/extra_panels.png", 128, 128).src(69, 62, 59, 66));
-        ((IStyleAccessor) style).getWidgets().put("toolbox", ws);
-
-        if (menu instanceof AEBaseMenu base
-                && base instanceof com.extendedae_plus.api.bridge.IUpgradableMenu upg
-                && upg.eap$getToolbox() != null
-                && upg.eap$getToolbox().isPresent()) {
-            try {
-                this.widgets.add("toolbox", new ToolboxPanel(style, upg.eap$getToolbox().getName()));
-            } catch (IllegalStateException e) {
-                com.extendedae_plus.util.ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 工具箱面板已存在，跳过添加: {}", e.getMessage());
-            }
-        }
     }
 
     @Unique
