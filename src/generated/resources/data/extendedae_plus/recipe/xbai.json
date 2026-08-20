@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "extendedae_plus:super_assembler_matrix_frame"
+    },
+    "B": {
+      "item": "extendedae_plus:mirror_pattern_provider"
+    },
+    "C": {
+      "item": "extendedae_plus:wireless_transceiver"
+    },
+    "D": {
+      "item": "extendedae_plus:assembler_matrix_hybrid_plus"
+    },
+    "E": {
+      "item": "extendedae_plus:labeled_wireless_transceiver"
+    },
+    "F": {
+      "item": "extendedae_plus:crystal_assembler_plus"
+    }
+  },
+  "pattern": [
+    "ABA",
+    "CDE",
+    "AFA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:xbai"
+  }
+}
