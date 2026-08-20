@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.6.0]
+
+### Added / 新增
+- 新增 Lattra（莱卓罗）水晶系列
+  - Added the Lattra Crystal series.
+- 新增超级水晶装配器与超级电路切片机
+  - Added the Super Crystal Assembler and Super Circuit Cutter.
+- 新增超级装配矩阵
+  - Added the Super Assembler Matrix.
+- 新增标签库存 ME 接口，支持通过标签表达式过滤网络库存
+  - Added the Tag Inventory ME Interface with tag-expression filtering for network inventory.
+- JEI 新增 AE2 网络物品存量与可合成状态显示
+  - Added AE2 network stock and craftability indicators to JEI.
+- 新增终极超级装配矩阵及其结构搭建器
+  - Added the Ultimate Super Assembler Matrix and its structure builder.
+- 新增伪装适用方块
+  - Added the Disguise-Compatible Block.
+- 样板供应器选择界面新增可视化配方类型映射管理
+  - Added visual recipe-type mapping management to the Pattern Provider selection screen.
+
+### Changed / 变更
+- 移除扩展样板供应器槽位倍增配置，改为使用扩容卡增加可用页数
+  - Removed the Extended Pattern Provider slot multiplier configuration; available pages are now increased with Expansion Cards.
+- 重构样板上传的配方类型解析与映射流程，并支持 Oritech 配方类型
+  - Refactored recipe-type parsing and mapping for pattern uploads, with support for Oritech recipe types.
+- 重构通过无线终端物品获取 AE2 网络节点的实现
+  - Refactored AE2 network node lookup through wireless terminal items.
+- 将 `_feng` 玩偶的注册 ID 与相关变量名修改为 `_leng`
+  - Renamed the `_feng` doll registration ID and related variable names to `_leng`.
+- 镜像样板供应器现可绑定 AdvancedAE 高级样板供应器
+  - Mirror Pattern Providers can now bind to AdvancedAE Advanced Pattern Providers.
+- 频道卡现可用于 AdvancedAE 高级样板供应器
+  - Channel Cards can now be used with AdvancedAE Advanced Pattern Providers.
+- 重构频道卡接入方的连接流程与生命周期管理，提供统一扩展入口
+  - Refactored Channel Card connection and lifecycle management behind a unified extension point.
+- 优化样板上传界面的按钮布局，并调整映射管理界面的翻页按钮位置
+  - Improved the pattern upload screen button layout and repositioned the mapping management pagination buttons.
+
+### Docs / 文档
+- 增加镜像样板供应器与扩容卡的 GuideME 说明
+  - Added GuideME documentation for the Mirror Pattern Provider and Expansion Cards.
+
 ## [1.5.5]
 
 ### Added / 新增
