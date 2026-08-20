@@ -3,12 +3,10 @@ package com.extendedae_plus.mixin.advancedae.client.gui;
 import appeng.api.upgrades.Upgrades;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.style.ScreenStyle;
-import appeng.client.gui.widgets.ToolboxPanel;
 import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.core.localization.GuiText;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
-import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +34,6 @@ public abstract class AdvPatternProviderScreenUpgradesMixin extends AEBaseScreen
                                      ScreenStyle style, CallbackInfo ci) {
         if (!UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) return;
         this.widgets.add("upgrades", new UpgradesPanel(menu.getSlots(SlotSemantics.UPGRADE), this::eap$getTooltip));
-        if (menu instanceof IUpgradableMenu upgradable && upgradable.eap$getToolbox() != null
-                && upgradable.eap$getToolbox().isPresent()) {
-            this.widgets.add("toolbox", new ToolboxPanel(style, upgradable.eap$getToolbox().getName()));
-        }
     }
 
     @Unique

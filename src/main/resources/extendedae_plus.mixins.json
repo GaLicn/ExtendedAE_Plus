@@ -100,6 +100,7 @@
     "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
+    "ae2.network.PatternAccessTermContainerTrackerMixin",
     "ae2.parts.AEBasePartClientSyncMixin",
     "ae2.parts.ChannelCardPartLifecycleMixin",
     "ae2.parts.InterfacePartChannelCardHostMixin",
