@@ -1,9 +1,7 @@
 package com.extendedae_plus.mixin.advancedae.menu;
 
 import appeng.menu.AEBaseMenu;
-import appeng.menu.ToolboxMenu;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
-import com.extendedae_plus.api.bridge.IUpgradableMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
@@ -20,9 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /** 未安装 Applied Flux 时给 AdvancedAE 菜单添加本地频道卡槽。 */
 @Mixin(value = AdvPatternProviderMenu.class, remap = false)
-public abstract class AdvPatternProviderMenuUpgradesMixin extends AEBaseMenu implements IUpgradableMenu {
+public abstract class AdvPatternProviderMenuUpgradesMixin extends AEBaseMenu {
     @Shadow @Final protected AdvPatternProviderLogic logic;
-    @Unique private ToolboxMenu eap$toolbox;
 
     protected AdvPatternProviderMenuUpgradesMixin(MenuType<?> menuType, int id, Inventory inventory, Object host) {
         super(menuType, id, inventory, host);
@@ -33,13 +30,8 @@ public abstract class AdvPatternProviderMenuUpgradesMixin extends AEBaseMenu imp
                                    AdvPatternProviderLogicHost host, CallbackInfo ci) {
         if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()
                 && this.logic instanceof CompatUpgradeProvider provider) {
-            this.eap$toolbox = new ToolboxMenu(this);
             this.setupUpgrades(provider.eap$getCompatUpgrades());
         }
     }
 
-    @Override
-    public ToolboxMenu eap$getToolbox() {
-        return this.eap$toolbox;
-    }
 }
