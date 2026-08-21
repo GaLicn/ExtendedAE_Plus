@@ -54,9 +54,11 @@ public abstract class TileAssemblerMatrixGlassMixin implements SuperAssemblerMat
     }
 
     public Set<Direction> getGridConnectableSides(BlockOrientation orientation) {
-        return this.eap$superMatrixCluster == null
-                ? EnumSet.noneOf(Direction.class)
-                : EnumSet.allOf(Direction.class);
+        var glass = (TileAssemblerMatrixGlass) (Object) this;
+        // 未加入超级矩阵时，保留 ExtendedAE 原版矩阵的联网面判断。
+        return this.eap$superMatrixCluster != null || glass.isFormed()
+                ? EnumSet.allOf(Direction.class)
+                : EnumSet.noneOf(Direction.class);
     }
 
     @Override
@@ -73,7 +75,8 @@ public abstract class TileAssemblerMatrixGlassMixin implements SuperAssemblerMat
         if (state.hasProperty(BlockAssemblerMatrixBase.FORMED)
                 && state.hasProperty(BlockAssemblerMatrixBase.POWERED)) {
             var glass = (TileAssemblerMatrixGlass) (Object) this;
-            var formed = this.eap$superMatrixCluster != null;
+            // 超级矩阵未接管玻璃时，回退到原版矩阵的 cluster 状态。
+            var formed = this.eap$superMatrixCluster != null || glass.isFormed();
             var newState = state
                     .setValue(BlockAssemblerMatrixBase.FORMED, formed)
                     .setValue(BlockAssemblerMatrixBase.POWERED, formed && glass.getMainNode().isActive());
@@ -85,6 +88,11 @@ public abstract class TileAssemblerMatrixGlassMixin implements SuperAssemblerMat
 
     // 覆盖原版节点回调，避免其按原版集群为空将玻璃重置为未成型。
     public void onMainNodeStateChanged(IGridNodeListener.State reason) {
-        this.eap$updateSuperMatrixStatus();
+        if (this.eap$superMatrixCluster != null) {
+            this.eap$updateSuperMatrixStatus();
+        } else if (reason != IGridNodeListener.State.GRID_BOOT) {
+            // 普通装配矩阵沿用 ExtendedAE 原版节点状态更新流程。
+            ((TileAssemblerMatrixGlass) (Object) this).updateSubType(false);
+        }
     }
 }
