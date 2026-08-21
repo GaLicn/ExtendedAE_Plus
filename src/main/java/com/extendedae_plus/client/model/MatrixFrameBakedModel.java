@@ -1,7 +1,8 @@
 package com.extendedae_plus.client.model;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.content.matrix.supermatrix.MatrixFrameModelData;
+import com.extendedae_plus.content.matrix.supermatrix.MatrixFrameModelData.Connections;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -18,7 +19,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.IDynamicBakedModel;
 import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 import net.neoforged.neoforge.client.model.pipeline.QuadBakingVertexConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +30,6 @@ import java.util.function.Function;
 
 public final class MatrixFrameBakedModel implements IDynamicBakedModel {
 
-    private static final ModelProperty<FrameConnections> CONNECTIONS = new ModelProperty<>();
     private static final ChunkRenderTypeSet RENDER_TYPES = ChunkRenderTypeSet.of(RenderType.solid());
 
     private static final Material SINGLE_ON = material("single_on");
@@ -65,19 +64,8 @@ public final class MatrixFrameBakedModel implements IDynamicBakedModel {
     @Override
     public @NotNull ModelData getModelData(@NotNull BlockAndTintGetter level, @NotNull BlockPos pos,
             @NotNull BlockState state, @NotNull ModelData modelData) {
-        var connections = new FrameConnections();
-        for (int x = -1; x <= 1; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -1; z <= 1; z++) {
-                    if ((x != 0 || y != 0 || z != 0)
-                            && level.getBlockState(pos.offset(x, y, z))
-                                    .is(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get())) {
-                        connections.set(x, y, z);
-                    }
-                }
-            }
-        }
-        return modelData.derive().with(CONNECTIONS, connections).build();
+        // 保留模型侧入口，兼容仍会调用旧动态模型回调的渲染路径。
+        return MatrixFrameModelData.create(level, pos, modelData);
     }
 
     @Override
@@ -87,10 +75,7 @@ public final class MatrixFrameBakedModel implements IDynamicBakedModel {
             return Collections.emptyList();
         }
 
-        var connections = modelData.get(CONNECTIONS);
-        if (connections == null) {
-            return Collections.emptyList();
-        }
+        var connections = MatrixFrameModelData.getOrEmpty(modelData);
 
         var face = FaceBasis.forSide(side);
         var selection = selectTexture(connections, face);
@@ -101,7 +86,7 @@ public final class MatrixFrameBakedModel implements IDynamicBakedModel {
         return List.of(bakeFace(side, face, textures.get(selection.type()), selection.rotation()));
     }
 
-    private static TextureSelection selectTexture(FrameConnections connections, FaceBasis face) {
+    private static TextureSelection selectTexture(Connections connections, FaceBasis face) {
         int connectedMask = 0;
         if (connections.contains(face.top())) {
             connectedMask |= 1;
@@ -265,30 +250,6 @@ public final class MatrixFrameBakedModel implements IDynamicBakedModel {
     }
 
     private record DirectionPair(Direction first, Direction second) {
-    }
-
-    private static final class FrameConnections {
-
-        private final boolean[][][] connections = new boolean[3][3][3];
-
-        void set(int x, int y, int z) {
-            this.connections[x + 1][y + 1][z + 1] = true;
-        }
-
-        boolean contains(Direction direction) {
-            return this.contains(direction.getStepX(), direction.getStepY(), direction.getStepZ());
-        }
-
-        boolean contains(Direction first, Direction second) {
-            return this.contains(
-                    first.getStepX() + second.getStepX(),
-                    first.getStepY() + second.getStepY(),
-                    first.getStepZ() + second.getStepZ());
-        }
-
-        private boolean contains(int x, int y, int z) {
-            return this.connections[x + 1][y + 1][z + 1];
-        }
     }
 
     private record TextureSet(TextureAtlasSprite single, TextureAtlasSprite strip, TextureAtlasSprite corner,
