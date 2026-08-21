@@ -133,6 +133,13 @@ public final class ModCapabilities {
                 (be,ctx)->(SuperCircuitCutterBlockEntity) be
         );
 
+        // 对齐 EAE 水晶装配器，使存储总线等 AE2 设备能够输入配方流体。
+        event.registerBlockEntity(
+                AECapabilities.GENERIC_INTERNAL_INV,
+                ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                (be, side) -> ((SuperCrystalAssemblerBlockEntity) be).getGenericInv(side)
+        );
+
         // 对齐 EAE 原机：将受输入/输出规则限制的自动化库存暴露给漏斗和物流模组。
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,

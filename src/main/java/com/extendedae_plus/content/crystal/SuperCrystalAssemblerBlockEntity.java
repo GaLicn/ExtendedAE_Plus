@@ -34,6 +34,7 @@ import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.glodblock.github.extendedae.api.caps.IGenericInvHost;
 import com.glodblock.github.glodium.recipe.stack.IngredientStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -57,7 +58,7 @@ import java.util.Set;
  * 单方块超级水晶装配器；数值、槽位和加速卡曲线均与 ExtendedAE 原机一致。
  */
 public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEntity
-        implements IGridTickable, IUpgradeableObject, IConfigurableObject {
+        implements IGridTickable, IUpgradeableObject, IConfigurableObject, IGenericInvHost {
     public static final int SLOTS = 9;
     public static final int TANK_CAP = 16_000;
     public static final int POWER_MAXIMUM_AMOUNT = 64_000;
@@ -102,6 +103,12 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
     }
 
     public GenericStackInv getTank() {
+        return tank;
+    }
+
+    @Override
+    public GenericStackInv getGenericInv() {
+        // 对齐 EAE 原机，让 AE2 外部存储能力访问流体罐。
         return tank;
     }
 
