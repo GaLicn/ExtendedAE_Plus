@@ -16,6 +16,7 @@ import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
 import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
+import com.extendedae_plus.compat.DynamicSizeInternalInventory;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
@@ -26,6 +27,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import appeng.util.inv.AppEngInternalInventory;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,6 +35,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,11 +91,32 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Shadow
     private IActionSource actionSource;
 
+    @Final
+    @Shadow
+    private AppEngInternalInventory patternInventory;
+
     @Shadow
     public abstract InternalInventory getPatternInv();
 
     @Shadow
     public abstract void updatePatterns();
+
+    @Unique
+    private InternalInventory eap$exposedPatternInventory;
+
+    @Inject(method = "getPatternInv", at = @At("RETURN"), cancellable = true)
+    private void eap$exposeDynamicPatternInventory(CallbackInfoReturnable<InternalInventory> cir) {
+        if (!this.eap$isExtendedPatternProviderHost()) {
+            return;
+        }
+        if (this.eap$exposedPatternInventory == null) {
+            // 转发库存保持身份不变，size() 则随扩容卡实时变化。
+            this.eap$exposedPatternInventory = new DynamicSizeInternalInventory(
+                    this.patternInventory,
+                    this::eap$getExposedPatternSlots);
+        }
+        cir.setReturnValue(this.eap$exposedPatternInventory);
+    }
 
     @Inject(method = "<init>(Lappeng/api/networking/IManagedGridNode;Lappeng/helpers/patternprovider/PatternProviderLogicHost;I)V",
             at = @At("TAIL"))
@@ -346,7 +370,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Override
     public int eap$getUnlockedPatternPages() {
         if (!this.eap$isExtendedPatternProviderHost()) {
-            int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+            int size = this.patternInventory.size();
             return Math.max(1, (size + EAP$SLOTS_PER_PAGE - 1) / EAP$SLOTS_PER_PAGE);
         }
 
@@ -355,13 +379,19 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Override
     public int eap$getUnlockedPatternSlots() {
-        int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+        int size = this.patternInventory.size();
         if (!this.eap$isExtendedPatternProviderHost()) {
             return size;
         }
 
-        int cardUnlockedSlots = UpgradeSlotCompat.getUnlockedExtendedPatternProviderSlots(this.eap$compatGetEffectiveUpgrades());
-        return Math.min(size, Math.max(cardUnlockedSlots, this.eap$legacyUnlockedPatternSlots));
+        return this.eap$getExposedPatternSlots();
+    }
+
+    @Unique
+    private int eap$getExposedPatternSlots() {
+        int cardUnlockedSlots = UpgradeSlotCompat.getUnlockedExtendedPatternProviderSlots(
+                this.eap$compatGetEffectiveUpgrades());
+        return Math.min(this.patternInventory.size(), Math.max(cardUnlockedSlots, this.eap$legacyUnlockedPatternSlots));
     }
 
     @Override

@@ -10,7 +10,6 @@ import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
-import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
 import net.minecraft.world.entity.player.Inventory;
@@ -40,7 +39,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
 
     @GuiSync(31416)
     @Unique
-    public int eap$unlockedMaxPage = 1;
+    public int eap$availablePageCount = 1;
 
     @Unique
     private static final int SLOTS_PER_PAGE = 36; // 每页显示36个槽位
@@ -55,32 +54,17 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     public void eap$showPage() {
         List<Slot> slots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
         int totalSlots = slots.size();
-        int unlockedPages = Math.max(1, Math.min(this.eap$maxPage, this.eap$getUnlockedPages()));
-        int unlockedSlots = Math.min(totalSlots, unlockedPages * SLOTS_PER_PAGE);
-        this.eap$unlockedMaxPage = unlockedPages;
-        this.eap$page = Math.max(0, Math.min(this.eap$page, unlockedPages - 1));
-        
-        // 如果总槽位数不超过36个，不需要翻页
-        if (totalSlots <= SLOTS_PER_PAGE && unlockedPages <= 1) {
-            for (Slot s : slots) {
-                AppEngSlot appEngSlot = (AppEngSlot) s;
-                appEngSlot.setSlotEnabled(true);
-                appEngSlot.setActive(true);
-            }
-            return;
-        }
+        this.eap$maxPage = Math.max(1, (totalSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
+        int availablePages = Math.max(1, Math.min(this.eap$maxPage, this.eap$availablePageCount));
+        this.eap$page = Math.max(0, Math.min(this.eap$page, availablePages - 1));
 
-        int slot_id = 0;
-
-        for (Slot s : slots) {
-            int page_id = slot_id / SLOTS_PER_PAGE;
-            boolean unlocked = slot_id < unlockedSlots;
-
-            // 未解锁槽位直接禁用，已解锁但非当前页的槽位仅隐藏。
-            AppEngSlot appEngSlot = (AppEngSlot) s;
-            appEngSlot.setSlotEnabled(unlocked);
-            appEngSlot.setActive(unlocked && page_id == this.eap$page);
-            ++slot_id;
+        for (int slotIndex = 0; slotIndex < slots.size(); slotIndex++) {
+            Slot slot = slots.get(slotIndex);
+            int pageId = slotIndex / SLOTS_PER_PAGE;
+            boolean available = pageId < availablePages;
+            AppEngSlot appEngSlot = (AppEngSlot) slot;
+            appEngSlot.setSlotEnabled(available);
+            appEngSlot.setActive(available && pageId == this.eap$page);
         }
     }
 
@@ -88,26 +72,19 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     private void eap$initPages(int id, Inventory playerInventory, PatternProviderLogicHost host, CallbackInfo ci) {
         int maxSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
         this.eap$maxPage = (maxSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE;
-        this.eap$showPage();
-    }
-
-    @Inject(method = "broadcastChanges", at = @At("TAIL"), remap = false, require = 0)
-    private void eap$refreshUnlockedPatternSlots(CallbackInfo ci) {
+        if (this.isServerSide()) {
+            this.eap$availablePageCount = this.eap$getDynamicPageCount();
+        }
         this.eap$showPage();
     }
 
     @Override
-    public void onSlotChange(Slot slot) {
-        super.onSlotChange(slot);
-        if (slot == null || !this.getSlots(SlotSemantics.UPGRADE).contains(slot)) {
-            return;
-        }
-
-        // 升级卡插拔后立刻刷新菜单页状态，并把最新页信息同步给界面层。
-        this.eap$showPage();
+    public void broadcastChanges() {
         if (this.isServerSide()) {
-            this.sendAllDataToRemote();
+            this.eap$availablePageCount = this.eap$getDynamicPageCount();
         }
+        this.eap$showPage();
+        super.broadcastChanges();
     }
 
     @Override
@@ -123,8 +100,8 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Override
-    public int eap$getUnlockedMaxPage() {
-        return this.eap$unlockedMaxPage;
+    public int eap$getAvailablePageCount() {
+        return Math.max(1, Math.min(this.eap$maxPage, this.eap$availablePageCount));
     }
 
     @Override
@@ -134,15 +111,9 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private int eap$getUnlockedPages() {
-        if (!this.isServerSide()) {
-            return Math.max(1, this.eap$unlockedMaxPage);
-        }
-
-        if (this.logic instanceof PatternProviderPageUnlockBridge bridge) {
-            return bridge.eap$getUnlockedPatternPages();
-        }
-        return 1;
+    private int eap$getDynamicPageCount() {
+        int exposedSlots = this.logic.getPatternInv().size();
+        return Math.max(1, (exposedSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
     }
 
     @Unique

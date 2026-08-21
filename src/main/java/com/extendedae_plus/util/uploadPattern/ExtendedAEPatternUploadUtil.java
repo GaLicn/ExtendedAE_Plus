@@ -16,7 +16,6 @@ import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
-import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
@@ -1720,28 +1719,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     private static int getAccessiblePatternSlotCount(PatternContainer container, InternalInventory inventory) {
-        if (inventory == null) {
-            return 0;
-        }
-        int size = inventory.size();
-        PatternProviderPageUnlockBridge bridge = getPatternProviderPageUnlockBridge(container);
-        if (bridge != null && bridge.eap$isExtendedPatternProviderHost()) {
-            return Math.max(0, Math.min(size, bridge.eap$getUnlockedPatternSlots()));
-        }
-        return size;
-    }
-
-    private static PatternProviderPageUnlockBridge getPatternProviderPageUnlockBridge(PatternContainer container) {
-        if (container instanceof PatternProviderPageUnlockBridge bridge) {
-            return bridge;
-        }
-
-        // AE2 终端枚举的是宿主方块/部件，扩容页状态实际保存在内部逻辑对象上。
-        if (container instanceof PatternProviderLogicHost host
-                && host.getLogic() instanceof PatternProviderPageUnlockBridge bridge) {
-            return bridge;
-        }
-        return null;
+        return inventory == null ? 0 : inventory.size();
     }
 
     private static ItemStack insertIntoAccessiblePatternSlots(InternalInventory inventory, int slotLimit, ItemStack stack, IAEItemFilter filter) {
