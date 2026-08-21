@@ -46,12 +46,18 @@ public abstract class BlockAssemblerMatrixBaseMixin {
         cir.setReturnValue(InteractionResult.sidedSuccess(level.isClientSide));
     }
 
-    @Inject(method = "neighborChanged", at = @At("TAIL"))
-    private void eap$recalculateSuperMatrix(BlockState state, Level level, BlockPos pos, Block block,
+    @Inject(method = "neighborChanged", at = @At("HEAD"), cancellable = true)
+    private void eap$handleSuperMatrixNeighborChange(BlockState state, Level level, BlockPos pos, Block block,
             BlockPos fromPos, boolean isMoving, CallbackInfo ci) {
-        if (!level.isClientSide && level instanceof ServerLevel serverLevel
-                && level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart) {
-            SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, pos);
+        if (!(level instanceof ServerLevel serverLevel)
+                || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)) {
+            return;
+        }
+
+        SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, fromPos);
+        if (part.eap$getSuperMatrixCluster() != null) {
+            // 超级集群已经接管该部件，跳过 EAE 原版同步多方块扫描。
+            ci.cancel();
         }
     }
 

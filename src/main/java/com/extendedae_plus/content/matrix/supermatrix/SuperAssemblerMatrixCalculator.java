@@ -37,6 +37,13 @@ public final class SuperAssemblerMatrixCalculator {
         PENDING_RECALCULATIONS.computeIfAbsent(level, ignored -> new LongOpenHashSet()).add(start.asLong());
     }
 
+    /** 仅结构部件变化时触发重算，忽略相邻机器和红石的普通方块更新。 */
+    public static void scheduleAfterNeighborChange(ServerLevel level, BlockPos start, BlockPos changedPos) {
+        if (isStructureComponent(level.getBlockEntity(changedPos))) {
+            scheduleRecalculate(level, start);
+        }
+    }
+
     /** 上传核心随区块载入后分阶段复核，覆盖跨区块方块实体的异步初始化。 */
     public static void scheduleUltimateLoadRecalculate(ServerLevel level, BlockPos uploadCorePos) {
         for (int delay : ULTIMATE_LOAD_RECALCULATION_DELAYS) {
