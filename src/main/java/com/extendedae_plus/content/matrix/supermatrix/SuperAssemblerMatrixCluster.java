@@ -15,7 +15,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
-import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
+import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixBase;
 import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -143,9 +143,9 @@ public class SuperAssemblerMatrixCluster {
                 if (node != null) {
                     nodes.add(node);
                 }
-            } else if (part instanceof TileAssemblerMatrixGlass glass) {
-                // 原版玻璃也必须作为多方块节点公开，才能从玻璃面接入 AE 网络。
-                var node = glass.getMainNode().getNode();
+            } else if (part instanceof TileAssemblerMatrixBase matrixPart) {
+                // 混合核心、上传核心和原版玻璃都属于同一多方块频道组。
+                var node = matrixPart.getMainNode().getNode();
                 if (node != null) {
                     nodes.add(node);
                 }

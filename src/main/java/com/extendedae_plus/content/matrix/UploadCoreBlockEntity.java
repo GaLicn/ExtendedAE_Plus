@@ -1,5 +1,7 @@
 package com.extendedae_plus.content.matrix;
 
+import appeng.api.networking.IGridNodeListener;
+import appeng.api.orientation.BlockOrientation;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCluster;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
@@ -8,12 +10,16 @@ import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrix
 import com.glodblock.github.extendedae.common.me.matrix.ClusterAssemblerMatrix;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixFunction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * ExtendedAE_Plus: 装配矩阵上传核心方块实体。
@@ -71,7 +77,29 @@ public class UploadCoreBlockEntity extends TileAssemblerMatrixFunction implement
 
     @Override
     public void eap$setSuperMatrixCluster(@Nullable SuperAssemblerMatrixCluster cluster) {
+        var wasSuperFormed = this.superMatrixCluster != null;
         this.superMatrixCluster = cluster;
+        if (wasSuperFormed != (cluster != null)) {
+            // 超级集群切换时重新建立节点连接面，避免上传核心保留未成型状态。
+            this.onGridConnectableSidesChanged();
+        }
+    }
+
+    @Override
+    public Set<Direction> getGridConnectableSides(BlockOrientation orientation) {
+        return this.superMatrixCluster == null
+                ? super.getGridConnectableSides(orientation)
+                : EnumSet.allOf(Direction.class);
+    }
+
+    @Override
+    public void onMainNodeStateChanged(IGridNodeListener.State reason) {
+        if (this.superMatrixCluster != null) {
+            // 超级矩阵使用独立集群，不能回落到只识别原版集群的状态更新。
+            this.eap$updateSuperMatrixStatus();
+        } else {
+            super.onMainNodeStateChanged(reason);
+        }
     }
 
     @Override
