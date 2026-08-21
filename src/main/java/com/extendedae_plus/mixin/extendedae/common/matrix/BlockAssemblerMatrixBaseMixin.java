@@ -31,8 +31,7 @@ public abstract class BlockAssemblerMatrixBaseMixin {
             InteractionHand hand, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
         if (!((Object) this instanceof BlockAssemblerMatrixGlass)
                 || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)
-                || (!state.getValue(BlockAssemblerMatrixBase.FORMED)
-                && part.eap$getSuperMatrixCluster() == null)) {
+                || part.eap$getSuperMatrixCluster() == null) {
             return;
         }
 
