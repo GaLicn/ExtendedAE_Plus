@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.6.1]
+## [1.6.1] Republish
 
 ### Added / 新增
 - JEI 书签栏新增 AE2 网络库存显示开关按钮，默认开启；关闭后停止扫描 JEI 槽位
@@ -11,6 +11,10 @@
   - Optimized pattern input matching for regular and Ultimate Super Assembler Matrices to avoid repeatedly scanning large matrix structures during crafting.
 
 ### Fixed / 修复
+- 修复超级装配矩阵框架在部分优化渲染器下完全透明或丢失连接纹理的问题
+  - Fixed Super Assembler Matrix Frames becoming fully transparent or losing connected textures with some optimized renderers.
+- 修复物品栏中存在未装入任何子终端的通用无线终端时，JEI 网络库存同步仍会反复尝试访问无效终端的问题
+  - Fixed JEI network inventory synchronization repeatedly trying to access an empty Universal Wireless Terminal in the player's inventory.
 - 修复超级水晶装配器未正确暴露流体库存，导致外部设备无法输入配方流体的问题
   - Fixed the Super Crystal Assembler not exposing its fluid inventory correctly, which prevented external devices from inserting recipe fluids.
 - 修复标签库存 ME 接口无法使用 AE2 扳手潜行右键拆除的问题
