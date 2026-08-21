@@ -9,7 +9,6 @@ import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.extendedae_plus.client.gui.NewIcon;
-import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -67,24 +66,16 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     }
 
     @Unique
-    private int eap$getUnlockedPagesFromUpgradeSlots() {
-        return UpgradeSlotCompat.getUnlockedExtendedPatternProviderPages(
-                this.getMenu().getSlots(SlotSemantics.UPGRADE).stream()
-                    .map(net.minecraft.world.inventory.Slot::getItem)
-                    .toList());
-    }
-
-    @Unique
     private int eap$syncMaxPageState() {
         int previousPage = this.eap$currentPage;
         int totalSlots = this.getMenu().getSlots(SlotSemantics.ENCODED_PATTERN).size();
         int totalPages = Math.max(1, (totalSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
 
         if (this.getMenu() instanceof ExPatternProviderMenuPageBridge bridge) {
-            this.eap$maxPageLocal = Math.max(1, Math.min(totalPages, bridge.eap$getUnlockedMaxPage()));
+            this.eap$maxPageLocal = Math.max(1, Math.min(totalPages, bridge.eap$getAvailablePageCount()));
             this.eap$currentPage = Math.max(0, Math.min(bridge.eap$getPage(), this.eap$maxPageLocal - 1));
         } else {
-            this.eap$maxPageLocal = Math.max(1, Math.min(totalPages, this.eap$getUnlockedPagesFromUpgradeSlots()));
+            this.eap$maxPageLocal = totalPages;
             this.eap$currentPage = Math.max(0, Math.min(this.eap$currentPage, this.eap$maxPageLocal - 1));
         }
 
@@ -298,12 +289,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             int currentPage = this.getCurrentPage();
             int base = currentPage * SLOTS_PER_PAGE;
             int end = Math.min(list.size(), base + SLOTS_PER_PAGE);
-            int unlockedSlots = Math.min(list.size(), this.eap$maxPageLocal * SLOTS_PER_PAGE);
 
             for (int i = 0; i < list.size(); i++) {
                 var slot = list.get(i);
                 if (slot instanceof AppEngSlot s) {
-                    boolean enabled = i < unlockedSlots && i >= base && i < end;
+                    boolean enabled = i >= base && i < end;
                     s.setActive(enabled);
                 }
             }
