@@ -30,6 +30,13 @@ public final class SuperAssemblerMatrixCalculator {
         PENDING_RECALCULATIONS.computeIfAbsent(level, ignored -> new LongOpenHashSet()).add(start.asLong());
     }
 
+    /** 仅结构部件变化时触发重算，忽略相邻机器和红石的普通方块更新。 */
+    public static void scheduleAfterNeighborChange(ServerLevel level, BlockPos start, BlockPos changedPos) {
+        if (isStructureComponent(level.getBlockEntity(changedPos))) {
+            scheduleRecalculate(level, start);
+        }
+    }
+
     /** 在世界刻末尾只检查每个连通结构一次。 */
     public static void processScheduledRecalculations(ServerLevel level) {
         var pending = PENDING_RECALCULATIONS.remove(level);

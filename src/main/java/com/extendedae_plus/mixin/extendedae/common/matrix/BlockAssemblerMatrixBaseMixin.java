@@ -24,16 +24,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** 接管原版矩阵玻璃在超级结构中的重算、拆除与菜单入口。 */
+/** 接管 EAE 矩阵方块在超级结构中的重算、拆除与玻璃菜单入口。 */
 @Mixin(value = BlockAssemblerMatrixBase.class, remap = false)
 public abstract class BlockAssemblerMatrixBaseMixin {
 
-    @Inject(method = "neighborChanged", at = @At("TAIL"))
-    private void eap$recalculateGlassSuperMatrix(BlockState state, Level level, BlockPos pos, Block block,
+    @Inject(method = "neighborChanged", at = @At("HEAD"), cancellable = true)
+    private void eap$handleSuperMatrixNeighborChange(BlockState state, Level level, BlockPos pos, Block block,
             BlockPos fromPos, boolean isMoving, CallbackInfo ci) {
-        if (!level.isClientSide && level instanceof ServerLevel serverLevel
-                && level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart) {
-            SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, pos);
+        if (!(level instanceof ServerLevel serverLevel)
+                || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)) {
+            return;
+        }
+
+        SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, fromPos);
+        if (part.eap$getSuperMatrixCluster() != null) {
+            // 超级集群已经接管该部件，跳过 EAE 原版同步多方块扫描。
+            ci.cancel();
         }
     }
 
