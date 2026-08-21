@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.6.1]
+
+### Added / 新增
+- JEI 书签栏新增 AE2 网络库存显示开关按钮，默认开启；关闭后停止扫描 JEI 槽位
+  - Added an enabled-by-default AE2 network inventory toggle to the JEI bookmark bar; disabling it stops JEI slot scanning.
+
+### Changed / 变更
+- 优化普通与终极超级装配矩阵的样板输入匹配，避免合成过程中反复扫描大型矩阵结构
+  - Optimized pattern input matching for regular and Ultimate Super Assembler Matrices to avoid repeatedly scanning large matrix structures during crafting.
+
+### Fixed / 修复
+- 修复超级水晶装配器未正确暴露流体库存，导致外部设备无法输入配方流体的问题
+  - Fixed the Super Crystal Assembler not exposing its fluid inventory correctly, which prevented external devices from inserting recipe fluids.
+- 修复标签库存 ME 接口无法使用 AE2 扳手潜行右键拆除的问题
+  - Fixed the Tag Inventory ME Interface not being dismantlable by shift-right-clicking with an AE2 wrench.
+- 修复终极超级装配矩阵成型后四个上传核心仍显示设备离线的问题
+  - Fixed the four Upload Cores in the Ultimate Super Assembler Matrix remaining offline after formation.
+- 修复终极超级装配矩阵错误占用 313 个频道的问题，成型后整个结构现在仅占用一个频道
+  - Fixed the Ultimate Super Assembler Matrix incorrectly consuming 313 channels; the formed structure now uses only one channel.
+
+### Docs / 文档
+- 为标签库存 ME 接口新增中英文 GuideME 页面，并支持通过物品上的 G 键跳转到对应说明
+  - Added English and Chinese GuideME pages for the Tag Inventory ME Interface, including G-key navigation from the item.
+
 ## [1.6.0-f2]
 
 ### Changed / 变更
