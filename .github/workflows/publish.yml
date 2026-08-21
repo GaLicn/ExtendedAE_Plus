@@ -46,7 +46,8 @@ jobs:
             release_type="${{ inputs.version_type }}"
           else
             commit_message="${{ github.event.head_commit.message }}"
-            if [[ "${commit_message}" =~ ^更新.+版本$ ]]; then
+            # 兼容原格式，以及追加“;日志:<修订号>”的指定日志格式。
+            if [[ "${commit_message}" =~ ^更新.+版本([;；]日志:[^[:space:];；]+)?$ ]]; then
               should_publish="true"
             else
               should_publish="false"
@@ -135,6 +136,13 @@ jobs:
         run: |
           head_commit="${{ github.sha }}"
           base_commit="${{ github.event.before }}"
+          commit_message="$(git log -1 --format=%B "${head_commit}")"
+
+          # 提交信息包含“日志:<修订号>”时，改用指定修订号对应提交的日志变更。
+          changelog_revision=""
+          if [[ "${commit_message}" =~ 日志:([^[:space:]]+) ]]; then
+            changelog_revision="${BASH_REMATCH[1]}"
+          fi
 
           # 手动触发没有 event.before，使用当前提交的父提交作为比较基准。
           if [[ -z "${base_commit}" || "${base_commit}" =~ ^0+$ ]]; then
@@ -142,7 +150,16 @@ jobs:
           fi
 
           changelog_content=""
-          if [[ -n "${base_commit}" ]] && git cat-file -e "${base_commit}^{commit}" 2>/dev/null; then
+          if [[ -n "${changelog_revision}" ]]; then
+            target_commit="$(git rev-parse --verify "${changelog_revision}^{commit}" 2>/dev/null || true)"
+            if [[ -z "${target_commit}" ]]; then
+              echo "::error::无法解析日志修订号: ${changelog_revision}" >&2
+              exit 1
+            fi
+
+            changelog_content="$(git show --format= --unified=0 --no-ext-diff "${target_commit}" -- CHANGELOG.md \
+              | awk '/^\+\+\+ / { next } /^\+/ { sub(/^\+/, ""); print }')"
+          elif [[ -n "${base_commit}" ]] && git cat-file -e "${base_commit}^{commit}" 2>/dev/null; then
             changelog_content="$(git diff --unified=0 "${base_commit}" "${head_commit}" -- CHANGELOG.md \
               | awk '/^\+\+\+ / { next } /^\+/ { sub(/^\+/, ""); print }')"
           fi
