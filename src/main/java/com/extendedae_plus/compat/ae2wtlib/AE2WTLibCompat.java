@@ -5,6 +5,7 @@ import appeng.api.storage.ISubMenuHost;
 import appeng.menu.locator.MenuLocator;
 import com.extendedae_plus.menu.host.CuriosWTMenuHost;
 import com.extendedae_plus.menu.host.CuriosWTSubMenuHost;
+import de.mari_023.ae2wtlib.terminal.ItemWT;
 import de.mari_023.ae2wtlib.terminal.WTMenuHost;
 import de.mari_023.ae2wtlib.wut.WTDefinition;
 import de.mari_023.ae2wtlib.wut.WUTHandler;
@@ -19,6 +20,10 @@ import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
  */
 public final class AE2WTLibCompat {
     private AE2WTLibCompat() {
+    }
+
+    public static boolean isWirelessTerminalItem(ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.getItem() instanceof ItemWT;
     }
 
     public static boolean isWirelessTerminal(ItemStack stack) {

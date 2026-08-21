@@ -142,7 +142,7 @@ public final class WirelessTerminalLocator {
             return null;
         }
 
-        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(terminal.stack)) {
             return AE2WTLibCompat.getConnectedGrid(player, terminal.stack, terminal.createMenuLocator(player),
                     terminal.slotIndex >= 0 ? terminal.slotIndex : null,
                     terminal.curiosSlotId, terminal.curiosIndex);
@@ -169,7 +169,7 @@ public final class WirelessTerminalLocator {
             return false;
         }
 
-        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(terminal.stack)) {
             return AE2WTLibCompat.useTerminalPower(player, terminal.stack, terminal.createMenuLocator(player),
                     terminal.slotIndex >= 0 ? terminal.slotIndex : null,
                     terminal.curiosSlotId, terminal.curiosIndex);
@@ -185,9 +185,11 @@ public final class WirelessTerminalLocator {
         if (stack.isEmpty()) {
             return false;
         }
-        if (stack.getItem() instanceof WirelessCraftingTerminalItem || stack.getItem() instanceof WirelessTerminalItem) {
-            return true;
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(stack)) {
+            // ItemWUT 继承 AE2 无线终端，但只有装入子终端后才可访问网络。
+            return AE2WTLibCompat.isWirelessTerminal(stack);
         }
-        return ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(stack);
+        return stack.getItem() instanceof WirelessCraftingTerminalItem
+                || stack.getItem() instanceof WirelessTerminalItem;
     }
 }
