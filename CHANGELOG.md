@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0-f1]
+
+### Fixed / 修复
+- 修复超级装配矩阵框架与墙壁无法使用镐子快速挖掘的问题
+  - Fixed an issue where Super Assembler Matrix Frames and Walls could not be mined quickly with pickaxes.
+
 ## [1.6.0]
 
 ### Added / 新增
