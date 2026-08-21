@@ -111,6 +111,17 @@ public final class ModCapabilities {
                 ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                 (be, ctx) -> (SuperAssemblerMatrixBlockEntity) be
         );
+        // 与原版装配矩阵一致，允许存储总线把编码样板输入超级矩阵。
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
+                (be, side) -> ((SuperAssemblerMatrixBlockEntity) be).getExposedPatternItemHandler(side)
+        );
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                (be, side) -> ((SuperAssemblerMatrixBlockEntity) be).getExposedPatternItemHandler(side)
+        );
         event.registerBlockEntity(
                 AECapabilities.IN_WORLD_GRID_NODE_HOST,
                 ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),

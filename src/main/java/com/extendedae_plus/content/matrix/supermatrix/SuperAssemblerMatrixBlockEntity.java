@@ -19,6 +19,8 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.CombinedInternalInventory;
+import appeng.util.inv.FilteredInternalInventory;
+import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
@@ -34,6 +36,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -44,6 +47,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         ICraftingProvider, IGridTickable, PatternContainer, SuperAssemblerMatrixPart {
 
     private static final InternalInventory EMPTY_PATTERN_INVENTORY = InternalInventory.empty();
+    private static final IItemHandler EMPTY_PATTERN_HANDLER = EMPTY_PATTERN_INVENTORY.toItemHandler();
 
     private boolean core;
     private boolean unloading;
@@ -217,6 +221,22 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         }
         var inventories = this.superCluster.getPatternInventories();
         return inventories.length == 0 ? EMPTY_PATTERN_INVENTORY : new CombinedInternalInventory(inventories);
+    }
+
+    /** 对齐原版矩阵：外部存储总线只能插入编码样板，不能抽取。 */
+    public IItemHandler getExposedPatternItemHandler(@Nullable Direction side) {
+        if (this.superCluster == null) {
+            return EMPTY_PATTERN_HANDLER;
+        }
+        var sources = this.superCluster.getPatternInventorySources();
+        if (sources.isEmpty()) {
+            return EMPTY_PATTERN_HANDLER;
+        }
+        var exposed = new InternalInventory[sources.size()];
+        for (int i = 0; i < sources.size(); i++) {
+            exposed[i] = new FilteredInternalInventory(sources.get(i).inventory(), AEItemFilters.INSERT_ONLY);
+        }
+        return new CombinedInternalInventory(exposed).toItemHandler();
     }
 
     @Override
