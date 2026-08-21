@@ -45,9 +45,11 @@ public final class JeiSyncManager {
         var terminal = WirelessTerminalLocator.find(player);
         IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, terminal);
         if (grid == null) {
-            if (state.wasConnected) {
+            if (!state.disconnectedStateSent) {
+                // 新存档首次进入时也要清空客户端缓存，避免残留上一个存档的网络库存。
                 sendClear(player);
                 state.reset();
+                state.disconnectedStateSent = true;
             }
             return;
         }
@@ -69,6 +71,7 @@ public final class JeiSyncManager {
                 : buildDiff(state, currentKeys, amounts, craftables);
         sendEntries(player, fullUpdate, entries);
         state.wasConnected = true;
+        state.disconnectedStateSent = false;
     }
 
     @SubscribeEvent
@@ -131,6 +134,9 @@ public final class JeiSyncManager {
 
     private static void sendEntries(ServerPlayer player, boolean fullUpdate, List<SyncNetworkInventoryS2CPacket.Entry> entries) {
         if (entries.isEmpty()) {
+            if (fullUpdate) {
+                sendClear(player);
+            }
             return;
         }
         for (int start = 0; start < entries.size(); start += MAX_ENTRIES_PER_PACKET) {
@@ -146,6 +152,7 @@ public final class JeiSyncManager {
     private static final class PlayerSyncState {
         private int tickCounter;
         private boolean wasConnected;
+        private boolean disconnectedStateSent;
         private long nextSerial = 1;
         private final Map<AEKey, Long> serials = new HashMap<>();
         private final Map<AEKey, Long> amounts = new HashMap<>();
