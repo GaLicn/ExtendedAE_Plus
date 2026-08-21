@@ -12,6 +12,7 @@ public final class ModConfigs {
     public static final ModConfigSpec CLIENT_SPEC;
     public static final ModConfigSpec.BooleanValue SHOW_ENCODER_PATTERN_PLAYER;
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
+    public static final ModConfigSpec.BooleanValue JEI_NETWORK_OVERLAY_ENABLED;
     public static final ModConfigSpec.BooleanValue PRIORITIZE_DISK_ENERGY;
 
     // Server 配置
@@ -46,6 +47,12 @@ public final class ModConfigs {
                         "影响进入界面时SlotsRow的默认可见性，仅影响客户端显示"
                 )
                 .define("patternTerminalShowSlotsDefault", true);
+        JEI_NETWORK_OVERLAY_ENABLED = clientBuilder
+                .comment(
+                        "JEI 中是否显示 AE2 网络库存与可合成状态",
+                        "可通过 JEI 左下角按钮即时切换"
+                )
+                .define("jeiNetworkOverlayEnabled", true);
         clientBuilder.pop();
         CLIENT_SPEC = clientBuilder.build();
 

@@ -2,6 +2,7 @@ package com.extendedae_plus.compat.jei;
 
 import appeng.api.stacks.AEItemKey;
 import com.extendedae_plus.client.jei.NetworkItemCache;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.util.GuiUtil;
 import com.extendedae_plus.util.NumberFormatUtil;
 import mezz.jei.api.constants.VanillaTypes;
@@ -17,7 +18,8 @@ public final class IngredientListOverlayHelper {
     }
 
     public static void render(GuiGraphics guiGraphics, List<?> slots) {
-        if (!NetworkItemCache.INSTANCE.isConnected()) {
+        // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
+        if (!ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.get() || !NetworkItemCache.INSTANCE.isConnected()) {
             return;
         }
         for (Object rawSlot : slots) {
