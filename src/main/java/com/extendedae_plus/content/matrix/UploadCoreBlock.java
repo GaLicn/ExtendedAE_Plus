@@ -36,7 +36,7 @@ public class UploadCoreBlock extends BlockAssemblerMatrixBase<UploadCoreBlockEnt
             @NotNull Block block, @NotNull BlockPos fromPos, boolean isMoving) {
         super.neighborChanged(state, level, pos, block, fromPos, isMoving);
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
-            SuperAssemblerMatrixCalculator.scheduleRecalculate(serverLevel, pos);
+            SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, fromPos);
         }
     }
 }
