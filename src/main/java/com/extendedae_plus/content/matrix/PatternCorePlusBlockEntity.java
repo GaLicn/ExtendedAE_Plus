@@ -107,6 +107,7 @@ public class PatternCorePlusBlockEntity extends TileAssemblerMatrixPattern imple
     public void saveChangedInventory(AppEngInternalInventory inv) {
         super.saveChangedInventory(inv);
         if (this.superMatrixCluster != null) {
+            this.superMatrixCluster.invalidatePatternInputHandler();
             this.superMatrixCluster.refreshCraftingProvider();
         }
     }
