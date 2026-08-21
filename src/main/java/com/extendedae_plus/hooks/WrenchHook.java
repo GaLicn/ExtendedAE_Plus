@@ -4,6 +4,7 @@ import appeng.block.crafting.CraftingUnitBlock;
 import appeng.util.InteractionUtil;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.screen.FrequencyInputScreen;
+import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -59,6 +60,27 @@ public final class WrenchHook {
                 block.playerWillDestroy(level, hit.getBlockPos(), state, player);
                 level.removeBlock(hit.getBlockPos(), false);
                 block.destroy(level, hit.getBlockPos(), state);
+
+                event.setCanceled(true);
+                event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+            }
+            // 普通 BlockEntity 不会被 AE2 的扳手钩子识别，在这里补充标签库存接口的拆除入口。
+            else if (be instanceof TagInventoryMEInterfaceBlockEntity) {
+                var pos = hit.getBlockPos();
+                BlockState state = level.getBlockState(pos);
+                var block = state.getBlock();
+
+                if (!level.isClientSide) {
+                    var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, be, player, stack);
+                    for (var item : drops) {
+                        player.getInventory().placeItemBackInInventory(item);
+                    }
+                }
+
+                level.playSound(player, pos, SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 0.7F, 1.0F);
+                block.playerWillDestroy(level, pos, state, player);
+                level.removeBlock(pos, false);
+                block.destroy(level, pos, state);
 
                 event.setCanceled(true);
                 event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
