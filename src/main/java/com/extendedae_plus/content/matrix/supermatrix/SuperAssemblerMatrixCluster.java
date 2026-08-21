@@ -22,6 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ public class SuperAssemblerMatrixCluster {
     private int uploadCoreCount;
     private long displayedConcurrentExecutions;
     private long displayedConcurrentUntil;
+    private @Nullable SuperAssemblerMatrixPatternInputHandler patternInputHandler;
 
     public SuperAssemblerMatrixCluster(BlockPos boundsMin, BlockPos boundsMax) {
         this(boundsMin, boundsMax, false);
@@ -170,6 +172,19 @@ public class SuperAssemblerMatrixCluster {
             inventories[i] = this.patternCores.get(i).getPatternInventory();
         }
         return inventories;
+    }
+
+    public IItemHandler getPatternInputHandler() {
+        if (this.patternInputHandler == null) {
+            this.patternInputHandler = new SuperAssemblerMatrixPatternInputHandler(this.getPatternInventories());
+        }
+        return this.patternInputHandler;
+    }
+
+    public void invalidatePatternInputHandler() {
+        if (this.patternInputHandler != null) {
+            this.patternInputHandler.invalidateFullState();
+        }
     }
 
     public List<HybridCoreBlockEntity> getPatternCores() {

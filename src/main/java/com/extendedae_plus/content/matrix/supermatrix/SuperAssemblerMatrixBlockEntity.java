@@ -19,8 +19,6 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.CombinedInternalInventory;
-import appeng.util.inv.FilteredInternalInventory;
-import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
@@ -232,15 +230,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkBlockEnti
         if (this.superCluster == null) {
             return EmptyHandler.INSTANCE;
         }
-        var inventories = this.superCluster.getPatternInventories();
-        if (inventories.length == 0) {
-            return EmptyHandler.INSTANCE;
-        }
-        var exposed = new InternalInventory[inventories.length];
-        for (int i = 0; i < inventories.length; i++) {
-            exposed[i] = new FilteredInternalInventory(inventories[i], AEItemFilters.INSERT_ONLY);
-        }
-        return new CombinedInternalInventory(exposed).toItemHandler();
+        return this.superCluster.getPatternInputHandler();
     }
 
     @Override
