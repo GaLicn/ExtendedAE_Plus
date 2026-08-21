@@ -89,7 +89,6 @@
     "ae2.helpers.patternprovider.PatternProviderLogicAdvancedMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicDoublingMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicSyncVersionMixin",
-    "ae2.helpers.patternprovider.PatternProviderLogicUnlockedSlotsMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
     "ae2.items.MemoryCardItemMixin",
     "ae2.crafting.CraftingCpuLogicManualWaitingMixin",

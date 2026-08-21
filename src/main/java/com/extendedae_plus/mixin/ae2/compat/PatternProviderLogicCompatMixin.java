@@ -14,10 +14,12 @@ import appeng.blockentity.AEBaseBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.inv.AppEngInternalInventory;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
+import com.extendedae_plus.compat.DynamicSizeInternalInventory;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.ae2.accessor.CraftingCpuLogicAccessor;
@@ -80,6 +82,10 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Shadow
     private IActionSource actionSource;
 
+    @Final
+    @Shadow
+    private AppEngInternalInventory patternInventory;
+
     @Unique
     private boolean eap$compatVirtualCraftingEnabled = false;
 
@@ -99,6 +105,23 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Shadow
     public abstract void updatePatterns();
+
+    @Unique
+    private InternalInventory eap$exposedPatternInventory;
+
+    @Inject(method = "getPatternInv", at = @At("RETURN"), cancellable = true)
+    private void eap$exposeDynamicPatternInventory(CallbackInfoReturnable<InternalInventory> cir) {
+        if (!this.eap$isExtendedPatternProviderHost()) {
+            return;
+        }
+        if (this.eap$exposedPatternInventory == null) {
+            // 转发库存保持身份不变，size() 则随扩容卡实时变化。
+            this.eap$exposedPatternInventory = new DynamicSizeInternalInventory(
+                    this.patternInventory,
+                    this::eap$getExposedPatternSlots);
+        }
+        cir.setReturnValue(this.eap$exposedPatternInventory);
+    }
 
     @Unique
     private void eap$compatOnUpgradesChanged() {
@@ -324,7 +347,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Override
     public int eap$getUnlockedPatternPages() {
         if (!this.eap$isExtendedPatternProviderHost()) {
-            int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+            int size = this.patternInventory.size();
             return Math.max(1, (size + EAP$SLOTS_PER_PAGE - 1) / EAP$SLOTS_PER_PAGE);
         }
 
@@ -333,13 +356,19 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Override
     public int eap$getUnlockedPatternSlots() {
-        int size = this.getPatternInv() != null ? this.getPatternInv().size() : 0;
+        int size = this.patternInventory.size();
         if (!this.eap$isExtendedPatternProviderHost()) {
             return size;
         }
 
-        int cardUnlockedSlots = UpgradeSlotCompat.getUnlockedExtendedPatternProviderSlots(this.eap$compatGetEffectiveUpgradeInventory());
-        return Math.min(size, Math.max(cardUnlockedSlots, this.eap$legacyUnlockedPatternSlots));
+        return this.eap$getExposedPatternSlots();
+    }
+
+    @Unique
+    private int eap$getExposedPatternSlots() {
+        int cardUnlockedSlots = UpgradeSlotCompat.getUnlockedExtendedPatternProviderSlots(
+                this.eap$compatGetEffectiveUpgradeInventory());
+        return Math.min(this.patternInventory.size(), Math.max(cardUnlockedSlots, this.eap$legacyUnlockedPatternSlots));
     }
 
     @Override

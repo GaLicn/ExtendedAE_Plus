@@ -10,7 +10,6 @@ import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
-import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
@@ -39,12 +38,12 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     @Unique
     private int eap$page = 0;
 
-    @GuiSync(31416)
-    @Unique
-    private int eap$unlockedMaxPage = 1;
-
     @Unique
     private int eap$maxPage = 1;
+
+    @GuiSync(31416)
+    @Unique
+    private int eap$availablePageCount = 1;
 
     @Unique
     private final Map<String, Consumer<Paras>> eap$actions = createHolder();
@@ -65,6 +64,9 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
 
         int totalSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
         this.eap$maxPage = Math.max(1, (totalSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
+        if (this.isServerSide()) {
+            this.eap$availablePageCount = this.eap$getDynamicPageCount();
+        }
         this.eap$showPage();
     }
 
@@ -72,11 +74,9 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     private void eap$showPage() {
         List<Slot> patternSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN);
         int totalSlots = patternSlots.size();
-        int unlockedPages = Math.max(1, Math.min(this.eap$maxPage, this.eap$getUnlockedPages()));
-        int unlockedSlots = Math.min(totalSlots, unlockedPages * SLOTS_PER_PAGE);
-
-        this.eap$unlockedMaxPage = unlockedPages;
-        this.eap$page = Math.max(0, Math.min(this.eap$page, unlockedPages - 1));
+        this.eap$maxPage = Math.max(1, (totalSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
+        int availablePages = Math.max(1, Math.min(this.eap$maxPage, this.eap$availablePageCount));
+        this.eap$page = Math.max(0, Math.min(this.eap$page, availablePages - 1));
 
         for (int i = 0; i < patternSlots.size(); i++) {
             Slot slot = patternSlots.get(i);
@@ -85,30 +85,19 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
             }
 
             int pageId = i / SLOTS_PER_PAGE;
-            boolean unlocked = i < unlockedSlots;
-            appEngSlot.setSlotEnabled(unlocked);
-            appEngSlot.setActive(unlocked && pageId == this.eap$page);
+            boolean available = pageId < availablePages;
+            appEngSlot.setSlotEnabled(available);
+            appEngSlot.setActive(available && pageId == this.eap$page);
         }
     }
 
     @Override
     public void broadcastChanges() {
-        super.broadcastChanges();
-        this.eap$showPage();
-    }
-
-    @Override
-    public void onSlotChange(Slot slot) {
-        super.onSlotChange(slot);
-        if (slot == null || !this.getSlots(SlotSemantics.UPGRADE).contains(slot)) {
-            return;
-        }
-
-        // 插拔扩容卡后立即重算解锁页并同步到界面层。
-        this.eap$showPage();
         if (this.isServerSide()) {
-            this.sendAllDataToRemote();
+            this.eap$availablePageCount = this.eap$getDynamicPageCount();
         }
+        this.eap$showPage();
+        super.broadcastChanges();
     }
 
     @Override
@@ -117,32 +106,26 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         this.eap$showPage();
     }
 
-    @Unique
-    private int eap$getUnlockedPages() {
-        if (!this.isServerSide()) {
-            return Math.max(1, this.eap$unlockedMaxPage);
-        }
-
-        if (this.logic instanceof PatternProviderPageUnlockBridge bridge) {
-            return bridge.eap$getUnlockedPatternPages();
-        }
-        return 1;
-    }
-
     @Override
     public int eap$getPage() {
         return this.eap$page;
     }
 
     @Override
-    public int eap$getUnlockedMaxPage() {
-        return this.eap$unlockedMaxPage;
+    public int eap$getAvailablePageCount() {
+        return Math.max(1, Math.min(this.eap$maxPage, this.eap$availablePageCount));
     }
 
     @Override
     public void eap$setPage(int page) {
         this.eap$page = page;
         this.eap$showPage();
+    }
+
+    @Unique
+    private int eap$getDynamicPageCount() {
+        int exposedSlots = this.logic.getPatternInv().size();
+        return Math.max(1, (exposedSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
     }
 
     @Unique

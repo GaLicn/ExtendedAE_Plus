@@ -166,7 +166,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
                 (this.menu.getSlots(SlotSemantics.ENCODED_PATTERN).size() + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
 
         if (this.menu instanceof ExPatternProviderMenuPageBridge bridge) {
-            this.eap$maxPageLocal = Math.max(1, Math.min(totalPages, bridge.eap$getUnlockedMaxPage()));
+            this.eap$maxPageLocal = Math.max(1, Math.min(totalPages, bridge.eap$getAvailablePageCount()));
             this.eap$currentPage = Math.max(0, Math.min(bridge.eap$getPage(), this.eap$maxPageLocal - 1));
         } else {
             this.eap$maxPageLocal = totalPages;

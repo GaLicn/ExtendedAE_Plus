@@ -1,9 +1,5 @@
 package com.extendedae_plus.compat;
 
-import appeng.api.inventories.InternalInventory;
-import appeng.helpers.patternprovider.PatternContainer;
-import appeng.helpers.patternprovider.PatternProviderLogicHost;
-import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import appeng.api.upgrades.IUpgradeInventory;
 import com.extendedae_plus.init.ModItems;
 import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
@@ -112,32 +108,6 @@ public final class UpgradeSlotCompat {
 
     public static int getUnlockedExtendedPatternProviderSlots(Iterable<ItemStack> upgrades) {
         return getUnlockedExtendedPatternProviderPages(upgrades) * EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE;
-    }
-
-    /** 返回管理终端应展示的已解锁槽位数，而不是供应器的物理库存容量。 */
-    public static int getAccessiblePatternSlotCount(PatternContainer container) {
-        if (container == null) {
-            return 0;
-        }
-
-        InternalInventory inventory = container.getTerminalPatternInventory();
-        if (inventory == null) {
-            return 0;
-        }
-
-        int size = inventory.size();
-        PatternProviderPageUnlockBridge bridge = null;
-        if (container instanceof PatternProviderPageUnlockBridge directBridge) {
-            bridge = directBridge;
-        } else if (container instanceof PatternProviderLogicHost host
-                && host.getLogic() instanceof PatternProviderPageUnlockBridge logicBridge) {
-            bridge = logicBridge;
-        }
-
-        if (bridge != null && bridge.eap$isExtendedPatternProviderHost()) {
-            return Math.max(0, Math.min(size, bridge.eap$getUnlockedPatternSlots()));
-        }
-        return size;
     }
 
     public static boolean isExtendedPatternProviderExpansionCard(ItemStack stack) {
