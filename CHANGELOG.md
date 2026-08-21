@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.0-f2]
+
+### Changed / 变更
+- 超级装配矩阵支持通过存储总线输入编码样板
+  - Super Assembler Matrix now supports inserting encoded patterns through Storage Buses.
+
+### Fixed / 修复
+- 修复库存 ME 接口无法输入大写字母或粘贴内容的问题
+  - Fixed an issue where the Inventory ME Interface did not accept uppercase letters or pasted content.
+- 修复原版装配矩阵使用矩阵玻璃时的异常问题
+  - Fixed issues with the original Assembler Matrix when using Matrix Glass.
+
 ## [1.6.0-f1]
 
 ### Fixed / 修复
