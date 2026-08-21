@@ -37,18 +37,21 @@ public class JeiSyncManager {
 
         var located = WirelessTerminalLocator.find(sp);
         if (located == null || located.isEmpty()) {
-            if (state.wasConnected) {
+            if (!state.disconnectedStateSent) {
+                // 新存档首次进入时也要清空客户端缓存，避免残留上一个存档的网络库存。
                 sendClear(sp);
                 state.reset();
+                state.disconnectedStateSent = true;
             }
             return;
         }
 
         IGrid grid = WirelessTerminalLocator.getConnectedGrid(sp, located);
         if (grid == null) {
-            if (state.wasConnected) {
+            if (!state.disconnectedStateSent) {
                 sendClear(sp);
                 state.reset();
+                state.disconnectedStateSent = true;
             }
             return;
         }
@@ -132,7 +135,9 @@ public class JeiSyncManager {
             }
         }
 
-        if (!entries.isEmpty()) {
+        if (entries.isEmpty() && fullUpdate) {
+            sendClear(sp);
+        } else if (!entries.isEmpty()) {
             // Send in chunks if too large
             for (int i = 0; i < entries.size(); i += MAX_ENTRIES_PER_PACKET) {
                 int end = Math.min(i + MAX_ENTRIES_PER_PACKET, entries.size());
@@ -144,6 +149,7 @@ public class JeiSyncManager {
         }
 
         state.wasConnected = true;
+        state.disconnectedStateSent = false;
     }
 
     @SubscribeEvent
@@ -159,6 +165,7 @@ public class JeiSyncManager {
     private static class PlayerSyncState {
         int tickCounter = 0;
         boolean wasConnected = false;
+        boolean disconnectedStateSent = false;
         long nextSerial = 1;
         final Map<AEKey, Long> serialMap = new HashMap<>();
         final Map<AEKey, Long> previousAmounts = new HashMap<>();
