@@ -131,6 +131,7 @@
     "extendedae.client.gui.GuiExPatternTerminalMixin",
     "hooks.ModelBakeryMixin",
     "jei.AE2JeiEncodePatternTransferHandlerMixin",
+    "jei.BookmarkOverlayMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
     "jei.LegacyIngredientListRendererMixin",

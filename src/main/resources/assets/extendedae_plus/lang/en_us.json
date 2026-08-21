@@ -388,5 +388,8 @@
   "gui.extendedae_plus.super_assembler_matrix": "Super Assembler Matrix",
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "Concurrent Executions: %s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "Cancel Current Jobs",
-  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns"
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns",
+  "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 network inventory display: Enabled",
+  "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 network inventory display: Disabled",
+  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks"
 }

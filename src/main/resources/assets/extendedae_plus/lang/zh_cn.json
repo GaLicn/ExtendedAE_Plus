@@ -384,5 +384,8 @@
   "gui.extendedae_plus.super_assembler_matrix": "超级装配矩阵",
   "gui.extendedae_plus.super_assembler_matrix.concurrent": "并发执行数：%s",
   "gui.extendedae_plus.super_assembler_matrix.cancel": "取消当前任务",
-  "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板"
+  "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板",
+  "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 网络库存显示：开启",
+  "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 网络库存显示：关闭",
+  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存"
 }
