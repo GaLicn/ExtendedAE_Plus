@@ -1,3 +1,14 @@
+# 发布前必须配置：
+# 1. GitHub 仓库变量（Settings -> Secrets and variables -> Actions -> Variables）：
+#    CURSEFORGE_PROJECT_ID  CurseForge 项目 ID
+#    MODRINTH_PROJECT_ID    Modrinth 项目 ID 或项目 slug
+# 2. GitHub 仓库 Secrets（Settings -> Secrets and variables -> Actions -> Secrets）：
+#    CURSEFORGE_TOKEN       CurseForge API Token
+#    MODRINTH_TOKEN         Modrinth Personal Access Token（需要创建版本/上传权限）
+# 3. gradle.properties 中必须维护以下参数：
+#    mod_id、mod_loader、mod_name、mod_version、minecraft_version
+# 4. 自动发布要求 push 提交信息匹配“更新.+版本”；也可以通过 workflow_dispatch 手动发布。
+
 name: Release Mods
 
 on:
