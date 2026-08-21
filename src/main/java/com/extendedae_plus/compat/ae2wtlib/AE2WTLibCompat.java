@@ -5,6 +5,7 @@ import appeng.api.storage.ISubMenuHost;
 import appeng.menu.locator.ItemMenuHostLocator;
 import com.extendedae_plus.menu.host.CuriosWTSubMenuHost;
 import de.mari_023.ae2wtlib.api.registration.WTDefinition;
+import de.mari_023.ae2wtlib.api.terminal.ItemWT;
 import de.mari_023.ae2wtlib.api.terminal.WTMenuHost;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -17,6 +18,10 @@ import java.util.function.BiConsumer;
  */
 public final class AE2WTLibCompat {
     private AE2WTLibCompat() {
+    }
+
+    public static boolean isWirelessTerminalItem(ItemStack stack) {
+        return stack != null && !stack.isEmpty() && stack.getItem() instanceof ItemWT;
     }
 
     public static boolean isWirelessTerminal(ItemStack stack) {
@@ -59,12 +64,12 @@ public final class AE2WTLibCompat {
         // CraftAmountMenu 只要求 ISubMenuHost，直接使用 Curios 桥接宿主，
         // 避免先创建终端专用宿主后因接口不匹配而失败。
         if (hostInterface == ISubMenuHost.class) {
-            var subHost = new CuriosWTSubMenuHost(definition.item(), player, locator,
+            var subHost = new CuriosWTSubMenuHost(getHostItem(stack, definition), player, locator,
                     (menuPlayer, menu) -> openSubMenu.accept(menuPlayer, menu));
             return hostInterface.cast(subHost);
         }
 
-        WTMenuHost host = definition.wTMenuHostFactory().create(definition.item(), player, locator,
+        WTMenuHost host = definition.wTMenuHostFactory().create(getHostItem(stack, definition), player, locator,
                 (menuPlayer, menu) -> openSubMenu.accept(menuPlayer, menu));
         if (hostInterface.isInstance(host)) {
             return hostInterface.cast(host);
@@ -93,10 +98,15 @@ public final class AE2WTLibCompat {
             if (definition == null) {
                 return null;
             }
-            return definition.wTMenuHostFactory().create(definition.item(), player, locator,
+            return definition.wTMenuHostFactory().create(getHostItem(stack, definition), player, locator,
                     (menuPlayer, menu) -> openSubMenu.accept(menuPlayer, menu));
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    private static ItemWT getHostItem(ItemStack stack, WTDefinition definition) {
+        // 通用终端必须保留自身的动态升级库存，量子桥卡可能位于子终端固定槽位之外。
+        return stack.getItem() instanceof ItemWT item ? item : definition.item();
     }
 }

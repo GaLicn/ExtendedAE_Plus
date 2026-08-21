@@ -96,6 +96,11 @@ public final class WirelessTerminalLocator {
             return null;
         }
 
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(terminal.stack)) {
+            // 空通用终端没有当前子终端定义，必须在调用 ItemWT#getMenuHost 前拦截。
+            return AE2WTLibCompat.getConnectedGrid(player, terminal.stack, locator);
+        }
+
         // 优先调用物品自己的宿主 API。EAE 终端虽由 WTLib 注册，但这里会保留它的专用宿主类型。
         if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
             ItemMenuHost menuHost = wirelessTerminal.getMenuHost(player, locator, null);
@@ -107,11 +112,6 @@ public final class WirelessTerminalLocator {
             }
         }
 
-        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
-            // 只有物品没有原生 AE2 宿主时，才通过 WTLib 兼容层构造菜单宿主。
-            return AE2WTLibCompat.getConnectedGrid(player, terminal.stack, locator);
-        }
-
         return null;
     }
 
@@ -119,8 +119,8 @@ public final class WirelessTerminalLocator {
      * WTLib 菜单主机会自行维护能耗，原版 AE2 终端才在快捷操作后额外扣电。
      */
     public static boolean useTerminalPower(Player player, LocatedTerminal terminal, double amount) {
-        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(terminal.stack)) {
-            return true;
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(terminal.stack)) {
+            return AE2WTLibCompat.isWirelessTerminal(terminal.stack);
         }
         if (terminal.stack.getItem() instanceof WirelessTerminalItem wirelessTerminal) {
             return wirelessTerminal.usePower(player, amount, terminal.stack);
@@ -129,9 +129,15 @@ public final class WirelessTerminalLocator {
     }
 
     private static boolean isWirelessTerminal(ItemStack stack) {
-        return !stack.isEmpty() && (stack.getItem() instanceof WirelessCraftingTerminalItem
-                || stack.getItem() instanceof WirelessTerminalItem
-                || (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminal(stack)));
+        if (stack.isEmpty()) {
+            return false;
+        }
+        if (ModList.get().isLoaded("ae2wtlib") && AE2WTLibCompat.isWirelessTerminalItem(stack)) {
+            // ItemWUT 继承 AE2 无线终端，但只有装入子终端后才可访问网络。
+            return AE2WTLibCompat.isWirelessTerminal(stack);
+        }
+        return stack.getItem() instanceof WirelessCraftingTerminalItem
+                || stack.getItem() instanceof WirelessTerminalItem;
     }
 
     public static final class LocatedTerminal {
