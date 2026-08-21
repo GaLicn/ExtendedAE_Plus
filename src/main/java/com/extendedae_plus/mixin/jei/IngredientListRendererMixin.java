@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.jei;
 
 import appeng.api.stacks.AEItemKey;
 import com.extendedae_plus.client.jei.NetworkItemCache;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.util.GuiUtil;
 import com.extendedae_plus.util.NumberFormatUtil;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -31,7 +32,9 @@ public class IngredientListRendererMixin {
 
     @Inject(method = "render", at = @At("TAIL"))
     private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo ci) {
-        if (!NetworkItemCache.INSTANCE.isConnected()) return;
+        // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
+        if (!ModConfig.INSTANCE.jeiNetworkOverlayEnabled
+                || !NetworkItemCache.INSTANCE.isConnected()) return;
 
         for (IngredientListSlot slot : this.slots) {
             if (slot.isBlocked()) continue;

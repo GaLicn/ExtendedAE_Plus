@@ -33,6 +33,7 @@
     "extendedae.client.gui.GuiExPatternProviderMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
     "jei.EncodePatternTransferHandlerMixin",
+    "jei.BookmarkOverlayMixin",
     "jei.EncodingHelperMixin",
     "jei.IngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor",

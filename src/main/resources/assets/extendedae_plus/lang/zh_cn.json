@@ -350,5 +350,8 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_missing": "AE 网络材料不足，缺少：",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.material_missing_entry": "- %s x %s",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_changed": "AE 网络库存已变化，未执行搭建",
-  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建"
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建",
+  "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 网络库存显示：开启",
+  "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 网络库存显示：关闭",
+  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存"
 }

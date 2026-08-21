@@ -104,6 +104,13 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "JEI 中是否显示 AE2 网络库存与可合成状态",
+            "可通过 JEI 左下角按钮即时切换"
+    })
+    public boolean jeiNetworkOverlayEnabled = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "实体加速器能量消耗基础值"
     })
     @Configurable.Range(min = 0, max = Integer.MAX_VALUE)

@@ -351,5 +351,8 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_missing": "AE network is missing these materials:",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.material_missing_entry": "- %s x %s",
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.materials_changed": "AE network inventory changed; build was not performed",
-  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built"
+  "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built",
+  "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 network inventory display: Enabled",
+  "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 network inventory display: Disabled",
+  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks"
 }
