@@ -17,7 +17,6 @@
     "extendedae_plus:super_assembler_matrix_frame",
     "extendedae_plus:super_assembler_matrix_wall",
     "extendedae_plus:labeled_wireless_transceiver",
-    "extendedae_plus:crystal_assembler_plus",
     "extendedae_plus:tag_inventory_me_interface",
     "extendedae_plus:circuit_cutter_plus"
   ]

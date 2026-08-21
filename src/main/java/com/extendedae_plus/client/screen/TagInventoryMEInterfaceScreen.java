@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagInventoryMEInterfaceMenu> {
 
     private static final ResourceLocation BACKGROUND = new ResourceLocation("ae2", "textures/guis/background.png");
-    private static final Pattern TAG_EXPRESSION_FILTER = Pattern.compile("[0-9a-z* &|^!():/_.\\n-]*");
+    private static final Pattern TAG_EXPRESSION_FILTER = Pattern.compile("[0-9A-Za-z* &|^!():/_.\\r\\n-]*");
 
     private EditBox whiteListInput;
     private EditBox blackListInput;
@@ -53,6 +53,7 @@ public class TagInventoryMEInterfaceScreen extends AbstractContainerScreen<TagIn
         EditBox input = new EditBox(this.font, x, y, width, 18, Component.empty());
         input.setMaxLength(TagInventoryMEInterfaceBlockEntity.MAX_FILTER_LENGTH);
         input.setValue(value == null ? "" : value);
+        // 放行大小写字符和 Windows 剪贴板常见的 CRLF 换行。
         input.setFilter(text -> TAG_EXPRESSION_FILTER.matcher(text).matches());
         return input;
     }
