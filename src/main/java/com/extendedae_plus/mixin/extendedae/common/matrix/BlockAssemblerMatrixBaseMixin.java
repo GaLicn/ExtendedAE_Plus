@@ -71,9 +71,8 @@ public abstract class BlockAssemblerMatrixBaseMixin {
                 || !(level.getBlockEntity(pos) instanceof SuperAssemblerMatrixPart part)) {
             return false;
         }
-        var state = level.getBlockState(pos);
-        return state.getValue(BlockAssemblerMatrixBase.FORMED)
-                || part.eap$getSuperMatrixCluster() != null;
+        // 只有实际加入超级集群的玻璃才接管菜单，原版成型状态不能作为超装判据。
+        return part.eap$getSuperMatrixCluster() != null;
     }
 
     private void eap$openSuperMatrixMenu(Level level, BlockPos pos, Player player) {

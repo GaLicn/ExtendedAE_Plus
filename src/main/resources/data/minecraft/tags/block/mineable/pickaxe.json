@@ -27,6 +27,8 @@
     "extendedae_plus:circuit_cutter_plus",
     "extendedae_plus:disguised_block",
     "extendedae_plus:super_assembler_matrix_frame",
-    "extendedae_plus:super_assembler_matrix_wall"
+    "extendedae_plus:super_assembler_matrix_wall",
+    "extendedae_plus:tag_inventory_me_interface",
+    "extendedae_plus:mirror_pattern_provider"
   ]
 }
