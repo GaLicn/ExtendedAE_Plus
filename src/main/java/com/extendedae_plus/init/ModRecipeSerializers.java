@@ -1,6 +1,8 @@
-package com.extendedae_plus.recipe;
+package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipeSerializer;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeSerializer;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.neoforged.neoforge.registries.DeferredHolder;
