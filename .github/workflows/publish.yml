@@ -198,6 +198,8 @@ jobs:
   publish-curseforge:
     name: Publish to CurseForge
     needs: build
+    environment:
+      name: publish
     runs-on: ubuntu-latest
 
     steps:
@@ -231,6 +233,8 @@ jobs:
   publish-modrinth:
     name: Publish to Modrinth
     needs: build
+    environment:
+      name: publish
     runs-on: ubuntu-latest
 
     steps:
