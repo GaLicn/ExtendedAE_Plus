@@ -31,6 +31,7 @@ permissions:
 jobs:
   prepare:
     name: Check Trigger
+    if: github.ref_protected == true
     runs-on: ubuntu-latest
     outputs:
       should_publish: ${{ steps.check.outputs.should_publish }}
