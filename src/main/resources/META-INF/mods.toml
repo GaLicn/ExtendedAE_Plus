@@ -42,6 +42,13 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.extendedae_plus]]
+modId = "jei"
+mandatory = false
+versionRange = "[15.48.0.177,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.extendedae_plus]]
 modId = "mae2"
 mandatory = false
 versionRange = "[2.0.0-alpha,)"

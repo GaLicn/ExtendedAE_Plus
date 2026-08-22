@@ -104,9 +104,9 @@ dependencies {
     modCompileOnly "curse.maven:advancedae-1084104:6939473"
     modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
 
+    // JEI 是可选兼容：仅在开发编译和运行测试环境提供，不作为硬依赖打入模组。
     modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:15.20.0.129"
-    modImplementation "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     modImplementation "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
