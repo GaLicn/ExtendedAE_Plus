@@ -8,7 +8,9 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.VanillaTypes;
@@ -114,9 +116,9 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
         var level = Minecraft.getInstance().level;
         if (level != null) {
             registration.addRecipes(SuperCrystalAssemblerCategory.TYPE,
-                    level.getRecipeManager().getAllRecipesFor(SuperCrystalAssemblerRecipe.TYPE));
+                    SuperCrystalAssemblerRecipeManager.getAllRecipes(level));
             registration.addRecipes(SuperCircuitCutterCategory.TYPE,
-                    level.getRecipeManager().getAllRecipesFor(SuperCircuitCutterRecipe.TYPE));
+                    SuperCircuitCutterRecipeManager.getAllRecipes(level));
         }
     }
 

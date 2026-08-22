@@ -34,6 +34,7 @@ import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
 import com.glodblock.github.extendedae.api.caps.IGenericInvHost;
 import com.glodblock.github.glodium.recipe.stack.IngredientStack;
 import net.minecraft.core.BlockPos;
@@ -186,7 +187,7 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         if (this.level == null) {
             return null;
         }
-        for (var recipe : this.level.getRecipeManager().getAllRecipesFor(SuperCrystalAssemblerRecipe.TYPE)) {
+        for (var recipe : SuperCrystalAssemblerRecipeManager.getAllRecipes(this.level)) {
             if (this.canRun(recipe.value())) {
                 return recipe;
             }

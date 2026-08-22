@@ -1,6 +1,7 @@
 package com.extendedae_plus.recipe;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.init.ModRecipeSerializers;
 import com.glodblock.github.glodium.recipe.stack.IngredientStack;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceLocation;
