@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.1-f1 1.20.1-Forge] 
+
+### Changed / 变更
+- 限制JEI版本最低为15.48.0.177
+  - Limit JEI version to minimum 15.48.0.177
 
 ## [1.6.1]
 
