@@ -124,6 +124,7 @@
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "emi.AE2EmiEncodePatternTransferHandlerMixin",
     "emi.BoMScreenMixin",
+    "emi.BoMScreenNodeAccessor",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",

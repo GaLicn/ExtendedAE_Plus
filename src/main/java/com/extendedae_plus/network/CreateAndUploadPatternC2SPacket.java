@@ -118,7 +118,7 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 				return;
 			}
 
-			ItemStack pattern = createPattern(
+			ItemStack pattern = encodePattern(
 				recipeHolder,
 				msg.isCraftingPattern,
 				msg.selectedIngredients,
@@ -147,7 +147,8 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		return TYPE;
 	}
 
-	private static boolean consumeBlankPattern(ServerPlayer player, IGrid grid) {
+	// 包内可见：批量分支（BatchCreateAndUploadPatternC2SPacket）复用同一套空白样板与编码逻辑。
+	static boolean consumeBlankPattern(ServerPlayer player, IGrid grid) {
 		AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
 		IEnergyService energy = grid.getEnergyService();
 		MEStorage storage = grid.getStorageService().getInventory();
@@ -162,7 +163,7 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		return extracted > 0;
 	}
 
-	private static void refundBlankPattern(ServerPlayer player, IGrid grid) {
+	static void refundBlankPattern(ServerPlayer player, IGrid grid) {
 		AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
 		IEnergyService energy = grid.getEnergyService();
 		MEStorage storage = grid.getStorageService().getInventory();
@@ -175,7 +176,8 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		);
 	}
 
-	private static ItemStack createPattern(
+	// 包内可见：批量分支（BatchCreateAndUploadPatternC2SPacket）复用同一套编码逻辑。
+	static ItemStack encodePattern(
 		RecipeHolder<?> recipeHolder,
 		boolean isCrafting,
 		List<ItemStack> selectedIngredients,

@@ -21,8 +21,7 @@ import java.util.List;
  * EMI 配方查询与 {@link RecipeInfo} 构建工厂（对应 JEI 路径的 {@code RecipeFinderUtil}）。
  * 仅在 ModList 确认 emi 已加载时调用；类内 EMI 引用随方法调用惰性解析，
  * 未装 EMI 时加载本类不会触发 dev.emi 类解析。
- */
-public final class EmiRecipeCompat {
+ */public final class EmiRecipeCompat {
 	private EmiRecipeCompat() {}
 
 	/**
@@ -134,8 +133,9 @@ public final class EmiRecipeCompat {
 	}
 
 	/**
-	 * EmiStack → GenericStack，支持物品与流体。
+	 * EmiStack → GenericStack，支持物品、流体与 Mekanism 化学品。
 	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
+	 * 化学品经 Applied Mekanistics 的 MekanismKey 转换，两侧都是 mB，数量 1:1。
 	 */
 	private static GenericStack toGenericStack(EmiStack stack) {
 		try {
@@ -143,10 +143,18 @@ public final class EmiRecipeCompat {
 			if (item != null && !item.isEmpty()) {
 				return new GenericStack(AEItemKey.of(item), Math.max(1, stack.getAmount()));
 			}
-			if (stack.getKey() instanceof Fluid fluid && fluid != Fluids.EMPTY) {
+			Object key = stack.getKey();
+			if (key instanceof Fluid fluid && fluid != Fluids.EMPTY) {
 				long amount = stack.getAmount();
 				long mb = Math.max(1, amount / 81);
 				return new GenericStack(AEFluidKey.of(fluid), mb);
+			}
+			// 化学品（Mek 氧化机、溶解室、注入室等一整批配方的输入/产物）需要 AppMek 提供的 AE2 键类型。
+			if (MekanismChemicalGate.isAvailable()) {
+				GenericStack chemical = MekanismChemicalCompat.toGenericStack(key, stack.getAmount());
+				if (chemical != null) {
+					return chemical;
+				}
 			}
 		} catch (Throwable ignored) {
 		}
