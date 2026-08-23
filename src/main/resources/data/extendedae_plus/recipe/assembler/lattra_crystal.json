@@ -1,5 +1,5 @@
 {
-  "type": "extendedae_plus:crystal_assembler_plus",
+  "type": "extendedae:crystal_assembler",
   "input_fluid": {
     "amount": 100,
     "ingredient": {
