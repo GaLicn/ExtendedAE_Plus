@@ -60,6 +60,9 @@ public class ExtendedAEPatternUploadUtil {
     private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
     private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
+    /** 每次重载映射表递增，供客户端缓存（如合成树映射标记）判断失效。 */
+    private static final java.util.concurrent.atomic.AtomicInteger MAPPING_VERSION =
+            new java.util.concurrent.atomic.AtomicInteger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     // 最近一次打开供应器选择界面时的预设搜索关键字。
     // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
@@ -145,8 +148,122 @@ public class ExtendedAEPatternUploadUtil {
             CUSTOM_NAMES.putAll(map);
             CUSTOM_ALIASES.clear();
             CUSTOM_ALIASES.putAll(alias);
+            MAPPING_VERSION.incrementAndGet();
         } catch (IOException ignored) {
         }
+    }
+
+    /** 映射表版本号：每次重载递增，客户端缓存据此失效。 */
+    public static int getMappingVersion() {
+        return MAPPING_VERSION.get();
+    }
+
+    /** 公开配方类型 ID 解析，供客户端判断映射状态。 */
+    public static ResourceLocation getRecipeTypeId(Recipe<?> recipe) {
+        return recipe == null ? null : resolveRecipeTypeId(recipe.getType());
+    }
+
+    /**
+     * 该配方类型是否存在用户自定义的供应器映射。
+     * 注意：{@link #resolveRecipeTypeSearchKey} 在无映射时会回退成 path，不能用它判断有无映射。
+     */
+    public static boolean hasCustomRecipeTypeMapping(ResourceLocation typeId) {
+        if (typeId == null) {
+            return false;
+        }
+        String custom = CUSTOM_NAMES.get(typeId);
+        if (custom != null && !custom.isBlank()) {
+            return true;
+        }
+        String alias = CUSTOM_ALIASES.get(typeId.getPath().toLowerCase(Locale.ROOT));
+        return alias != null && !alias.isBlank();
+    }
+
+    /** 有自定义映射时返回供应器搜索词，否则返回 null。 */
+    public static String mappedSearchKeyOrNull(Recipe<?> recipe) {
+        ResourceLocation typeId = getRecipeTypeId(recipe);
+        if (!hasCustomRecipeTypeMapping(typeId)) {
+            return null;
+        }
+        String key = resolveRecipeTypeSearchKey(typeId, null);
+        return key == null || key.isBlank() ? null : key;
+    }
+
+    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
+    private static Boolean JEC_AVAILABLE = null;
+    private static java.lang.reflect.Method JEC_CONTAINS = null;
+
+    /**
+     * 供应器名称与搜索词的匹配（客户端选择界面与服务端定向上传共用同一语义）。
+     * 空搜索词视为全部匹配。
+     */
+    public static boolean providerNameMatches(String name, String key) {
+        if (name == null) return false;
+        if (key == null || key.isEmpty()) return true;
+        try {
+            if (JEC_AVAILABLE == null) {
+                try {
+                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
+                    // 使用 contains(CharSequence, CharSequence)
+                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
+                    JEC_AVAILABLE = true;
+                } catch (Throwable t) {
+                    JEC_AVAILABLE = false;
+                }
+            }
+            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
+                Object r = JEC_CONTAINS.invoke(null, name, key);
+                if (r instanceof Boolean && (Boolean) r) return true;
+                // 再尝试大小写不敏感：双方转为小写重新匹配
+                String nL = name.toLowerCase();
+                String kL = key.toLowerCase();
+                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
+                if (r2 instanceof Boolean && (Boolean) r2) return true;
+            }
+        } catch (Throwable ignored) {
+            // 回退
+        }
+        // 默认大小写不敏感子串
+        return name.toLowerCase().contains(key.toLowerCase());
+    }
+
+    /**
+     * 依映射搜索词在给定供应器列表中寻找名称匹配者并插入样板。
+     * 空位多的优先，避免把整棵树的样板全挤到同一台机器上。
+     * 批量上传专用：不记录 last uploaded provider（一批 N 个样板的“最后一个”没有意义）。
+     */
+    public static boolean uploadPatternToMatchingProvider(ServerPlayer player,
+                                                         ItemStack pattern,
+                                                         List<PatternContainer> providers,
+                                                         String searchKey) {
+        if (player == null || pattern == null || pattern.isEmpty()
+                || searchKey == null || searchKey.isBlank()
+                || providers == null || providers.isEmpty()) {
+            return false;
+        }
+
+        List<PatternContainer> matched = new ArrayList<>();
+        for (PatternContainer container : providers) {
+            if (container == null) continue;
+            if (providerNameMatches(getProviderDisplayNameComponent(container).getString(), searchKey)) {
+                matched.add(container);
+            }
+        }
+        if (matched.isEmpty()) {
+            return false;
+        }
+        // getAvailableSlots 有重载，方法引用无法在 reversed() 处推断类型，显式声明比较器元素类型。
+        Comparator<PatternContainer> bySlotsDesc =
+                Comparator.comparingInt((PatternContainer c) -> getAvailableSlots(c)).reversed();
+        matched.sort(bySlotsDesc);
+
+        for (PatternContainer container : matched) {
+            ItemStack remain = insertIntoAccessiblePatternSlots(container, pattern.copy(), null);
+            if (remain.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void setLastProcessingName(String name) {
@@ -747,6 +864,13 @@ public class ExtendedAEPatternUploadUtil {
      * @return 是否成功插入矩阵
      */
     public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid) {
+        return uploadPatternToMatrix(player, pattern, grid, false);
+    }
+
+    /**
+     * @param quiet 批量上传时抑制逐个样板的聊天提示，由调用方汇总后统一告知玩家。
+     */
+    public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid, boolean quiet) {
         if (player == null || grid == null || pattern == null || pattern.isEmpty() || !PatternDetailsHelper.isEncodedPattern(pattern)) {
             return false;
         }
@@ -755,12 +879,14 @@ public class ExtendedAEPatternUploadUtil {
         if (!(details instanceof AECraftingPattern
                 || details instanceof AESmithingTablePattern
                 || details instanceof AEStonecuttingPattern)) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
+            if (!quiet) {
+                sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
+            }
             return false;
         }
 
         if (matrixContainsPattern(grid, pattern)) {
-            if (player != null) {
+            if (!quiet) {
                 player.sendSystemMessage(Component.translatable("extendedae_plus.message.matrix.duplicate"));
             }
             return false;
@@ -781,7 +907,9 @@ public class ExtendedAEPatternUploadUtil {
                             target.plus(),
                             findLastChangedSlot(target.patternInventory(), before, target.patternInventory().size())
                     );
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    if (!quiet) {
+                        sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    }
                     return true;
                 }
             }
@@ -793,16 +921,20 @@ public class ExtendedAEPatternUploadUtil {
                 ItemStack toInsert = pattern.copy();
                 ItemStack remain = insertIntoAnySlot(cap, toInsert);
                 if (remain.getCount() < toInsert.getCount()) {
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    if (!quiet) {
+                        sendMessage(player, "extendedae_plus.upload_to_matrix.success");
+                    }
                     return true;
                 }
             }
         }
 
-        if (inventories.isEmpty() && handlers.isEmpty()) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
-        } else {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+        if (!quiet) {
+            if (inventories.isEmpty() && handlers.isEmpty()) {
+                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
+            } else {
+                sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
+            }
         }
         return false;
     }
@@ -924,6 +1056,11 @@ public class ExtendedAEPatternUploadUtil {
     private static List<?> findAllMatrixPatternHandlers(IGrid grid) {
         // NeoForge 1.21 能力系统与 API 变更，此处先返回空列表，避免编译期依赖旧能力系统
         return java.util.Collections.emptyList();
+    }
+
+    /** 装配矩阵是否已存在同一样板（忽略编码者等自定义数据）。批量编码用来跳过重复项，不白扣空白样板。 */
+    public static boolean matrixHasPattern(IGrid grid, ItemStack pattern) {
+        return matrixContainsPattern(grid, pattern);
     }
 
     private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
@@ -1656,6 +1793,31 @@ public class ExtendedAEPatternUploadUtil {
                                 break;
                             }
                         }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return list;
+    }
+
+    /**
+     * 列出网络中所有终端可见的样板供应器（不筛空位）。
+     * 供“为配方类型挑选机器建立映射”使用：映射只关心名字，机器当下满不满无关。
+     */
+    public static List<PatternContainer> listAllProvidersFromGrid(IGrid grid) {
+        List<PatternContainer> list = new ArrayList<>();
+        if (grid == null) return list;
+        try {
+            for (var machineClass : grid.getMachineClasses()) {
+                if (PatternContainer.class.isAssignableFrom(machineClass)) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                    for (var container : grid.getActiveMachines(containerClass)) {
+                        if (container == null || !container.isVisibleInTerminal()) continue;
+                        InternalInventory inv = container.getTerminalPatternInventory();
+                        if (inv == null || inv.size() <= 0) continue;
+                        list.add(container);
                     }
                 }
             }

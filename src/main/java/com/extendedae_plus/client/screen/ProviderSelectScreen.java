@@ -33,9 +33,6 @@ public class ProviderSelectScreen extends Screen {
     private static final int AE_TEXT_FIELD_WIDTH = 128;
     private static final int AE_SEARCH_FIELD_HEIGHT = 20;
     private int pageSize = 6;
-    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
-    private static Boolean JEC_AVAILABLE = null;
-    private static java.lang.reflect.Method JEC_CONTAINS = null;
 
     // 置顶的供应器名称集合（静态变量，持久化到配置文件）
     private static final Set<String> pinnedProviders = new HashSet<>();
@@ -84,9 +81,21 @@ public class ProviderSelectScreen extends Screen {
     private boolean autoUploadRequestedFromPresetSearch = false;
     private boolean autoUploadAttempted = false;
     private int lastExactMatchCount = 0;
+    /**
+     * 非空表示「为配方类型挑选机器」模式：入口是合成树上的感叹号，
+     * 此时没有待上传的样板，点选条目改为写入「配方类型 → 机器名」映射。
+     */
+    private final String mappingKey;
+
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
+        this(parent, null, ids, names, emptySlots);
+    }
+
+    public ProviderSelectScreen(Screen parent, String mappingKey,
+                                List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
         this.parent = parent;
+        this.mappingKey = mappingKey == null || mappingKey.isBlank() ? null : mappingKey.trim();
         this.aeStyle = StyleManager.loadStyleDoc("/screens/common/common.json");
         this.ids = ids;
         this.names = names;
@@ -100,38 +109,22 @@ public class ProviderSelectScreen extends Screen {
                 this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
+        if (this.mappingKey != null) {
+            // 挑映射机器时不该自动上传，也不该沿用上一次编码流程留下的搜索词。
+            this.query = "";
+            this.autoUploadRequestedFromPresetSearch = false;
+        }
         this.buildGroups();
         this.applyFilter();
     }
 
+    public boolean isMappingMode() {
+        return this.mappingKey != null;
+    }
+
     private static boolean nameMatches(String name, String key) {
-        if (name == null) return false;
-        if (key == null || key.isEmpty()) return true;
-        try {
-            if (JEC_AVAILABLE == null) {
-                try {
-                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-                    // 使用 contains(CharSequence, CharSequence)
-                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-                    JEC_AVAILABLE = true;
-                } catch (Throwable t) {
-                    JEC_AVAILABLE = false;
-                }
-            }
-            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-                Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean && (Boolean) r) return true;
-                // 再尝试大小写不敏感：双方转为小写重新匹配
-                String nL = name.toLowerCase();
-                String kL = key.toLowerCase();
-                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
-                if (r2 instanceof Boolean && (Boolean) r2) return true;
-            }
-        } catch (Throwable ignored) {
-            // 回退
-        }
-        // 默认大小写不敏感子串
-        return name.toLowerCase().contains(key.toLowerCase());
+        // 匹配语义与服务端定向上传共用，见 ExtendedAEPatternUploadUtil#providerNameMatches
+        return ExtendedAEPatternUploadUtil.providerNameMatches(name, key);
     }
 
     private void changePage(int delta) {
@@ -215,9 +208,38 @@ public class ProviderSelectScreen extends Screen {
 
     private void onChoose(int idx, boolean showStatusMessage) {
         if (idx < 0 || idx >= this.fIds.size()) return;
-        long providerId = this.fIds.get(idx);
         String providerName = this.fNames.get(idx);
+        if (this.mappingKey != null) {
+            // 挑映射机器模式：点选即建立「配方类型 → 机器名」映射，没有样板要上传。
+            this.saveMappingTo(providerName);
+            return;
+        }
+        long providerId = this.fIds.get(idx);
         PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
+        this.onClose();
+    }
+
+    /** 把当前配方类型映射到给定的机器名/搜索词，成功后返回上一层界面。 */
+    private void saveMappingTo(String value) {
+        var player = Minecraft.getInstance().player;
+        if (value == null || value.isBlank()) {
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.cn_required"));
+            }
+            return;
+        }
+        if (!ExtendedAEPatternUploadUtil.addOrUpdateRecipeTypeMapping(this.mappingKey, value)) {
+            if (player != null) {
+                player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_fail"));
+            }
+            return;
+        }
+        // 映射表版本已递增，合成树上的感叹号会随之消失。
+        com.extendedae_plus.client.emi.BoMMappingStatus.invalidate();
+        if (player != null) {
+            player.sendSystemMessage(Component.translatable(
+                    "extendedae_plus.message.mapping.add_success", this.mappingKey, value));
+        }
         this.onClose();
     }
 
@@ -327,7 +349,10 @@ public class ProviderSelectScreen extends Screen {
 
     @Override
     public void onClose() {
-        PacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
+        if (this.mappingKey == null) {
+            // 挑映射机器模式下没有 pending 样板，不能误发取消请求。
+            PacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
+        }
         Minecraft.getInstance().setScreen(this.parent);
     }
 
@@ -432,7 +457,9 @@ public class ProviderSelectScreen extends Screen {
         Button mappingManagement = new AE2Button(
                 controlsX + quickInputWidth + 5 + 85 + 5, quickMappingY, 155, 20,
                 Component.translatable("extendedae_plus.screen.mapping_management.button"),
-                b -> Minecraft.getInstance().setScreen(new RecipeTypeMappingScreen(this)));
+                b -> Minecraft.getInstance().setScreen(this.mappingKey == null
+                        ? new RecipeTypeMappingScreen(this)
+                        : new RecipeTypeMappingScreen(this, this.mappingKey)));
         this.addRenderableWidget(mappingManagement);
 
         Button close = new AE2Button(
@@ -456,6 +483,22 @@ public class ProviderSelectScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void render(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        if (this.mappingKey == null) {
+            return;
+        }
+        // 挑映射机器时必须看得见正在给哪个配方类型建映射，否则点错机器无从察觉。
+        int y = Math.max(4, (this.height - this.pageSize * 25) / 2 - 44);
+        graphics.drawCenteredString(this.font,
+                Component.translatable("extendedae_plus.screen.choose_provider.mapping_title"),
+                this.width / 2, y, 0xFFFFFFFF);
+        graphics.drawCenteredString(this.font,
+                Component.translatable("extendedae_plus.screen.choose_provider.mapping_key", this.mappingKey),
+                this.width / 2, y + 11, 0xFFFFAA00);
     }
 
     @Override
@@ -511,7 +554,10 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private void addMappingFromUI() {
-        String key = this.query == null ? "" : this.query.trim();
+        // 挑映射机器模式下键已由合成树给定，普通模式沿用「搜索词即映射键」的旧行为。
+        String key = this.mappingKey != null
+                ? this.mappingKey
+                : (this.query == null ? "" : this.query.trim());
         String value = this.cnInput == null ? "" : this.cnInput.getValue().trim();
         var player = Minecraft.getInstance().player;
         if (key.isEmpty()) {
@@ -524,6 +570,11 @@ public class ProviderSelectScreen extends Screen {
             if (player != null) {
                 player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.cn_required"));
             }
+            return;
+        }
+
+        if (this.mappingKey != null) {
+            this.saveMappingTo(value);
             return;
         }
 

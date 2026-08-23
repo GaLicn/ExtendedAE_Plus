@@ -3,9 +3,10 @@ package com.extendedae_plus.client.event;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
+import com.extendedae_plus.client.emi.BoMMappingStatus;
 import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.compat.EmiRecipeCompat;
-import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
+import com.extendedae_plus.network.BatchCreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
@@ -19,6 +20,7 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -106,8 +108,12 @@ public final class EmiCtrlQHandler {
 	}
 
 	/**
-	 * 合成链（BoM 树）一键批量编码：遍历整棵树，收集所有涉及配方的样板并批量发送
-	 * （直传装配矩阵，无矩阵时服务端自动落背包）。同一配方只编码一次。
+	 * 合成链（BoM 树）一键批量编码：遍历整棵树，收集所有涉及配方的样板，
+	 * 分批打包成 {@link BatchCreateAndUploadPatternC2SPacket} 发送
+	 * （合成样板进装配矩阵，处理样板按映射进供应器，都不行才落背包）。同一配方只编码一次。
+	 * <p>
+	 * 调用方（A 按钮）负责在存在缺映射节点时拦住本方法；此处只跳过无法解析配方 ID 的节点，
+	 * 那类节点补映射也编不出样板。
 	 *
 	 * @return 成功发送的样板数
 	 */
@@ -122,7 +128,8 @@ public final class EmiCtrlQHandler {
 		}
 
 		Set<ResourceLocation> seen = new HashSet<>();
-		int sent = 0;
+		List<BatchCreateAndUploadPatternC2SPacket.Entry> entries = new ArrayList<>();
+		int skipped = 0;
 		Deque<dev.emi.emi.bom.MaterialNode> stack = new ArrayDeque<>();
 		stack.push(tree.goal);
 		while (!stack.isEmpty()) {
@@ -135,29 +142,45 @@ public final class EmiCtrlQHandler {
 			if (node.recipe == null) {
 				continue;
 			}
+			if (BoMMappingStatus.of(node.recipe) == BoMMappingStatus.Status.NO_RECIPE_ID) {
+				skipped++;
+				continue;
+			}
 			RecipeInfo info = EmiRecipeCompat.fromEmiRecipe(node.recipe);
 			if (info == null || info.getRecipeId() == null || !seen.add(info.getRecipeId())) {
 				continue;
 			}
-			PacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
+			entries.add(new BatchCreateAndUploadPatternC2SPacket.Entry(
 				info.getRecipeId(),
 				info.isCraftingRecipe(),
 				info.selectBestInputs(Map.of()),
 				convertOutputsToItemStacks(info),
+				BoMMappingStatus.searchKeyOf(node.recipe)
+			));
+		}
+
+		if (entries.isEmpty()) {
+			if (mc.player != null) {
+				mc.player.displayClientMessage(
+					Component.translatable("message.extendedae_plus.bom_encode.nothing_to_encode"), true);
+			}
+			return 0;
+		}
+
+		// 单封包条目上限，超出时分批发送，避免一棵大树塞爆一个数据包。
+		int limit = BatchCreateAndUploadPatternC2SPacket.MAX_ENTRIES;
+		for (int from = 0; from < entries.size(); from += limit) {
+			PacketDistributor.sendToServer(new BatchCreateAndUploadPatternC2SPacket(
+				new ArrayList<>(entries.subList(from, Math.min(from + limit, entries.size()))),
 				isAllowSubstitutes,
 				isFluidSubstitutes
 			));
-			sent++;
 		}
 
-		if (mc.player != null) {
-			mc.player.displayClientMessage(
-				sent > 0
-					? Component.literal("[EAP] 已发送 " + sent + " 个样板编码请求")
-					: Component.literal("[EAP] 合成链中没有可编码的配方"),
-				true
-			);
+		if (skipped > 0 && mc.player != null) {
+			mc.player.displayClientMessage(Component.translatable(
+				"message.extendedae_plus.bom_encode.skipped_no_recipe", skipped), true);
 		}
-		return sent;
+		return entries.size();
 	}
 }

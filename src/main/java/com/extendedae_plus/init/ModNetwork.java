@@ -1,6 +1,7 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.network.BatchCreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
@@ -8,8 +9,10 @@ import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.network.GlobalToggleProviderModesC2SPacket;
 import com.extendedae_plus.network.InterfaceAdjustConfigAmountC2SPacket;
+import com.extendedae_plus.network.MappingProvidersS2CPacket;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.network.ProvidersListS2CPacket;
+import com.extendedae_plus.network.RequestMappingProvidersC2SPacket;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
@@ -42,6 +45,8 @@ public class ModNetwork {
         registrar.playToClient(SetPatternHighlightS2CPacket.TYPE, SetPatternHighlightS2CPacket.STREAM_CODEC, SetPatternHighlightS2CPacket::handle);
         registrar.playToClient(ProvidersListS2CPacket.TYPE, ProvidersListS2CPacket.STREAM_CODEC, ProvidersListS2CPacket::handle);
         registrar.playToServer(RequestProvidersListC2SPacket.TYPE, RequestProvidersListC2SPacket.STREAM_CODEC, RequestProvidersListC2SPacket::handle);
+        registrar.playToServer(RequestMappingProvidersC2SPacket.TYPE, RequestMappingProvidersC2SPacket.STREAM_CODEC, RequestMappingProvidersC2SPacket::handle);
+        registrar.playToClient(MappingProvidersS2CPacket.TYPE, MappingProvidersS2CPacket.STREAM_CODEC, MappingProvidersS2CPacket::handle);
         registrar.playToClient(SetProviderPageS2CPacket.TYPE, SetProviderPageS2CPacket.STREAM_CODEC, SetProviderPageS2CPacket::handle);
         registrar.playToServer(GlobalToggleProviderModesC2SPacket.TYPE, GlobalToggleProviderModesC2SPacket.STREAM_CODEC, GlobalToggleProviderModesC2SPacket::handle);
         registrar.playToServer(CraftingMonitorJumpC2SPacket.TYPE, CraftingMonitorJumpC2SPacket.STREAM_CODEC, CraftingMonitorJumpC2SPacket::handle);
@@ -52,6 +57,7 @@ public class ModNetwork {
         registrar.playToServer(UploadInventoryPatternToProviderC2SPacket.TYPE, UploadInventoryPatternToProviderC2SPacket.STREAM_CODEC, UploadInventoryPatternToProviderC2SPacket::handle);
         registrar.playToServer(CreateCtrlQPatternC2SPacket.TYPE, CreateCtrlQPatternC2SPacket.STREAM_CODEC, CreateCtrlQPatternC2SPacket::handle);
         registrar.playToServer(CreateAndUploadPatternC2SPacket.TYPE, CreateAndUploadPatternC2SPacket.STREAM_CODEC, CreateAndUploadPatternC2SPacket::handle);
+        registrar.playToServer(BatchCreateAndUploadPatternC2SPacket.TYPE, BatchCreateAndUploadPatternC2SPacket.STREAM_CODEC, BatchCreateAndUploadPatternC2SPacket::handle);
         registrar.playToServer(CancelPendingPatternC2SPacket.TYPE,CancelPendingPatternC2SPacket.STREAM_CODEC,CancelPendingPatternC2SPacket::handle);
         registrar.playToServer(EncodeWithShiftFlagC2SPacket.TYPE, EncodeWithShiftFlagC2SPacket.STREAM_CODEC, EncodeWithShiftFlagC2SPacket::handle);
         // 新增：JEI 中键打开合成界面 & 无线终端拾取方块物品
