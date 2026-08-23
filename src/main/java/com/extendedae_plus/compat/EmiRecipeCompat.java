@@ -1,5 +1,6 @@
 package com.extendedae_plus.compat;
 
+import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.util.RecipeInfo;
@@ -10,6 +11,8 @@ import dev.emi.emi.api.stack.EmiStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.Fluids;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +66,7 @@ public final class EmiRecipeCompat {
 		var holderOpt = mc.level.getRecipeManager().byKey(recipe.getId());
 		boolean crafting = holderOpt.isPresent() && holderOpt.get().value() instanceof CraftingRecipe;
 
-		GenericStack output = firstItemOutput(recipe);
+		GenericStack output = firstOutput(recipe);
 		if (output == null) {
 			return null;
 		}
@@ -87,7 +90,7 @@ public final class EmiRecipeCompat {
 			for (EmiIngredient slot : recipe.getInputs()) {
 				List<GenericStack> candidates = new ArrayList<>();
 				for (EmiStack option : slot.getEmiStacks()) {
-					GenericStack gs = toItemGenericStack(option);
+					GenericStack gs = toGenericStack(option);
 					if (gs != null) {
 						candidates.add(gs);
 					}
@@ -99,9 +102,9 @@ public final class EmiRecipeCompat {
 		return new RecipeInfo(recipe, recipe.getId(), crafting, inputs, List.of(output));
 	}
 
-	private static GenericStack firstItemOutput(EmiRecipe recipe) {
+	private static GenericStack firstOutput(EmiRecipe recipe) {
 		for (EmiStack out : recipe.getOutputs()) {
-			GenericStack gs = toItemGenericStack(out);
+			GenericStack gs = toGenericStack(out);
 			if (gs != null) {
 				return gs;
 			}
@@ -109,16 +112,23 @@ public final class EmiRecipeCompat {
 		return null;
 	}
 
-	/** EmiStack → GenericStack；v1 仅支持物品栈，流体返回 null。 */
-	private static GenericStack toItemGenericStack(EmiStack stack) {
+	/**
+	 * EmiStack → GenericStack，支持物品与流体。
+	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
+	 */
+	private static GenericStack toGenericStack(EmiStack stack) {
 		try {
 			ItemStack item = stack.getItemStack();
-			if (item == null || item.isEmpty()) {
-				return null;
+			if (item != null && !item.isEmpty()) {
+				return new GenericStack(AEItemKey.of(item), Math.max(1, stack.getAmount()));
 			}
-			return new GenericStack(AEItemKey.of(item), Math.max(1, stack.getAmount()));
+			if (stack.getKey() instanceof Fluid fluid && fluid != Fluids.EMPTY) {
+				long amount = stack.getAmount();
+				long mb = Math.max(1, amount / 81);
+				return new GenericStack(AEFluidKey.of(fluid), mb);
+			}
 		} catch (Throwable ignored) {
-			return null;
 		}
+		return null;
 	}
 }
