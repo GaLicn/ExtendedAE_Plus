@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = EmiEncodePatternHandler.class, remap = false)
 public abstract class AE2EmiEncodePatternTransferHandlerMixin {
 
-    @Inject(method = "transferRecipe(Lappeng/menu/me/items/PatternEncodingTermMenu;Lnet/minecraft/world/item/crafting/RecipeHolder;Ldev/emi/emi/api/recipe/EmiRecipe;Z)Lappeng/integration/modules/emi/AbstractRecipeHandler$Result;",
+    @Inject(method = "transferRecipe",
         at = @At("HEAD"), require = 0, remap = false)
     private void extendedae_plus$captureProcessingName(PatternEncodingTermMenu menu,
                                                        RecipeHolder<?> holder,

@@ -31,30 +31,21 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
 
     public static void handle(final OpenCraftFromJeiC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            var L = com.extendedae_plus.ExtendedAEPlus.LOGGER;
             if (!(ctx.player() instanceof ServerPlayer player)) return;
-            if (player == null || msg.stack == null) { L.info("[EAP-DBG] srv: null player/stack"); return; }
 
             // 仅支持 AEKey 为可合成的种类
             AEKey what = msg.stack.what();
-            L.info("[EAP-DBG] srv recv: {}", what);
 
             // 定位无线终端
             var located = WirelessTerminalLocator.find(player);
-            if (located.isEmpty()) { L.info("[EAP-DBG] srv: terminal NOT found"); return; }
-            L.info("[EAP-DBG] srv: terminal found: {}", located.stack.getItem());
 
             var grid = WirelessTerminalLocator.getConnectedGrid(player, located);
-            if (grid == null) { L.info("[EAP-DBG] srv: grid NULL"); return; }
             var craftingService = grid.getCraftingService();
-            if (!craftingService.isCraftable(what)) { L.info("[EAP-DBG] srv: NOT craftable"); return; }
 
             var locator = located.createMenuLocator(player);
             if (locator != null) {
                 CraftAmountMenu.open(player, locator, what, 1);
-                L.info("[EAP-DBG] srv: CraftAmountMenu opened");
             } else {
-                L.info("[EAP-DBG] srv: locator NULL");
             }
         });
     }
