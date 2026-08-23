@@ -48,6 +48,19 @@ public final class EmiHelper {
 		return toItemStack(EmiApi.getHoveredStack(true));
 	}
 
+	/**
+	 * 严格模式：仅查找 EMI 自有区域（收藏栏、搜索/可合成等侧边栏面板、配方槽 provider）的悬浮物。
+	 * 不含 lastStackTooltipRendered 兜底——用于点击类交互（Shift+左键拉取 / 中键下单），
+	 * 避免把背包等普通屏幕槽位的物品误认为查看器条目而劫持原版点击。
+	 */
+	public static ItemStack getSidebarIngredientUnderMouse(double mouseX, double mouseY) {
+		try {
+			return toItemStack(EmiApi.getHoveredStack((int) mouseX, (int) mouseY, false));
+		} catch (Throwable ignored) {
+			return ItemStack.EMPTY;
+		}
+	}
+
 	private static ItemStack lookupByCoords(double mouseX, double mouseY) {
 		try {
 			ItemStack item = toItemStack(EmiApi.getHoveredStack((int) mouseX, (int) mouseY, false));

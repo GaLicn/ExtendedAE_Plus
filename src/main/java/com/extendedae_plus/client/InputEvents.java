@@ -61,11 +61,9 @@ public final class InputEvents {
 		// Shift + 左键：拉取或下单。
 		// 不做作弊模式检查：EMI 的给予/合成只作用于它自己的侧边栏栈（那里事件到不了这里）；
 		// 对终端网格等屏幕槽位 EMI 零介入，且默认 cheatMode=CREATIVE 会让创造模式误判跳过。
+		// 使用严格查找（仅 EMI 侧边栏/provider 区域），避免劫持背包等普通槽位的点击。
 		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-			ItemStack hovered = EmiHelper.getIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-			if (hovered.isEmpty()) {
-				hovered = EmiHelper.getIngredientUnderMouse();
-			}
+			ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
 			if (!hovered.isEmpty()) {
 				GenericStack stack = GenericStack.fromItemStack(hovered);
 				if (stack != null) {
@@ -80,11 +78,9 @@ public final class InputEvents {
 		// 中键：打开 AE 下单界面。
 		// 不做作弊模式检查：EMI 全部点击行为均由可配置按键驱动，源码中不存在中键绑定，
 		// 接管中键与 EMI 原生交互零冲突；且默认 cheatMode=CREATIVE 会让创造模式下误判跳过。
+		// 同样使用严格查找，仅对 EMI 自有区域的条目生效。
 		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-			ItemStack hovered = EmiHelper.getIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-			if (hovered.isEmpty()) {
-				hovered = EmiHelper.getIngredientUnderMouse();
-			}
+			ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
 			if (hovered.isEmpty()) return;
 
 			GenericStack stack = GenericStack.fromItemStack(hovered);
@@ -109,10 +105,7 @@ public final class InputEvents {
 			emiActionPressHandled = false;
 			return;
 		}
-		ItemStack hovered = EmiHelper.getIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-		if (hovered.isEmpty()) {
-			hovered = EmiHelper.getIngredientUnderMouse();
-		}
+		ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
 		if (hovered.isEmpty()) return;
 
 		GenericStack stack = GenericStack.fromItemStack(hovered);
