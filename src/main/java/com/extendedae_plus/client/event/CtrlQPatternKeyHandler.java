@@ -21,7 +21,6 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import java.sql.SQLOutput;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,14 @@ public class CtrlQPatternKeyHandler {
         boolean isFluidSubstitutes = Screen.hasAltDown();
 
         // 使用 KeyMapping
-        if (!ModKeybindings.CREATE_PATTERN_KEY.matches(keyCode, scanCode)) {
+        // isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
+        if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
+                com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+            return;
+        }
+
+        // 双查看器仲裁：EMI 在场时由 EmiCtrlQHandler 接管（与 InputEvents 的分派优先级一致）。
+        if (com.extendedae_plus.compat.EmiHelper.isLoaded()) {
             return;
         }
 
@@ -107,7 +113,6 @@ public class CtrlQPatternKeyHandler {
         List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selectedRecipeInfo);
 
 
-        System.out.println("sendPackage");
         // 发送网络包到服务器
         ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
             selectedRecipeInfo.getRecipe().getId(),

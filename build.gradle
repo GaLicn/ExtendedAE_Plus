@@ -45,6 +45,13 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
+        name = "Architectury"
+        url = "https://maven.architectury.dev/"
+        content {
+            includeGroup "dev.architectury"
+        }
+    }
+    maven {
         url = "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
@@ -55,6 +62,9 @@ repositories {
     }
     maven {
         url = "https://dvs1.progwml6.com/files/maven/"
+        content {
+            includeGroup "mezz.jei"
+        }
     }
     maven {
         name = "Modmaven"
@@ -70,6 +80,10 @@ repositories {
     }
     maven { url "https://repo.spongepowered.org/maven" }
     maven { url "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
+    maven {
+        name = "TerraformersMC"
+        url = "https://maven.terraformersmc.com/releases/"
+    }
 }
 
 dependencies {
@@ -104,9 +118,25 @@ dependencies {
     modCompileOnly "curse.maven:advancedae-1084104:6939473"
     modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
 
-    // JEI 是可选兼容：仅在开发编译和运行测试环境提供，不作为硬依赖打入模组。
+    // JEI 是可选兼容：仅在开发编译和运行测试环境提供，不作为硬依赖打入模组
     modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    // EMI 同为可选兼容：编译期 API + 运行期按 use_Xei 开关注入
+    modCompileOnly "dev.emi:emi-forge:${emi_version}"
+
+    // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
+    switch (project.findProperty('use_Xei') ?: 'emi') {
+        case 'emi':
+            modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
+            break
+        case 'jei':
+            modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+            break
+        case 'emi_jei':
+            // EMI + JEI
+            modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
+            modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+            break
+    }
     modImplementation "curse.maven:jade-324717:${jade_version}"
 
     // GregTech

@@ -104,6 +104,13 @@ public final class MatrixUploadUtil {
      * @return 是否上传成功
      */
     public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid) {
+        return uploadPatternToMatrix(player, pattern, grid, false);
+    }
+
+    /**
+     * @param quiet true 时结果提示走动作栏（供合成链批量编码等场景使用，避免刷聊天框）
+     */
+    public static boolean uploadPatternToMatrix(ServerPlayer player, ItemStack pattern, IGrid grid, boolean quiet) {
         if (player == null || pattern.isEmpty() || grid == null) {
             return false;
         }
@@ -129,7 +136,7 @@ public final class MatrixUploadUtil {
         // 在尝试上传之前，检查装配矩阵是否已经存在相同样板（物品与NBT完全一致）
         if (matrixContainsPattern(inventories, pattern)) {
             // 直接提醒并跳过上传
-            sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.repetition"));
+            eap$notify(player, Component.translatable("extendedae_plus.upload_to_matrix.repetition"), quiet);
             return false;
         }
 
@@ -140,7 +147,7 @@ public final class MatrixUploadUtil {
             ItemStack remain = target.insertInventory().addItems(toInsert);
             if (remain.getCount() < pattern.getCount()) {
                 // 上传成功
-                sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.success"));
+                eap$notify(player, Component.translatable("extendedae_plus.upload_to_matrix.success"), quiet);
                 ProviderUploadUtil.recordMatrixUpload(
                         player,
                         target.pos(),
@@ -153,11 +160,17 @@ public final class MatrixUploadUtil {
         }
 
         // 所有矩阵都满了
-        sendPlayerMessage(player, Component.translatable("extendedae_plus.upload_to_matrix.full"));
+        eap$notify(player, Component.translatable("extendedae_plus.upload_to_matrix.full"), quiet);
         return false;
     }
 
 
+
+    private static void eap$notify(ServerPlayer player, net.minecraft.network.chat.Component msg, boolean quiet) {
+        if (player == null) return;
+        if (quiet) player.displayClientMessage(msg, true);
+        else sendPlayerMessage(player, msg);
+    }
 
     /**
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“样板核心”的用于外部插入的内部库存
