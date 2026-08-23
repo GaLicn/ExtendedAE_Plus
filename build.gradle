@@ -137,7 +137,7 @@ dependencies {
     implementation "curse.maven:curios-309927:6529130"
 
     compileOnly "curse.maven:applied-flux-965012:8204513"
-    compileOnly "dev.emi:emi-neoforge:1.1.10+1.21"
+    compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
     compileOnly "curse.maven:mega-cells-622112:6005043"
     compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
     compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
@@ -196,7 +196,7 @@ dependencies {
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
     switch (project.findProperty('use_Xei') ?: 'emi') {
         case 'emi':
-            runtimeOnly "dev.emi:emi-neoforge:1.1.10+1.21"
+            runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
             break
         case 'rei':
             runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
