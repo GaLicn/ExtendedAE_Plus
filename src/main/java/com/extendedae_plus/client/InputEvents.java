@@ -11,6 +11,8 @@ import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
@@ -131,9 +133,7 @@ public final class InputEvents {
 	private static void onKeyEmi(ScreenEvent.KeyPressed.Pre event, Screen screen) {
 		ItemStack hovered = EmiHelper.getIngredientUnderMouse();
 		if (hovered.isEmpty()) return;
-		String name = hovered.getHoverName().getString();
-		if (name == null || name.isEmpty()) return;
-		fillSearch(screen, name, event);
+		fillSearch(screen, buildSearchText(hovered), event);
 	}
 
 	// ---- JEI 路径（仅在 jei 已加载时调用） ----
@@ -174,12 +174,30 @@ public final class InputEvents {
 	private static void onKeyJei(ScreenEvent.KeyPressed.Pre event, Screen screen) {
 		Optional<?> hovered = JeiRuntimeCompat.getIngredientUnderMouse();
 		if (hovered.isEmpty()) return;
+		Object value = JeiRuntimeCompat.getTypedIngredientValue(hovered.get());
+		if (value instanceof ItemStack stack) {
+			fillSearch(screen, buildSearchText(stack), event);
+			return;
+		}
+		// 非物品类型（流体等）暂不支持 @modid，退化为显示名
 		String name = JeiRuntimeCompat.getTypedIngredientDisplayName(hovered.get());
 		if (name == null || name.isEmpty()) return;
 		fillSearch(screen, name, event);
 	}
 
 	// ---- 共享逻辑 ----
+
+	/**
+	 * Alt+F：填充 "@modid"（按模组过滤，对齐 EmiLink 与 AE2 原生 @ 搜索语法）；
+	 * 普通 F：填充物品显示名。
+	 */
+	private static String buildSearchText(ItemStack stack) {
+		if (Screen.hasAltDown()) {
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+			return "@" + id.getNamespace();
+		}
+		return stack.getHoverName().getString();
+	}
 
 	private static GenericStack toGenericStack(Object typed) {
 		Object value = JeiRuntimeCompat.getTypedIngredientValue(typed);
