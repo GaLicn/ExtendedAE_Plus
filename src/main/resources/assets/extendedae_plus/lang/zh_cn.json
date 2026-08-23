@@ -191,7 +191,7 @@
   "message.extendedae_plus.no_network": "无法访问 AE 网络。",
   "message.extendedae_plus.bom_encode.summary": "批量编码完成：装配矩阵 %s 个，供应器 %s 个，背包 %s 个。",
   "message.extendedae_plus.bom_encode.skipped_no_recipe": "已跳过 %s 个无法解析配方 ID 的节点。",
-  "message.extendedae_plus.bom_encode.skipped_duplicate": "已跳过 %s 个装配矩阵中已存在的样板。",
+  "message.extendedae_plus.bom_encode.skipped_duplicate": "已跳过 %s 个网络中已存在的样板。",
   "message.extendedae_plus.bom_encode.failed": "%s 个样板编码失败，空白样板已退回。",
   "message.extendedae_plus.bom_encode.nothing_to_encode": "合成链中没有可编码的配方。",
   "message.extendedae_plus.bom_encode.blocked": "还有 %s 个配方类型缺少供应器映射，请点击合成树上的红色感叹号补充映射。",

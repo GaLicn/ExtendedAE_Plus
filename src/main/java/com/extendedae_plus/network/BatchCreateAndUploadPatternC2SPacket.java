@@ -16,6 +16,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * C2S: 合成链（EMI 配方树 / BoM）一键批量编码并上传。
@@ -106,6 +107,8 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 
 			// 供应器列表整批复用一次快照：逐个查会在大树上重复遍历整个网络的机器类。
 			List<PatternContainer> providers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
+			// 已存在样板集合同样只建一次：逐个样板扫全网是 O(样板数 × 供应器数 × 槽位数)。
+			Set<ItemStack> existingPatterns = ExtendedAEPatternUploadUtil.collectExistingPatterns(grid, providers);
 
 			int toMatrix = 0;
 			int toProvider = 0;
@@ -137,8 +140,8 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 					continue;
 				}
 
-				// 反复按一键编码时不该在背包里堆一摞重复样板。
-				if (ExtendedAEPatternUploadUtil.matrixHasPattern(grid, pattern)) {
+				// 反复按一键编码时不该在网络里堆一摞重复样板：装配矩阵与供应器都算已存在。
+				if (ExtendedAEPatternUploadUtil.containsPattern(existingPatterns, pattern)) {
 					duplicate++;
 					continue;
 				}
@@ -150,16 +153,21 @@ public class BatchCreateAndUploadPatternC2SPacket implements CustomPacketPayload
 
 				// 装配矩阵只收合成/锻造/切石样板，处理样板必然落到下一段。
 				if (ExtendedAEPatternUploadUtil.uploadPatternToMatrix(player, pattern, grid, true)) {
+					ExtendedAEPatternUploadUtil.rememberPattern(existingPatterns, pattern);
 					toMatrix++;
 					continue;
 				}
 
 				if (ExtendedAEPatternUploadUtil.uploadPatternToMatchingProvider(
 						player, pattern, providers, entry.providerSearchKey())) {
+					ExtendedAEPatternUploadUtil.rememberPattern(existingPatterns, pattern);
 					toProvider++;
 					continue;
 				}
 
+				// 落背包的也登记：服务端不能依赖客户端已按配方去重，
+				// 否则一个塞满同一条目的封包会白扣掉整叠空白样板。
+				ExtendedAEPatternUploadUtil.rememberPattern(existingPatterns, pattern);
 				if (!player.getInventory().add(pattern)) {
 					player.drop(pattern.copy(), false);
 				}
