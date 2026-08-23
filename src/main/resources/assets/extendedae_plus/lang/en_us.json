@@ -190,7 +190,7 @@
   "message.extendedae_plus.no_network": "Unable to access AE network.",
   "message.extendedae_plus.bom_encode.summary": "Batch encoding done: %s to assembler matrix, %s to providers, %s to inventory.",
   "message.extendedae_plus.bom_encode.skipped_no_recipe": "Skipped %s node(s) whose recipe ID could not be resolved.",
-  "message.extendedae_plus.bom_encode.skipped_duplicate": "Skipped %s pattern(s) already present in the assembler matrix.",
+  "message.extendedae_plus.bom_encode.skipped_duplicate": "Skipped %s pattern(s) already present in the network.",
   "message.extendedae_plus.bom_encode.failed": "%s pattern(s) failed to encode; blank patterns were refunded.",
   "message.extendedae_plus.bom_encode.nothing_to_encode": "No encodable recipes in this crafting tree.",
   "message.extendedae_plus.bom_encode.blocked": "%s recipe type(s) still lack a provider mapping. Click the red exclamation marks in the crafting tree to add them.",
