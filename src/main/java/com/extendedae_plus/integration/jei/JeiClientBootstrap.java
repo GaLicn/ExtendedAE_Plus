@@ -11,5 +11,9 @@ public final class JeiClientBootstrap {
 		if (net.neoforged.fml.ModList.get().isLoaded("jei")) {
 			net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.event.CtrlQPatternKeyHandler::onScreenKeyPressed);
 		}
+		// Ctrl+Q 快速创建样板的 EMI 分支：仅引用 dev.emi 惰性解析类，EMI 在场时注册。
+		if (net.neoforged.fml.ModList.get().isLoaded("emi")) {
+			net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(com.extendedae_plus.client.event.EmiCtrlQHandler::onScreenKeyPressed);
+		}
 	}
 } 
