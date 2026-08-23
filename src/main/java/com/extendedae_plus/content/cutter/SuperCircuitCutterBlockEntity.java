@@ -30,6 +30,7 @@ import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -154,7 +155,7 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         if (level == null) {
             return null;
         }
-        for (var recipe : level.getRecipeManager().getAllRecipesFor(SuperCircuitCutterRecipe.TYPE)) {
+        for (var recipe : SuperCircuitCutterRecipeManager.getAllRecipes(level)) {
             if (canRun(recipe.value())) {
                 return recipe;
             }

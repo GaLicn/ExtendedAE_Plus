@@ -88,7 +88,11 @@ public final class JeiRuntimeCompat {
 			return Optional.empty();
 		}
 		Optional<ITypedIngredient<?>> ingredient = jeiRuntime.getIngredientListOverlay().getIngredientUnderMouse();
-		return ingredient.isPresent() ? ingredient : jeiRuntime.getBookmarkOverlay().getIngredientUnderMouse();
+		if (ingredient.isPresent()) {
+			return ingredient;
+		}
+		ingredient = jeiRuntime.getBookmarkOverlay().getIngredientUnderMouse();
+		return ingredient.isPresent() ? ingredient : getRecipeIngredientUnderMouse(jeiRuntime);
 	}
 
 	public static Optional<ITypedIngredient<?>> getIngredientUnderMouse(double mouseX, double mouseY) {
@@ -97,7 +101,23 @@ public final class JeiRuntimeCompat {
 			return Optional.empty();
 		}
 		Optional<ITypedIngredient<?>> ingredient = getIngredientUnderMouse(jeiRuntime.getIngredientListOverlay(), mouseX, mouseY);
-		return ingredient.isPresent() ? ingredient : getIngredientUnderMouse(jeiRuntime.getBookmarkOverlay(), mouseX, mouseY);
+		if (ingredient.isPresent()) {
+			return ingredient;
+		}
+		ingredient = getIngredientUnderMouse(jeiRuntime.getBookmarkOverlay(), mouseX, mouseY);
+		return ingredient.isPresent() ? ingredient : getRecipeIngredientUnderMouse(jeiRuntime);
+	}
+
+	private static Optional<ITypedIngredient<?>> getRecipeIngredientUnderMouse(IJeiRuntime jeiRuntime) {
+		try {
+			return jeiRuntime.getRecipesGui()
+				.getIngredientUnderMouse(VanillaTypes.ITEM_STACK)
+				.flatMap(stack -> jeiRuntime.getIngredientManager()
+					.createTypedIngredient(VanillaTypes.ITEM_STACK, stack, false)
+					.map(typed -> (ITypedIngredient<?>) typed));
+		} catch (Throwable ignored) {
+			return Optional.empty();
+		}
 	}
 
 	public static boolean isCheatModeEnabled() {
