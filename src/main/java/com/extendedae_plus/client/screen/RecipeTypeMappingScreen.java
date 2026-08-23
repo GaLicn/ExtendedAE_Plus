@@ -36,12 +36,23 @@ public class RecipeTypeMappingScreen extends Screen {
     private int page;
     private int pageSize = 6;
     private boolean needsRefresh;
+    /** 从合成树的感叹号跳转进来时预填的映射键，在首次 init 时写入输入框。 */
+    private String pendingPresetKey;
 
     public RecipeTypeMappingScreen(Screen parent) {
         super(Component.translatable("extendedae_plus.screen.mapping_management.title"));
         this.parent = parent;
         this.aeStyle = StyleManager.loadStyleDoc("/screens/common/common.json");
         this.reloadMappings(false);
+    }
+
+    /**
+     * 预填映射键的入口（合成树上点击缺映射标记时使用）：
+     * 玩家只需要填供应器名称那一栏。
+     */
+    public RecipeTypeMappingScreen(Screen parent, String presetKey) {
+        this(parent);
+        this.pendingPresetKey = presetKey;
     }
 
     @Override
@@ -89,7 +100,13 @@ public class RecipeTypeMappingScreen extends Screen {
                 "extendedae_plus.screen.mapping_management.value");
         this.addRenderableWidget(this.keyInput);
         this.addRenderableWidget(this.valueInput);
-        if (keyWasFocused) {
+        if (this.pendingPresetKey != null) {
+            // 键已由合成树给定，焦点直接落在供应器名称栏。
+            this.keyInput.setValue(this.pendingPresetKey);
+            this.pendingPresetKey = null;
+            this.setFocused(this.valueInput);
+            this.setStatus("extendedae_plus.screen.mapping_management.preset_hint", 0xFFFFAA00);
+        } else if (keyWasFocused) {
             this.setFocused(this.keyInput);
         } else if (valueWasFocused) {
             this.setFocused(this.valueInput);
