@@ -32,13 +32,15 @@ public class ExtendedAEPlusClient {
 		ExtendedAEPlus.LOGGER.info("HELLO FROM CLIENT SETUP");
 		ExtendedAEPlus.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
 
-		if (ModList.get().isLoaded("jei")) {
+		// EMI 或 JEI 任一存在即注册输入监听；InputEvents 内部按查看器来源自守卫，
+		// 未安装对应查看器时相关分支不会被触发，避免触碰缺失模组的类导致类加载失败。
+		if (ModList.get().isLoaded("jei") || ModList.get().isLoaded("emi")) {
 			try {
 				Class<?> bootstrap = Class.forName("com.extendedae_plus.integration.jei.JeiClientBootstrap");
 				java.lang.reflect.Method m = bootstrap.getMethod("register");
 				m.invoke(null);
 			} catch (Throwable t) {
-				ExtendedAEPlus.LOGGER.warn("Failed to register JEI client listeners: {}", t.toString());
+				ExtendedAEPlus.LOGGER.warn("Failed to register EMI/JEI client listeners: {}", t.toString());
 			}
 		}
 	}
