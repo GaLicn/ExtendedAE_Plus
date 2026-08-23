@@ -5,19 +5,25 @@ import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.compat.EmiRecipeCompat;
+import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Ctrl+Q 快速创建样板（EMI 路径）。
@@ -43,6 +49,11 @@ public final class EmiCtrlQHandler {
 
 		boolean isAllowSubstitutes = Screen.hasShiftDown();
 		boolean isFluidSubstitutes = Screen.hasAltDown();
+
+		// 合成链（配方树/BoM）界面内禁用快捷键编码：批量编码由界面上的 A 按钮承担
+		if (screen instanceof dev.emi.emi.screen.BoMScreen) {
+			return;
+		}
 
 		ItemStack hovered = EmiHelper.getIngredientUnderMouse();
 		if (hovered.isEmpty()) {
@@ -90,5 +101,61 @@ public final class EmiCtrlQHandler {
 				return GenericStack.wrapInItemStack(genericStack);
 			})
 			.toList();
+	}
+
+	/**
+	 * 合成链（BoM 树）一键批量编码：遍历整棵树，收集所有涉及配方的样板并批量发送
+	 * （直传装配矩阵，无矩阵时服务端自动落背包）。同一配方只编码一次。
+	 *
+	 * @return 成功发送的样板数
+	 */
+	public static int encodeBoMTreeAll(boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+		Minecraft mc = Minecraft.getInstance();
+		dev.emi.emi.bom.MaterialTree tree = dev.emi.emi.bom.BoM.tree;
+		if (tree == null || tree.goal == null) {
+			if (mc.player != null) {
+				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
+			}
+			return 0;
+		}
+
+		Set<ResourceLocation> seen = new HashSet<>();
+		int sent = 0;
+		Deque<dev.emi.emi.bom.MaterialNode> stack = new ArrayDeque<>();
+		stack.push(tree.goal);
+		while (!stack.isEmpty()) {
+			dev.emi.emi.bom.MaterialNode node = stack.pop();
+			if (node.children != null) {
+				for (dev.emi.emi.bom.MaterialNode child : node.children) {
+					stack.push(child);
+				}
+			}
+			if (node.recipe == null) {
+				continue;
+			}
+			RecipeInfo info = EmiRecipeCompat.fromEmiRecipe(node.recipe);
+			if (info == null || info.getRecipeId() == null || !seen.add(info.getRecipeId())) {
+				continue;
+			}
+			PacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
+				info.getRecipeId(),
+				info.isCraftingRecipe(),
+				info.selectBestInputs(Map.of()),
+				convertOutputsToItemStacks(info),
+				isAllowSubstitutes,
+				isFluidSubstitutes
+			));
+			sent++;
+		}
+
+		if (mc.player != null) {
+			mc.player.displayClientMessage(
+				sent > 0
+					? Component.literal("[EAP] 已发送 " + sent + " 个样板编码请求")
+					: Component.literal("[EAP] 合成链中没有可编码的配方"),
+				true
+			);
+		}
+		return sent;
 	}
 }
