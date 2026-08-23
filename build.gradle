@@ -198,6 +198,12 @@ dependencies {
         case 'emi':
             runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
             break
+        case 'emi_jei':
+            // EMI + JEI 同时加载：EAEP 两套集成并行（输入交互走 EMI 路径，JEI 分类/书签照常）
+            runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
+            runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+            break
         case 'rei':
             runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
             runtimeOnly "dev.architectury:architectury-neoforge:13.0.1"
