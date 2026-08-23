@@ -51,6 +51,11 @@ public final class CtrlQPatternKeyHandler {
 			return;
 		}
 
+		// 双查看器仲裁：EMI 在场时由 EmiCtrlQHandler 接管（与 InputEvents 的分派优先级一致）。
+		if (com.extendedae_plus.compat.EmiHelper.isLoaded()) {
+			return;
+		}
+
 		if (JeiRuntimeCompat.getRuntime() == null) {
 			return;
 		}
