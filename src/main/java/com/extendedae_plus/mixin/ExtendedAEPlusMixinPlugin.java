@@ -22,6 +22,10 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		return isClassPresent("mezz.jei.api.IModPlugin");
 	}
 
+	private static boolean isEmiPresent() {
+		return isClassPresent("dev.emi.emi.api.EmiApi");
+	}
+
 	private static boolean isAdvancedAePresent() {
 		return isClassPresent("net.pedroksl.advanced_ae.AdvancedAE");
 	}
@@ -68,6 +72,9 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 			// Disable all JEI package mixins and any mixins that reference JEI-only helpers
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.jei")) return false;
 			if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.menu.CraftConfirmMenuGoBackMixin")) return false;
+		}
+		if (!isEmiPresent() && mixinClassName.startsWith("com.extendedae_plus.mixin.emi.")) {
+			return false;
 		}
 		if (!isAdvancedAePresent()) {
 			if (mixinClassName.startsWith("com.extendedae_plus.mixin.advancedae.")) {
