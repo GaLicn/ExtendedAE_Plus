@@ -72,9 +72,30 @@ public final class EmiRecipeCompat {
 		}
 
 		List<List<GenericStack>> inputs;
-		if (crafting && holderOpt.get().value() instanceof CraftingRecipe craftingRecipe) {
+		if (crafting && holderOpt.get().value() instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
+			// 有序配方：getIngredients() 是宽×高的紧凑行主序，必须按宽度还原到 3x3 的真实槽位
+			// （如 1x3 竖条形的材料应位于槽位 0,3,6），否则 AE2 解码时 matches() 复验失败 → 无效样板。
+			var ingredients = shaped.getIngredients();
+			int width = Math.max(1, shaped.getWidth());
+			List<List<GenericStack>> grid = new ArrayList<>(9);
+			for (int i = 0; i < 9; i++) {
+				grid.add(new ArrayList<>());
+			}
+			for (int i = 0; i < ingredients.size() && i < 9; i++) {
+				int slot = (i / width) * 3 + (i % width);
+				ItemStack[] items = ingredients.get(i).getItems();
+				if (items.length > 0 && !items[0].isEmpty()) {
+					GenericStack gs = GenericStack.fromItemStack(items[0].copy());
+					if (gs != null) {
+						grid.get(slot).add(gs);
+					}
+				}
+			}
+			inputs = grid;
+		} else if (crafting) {
+			// 无序合成：顺序无关，紧凑填充即可
 			inputs = new ArrayList<>();
-			for (var ingredient : craftingRecipe.getIngredients()) {
+			for (var ingredient : ((CraftingRecipe) holderOpt.get().value()).getIngredients()) {
 				List<GenericStack> candidates = new ArrayList<>();
 				ItemStack[] items = ingredient.getItems();
 				if (items.length > 0 && !items[0].isEmpty()) {
