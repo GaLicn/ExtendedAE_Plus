@@ -176,7 +176,6 @@
   "extendedae_plus.screen.mapping_management.delete_failed": "映射删除失败",
   "extendedae_plus.screen.mapping_management.reloaded": "映射已重新加载",
   "extendedae_plus.screen.mapping_management.preset_hint": "配方类型已从合成树填入，只需填写供应器搜索词",
-  "extendedae_plus.screen.choose_provider.mapping_title": "选择处理该配方的机器（点选即建立映射）",
   "extendedae_plus.screen.choose_provider.mapping_key": "配方类型：%s",
   "extendedae_plus.button.choose_provider":"上传样板",
   "extendedae_plus.button.return_last_pattern": "取回上一个上传样板",

@@ -86,6 +86,8 @@ public class ProviderSelectScreen extends Screen {
      * 此时没有待上传的样板，点选条目改为写入「配方类型 → 机器名」映射。
      */
     private final String mappingKey;
+    /** 挑映射机器模式下「配方类型：XXX」的绘制 Y，随 init 的布局一起算。 */
+    private int mappingKeyTextY;
 
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         this(parent, null, ids, names, emptySlots);
@@ -380,6 +382,8 @@ public class ProviderSelectScreen extends Screen {
         int searchX = centerX - AE_TEXT_FIELD_WIDTH / 2;
         this.searchBox = new ResizableAETextField(this.aeStyle, this.font, searchX, startY - 25,
                 AE_TEXT_FIELD_WIDTH, AE_SEARCH_FIELD_HEIGHT);
+        // 配方类型提示紧贴搜索框上方，跟着布局走，不另算一套居中。
+        this.mappingKeyTextY = startY - 25 - 11;
         // AE2 终端关闭 EditBox 默认填充，只绘制 AE2 文本框纹理。
         this.searchBox.setBordered(false);
         this.searchBox.setMaxLength(256);
@@ -492,13 +496,9 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         // 挑映射机器时必须看得见正在给哪个配方类型建映射，否则点错机器无从察觉。
-        int y = Math.max(4, (this.height - this.pageSize * 25) / 2 - 44);
-        graphics.drawCenteredString(this.font,
-                Component.translatable("extendedae_plus.screen.choose_provider.mapping_title"),
-                this.width / 2, y, 0xFFFFFFFF);
         graphics.drawCenteredString(this.font,
                 Component.translatable("extendedae_plus.screen.choose_provider.mapping_key", this.mappingKey),
-                this.width / 2, y + 11, 0xFFFFAA00);
+                this.width / 2, Math.max(4, this.mappingKeyTextY), 0xFFFFAA00);
     }
 
     @Override
