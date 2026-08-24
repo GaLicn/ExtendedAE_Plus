@@ -71,6 +71,18 @@ public final class BoMMappingOverlay {
 	private BoMMappingOverlay() {}
 
 	/**
+	 * 每帧渲染开始时清空上一帧的标记。
+	 * <p>
+	 * 必须由 render 的 HEAD 调用而不是依赖 {@link #render} 自己清：
+	 * BoM.tree 为空时 EMI 走的是「没有配方树」分支，render 根本不会被调到，
+	 * 上一棵树的标记会残留下来，让空界面上仍能悬停出提示、甚至点出映射界面。
+	 */
+	public static void reset() {
+		MARKERS.clear();
+		hoveredMarker = null;
+	}
+
+	/**
 	 * 在 BoMScreen 的缩放矩阵内绘制，传入的坐标即树坐标（与 EMI 自身节点绘制同一坐标系）。
 	 */
 	public static void render(GuiGraphics graphics, List<?> nodes, int treeMouseX, int treeMouseY) {
