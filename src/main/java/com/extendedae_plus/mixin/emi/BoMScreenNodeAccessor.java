@@ -17,6 +17,10 @@ public interface BoMScreenNodeAccessor {
 	@Accessor("y")
 	int eap$getY();
 
+	/** 节点边框宽度：42 + 数量文字溢出量（无配方的叶节点为 16）。 */
+	@Accessor("width")
+	int eap$getWidth();
+
 	@Accessor("midOffset")
 	int eap$getMidOffset();
 
