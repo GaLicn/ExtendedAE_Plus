@@ -175,7 +175,6 @@
   "extendedae_plus.screen.mapping_management.delete_failed": "Failed to delete mapping",
   "extendedae_plus.screen.mapping_management.reloaded": "Mappings reloaded",
   "extendedae_plus.screen.mapping_management.preset_hint": "Recipe type filled in from the crafting tree; just enter the provider search term",
-  "extendedae_plus.screen.choose_provider.mapping_title": "Pick the machine that handles this recipe (click to create the mapping)",
   "extendedae_plus.screen.choose_provider.mapping_key": "Recipe type: %s",
   "extendedae_plus.button.choose_provider": "Upload Pattern",
   "extendedae_plus.button.return_last_pattern": "Return Last Uploaded Pattern",
