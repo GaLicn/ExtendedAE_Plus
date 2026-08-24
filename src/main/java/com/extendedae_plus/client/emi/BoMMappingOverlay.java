@@ -33,13 +33,16 @@ import java.util.Set;
  */
 public final class BoMMappingOverlay {
 
-	/** 标记相对物品格子左上角的偏移与命中范围。 */
-	private static final int GLYPH_OFFSET_X = 11;
-	private static final int GLYPH_OFFSET_Y = -1;
-	private static final int HIT_OFFSET_X = 9;
-	private static final int HIT_OFFSET_Y = -2;
-	private static final int HIT_WIDTH = 7;
-	private static final int HIT_HEIGHT = 9;
+	/**
+	 * 感叹号锚在节点边框（{@code BoMScreen$Node#render} 画的那个方框）的右上角外侧。
+	 * <p>
+	 * 刻意贴在边框上边线之上而不是压在物品格子上：EMI 的
+	 * {@code Node#getHover} 把整个方框区域连同两个图标都算作悬停区，
+	 * 压在里面会让 EMI 的物品提示与本模组的提示同时弹出（两层重叠）。
+	 * 方框上边线以上不属于任何 EMI 悬停区，因此提示只会出现一次。
+	 */
+	private static final int GLYPH_W = 5;
+	private static final int GLYPH_H = 8;
 
 	private static final int COLOR_BLOCKING = 0xFFFF5555;
 	private static final int COLOR_BLOCKING_HOVER = 0xFFFFCCCC;
@@ -57,12 +60,11 @@ public final class BoMMappingOverlay {
 	private static int cachedBlockingCount;
 	private static int blockingFrameTicker;
 
-	private record Marker(int iconX, int iconY, BoMMappingStatus.Status status, EmiRecipe recipe) {
+	/** glyphX/glyphY 是感叹号左上角的树坐标，命中范围即字形自身的方框。 */
+	private record Marker(int glyphX, int glyphY, BoMMappingStatus.Status status, EmiRecipe recipe) {
 		boolean contains(int treeX, int treeY) {
-			int left = iconX + HIT_OFFSET_X;
-			int top = iconY + HIT_OFFSET_Y;
-			return treeX >= left && treeX < left + HIT_WIDTH
-				&& treeY >= top && treeY < top + HIT_HEIGHT;
+			return treeX >= glyphX && treeX < glyphX + GLYPH_W
+				&& treeY >= glyphY && treeY < glyphY + GLYPH_H;
 		}
 	}
 
@@ -93,10 +95,13 @@ public final class BoMMappingOverlay {
 				continue;
 			}
 
-			// 与 BoMScreen$Node#render 的物品格子定位保持一致：有配方的节点图标右移 11。
-			int iconX = accessor.eap$getX() + 11 - 8 + accessor.eap$getMidOffset();
-			int iconY = accessor.eap$getY() - 8;
-			Marker marker = new Marker(iconX, iconY, status, node.recipe);
+			// 节点边框：BoMScreen$Node#render 用 x±width/2、y-11..y+10 画方框。
+			// 感叹号贴在右上角外侧（上边线之上），避开 EMI 的悬停区，见 GLYPH_W 处说明。
+			int borderRight = accessor.eap$getX() + accessor.eap$getWidth() / 2;
+			int borderTop = accessor.eap$getY() - 11;
+			int glyphX = borderRight - GLYPH_W + 2;
+			int glyphY = borderTop - GLYPH_H;
+			Marker marker = new Marker(glyphX, glyphY, status, node.recipe);
 			MARKERS.add(marker);
 
 			boolean hovered = marker.contains(treeMouseX, treeMouseY);
@@ -110,7 +115,7 @@ public final class BoMMappingOverlay {
 			} else {
 				color = COLOR_UNENCODABLE;
 			}
-			graphics.drawString(font, "!", iconX + GLYPH_OFFSET_X, iconY + GLYPH_OFFSET_Y, color, true);
+			graphics.drawString(font, "!", glyphX, glyphY, color, true);
 		}
 	}
 
