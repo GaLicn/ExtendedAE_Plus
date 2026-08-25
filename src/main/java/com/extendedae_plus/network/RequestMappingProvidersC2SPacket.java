@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.networking.IGrid;
 import appeng.helpers.patternprovider.PatternContainer;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.util.uploadPattern.BatchPatternUploadUtil;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -53,7 +54,7 @@ public class RequestMappingProvidersC2SPacket implements CustomPacketPayload {
 
 			// 与 RequestProvidersListC2SPacket 的回退分支同一约定：负数 ID 表示按索引。
 			// 映射流程不会用到这些 ID，保留只是为了复用供应器选择界面的分组逻辑。
-			List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAllProvidersFromGrid(grid);
+			List<PatternContainer> containers = BatchPatternUploadUtil.listAllProvidersFromGrid(grid);
 			List<Long> ids = new ArrayList<>(containers.size());
 			List<Component> names = new ArrayList<>(containers.size());
 			List<Integer> slots = new ArrayList<>(containers.size());

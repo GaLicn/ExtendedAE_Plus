@@ -4,6 +4,7 @@ import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.client.emi.BoMMappingStatus;
 import com.extendedae_plus.client.widget.ResizableAETextField;
+import com.extendedae_plus.util.uploadPattern.BatchPatternUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.google.gson.*;
 import appeng.client.gui.style.ScreenStyle;
@@ -128,7 +129,7 @@ public class ProviderSelectScreen extends Screen {
 
     private static boolean nameMatches(String name, String key) {
         // 匹配语义与服务端定向上传共用，见 ExtendedAEPatternUploadUtil#providerNameMatches
-        return ExtendedAEPatternUploadUtil.providerNameMatches(name, key);
+        return BatchPatternUploadUtil.providerNameMatches(name, key);
     }
 
     private void changePage(int delta) {
