@@ -1,8 +1,10 @@
 package com.extendedae_plus;
 
+import appeng.api.client.StorageCellModels;
 import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.api.ids.EAPComponents;
@@ -16,6 +18,8 @@ import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModBlocks;
 import com.extendedae_plus.init.ModCapabilities;
@@ -25,13 +29,12 @@ import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.init.ModRecipeSerializers;
 import com.extendedae_plus.init.UpgradeCards;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.server.JeiSyncManager;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -128,10 +131,10 @@ public class ExtendedAEPlus {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        LOGGER.info("HELLO FROM COMMON SETUP");
-        // 示例日志，避免引用不存在的模板 Config 字段
-        LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
         StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
+        StorageCellModels.registerModel(
+                ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(),
+                id("block/drive/cells/infinity_biginteger_cell"));
 
         // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
         try {
@@ -188,14 +191,14 @@ public class ExtendedAEPlus {
             );
 
             ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get().setBlockEntity(
-                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity.class,
+                    SuperAssemblerMatrixFrameBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
                     null,
                     null
             );
 
             ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
-                    com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity.class,
+                    SuperAssemblerMatrixWallBlockEntity.class,
                     ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
                     null,
                     null
@@ -239,10 +242,10 @@ public class ExtendedAEPlus {
 
                 // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
                 try {
-                    appeng.menu.locator.MenuLocators.register(
-                            com.extendedae_plus.menu.locator.CuriosItemLocator.class,
-                            com.extendedae_plus.menu.locator.CuriosItemLocator::writeToPacket,
-                            com.extendedae_plus.menu.locator.CuriosItemLocator::readFromPacket
+                    MenuLocators.register(
+                            CuriosItemLocator.class,
+                            CuriosItemLocator::writeToPacket,
+                            CuriosItemLocator::readFromPacket
                     );
                     LOGGER.info("Registered AE2 MenuLocator: CuriosItemLocator");
                 } catch (Throwable t) {
@@ -256,6 +259,5 @@ public class ExtendedAEPlus {
 
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
-        LOGGER.info("HELLO from server starting");
     }
 }
