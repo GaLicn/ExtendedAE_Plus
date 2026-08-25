@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -73,22 +74,21 @@ public final class BatchPatternUploadUtil {
 			return existing;
 		}
 
-		try {
-			for (MatrixInventoryTarget target : ExtendedAEPatternUploadUtil.findAllMatrixPatternInventories(grid)) {
-				InternalInventory inv = target == null ? null : target.patternInventory();
-				collectFrom(inv, inv == null ? 0 : inv.size(), existing);
+		for (MatrixInventoryTarget target : ExtendedAEPatternUploadUtil.findAllMatrixPatternInventories(grid)) {
+			if (target == null) {
+				continue;
 			}
-		} catch (Throwable ignored) {
+			InternalInventory inv = target.patternInventory();
+			collectFrom(inv, inv == null ? 0 : inv.size(), existing);
 		}
 
 		if (providers != null) {
 			for (PatternContainer container : providers) {
-				if (container == null) continue;
-				try {
-					collectFrom(container.getTerminalPatternInventory(),
-							ExtendedAEPatternUploadUtil.getAccessiblePatternSlotCount(container), existing);
-				} catch (Throwable ignored) {
+				if (container == null) {
+					continue;
 				}
+				collectFrom(container.getTerminalPatternInventory(),
+						ExtendedAEPatternUploadUtil.getAccessiblePatternSlotCount(container), existing);
 			}
 		}
 		return existing;
@@ -126,41 +126,53 @@ public final class BatchPatternUploadUtil {
 	// --------------------------- 依映射挑供应器 ---------------------------
 
 	// 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
-	private static Boolean JEC_AVAILABLE = null;
-	private static java.lang.reflect.Method JEC_CONTAINS = null;
+	private static boolean JEC_RESOLVED = false;
+	private static Method JEC_CONTAINS = null;
 
 	/**
 	 * 供应器名称与搜索词的匹配（客户端选择界面与服务端定向上传共用同一语义）。
 	 * 空搜索词视为全部匹配。
 	 */
 	public static boolean providerNameMatches(String name, String key) {
-		if (name == null) return false;
-		if (key == null || key.isEmpty()) return true;
-		try {
-			if (JEC_AVAILABLE == null) {
-				try {
-					Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-					// 使用 contains(CharSequence, CharSequence)
-					JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-					JEC_AVAILABLE = true;
-				} catch (Throwable t) {
-					JEC_AVAILABLE = false;
-				}
-			}
-			if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-				Object r = JEC_CONTAINS.invoke(null, name, key);
-				if (r instanceof Boolean && (Boolean) r) return true;
-				// 再尝试大小写不敏感：双方转为小写重新匹配
-				String nL = name.toLowerCase();
-				String kL = key.toLowerCase();
-				Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
-				if (r2 instanceof Boolean && (Boolean) r2) return true;
-			}
-		} catch (Throwable ignored) {
-			// 回退
+		if (name == null) {
+			return false;
+		}
+		if (key == null || key.isEmpty()) {
+			return true;
+		}
+		if (jecContains() != null && jecMatches(name, key)) {
+			return true;
 		}
 		// 默认大小写不敏感子串
 		return name.toLowerCase().contains(key.toLowerCase());
+	}
+
+	/** JEC 的 Match.contains；未装 JEC 时返回 null。反射解析只做一次，结果缓存。 */
+	private static Method jecContains() {
+		if (JEC_RESOLVED) {
+			return JEC_CONTAINS;
+		}
+		JEC_RESOLVED = true;
+		try {
+			JEC_CONTAINS = Class.forName("me.towdium.jecharacters.utils.Match")
+					.getMethod("contains", CharSequence.class, CharSequence.class);
+		} catch (ReflectiveOperationException notInstalled) {
+			JEC_CONTAINS = null;
+		}
+		return JEC_CONTAINS;
+	}
+
+	/** 原样匹配一次，再用双方小写各匹配一次（JEC 自身不保证大小写不敏感）。 */
+	private static boolean jecMatches(String name, String key) {
+		return jecContains(name, key) || jecContains(name.toLowerCase(), key.toLowerCase());
+	}
+
+	private static boolean jecContains(String name, String key) {
+		try {
+			return Boolean.TRUE.equals(JEC_CONTAINS.invoke(null, name, key));
+		} catch (ReflectiveOperationException failed) {
+			return false;
+		}
 	}
 
 	/**
@@ -213,21 +225,26 @@ public final class BatchPatternUploadUtil {
 	 */
 	public static List<PatternContainer> listAllProvidersFromGrid(IGrid grid) {
 		List<PatternContainer> list = new ArrayList<>();
-		if (grid == null) return list;
-		try {
-			for (var machineClass : grid.getMachineClasses()) {
-				if (PatternContainer.class.isAssignableFrom(machineClass)) {
-					@SuppressWarnings("unchecked")
-					Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-					for (var container : grid.getActiveMachines(containerClass)) {
-						if (container == null || !container.isVisibleInTerminal()) continue;
-						InternalInventory inv = container.getTerminalPatternInventory();
-						if (inv == null || inv.size() <= 0) continue;
-						list.add(container);
-					}
-				}
+		if (grid == null) {
+			return list;
+		}
+
+		for (Class<?> machineClass : grid.getMachineClasses()) {
+			if (!PatternContainer.class.isAssignableFrom(machineClass)) {
+				continue;
 			}
-		} catch (Throwable ignored) {
+			@SuppressWarnings("unchecked")
+			Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+			for (PatternContainer container : grid.getActiveMachines(containerClass)) {
+				if (container == null || !container.isVisibleInTerminal()) {
+					continue;
+				}
+				InternalInventory inv = container.getTerminalPatternInventory();
+				if (inv == null || inv.size() <= 0) {
+					continue;
+				}
+				list.add(container);
+			}
 		}
 		return list;
 	}
