@@ -4,6 +4,7 @@ import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.util.RecipeInfo;
+import com.extendedae_plus.util.ModCheckUtils;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -152,8 +153,8 @@ public final class EmiRecipeCompat {
 				return new GenericStack(AEFluidKey.of(fluid), mb);
 			}
 			// 化学品（Mek 氧化机、溶解室、注入室等一整批配方的输入/产物）需要 AppMek 提供的 AE2 键类型。
-			if (MekanismChemicalGate.isAvailable()) {
-				GenericStack chemical = MekanismChemicalCompat.toGenericStack(key, stack.getAmount());
+			if (ModCheckUtils.isAppMekLoading()) {
+				GenericStack chemical = AppliedMekanisticsCompat.toGenericStack(key, stack.getAmount());
 				if (chemical != null) {
 					return chemical;
 				}
