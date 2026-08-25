@@ -24,6 +24,8 @@ public class ModCheckUtils {
             MODID_GUIDEME = "guideme",
             MODID_MAE2 = "mae2",
             MODID_MEGA = "megacells",
+            MODID_MEKANISM = "mekanism",
+            MODID_APPMEK = "appmek",
             MODID_EPA = "expandedae";
 
     /**
@@ -88,5 +90,15 @@ public class ModCheckUtils {
 
     public static boolean isAAELoading() {
         return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
+    }
+
+    /**
+     * Applied Mekanistics 是否可用。
+     * 化学品相关的桥接类（{@code AppliedMekanisticsCompat}）直接引用 mekanism / appmek 的类，
+     * 只装 Mekanism 不装 Applied Mekanistics 的环境会解析失败，所以两个都要在场才算可用。
+     */
+    public static boolean isAppMekLoading() {
+        return ModCheckUtils.isLoaded(ModCheckUtils.MODID_MEKANISM)
+                && ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPMEK);
     }
 }
