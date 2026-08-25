@@ -2,6 +2,7 @@ package com.extendedae_plus.client.screen;
 
 import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
+import com.extendedae_plus.client.emi.BoMMappingStatus;
 import com.extendedae_plus.client.widget.ResizableAETextField;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.google.gson.*;
@@ -9,6 +10,7 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
 import appeng.client.gui.widgets.AE2Button;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -237,7 +239,7 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         // 映射表版本已递增，合成树上的感叹号会随之消失。
-        com.extendedae_plus.client.emi.BoMMappingStatus.invalidate();
+        BoMMappingStatus.invalidate();
         if (player != null) {
             player.sendSystemMessage(Component.translatable(
                     "extendedae_plus.message.mapping.add_success", this.mappingKey, value));
@@ -490,7 +492,7 @@ public class ProviderSelectScreen extends Screen {
     }
 
     @Override
-    public void render(net.minecraft.client.gui.GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
         if (this.mappingKey == null) {
             return;

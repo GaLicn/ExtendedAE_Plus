@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.emi;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.emi.BoMMappingOverlay;
+import com.extendedae_plus.client.event.EmiCtrlQHandler;
 import dev.emi.emi.bom.BoM;
 import dev.emi.emi.screen.BoMScreen;
 import net.minecraft.client.Minecraft;
@@ -183,7 +184,7 @@ public abstract class BoMScreenMixin {
 						"message.extendedae_plus.bom_encode.blocked", eapBlockingCount), true);
 			}
 		} else {
-			com.extendedae_plus.client.event.EmiCtrlQHandler.encodeBoMTreeAll(
+			EmiCtrlQHandler.encodeBoMTreeAll(
 					Screen.hasShiftDown(), Screen.hasAltDown());
 		}
 		cir.setReturnValue(true);
