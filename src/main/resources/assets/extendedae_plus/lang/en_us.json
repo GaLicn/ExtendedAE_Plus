@@ -185,6 +185,10 @@
   "message.extendedae_plus.no_blank_pattern": "No blank pattern available.",
   "message.extendedae_plus.pattern_creation_failed": "Failed to create encoded pattern.",
   "message.extendedae_plus.no_network": "Unable to access AE network.",
+  "message.extendedae_plus.bom_encode.summary": "Batch encoding done: %s to assembler matrix, %s to providers, %s to inventory.",
+  "message.extendedae_plus.bom_encode.skipped_no_recipe": "Skipped %s node(s) whose recipe ID could not be resolved.",
+  "message.extendedae_plus.bom_encode.skipped_duplicate": "Skipped %s pattern(s) already present in the network.",
+  "message.extendedae_plus.bom_encode.failed": "%s pattern(s) failed to encode; blank patterns were refunded.",
   "extendedae_plus.pattern.hovertext.player": "Encoded by %s",
 
   "item.extendedae_plus.entity_speed_ticker": "Entity Accelerator",
