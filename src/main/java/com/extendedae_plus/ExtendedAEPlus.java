@@ -1,5 +1,6 @@
 package com.extendedae_plus;
 
+import appeng.api.client.StorageCellModels;
 import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.menu.locator.MenuLocators;
@@ -89,6 +90,9 @@ public class ExtendedAEPlus {
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
         StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
+        StorageCellModels.registerModel(
+                ModItems.INFINITY_BIGINTEGER_CELL.get(),
+                id("block/drive/cells/infinity_biginteger_cell"));
 
         // 注册本模组网络通道与数据包
         event.enqueueWork(() -> {

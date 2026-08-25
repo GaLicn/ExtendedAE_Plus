@@ -27,6 +27,20 @@ loom {
     }
 
     runs {
+        client {
+            client()
+            name "Minecraft Client"
+            runDir 'run/client'
+            vmArgs '-Xmx3G'
+        }
+
+        server {
+            server()
+            name "Minecraft Server"
+            runDir 'run/server'
+            vmArgs '-Xmx3G'
+        }
+
         data {
             data()
             name "Data Generation"
@@ -82,7 +96,7 @@ dependencies {
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.4"))
     implementation(include("io.github.llamalad7:mixinextras-forge:0.5.4"))
 
-    //exendedae前置
+    //extendedae
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
     modImplementation "curse.maven:ex-pattern-provider-892005:7005572"
@@ -90,7 +104,8 @@ dependencies {
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
-    modImplementation "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
+    modCompileOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
+    modRuntimeOnly "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
     modCompileOnly "curse.maven:applied-flux-965012:7072853"
     modRuntimeOnly "curse.maven:applied-flux-965012:7072853"
     modImplementation "curse.maven:mega-cells-622112:${mega_cells_version}"
@@ -103,9 +118,9 @@ dependencies {
     modCompileOnly "curse.maven:advancedae-1084104:6939473"
     modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
 
+    // JEI 是可选兼容：仅在开发编译和运行测试环境提供，不作为硬依赖打入模组。
     modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:15.20.0.129"
-    modImplementation "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     modImplementation "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
