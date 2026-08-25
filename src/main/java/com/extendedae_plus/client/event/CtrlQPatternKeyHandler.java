@@ -9,6 +9,7 @@ import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.mojang.blaze3d.platform.InputConstants;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -49,7 +50,7 @@ public final class CtrlQPatternKeyHandler {
 		boolean isFluidSubstitutes = Screen.hasAltDown();
 		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
 		if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
-				com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+				InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
 			return;
 		}
 

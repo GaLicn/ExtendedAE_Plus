@@ -10,6 +10,7 @@ import com.extendedae_plus.network.BatchCreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -43,7 +44,7 @@ public final class EmiCtrlQHandler {
 		}
 		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
 		if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
-				com.mojang.blaze3d.platform.InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()))) {
+				InputConstants.Type.KEYSYM.getOrCreate(event.getKeyCode()))) {
 			return;
 		}
 		// 双查看器仲裁：EMI 在场时本类接管，JEI 分支让位（与 InputEvents 的分派优先级一致）。

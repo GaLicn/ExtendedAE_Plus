@@ -11,6 +11,7 @@ import dev.emi.emi.api.stack.EmiStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
@@ -72,7 +73,7 @@ public final class EmiRecipeCompat {
 		}
 
 		List<List<GenericStack>> inputs;
-		if (crafting && holderOpt.get().value() instanceof net.minecraft.world.item.crafting.ShapedRecipe shaped) {
+		if (crafting && holderOpt.get().value() instanceof ShapedRecipe shaped) {
 			// 有序配方：getIngredients() 是宽×高的紧凑行主序，必须按宽度还原到 3x3 的真实槽位
 			// （如 1x3 竖条形的材料应位于槽位 0,3,6），否则 AE2 解码时 matches() 复验失败 → 无效样板。
 			var ingredients = shaped.getIngredients();
