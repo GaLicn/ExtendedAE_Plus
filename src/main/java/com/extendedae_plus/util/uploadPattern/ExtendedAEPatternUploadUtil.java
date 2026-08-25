@@ -26,8 +26,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -62,9 +60,6 @@ public class ExtendedAEPatternUploadUtil {
     private static final String CONFIG_RELATIVE = "extendedae_plus/recipe_type_names.json";
     private static final Map<ResourceLocation, String> CUSTOM_NAMES = new ConcurrentHashMap<>();
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
-    /** 每次重载映射表递增，供客户端缓存（如合成树映射标记）判断失效。 */
-    private static final java.util.concurrent.atomic.AtomicInteger MAPPING_VERSION =
-            new java.util.concurrent.atomic.AtomicInteger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     // 最近一次打开供应器选择界面时的预设搜索关键字。
     // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
@@ -88,7 +83,7 @@ public class ExtendedAEPatternUploadUtil {
 
     private record HostLocator(long pos, String side, String dimension) {}
 
-    private record MatrixInventoryTarget(InternalInventory insertInventory,
+    record MatrixInventoryTarget(InternalInventory insertInventory,
                                          InternalInventory patternInventory,
                                          BlockPos pos,
                                          boolean plus) {}
@@ -150,125 +145,8 @@ public class ExtendedAEPatternUploadUtil {
             CUSTOM_NAMES.putAll(map);
             CUSTOM_ALIASES.clear();
             CUSTOM_ALIASES.putAll(alias);
-            MAPPING_VERSION.incrementAndGet();
         } catch (IOException ignored) {
         }
-    }
-
-    /** 映射表版本号：每次重载递增，客户端缓存据此失效。 */
-    public static int getMappingVersion() {
-        return MAPPING_VERSION.get();
-    }
-
-    /** 公开配方类型 ID 解析，供客户端判断映射状态。 */
-    public static ResourceLocation getRecipeTypeId(Recipe<?> recipe) {
-        return recipe == null ? null : resolveRecipeTypeId(recipe.getType());
-    }
-
-    /**
-     * 该配方类型是否存在用户自定义的供应器映射。
-     * 注意：{@link #resolveRecipeTypeSearchKey} 在无映射时会回退成 path，不能用它判断有无映射。
-     */
-    public static boolean hasCustomRecipeTypeMapping(ResourceLocation typeId) {
-        if (typeId == null) {
-            return false;
-        }
-        String custom = CUSTOM_NAMES.get(typeId);
-        if (custom != null && !custom.isBlank()) {
-            return true;
-        }
-        String alias = CUSTOM_ALIASES.get(typeId.getPath().toLowerCase(Locale.ROOT));
-        return alias != null && !alias.isBlank();
-    }
-
-    /** 有自定义映射时返回供应器搜索词，否则返回 null。 */
-    public static String mappedSearchKeyOrNull(Recipe<?> recipe) {
-        ResourceLocation typeId = getRecipeTypeId(recipe);
-        if (!hasCustomRecipeTypeMapping(typeId)) {
-            return null;
-        }
-        String key = resolveRecipeTypeSearchKey(typeId, null);
-        return key == null || key.isBlank() ? null : key;
-    }
-
-    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
-    private static Boolean JEC_AVAILABLE = null;
-    private static java.lang.reflect.Method JEC_CONTAINS = null;
-
-    /**
-     * 供应器名称与搜索词的匹配（客户端选择界面与服务端定向上传共用同一语义）。
-     * 空搜索词视为全部匹配。
-     */
-    public static boolean providerNameMatches(String name, String key) {
-        if (name == null) return false;
-        if (key == null || key.isEmpty()) return true;
-        try {
-            if (JEC_AVAILABLE == null) {
-                try {
-                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-                    // 使用 contains(CharSequence, CharSequence)
-                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-                    JEC_AVAILABLE = true;
-                } catch (Throwable t) {
-                    JEC_AVAILABLE = false;
-                }
-            }
-            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-                Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean && (Boolean) r) return true;
-                // 再尝试大小写不敏感：双方转为小写重新匹配
-                String nL = name.toLowerCase();
-                String kL = key.toLowerCase();
-                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
-                if (r2 instanceof Boolean && (Boolean) r2) return true;
-            }
-        } catch (Throwable ignored) {
-            // 回退
-        }
-        // 默认大小写不敏感子串
-        return name.toLowerCase().contains(key.toLowerCase());
-    }
-
-    /**
-     * 依映射搜索词在给定供应器列表中寻找名称匹配者并插入样板。
-     * 空位多的优先，避免把整棵树的样板全挤到同一台机器上。
-     * 批量上传专用：不记录 last uploaded provider（一批 N 个样板的“最后一个”没有意义）。
-     */
-    public static boolean uploadPatternToMatchingProvider(ServerPlayer player,
-                                                         ItemStack pattern,
-                                                         List<PatternContainer> providers,
-                                                         String searchKey) {
-        if (player == null || pattern == null || pattern.isEmpty()
-                || searchKey == null || searchKey.isBlank()
-                || providers == null || providers.isEmpty()) {
-            return false;
-        }
-
-        List<PatternContainer> matched = new ArrayList<>();
-        for (PatternContainer container : providers) {
-            if (container == null) continue;
-            if (providerNameMatches(getProviderDisplayNameComponent(container).getString(), searchKey)) {
-                matched.add(container);
-            }
-        }
-        if (matched.isEmpty()) {
-            return false;
-        }
-        // getAvailableSlots 有重载，方法引用无法在 reversed() 处推断类型，显式声明比较器元素类型。
-        Comparator<PatternContainer> bySlotsDesc =
-                Comparator.comparingInt((PatternContainer c) -> getAvailableSlots(c)).reversed();
-        matched.sort(bySlotsDesc);
-
-        // 查重不在这里做：会把「已存在」和「插不进去」混成同一个 false，
-        // 导致调用方误判为失败而把样板塞进背包。查重由调用方在尝试上传前用
-        // collectExistingPatterns 一次性完成。
-        for (PatternContainer container : matched) {
-            ItemStack remain = insertIntoAccessiblePatternSlots(container, pattern.copy(), null);
-            if (remain.isEmpty()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static void setLastProcessingName(String name) {
@@ -948,7 +826,7 @@ public class ExtendedAEPatternUploadUtil {
      * 在给定 AE Grid 中收集所有已成型且在线的装配矩阵“图样模块”的用于外部插入的内部库存。
      * 优先使用 TileAssemblerMatrixPattern#getExposedInventory（仅允许插入，且已带AE过滤规则）。
      */
-    private static List<MatrixInventoryTarget> findAllMatrixPatternInventories(IGrid grid) {
+    static List<MatrixInventoryTarget> findAllMatrixPatternInventories(IGrid grid) {
         List<MatrixInventoryTarget> result = new ArrayList<>();
         if(grid== null) return result;
         try {
@@ -1063,146 +941,28 @@ public class ExtendedAEPatternUploadUtil {
         return java.util.Collections.emptyList();
     }
 
-    // --------------------------- 重复样板检测 ---------------------------
-
-    /**
-     * 忽略编码者信息后的样板副本，用于判定「是不是同一份样板」。
-     * {@code encodePlayer} 只记录是谁编的，不影响样板功能，必须排除在比较之外。
-     */
-    private static ItemStack normalizePatternForCompare(ItemStack pattern) {
-        ItemStack copy = pattern.copy();
-        CompoundTag tag = copy.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.of(new CompoundTag())).copyTag();
-        tag.remove("encodePlayer");
-        copy.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-        return copy;
-    }
-
-    /** 两个样板是否是同一份（忽略编码者）。 */
-    public static boolean isSamePattern(ItemStack a, ItemStack b) {
-        if (a == null || b == null || a.isEmpty() || b.isEmpty()) {
-            return false;
-        }
-        return ItemStack.isSameItemSameComponents(normalizePatternForCompare(a), normalizePatternForCompare(b));
-    }
-
-    /**
-     * 建立「忽略编码者」的样板集合，与 {@link #isSamePattern} 同一套等价语义。
-     * 与本类其它地方一致地复用 {@code hashItemAndComponents} / {@code isSameItemSameComponents} 配对。
-     */
-    public static Set<ItemStack> newPatternSet() {
-        return new ObjectOpenCustomHashSet<>(new Hash.Strategy<>() {
-            @Override
-            public int hashCode(ItemStack stack) {
-                return stack == null ? 0 : ItemStack.hashItemAndComponents(stack);
-            }
-
-            @Override
-            public boolean equals(ItemStack a, ItemStack b) {
-                return a == b || (a != null && b != null && ItemStack.isSameItemSameComponents(a, b));
-            }
-        });
-    }
-
-    /**
-     * 收集网络中已存在的样板（装配矩阵 + 样板供应器），供批量编码一次性查重。
-     * <p>
-     * 批量编码若逐个样板扫全网，复杂度是 O(样板数 × 供应器数 × 槽位数)，
-     * 大网络上足以造成明显卡顿；因此扫一遍建成哈希集合，之后每次查重都是 O(1)。
-     * 新放进去的样板要由调用方 {@link #rememberPattern} 补进集合，集合不会自动跟随库存变化。
-     *
-     * @param providers 供应器快照；传 null 表示只看装配矩阵
-     */
-    public static Set<ItemStack> collectExistingPatterns(IGrid grid, List<PatternContainer> providers) {
-        Set<ItemStack> existing = newPatternSet();
-        if (grid == null) {
-            return existing;
-        }
-
-        try {
-            for (MatrixInventoryTarget target : findAllMatrixPatternInventories(grid)) {
-                InternalInventory inv = target == null ? null : target.patternInventory();
-                collectFrom(inv, inv == null ? 0 : inv.size(), existing);
-            }
-        } catch (Throwable ignored) {
-        }
-
-        if (providers != null) {
-            for (PatternContainer container : providers) {
-                if (container == null) continue;
-                try {
-                    InternalInventory inv = container.getTerminalPatternInventory();
-                    collectFrom(inv, getAccessiblePatternSlotCount(container, inv), existing);
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-        return existing;
-    }
-
-    private static void collectFrom(InternalInventory inv, int slotLimit, Set<ItemStack> out) {
-        if (inv == null) {
-            return;
-        }
-        int limit = Math.max(0, Math.min(inv.size(), slotLimit));
-        for (int i = 0; i < limit; i++) {
-            ItemStack stack = inv.getStackInSlot(i);
-            if (stack != null && !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
-                out.add(normalizePatternForCompare(stack));
-            }
-        }
-    }
-
-    /** 集合里是否已有这份样板。 */
-    public static boolean containsPattern(Set<ItemStack> existing, ItemStack pattern) {
-        if (existing == null || existing.isEmpty() || pattern == null || pattern.isEmpty()) {
-            return false;
-        }
-        return existing.contains(normalizePatternForCompare(pattern));
-    }
-
-    /** 样板成功放入网络后登记进集合，让同一批里的后续项也能查到。 */
-    public static void rememberPattern(Set<ItemStack> existing, ItemStack pattern) {
-        if (existing == null || pattern == null || pattern.isEmpty()) {
-            return;
-        }
-        existing.add(normalizePatternForCompare(pattern));
-    }
-
-    /** 装配矩阵是否已存在同一样板（忽略编码者等自定义数据）。批量编码用来跳过重复项，不白扣空白样板。 */
-    public static boolean matrixHasPattern(IGrid grid, ItemStack pattern) {
-        return matrixContainsPattern(grid, pattern);
-    }
-
-    /** 该供应器里是否已存在同一样板。 */
-    public static boolean providerHasPattern(PatternContainer container, ItemStack pattern) {
-        if (container == null || pattern == null || pattern.isEmpty()) {
-            return false;
-        }
-        try {
-            InternalInventory inv = container.getTerminalPatternInventory();
-            if (inv == null) {
-                return false;
-            }
-            int limit = Math.max(0, Math.min(inv.size(), getAccessiblePatternSlotCount(container, inv)));
-            for (int i = 0; i < limit; i++) {
-                if (isSamePattern(inv.getStackInSlot(i), pattern)) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return false;
-    }
-
     private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
         if (grid == null || pattern == null || pattern.isEmpty()) return false;
+        CustomData defaultData = CustomData.of(new CompoundTag());
+        ItemStack patternCopy = pattern.copy();
+        CompoundTag newTag= patternCopy.getOrDefault(DataComponents.CUSTOM_DATA,defaultData).copyTag();
+        newTag.remove("encodePlayer");
+        patternCopy.set(DataComponents.CUSTOM_DATA, CustomData.of(newTag));
         try {
             // 先检查提供外部插入视图的内部库存
-            for (MatrixInventoryTarget target : findAllMatrixPatternInventories(grid)) {
+            List<MatrixInventoryTarget> inventories = findAllMatrixPatternInventories(grid);
+            for (MatrixInventoryTarget target : inventories) {
                 InternalInventory inv = target == null ? null : target.patternInventory();
                 if (inv == null) continue;
                 for (int i = 0; i < inv.size(); i++) {
-                    if (isSamePattern(inv.getStackInSlot(i), pattern)) {
+                    ItemStack s = inv.getStackInSlot(i);
+
+                    ItemStack sCopy=s.copy();
+                    CompoundTag sNewTag=sCopy.getOrDefault(DataComponents.CUSTOM_DATA,defaultData).copyTag();
+                    sNewTag.remove("encodePlayer");
+                    sCopy.set(DataComponents.CUSTOM_DATA, CustomData.of(sNewTag));
+
+                    if (!sCopy.isEmpty() && ItemStack.isSameItemSameComponents(sCopy, patternCopy)) {
                         return true;
                     }
                 }
@@ -1911,31 +1671,6 @@ public class ExtendedAEPatternUploadUtil {
                                 break;
                             }
                         }
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return list;
-    }
-
-    /**
-     * 列出网络中所有终端可见的样板供应器（不筛空位）。
-     * 供“为配方类型挑选机器建立映射”使用：映射只关心名字，机器当下满不满无关。
-     */
-    public static List<PatternContainer> listAllProvidersFromGrid(IGrid grid) {
-        List<PatternContainer> list = new ArrayList<>();
-        if (grid == null) return list;
-        try {
-            for (var machineClass : grid.getMachineClasses()) {
-                if (PatternContainer.class.isAssignableFrom(machineClass)) {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                    for (var container : grid.getActiveMachines(containerClass)) {
-                        if (container == null || !container.isVisibleInTerminal()) continue;
-                        InternalInventory inv = container.getTerminalPatternInventory();
-                        if (inv == null || inv.size() <= 0) continue;
-                        list.add(container);
                     }
                 }
             }
