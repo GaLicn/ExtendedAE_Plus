@@ -1,9 +1,11 @@
 {
   "required": false,
   "package": "com.extendedae_plus.mixin",
+  "plugin": "com.extendedae_plus.mixin.ExtendedAEMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
+    "emi.BoMScreenMixin",
     "advancedae.client.gui.AdvPatternProviderScreenMixin",
     "advancedae.client.gui.AdvPatternProviderScreenUpgradesMixin",
     "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",

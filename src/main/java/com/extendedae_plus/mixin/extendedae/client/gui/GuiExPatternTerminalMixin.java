@@ -278,7 +278,6 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
                 for (int i = 0; i < typedRows.size(); i++) {
                     Object row = typedRows.get(i);
                     String fullClassName = row.getClass().getName();
-                    System.out.println("EAP Debug: Processing Row " + i + ": " + fullClassName);
 
                     if (fullClassName.endsWith(".GuiExPatternTerminal$GroupHeaderRow")) {
                         int headerOldIndex = i;
