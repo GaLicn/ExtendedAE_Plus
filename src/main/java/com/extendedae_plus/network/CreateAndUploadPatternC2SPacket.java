@@ -163,17 +163,25 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 		return extracted > 0;
 	}
 
-	static void refundBlankPattern(ServerPlayer player, IGrid grid) {
+	/**
+	 * 把一张空白样板还回网络。
+	 * <p>
+	 * 公开给待选队列用：队列里的样板被跳过/放弃时整份作废，扣掉的空白样板必须还回去，
+	 * 否则玩家什么都没选却少了一张空白样板。
+	 *
+	 * @return 网络真的收下了；false 表示存储塞不进去，调用方得自己安置这张空白样板
+	 */
+	public static boolean refundBlankPattern(ServerPlayer player, IGrid grid) {
 		AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
 		IEnergyService energy = grid.getEnergyService();
 		MEStorage storage = grid.getStorageService().getInventory();
-		StorageHelper.poweredInsert(
+		return StorageHelper.poweredInsert(
 			energy,
 			storage,
 			blankPatternKey,
 			1,
 			new PlayerSource(player)
-		);
+		) > 0;
 	}
 
 	// 包内可见：批量分支（BatchCreateAndUploadPatternC2SPacket）复用同一套编码逻辑。

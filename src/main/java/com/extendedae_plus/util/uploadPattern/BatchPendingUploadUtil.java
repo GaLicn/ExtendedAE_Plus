@@ -1,6 +1,9 @@
 package com.extendedae_plus.util.uploadPattern;
 
+import appeng.api.networking.IGrid;
+import appeng.core.definitions.AEItems;
 import appeng.helpers.patternprovider.PatternContainer;
+import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.ProvidersListS2CPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -23,12 +26,13 @@ import java.util.List;
  * 选完（或跳过）才轮到下一项。
  * <p>
  * 样板本体存在玩家 persistentData 而不是内存里：编码时空白样板已经扣掉，
- * 队列一丢就等于凭空吞掉玩家的材料。玩家中途退出时留在队列里的样板会在下次登录时退回背包。
+ * 队列一丢就等于凭空吞掉玩家的材料。跳过或放弃的项不会生成样板，
+ * 编码时扣掉的空白样板会还回网络；玩家中途退出时留在队列里的项也按这个规则在下次登录时结算。
  */
 public final class BatchPendingUploadUtil {
 	private static final String QUEUE_KEY = "eap_batch_pending_queue";
 	private static final String UPLOADED_KEY = "eap_batch_pending_uploaded";
-	private static final String TO_INVENTORY_KEY = "eap_batch_pending_to_inventory";
+	private static final String DISCARDED_KEY = "eap_batch_pending_discarded";
 	private static final String ITEM_PATTERN = "pattern";
 	private static final String ITEM_OUTPUT = "output";
 	private static final String ITEM_SEARCH_KEY = "search_key";
@@ -90,7 +94,7 @@ public final class BatchPendingUploadUtil {
 
 		CompoundTag head = queue.getCompound(0);
 		ItemStack output = ItemStack.parseOptional(player.registryAccess(), head.getCompound(ITEM_OUTPUT));
-		int resolved = stat(player, UPLOADED_KEY) + stat(player, TO_INVENTORY_KEY);
+		int resolved = stat(player, UPLOADED_KEY) + stat(player, DISCARDED_KEY);
 		var pending = new ProvidersListS2CPacket.PendingSelection(
 				output,
 				ResourceLocation.tryParse(head.getString(ITEM_RECIPE_ID)),
@@ -128,13 +132,21 @@ public final class BatchPendingUploadUtil {
 		player.connection.send(ProvidersListS2CPacket.pendingSelection(ids, names, slots, pending));
 	}
 
-	/** 玩家点选了目标机器：插入队首样板后前进到下一项。插不进去就退回背包，不卡在同一项上。 */
+	/**
+	 * 玩家点选了目标机器：插进去才算这份样板真正生成。
+	 * <p>
+	 * 选中的机器刚好被塞满时既不消耗样板也不前进队列，只提示一声让玩家换一台：
+	 * 硬塞进背包会让玩家多出一份没进网络的样板，还得自己找出是哪个配方。
+	 */
 	public static void chooseForHead(ServerPlayer player, long providerId) {
 		if (!hasPending(player)) {
 			return;
 		}
-		ItemStack pattern = popHead(player);
+		ItemStack pattern = peekHeadPattern(player);
 		if (pattern.isEmpty()) {
+			// 样板 NBT 读不出来，这一项没救了，扣掉的空白样板还回去。
+			popHead(player);
+			discard(player);
 			sendCurrentSelection(player);
 			return;
 		}
@@ -142,47 +154,41 @@ public final class BatchPendingUploadUtil {
 		ItemStack remain = CtrlQPendingUploadUtil
 				.insertPatternIntoProviderFromPlayerNetwork(player, pattern, providerId);
 		if (remain.isEmpty()) {
+			popHead(player);
 			bump(player, UPLOADED_KEY);
 		} else {
-			giveBack(player, remain);
-			bump(player, TO_INVENTORY_KEY);
+			player.displayClientMessage(
+					Component.translatable("message.extendedae_plus.bom_encode.provider_full"), true);
 		}
 		sendCurrentSelection(player);
 	}
 
-	/** 跳过队首项：样板退回背包，继续问下一项。 */
+	/** 跳过队首项：这份样板压根不生成，空白样板还回去，继续问下一项。 */
 	public static void skipHead(ServerPlayer player) {
 		if (!hasPending(player)) {
 			return;
 		}
-		ItemStack pattern = popHead(player);
-		if (!pattern.isEmpty()) {
-			giveBack(player, pattern);
-			bump(player, TO_INVENTORY_KEY);
-		}
+		popHead(player);
+		discard(player);
 		sendCurrentSelection(player);
 	}
 
-	/** 放弃整条队列：剩下的样板全部退回背包，只发一条汇总。 */
+	/** 放弃整条队列：剩下的样板一份都不生成，扣掉的空白样板全部还回去，只发一条汇总。 */
 	public static void abortAll(ServerPlayer player) {
 		if (player == null) {
 			return;
 		}
-		ListTag queue = queue(player);
-		for (int i = 0; i < queue.size(); i++) {
-			ItemStack pattern = ItemStack.parseOptional(player.registryAccess(),
-					queue.getCompound(i).getCompound(ITEM_PATTERN));
-			if (!pattern.isEmpty()) {
-				giveBack(player, pattern);
-				bump(player, TO_INVENTORY_KEY);
-			}
-		}
+		int remaining = queue(player).size();
 		player.getPersistentData().remove(QUEUE_KEY);
+		for (int i = 0; i < remaining; i++) {
+			discard(player);
+		}
 		finish(player);
 	}
 
 	/**
-	 * 玩家上线时清空遗留队列：样板早就扣过空白样板，留在 NBT 里等于被吞掉。
+	 * 玩家上线时清空遗留队列：队列里的样板都已经扣过空白样板，
+	 * 留在 NBT 里等于白扣，按「未生成」处理把空白样板还回去。
 	 * 掉线时不处理，因为那时往背包塞东西未必还能保存进存档。
 	 */
 	@SubscribeEvent
@@ -197,13 +203,13 @@ public final class BatchPendingUploadUtil {
 	/** 队列空了：发一条手动指定的汇总并清掉计数，避免和下一次一键编码的统计串味。 */
 	private static void finish(ServerPlayer player) {
 		int uploaded = stat(player, UPLOADED_KEY);
-		int toInventory = stat(player, TO_INVENTORY_KEY);
+		int discarded = stat(player, DISCARDED_KEY);
 		player.getPersistentData().remove(QUEUE_KEY);
 		player.getPersistentData().remove(UPLOADED_KEY);
-		player.getPersistentData().remove(TO_INVENTORY_KEY);
-		if (uploaded > 0 || toInventory > 0) {
+		player.getPersistentData().remove(DISCARDED_KEY);
+		if (uploaded > 0 || discarded > 0) {
 			player.displayClientMessage(Component.translatable(
-					"message.extendedae_plus.bom_encode.manual_summary", uploaded, toInventory), false);
+					"message.extendedae_plus.bom_encode.manual_summary", uploaded, discarded), false);
 		}
 	}
 
@@ -214,25 +220,43 @@ public final class BatchPendingUploadUtil {
 		return player.getPersistentData().getList(QUEUE_KEY, Tag.TAG_COMPOUND);
 	}
 
-	/** 取出并移除队首样板。 */
-	private static ItemStack popHead(ServerPlayer player) {
+	/** 只看队首样板，不出队：插不进目标机器时这一项还要留在队列里让玩家换一台。 */
+	private static ItemStack peekHeadPattern(ServerPlayer player) {
 		ListTag queue = queue(player);
 		if (queue.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		CompoundTag head = queue.getCompound(0);
+		return ItemStack.parseOptional(player.registryAccess(),
+				queue.getCompound(0).getCompound(ITEM_PATTERN));
+	}
+
+	/** 移除队首项。 */
+	private static void popHead(ServerPlayer player) {
+		ListTag queue = queue(player);
+		if (queue.isEmpty()) {
+			return;
+		}
 		queue.remove(0);
 		if (queue.isEmpty()) {
 			player.getPersistentData().remove(QUEUE_KEY);
 		} else {
 			player.getPersistentData().put(QUEUE_KEY, queue);
 		}
-		return ItemStack.parseOptional(player.registryAccess(), head.getCompound(ITEM_PATTERN));
 	}
 
-	private static void giveBack(ServerPlayer player, ItemStack pattern) {
-		if (!player.getInventory().add(pattern)) {
-			player.drop(pattern.copy(), false);
+	/**
+	 * 这一项作废：编好的样板直接丢掉（它从未进入世界），把编码时扣掉的空白样板还回网络。
+	 * 网络不在或塞不下时给到背包，总之不能让玩家什么都没选却少一张空白样板。
+	 */
+	private static void discard(ServerPlayer player) {
+		bump(player, DISCARDED_KEY);
+		IGrid grid = CtrlQPendingUploadUtil.findPlayerGrid(player);
+		if (grid != null && CreateAndUploadPatternC2SPacket.refundBlankPattern(player, grid)) {
+			return;
+		}
+		ItemStack blank = AEItems.BLANK_PATTERN.stack();
+		if (!player.getInventory().add(blank)) {
+			player.drop(blank, false);
 		}
 	}
 

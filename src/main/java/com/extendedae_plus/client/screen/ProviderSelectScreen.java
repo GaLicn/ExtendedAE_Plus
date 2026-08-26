@@ -402,8 +402,8 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         if (this.pending != null) {
-            // 批量待选模式下关窗视为放弃整条队列，剩余样板由服务端退回背包；
-            // 只想放过当前一项的话有单独的「跳过」按钮。
+            // 批量待选模式下关窗视为放弃整条队列：剩余样板一份都不生成，
+            // 服务端会把编码时扣掉的空白样板还回去。只想放过当前一项的话有单独的「跳过」按钮。
             PacketDistributor.sendToServer(new BatchPendingActionC2SPacket(BatchPendingActionC2SPacket.Action.ABORT));
         } else if (this.mappingKey == null) {
             // 挑映射机器模式下没有 pending 样板，不能误发取消请求。
@@ -412,7 +412,7 @@ public class ProviderSelectScreen extends Screen {
         Minecraft.getInstance().setScreen(this.parent);
     }
 
-    /** 批量待选模式：放过当前这一项（样板退回背包），继续处理队列里的下一项。 */
+    /** 批量待选模式：放过当前这一项（不生成样板，空白样板还回），继续处理队列里的下一项。 */
     private void skipPendingItem() {
         if (this.pending == null) {
             return;
