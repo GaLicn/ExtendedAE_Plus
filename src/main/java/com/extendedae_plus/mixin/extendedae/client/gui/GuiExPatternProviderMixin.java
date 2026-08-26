@@ -7,12 +7,15 @@ import appeng.menu.SlotSemantics;
 import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
+import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.gui.NewIcon;
 import com.extendedae_plus.util.ScaleButtonHelper;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,6 +54,15 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     @Unique
     private List<ActionEPPButton> scaleButtons;
 
+    @Unique
+    private ActionEPPButton eap$showPatternScalingControlsButton;
+
+    @Unique
+    private ActionEPPButton eap$hidePatternScalingControlsButton;
+
+    @Unique
+    private boolean eap$patternScalingControlsVisible = true;
+
     public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title,
             ScreenStyle style) {
         super(menu, playerInventory, title, style);
@@ -66,16 +78,36 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addToLeftToolbar(this.nextPage);
         this.addToLeftToolbar(this.prevPage);
 
-        this.scaleButtons = ScaleButtonHelper.createAndLayout(
-                this.leftPos + this.imageWidth,
-                this.topPos + 104,
+        this.eap$showPatternScalingControlsButton = new ActionEPPButton(
+                button -> this.eap$setPatternScalingControlsVisible(true),
+                NewIcon.SHOW_PATTERN_SCALING_CONTROLS);
+        this.eap$showPatternScalingControlsButton.setTooltip(Tooltip.create(
+                Component.translatable("tooltip.extendedae_plus.show_pattern_scaling_controls")));
+        this.eap$hidePatternScalingControlsButton = new ActionEPPButton(
+                button -> this.eap$setPatternScalingControlsVisible(false),
+                NewIcon.HIDE_PATTERN_SCALING_CONTROLS);
+        this.eap$hidePatternScalingControlsButton.setTooltip(Tooltip.create(
+                Component.translatable("tooltip.extendedae_plus.hide_pattern_scaling_controls")));
+        this.addToLeftToolbar(this.eap$showPatternScalingControlsButton);
+        this.addToLeftToolbar(this.eap$hidePatternScalingControlsButton);
+
+        var firstUpgradeSlot = menu.getSlots(SlotSemantics.UPGRADE).get(0);
+        var allScaleButtons = ScaleButtonHelper.createAndLayout(
+                this.leftPos + firstUpgradeSlot.x + 23,
+                this.topPos + firstUpgradeSlot.y-4,
                 22,
                 ScaleButtonHelper.Side.RIGHT,
                 (divide, factor) -> {
                     String action = (divide ? "divide" : "multiply") + factor;
                     EPPNetworkHandler.INSTANCE.sendToServer(new CGenericPacket(action));
                 });
+        // 供应器只显示 2 倍和 5 倍控件，10 倍控件仍供其它界面使用。
+        this.scaleButtons = List.of(
+                allScaleButtons.get(0), allScaleButtons.get(1),
+                allScaleButtons.get(2), allScaleButtons.get(3));
         this.scaleButtons.forEach(this::addRenderableWidget);
+        this.eap$patternScalingControlsVisible = ModConfig.INSTANCE.extendedPatternProviderShowScalingControls;
+        this.eap$applyPatternScalingControlsVisibility();
     }
 
     @Override
@@ -103,13 +135,15 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         if (this.scaleButtons != null) {
             for (ActionEPPButton button : this.scaleButtons) {
                 if (button != null) {
-                    button.setVisibility(true);
+                    button.setVisibility(this.eap$patternScalingControlsVisible);
                     if (!this.renderables.contains(button)) {
                         this.addRenderableWidget(button);
                     }
                 }
             }
         }
+
+        this.eap$applyPatternScalingControlsVisibility();
 
         if (this.width != this.eap$lastScreenWidth || this.height != this.eap$lastScreenHeight) {
             this.eap$lastScreenWidth = this.width;
@@ -124,19 +158,18 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             }
         }
 
-        if (this.scaleButtons != null && this.scaleButtons.size() >= 6) {
-            ScaleButtonHelper.layoutButtons(
-                    new ScaleButtonHelper.ScaleButtonSet(
-                            this.scaleButtons.get(1),
-                            this.scaleButtons.get(0),
-                            this.scaleButtons.get(3),
-                            this.scaleButtons.get(2),
-                            this.scaleButtons.get(5),
-                            this.scaleButtons.get(4)),
-                    this.leftPos + this.imageWidth,
-                    this.topPos + 104,
-                    22,
-                    ScaleButtonHelper.Side.RIGHT);
+        if (this.scaleButtons != null && this.scaleButtons.size() >= 4) {
+            var firstUpgradeSlot = this.menu.getSlots(SlotSemantics.UPGRADE).get(0);
+            int buttonX = this.leftPos + firstUpgradeSlot.x + 24;
+            int buttonY = this.topPos + firstUpgradeSlot.y - 4;
+            this.scaleButtons.get(0).setX(buttonX);
+            this.scaleButtons.get(0).setY(buttonY);
+            this.scaleButtons.get(1).setX(buttonX);
+            this.scaleButtons.get(1).setY(buttonY + 22);
+            this.scaleButtons.get(2).setX(buttonX);
+            this.scaleButtons.get(2).setY(buttonY + 44);
+            this.scaleButtons.get(3).setX(buttonX);
+            this.scaleButtons.get(3).setY(buttonY + 66);
         }
     }
 
@@ -145,6 +178,30 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         int maxPage = Math.max(1, this.eap$maxPageLocal);
         int newPage = Math.floorMod(this.eap$currentPage + delta, maxPage);
         this.eap$applyPage(newPage);
+    }
+
+    @Unique
+    private void eap$setPatternScalingControlsVisible(boolean visible) {
+        this.eap$patternScalingControlsVisible = visible;
+        ModConfig.setExtendedPatternProviderShowScalingControls(visible);
+        this.eap$applyPatternScalingControlsVisibility();
+    }
+
+    @Unique
+    private void eap$applyPatternScalingControlsVisibility() {
+        if (this.scaleButtons != null) {
+            for (ActionEPPButton button : this.scaleButtons) {
+                if (button != null) {
+                    button.setVisibility(this.eap$patternScalingControlsVisible);
+                }
+            }
+        }
+        if (this.eap$showPatternScalingControlsButton != null) {
+            this.eap$showPatternScalingControlsButton.setVisibility(!this.eap$patternScalingControlsVisible);
+        }
+        if (this.eap$hidePatternScalingControlsButton != null) {
+            this.eap$hidePatternScalingControlsButton.setVisibility(this.eap$patternScalingControlsVisible);
+        }
     }
 
     @Unique

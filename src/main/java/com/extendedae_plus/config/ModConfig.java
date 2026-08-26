@@ -6,8 +6,11 @@ import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import dev.toma.configuration.Configuration;
 import dev.toma.configuration.client.IValidationHandler;
 import dev.toma.configuration.config.Config;
+import dev.toma.configuration.config.ConfigHolder;
 import dev.toma.configuration.config.Configurable;
 import dev.toma.configuration.config.format.ConfigFormats;
+import dev.toma.configuration.config.io.ConfigIO;
+import dev.toma.configuration.config.value.ConfigValue;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,13 +21,29 @@ import java.util.concurrent.TimeUnit;
 public final class ModConfig {
 
     public static ModConfig INSTANCE;
+    private static ConfigHolder<ModConfig> configHolder;
     private static final Object lock = new Object();
 
     public static void init() {
         synchronized (lock) {
             if (INSTANCE == null) {
-                INSTANCE = Configuration.registerConfig(ModConfig.class, ConfigFormats.yaml()).getConfigInstance();
+                configHolder = Configuration.registerConfig(ModConfig.class, ConfigFormats.yaml());
+                INSTANCE = configHolder.getConfigInstance();
             }
+        }
+    }
+
+    /** Updates and immediately saves a client-only UI preference. */
+    @SuppressWarnings("unchecked")
+    public static void setExtendedPatternProviderShowScalingControls(boolean visible) {
+        synchronized (lock) {
+            if (INSTANCE == null || configHolder == null) {
+                return;
+            }
+            ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
+                    .get("extendedPatternProviderShowScalingControls");
+            value.set(visible);
+            ConfigIO.saveClientValues(configHolder);
         }
     }
 
@@ -108,6 +127,13 @@ public final class ModConfig {
             "可通过 JEI 左下角按钮即时切换"
     })
     public boolean jeiNetworkOverlayEnabled = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "扩展样板供应器是否显示倍率调整按钮",
+            "可通过扩展样板供应器左侧工具栏即时切换"
+    })
+    public boolean extendedPatternProviderShowScalingControls = true;
 
     @Configurable
     @Configurable.Comment(value = {
