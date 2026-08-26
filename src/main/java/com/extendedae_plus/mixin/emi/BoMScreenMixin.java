@@ -137,7 +137,7 @@ public abstract class BoMScreenMixin {
 		BoMScreen self = (BoMScreen) (Object) this;
 		Font font = Minecraft.getInstance().font;
 
-		BoMPendingSelectOverlay.render(raw, self.width, self.height, mouseX, mouseY);
+		BoMPendingSelectOverlay.render(raw, self.width, self.height, mouseX, mouseY, getScale());
 		if (BoMPendingSelectOverlay.contains(mouseX, mouseY)) {
 			// 面板盖住的地方不该再弹树上的提示。
 			return;

@@ -39,6 +39,11 @@ public final class BoMPendingSelectOverlay {
 	private static final int FOOTER_H = 13;
 	/** 材料图标一行最多画几个，多出来的折成「+N」。 */
 	private static final int MAX_INPUT_ICONS = 9;
+	/** 面板缩放的上下限：树的缩放档位跨度很大，倒数直接用会缩到看不清或涨到占满窗口。 */
+	private static final float MIN_SCALE = 0.75f;
+	private static final float MAX_SCALE = 1f;
+	/** 面板整体的 z 偏移，压在节点图标（GUI 物品渲染自带 +100）与原版提示（400）之上。 */
+	private static final float PANEL_Z = 500f;
 
 	private static final int COLOR_BG = 0xF0181818;
 	/** 与合成树树枝同一个纯白（EMI 的 {@code drawLine} 用 0xFFFFFFFF），面板贴在树上不显得是外来物。 */
@@ -63,6 +68,8 @@ public final class BoMPendingSelectOverlay {
 	private static int page;
 
 	// 上一帧的几何与命中区：渲染必然发生在同一帧的点击处理之前。
+	// 坐标一律记在「面板单位」里，即除掉配方树缩放之后的坐标系；
+	// 命中判定先把鼠标的屏幕坐标除以同一个缩放，绘制与判定才不会错位。
 	private static Rect panelRect = Rect.EMPTY;
 	private static final List<Rect> ROW_RECTS = new ArrayList<>();
 	private static Rect skipRect = Rect.EMPTY;
@@ -70,6 +77,8 @@ public final class BoMPendingSelectOverlay {
 	private static Rect moreRect = Rect.EMPTY;
 	private static Rect prevRect = Rect.EMPTY;
 	private static Rect nextRect = Rect.EMPTY;
+	/** 上一帧绘制用的面板缩放；取配方树缩放档位的倒数，树越大面板越小。 */
+	private static float panelScale = 1f;
 
 	private record Row(long id, String name, int totalSlots, int count) {}
 
@@ -130,7 +139,25 @@ public final class BoMPendingSelectOverlay {
 
 	/** 面板占住的屏幕区域，宿主界面用它让出鼠标（悬停、点击、滚轮、拖动都不该穿透）。 */
 	public static boolean contains(double mouseX, double mouseY) {
-		return isOpen() && panelRect.contains(mouseX, mouseY);
+		return isOpen() && panelRect.contains(toPanel(mouseX), toPanel(mouseY));
+	}
+
+	/** 屏幕坐标 → 面板单位：面板整体被缩放绘制，命中判定必须走同一个换算。 */
+	private static double toPanel(double screenCoord) {
+		return screenCoord / (panelScale <= 0 ? 1f : panelScale);
+	}
+
+	/**
+	 * 面板缩放取树缩放的倒数，再夹到可用范围内。
+	 * <p>
+	 * 上限 1 倍：面板不会长得比自然尺寸更大，树缩小时它就停在原样。
+	 * 下限 0.75 倍：树放到最大时也只收到四分之三，再小候选行就点不准了。
+	 * 最后按屏幕尺寸再封一次，小窗口下不至于溢出。
+	 */
+	private static float resolveScale(float treeScale, int screenW, int screenH, int panelH) {
+		float scale = treeScale <= 0 ? 1f : 1f / treeScale;
+		float fit = Math.min((screenW - 16f) / PANEL_W, (screenH - 8f) / panelH);
+		return Math.max(MIN_SCALE, Math.min(Math.min(scale, MAX_SCALE), fit));
 	}
 
 	/**
@@ -155,8 +182,15 @@ public final class BoMPendingSelectOverlay {
 		close();
 	}
 
-	/** 屏幕坐标系内绘制（宿主的缩放矩阵之外），面板固定贴在左侧居中，不随树缩放平移。 */
-	public static void render(GuiGraphics graphics, int screenW, int screenH, int mouseX, int mouseY) {
+	/**
+	 * 面板绘制。调用点在宿主的缩放矩阵之外（屏幕坐标系），面板自己按
+	 * {@code 1 / treeScale} 缩放：树放大（节点变大、占屏更多）时面板收小让路，
+	 * 树缩小（整棵树都看得见）时面板放大好点。位置仍固定贴在屏幕左侧居中，
+	 * 不跟着树平移 —— 跟着平移的话拖两下树面板就跑出屏幕了。
+	 *
+	 * @param treeScale 配方树当前的缩放档位（EMI 的 {@code getScale()}）
+	 */
+	public static void render(GuiGraphics graphics, int screenW, int screenH, int mouseX, int mouseY, float treeScale) {
 		if (!isOpen()) {
 			return;
 		}
@@ -165,10 +199,21 @@ public final class BoMPendingSelectOverlay {
 		int inputsH = INPUT_ICONS.isEmpty() ? 0 : 18;
 		int headerH = 12 + inputsH + 10;
 		int panelH = PAD + headerH + pageRows * ROW_H + 2 + FOOTER_H + PAD;
+		panelScale = resolveScale(treeScale, screenW, screenH, panelH);
+		// 屏幕尺寸与鼠标一并换算到面板单位，布局算术不必关心缩放。
+		int viewH = (int) (screenH / panelScale);
 		int x = 8;
-		int y = Math.max(4, (screenH - panelH) / 2);
+		int y = Math.max(2, (viewH - panelH) / 2);
+		int pMouseX = (int) toPanel(mouseX);
+		int pMouseY = (int) toPanel(mouseY);
 		panelRect = new Rect(x, y, PANEL_W, panelH);
 
+		graphics.pose().pushPose();
+		// 抬到物品图标之上：树上的节点图标是带深度测试的 GUI 物品渲染（renderItem 自己会 +100），
+		// 面板若留在 z=0，即便画得更晚也会被那些图标的深度挡住。400 是原版提示框的高度，这里再高一档，
+		// 让面板压在包括提示在内的所有东西上面。
+		graphics.pose().translate(0f, 0f, PANEL_Z);
+		graphics.pose().scale(panelScale, panelScale, 1f);
 		graphics.fill(x, y, x + PANEL_W, y + panelH, COLOR_BG);
 		graphics.renderOutline(x, y, PANEL_W, panelH, COLOR_BORDER);
 
@@ -210,8 +255,9 @@ public final class BoMPendingSelectOverlay {
 			textX, cursorY + 2, COLOR_DIM, false);
 		cursorY += 10;
 
-		renderRows(graphics, font, x, cursorY, pageRows, mouseX, mouseY);
-		renderFooter(graphics, font, x, y + panelH - PAD - FOOTER_H, mouseX, mouseY);
+		renderRows(graphics, font, x, cursorY, pageRows, pMouseX, pMouseY);
+		renderFooter(graphics, font, x, y + panelH - PAD - FOOTER_H, pMouseX, pMouseY);
+		graphics.pose().popPose();
 	}
 
 	private static void renderRows(GuiGraphics graphics, Font font, int panelX, int top,
@@ -292,7 +338,12 @@ public final class BoMPendingSelectOverlay {
 	 * （面板压在树上，穿透过去会顺手展开节点或跳去别的配方）。
 	 */
 	public static boolean mouseClicked(double mouseX, double mouseY, int button) {
-		if (!isOpen() || !panelRect.contains(mouseX, mouseY)) {
+		if (!isOpen()) {
+			return false;
+		}
+		double px = toPanel(mouseX);
+		double py = toPanel(mouseY);
+		if (!panelRect.contains(px, py)) {
 			return false;
 		}
 		if (button != 0) {
@@ -301,7 +352,7 @@ public final class BoMPendingSelectOverlay {
 		}
 
 		for (int i = 0; i < ROW_RECTS.size(); i++) {
-			if (!ROW_RECTS.get(i).contains(mouseX, mouseY)) {
+			if (!ROW_RECTS.get(i).contains(px, py)) {
 				continue;
 			}
 			int idx = page * ROWS_PER_PAGE + i;
@@ -311,24 +362,24 @@ public final class BoMPendingSelectOverlay {
 			return true;
 		}
 
-		if (prevRect.contains(mouseX, mouseY)) {
+		if (prevRect.contains(px, py)) {
 			changePage(-1);
 			return true;
 		}
-		if (nextRect.contains(mouseX, mouseY)) {
+		if (nextRect.contains(px, py)) {
 			changePage(1);
 			return true;
 		}
-		if (moreRect.contains(mouseX, mouseY)) {
+		if (moreRect.contains(px, py)) {
 			openFullScreen();
 			return true;
 		}
-		if (skipRect.contains(mouseX, mouseY)) {
+		if (skipRect.contains(px, py)) {
 			PacketDistributor.sendToServer(new BatchPendingActionC2SPacket(BatchPendingActionC2SPacket.Action.SKIP));
 			close();
 			return true;
 		}
-		if (abortRect.contains(mouseX, mouseY)) {
+		if (abortRect.contains(px, py)) {
 			abortQueue();
 			return true;
 		}
@@ -337,7 +388,7 @@ public final class BoMPendingSelectOverlay {
 
 	/** 面板上滚轮翻页，同时挡住宿主的缩放：在候选列表上滚不该把整棵树缩掉。 */
 	public static boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-		if (!isOpen() || !panelRect.contains(mouseX, mouseY)) {
+		if (!isOpen() || !panelRect.contains(toPanel(mouseX), toPanel(mouseY))) {
 			return false;
 		}
 		if (amount != 0) {
