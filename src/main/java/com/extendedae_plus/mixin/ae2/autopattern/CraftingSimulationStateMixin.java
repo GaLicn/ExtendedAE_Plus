@@ -25,7 +25,6 @@ import java.util.Map;
 @Mixin(value = CraftingSimulationState.class, remap = false)
 public abstract class CraftingSimulationStateMixin {
 
-    private static final int MAX_SUPER_MATRIX_DISPATCHES = 10;
     /**
      * 替换 CraftingPlan 构建逻辑，在此统一处理样板倍率
      */
@@ -52,7 +51,8 @@ public abstract class CraftingSimulationStateMixin {
 
             boolean allowScaling = aware.eap$allowScaling();
             long perCraftLimit = details instanceof StrictMolecularAssemblerPattern
-                    ? getSuperMatrixDispatchSize(totalAmount)
+                    // 超级装配矩阵整笔订单一次发配，不再按十批拆分。
+                    ? totalAmount
                     : aware.eap$getMultiplierLimit();
 
             if (!allowScaling || totalAmount <= 1) {
@@ -130,12 +130,6 @@ public abstract class CraftingSimulationStateMixin {
             return scaled.getOriginal();
         }
         return pattern;
-    }
-
-    private static long getSuperMatrixDispatchSize(long targetAmount) {
-        // 按目标数量动态分包，最多十次发配即可覆盖完整订单。
-        return targetAmount / MAX_SUPER_MATRIX_DISPATCHES
-                + (targetAmount % MAX_SUPER_MATRIX_DISPATCHES == 0 ? 0 : 1);
     }
 
     private static int countProvidersUpTo(Iterable<ICraftingProvider> providers, long maxNeeded) {
