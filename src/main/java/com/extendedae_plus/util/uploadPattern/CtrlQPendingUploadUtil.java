@@ -126,7 +126,14 @@ public final class CtrlQPendingUploadUtil {
 		return stack;
 	}
 
-	private static ItemStack insertPatternIntoProviderFromPlayerNetwork(ServerPlayer player, ItemStack pattern, long providerId) {
+	/**
+	 * 把样板插进玩家网络里第 {@code providerId} 项供应器（负数编码索引，见
+	 * {@code RequestProvidersListC2SPacket} 的约定），同名机器互为备选。
+	 * 批量编码的待选队列复用同一套索引与插入语义，二者下发的列表也来自同一个枚举。
+	 *
+	 * @return 没能插入的剩余部分
+	 */
+	public static ItemStack insertPatternIntoProviderFromPlayerNetwork(ServerPlayer player, ItemStack pattern, long providerId) {
 		if (player == null || pattern == null || pattern.isEmpty() || !PatternDetailsHelper.isEncodedPattern(pattern)) {
 			return pattern == null ? ItemStack.EMPTY : pattern;
 		}

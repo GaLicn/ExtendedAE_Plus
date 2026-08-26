@@ -9,13 +9,13 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -176,31 +176,67 @@ public final class BatchPatternUploadUtil {
 	}
 
 	/**
-	 * 依映射搜索词在给定供应器列表中寻找名称匹配者并插入样板。
-	 * 空位多的优先，避免把整棵树的样板全挤到同一台机器上。
+	 * 依映射搜索词挑出候选供应器：先按显示名精确相等收集，一个都没有再退回模糊匹配（含 JEC 拼音）。
+	 * <p>
+	 * 映射值是在供应器选择界面点选机器时写下的完整机器名，精确优先才不会让「熔炉」
+	 * 连带命中「高级熔炉」——那样服务端会在两台不相干的机器之间自行挑一台。
+	 * 手输的映射值可能只是片段，所以精确落空时仍要保留模糊这一层。
+	 */
+	public static List<PatternContainer> matchProviders(List<PatternContainer> providers, String searchKey) {
+		if (providers == null || providers.isEmpty() || searchKey == null || searchKey.isBlank()) {
+			return List.of();
+		}
+		String key = searchKey.trim();
+		List<PatternContainer> exact = new ArrayList<>();
+		List<PatternContainer> fuzzy = new ArrayList<>();
+		for (PatternContainer container : providers) {
+			if (container == null) {
+				continue;
+			}
+			String name = ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(container).getString();
+			if (name == null) {
+				continue;
+			}
+			if (name.trim().equalsIgnoreCase(key)) {
+				exact.add(container);
+			} else if (providerNameMatches(name, key)) {
+				fuzzy.add(container);
+			}
+		}
+		return exact.isEmpty() ? fuzzy : exact;
+	}
+
+	/**
+	 * 候选里不同显示名的个数，即「玩家眼里有几台机器可选」。
+	 * 同名机器在选择界面里本就合并成一条、上传时可互相顶替，因此算一个候选。
+	 */
+	public static int distinctProviderNames(List<PatternContainer> providers) {
+		if (providers == null || providers.isEmpty()) {
+			return 0;
+		}
+		Set<String> names = new HashSet<>();
+		for (PatternContainer container : providers) {
+			if (container == null) {
+				continue;
+			}
+			String name = ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(container).getString();
+			if (name != null) {
+				names.add(name.trim());
+			}
+		}
+		return names.size();
+	}
+
+	/**
+	 * 把样板插进候选供应器，空位多的优先，避免把整棵树的样板全挤到同一台机器上。
 	 * 批量上传专用：不记录 last uploaded provider（一批 N 个样板的“最后一个”没有意义）。
 	 */
-	public static boolean uploadPatternToMatchingProvider(ServerPlayer player,
-	                                                     ItemStack pattern,
-	                                                     List<PatternContainer> providers,
-	                                                     String searchKey) {
-		if (player == null || pattern == null || pattern.isEmpty()
-				|| searchKey == null || searchKey.isBlank()
-				|| providers == null || providers.isEmpty()) {
+	public static boolean insertPatternIntoProviders(ItemStack pattern, List<PatternContainer> candidates) {
+		if (pattern == null || pattern.isEmpty() || candidates == null || candidates.isEmpty()) {
 			return false;
 		}
 
-		List<PatternContainer> matched = new ArrayList<>();
-		for (PatternContainer container : providers) {
-			if (container == null) continue;
-			if (providerNameMatches(
-					ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(container).getString(), searchKey)) {
-				matched.add(container);
-			}
-		}
-		if (matched.isEmpty()) {
-			return false;
-		}
+		List<PatternContainer> matched = new ArrayList<>(candidates);
 		// getAvailableSlots 有重载，方法引用无法在 reversed() 处推断类型，显式声明比较器元素类型。
 		Comparator<PatternContainer> bySlotsDesc = Comparator.comparingInt(
 				(PatternContainer c) -> ExtendedAEPatternUploadUtil.getAvailableSlots(c)).reversed();

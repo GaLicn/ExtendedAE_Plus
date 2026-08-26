@@ -78,6 +78,8 @@ public class ExtendedAEPlus {
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(JeiSyncManager.class);
+        // 批量编码待选队列：玩家上线时把遗留样板退回背包。
+        NeoForge.EVENT_BUS.register(com.extendedae_plus.util.uploadPattern.BatchPendingUploadUtil.class);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
         NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);

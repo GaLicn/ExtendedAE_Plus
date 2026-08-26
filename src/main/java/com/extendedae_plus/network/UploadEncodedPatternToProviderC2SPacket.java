@@ -1,6 +1,7 @@
 package com.extendedae_plus.network;
 
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.util.uploadPattern.BatchPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -45,7 +46,14 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
             if (!(ctx.player() instanceof ServerPlayer player)) return;
             boolean uploaded = false;
 
-            // 优先处理 Ctrl+Q pending 上传
+            // 批量编码待选队列优先：这一份样板属于队首项，上传后由队列自己前进到下一项，
+            // 汇总也由队列统一发，不能走下面的单次上传提示。
+            if (BatchPendingUploadUtil.hasPending(player)) {
+                BatchPendingUploadUtil.chooseForHead(player, msg.providerId);
+                return;
+            }
+
+            // 其次处理 Ctrl+Q pending 上传
             if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
                 uploaded = CtrlQPendingUploadUtil.uploadPendingCtrlQPattern(player, msg.providerId);
                 if (!uploaded) {

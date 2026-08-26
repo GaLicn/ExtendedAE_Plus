@@ -111,7 +111,7 @@ public final class EmiCtrlQHandler {
 	/**
 	 * 合成链（BoM 树）一键批量编码：遍历整棵树，收集所有涉及配方的样板，
 	 * 分批打包成 {@link BatchCreateAndUploadPatternC2SPacket} 发送
-	 * （合成样板进装配矩阵，处理样板按映射进供应器，都不行才落背包）。同一配方只编码一次。
+	 * （合成样板进装配矩阵，处理样板按映射唯一命中的机器进供应器，命中不唯一的由选择界面逐个指定）。同一配方只编码一次。
 	 * <p>
 	 * 调用方（A 按钮）负责在存在缺映射节点时拦住本方法；此处只跳过无法解析配方 ID 的节点，
 	 * 那类节点补映射也编不出样板。
@@ -174,7 +174,9 @@ public final class EmiCtrlQHandler {
 			PacketDistributor.sendToServer(new BatchCreateAndUploadPatternC2SPacket(
 				new ArrayList<>(entries.subList(from, Math.min(from + limit, entries.size()))),
 				isAllowSubstitutes,
-				isFluidSubstitutes
+				isFluidSubstitutes,
+				// 沿用选择界面里的「唯一匹配自动上传」开关：关掉时每一项都由玩家指定机器。
+				com.extendedae_plus.client.screen.ProviderSelectScreen.isAutoUploadUniqueMatchEnabled()
 			));
 		}
 

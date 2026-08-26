@@ -1,6 +1,8 @@
 package com.extendedae_plus.client.screen;
 
+import com.extendedae_plus.network.BatchPendingActionC2SPacket;
 import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
+import com.extendedae_plus.network.ProvidersListS2CPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.client.emi.BoMMappingStatus;
 import com.extendedae_plus.client.widget.ResizableAETextField;
@@ -16,6 +18,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -92,15 +95,35 @@ public class ProviderSelectScreen extends Screen {
     /** 挑映射机器模式下「配方类型：XXX」的绘制 Y，随 init 的布局一起算。 */
     private int mappingKeyTextY;
 
+    /**
+     * 非空表示「批量编码待选」模式：一键编码里映射没有唯一命中的样板由服务端排队，
+     * 逐个弹出本界面让玩家指定目标机器，选完/跳过才轮到下一项。
+     */
+    private final ProvidersListS2CPacket.PendingSelection pending;
+    /** 已经把选择发给服务端，onClose 不能再补一条取消，否则会把队列的下一项一起取消掉。 */
+    private boolean choiceSent = false;
+
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         this(parent, null, ids, names, emptySlots);
     }
 
     public ProviderSelectScreen(Screen parent, String mappingKey,
                                 List<Long> ids, List<Component> names, List<Integer> emptySlots) {
+        this(parent, mappingKey, ids, names, emptySlots, null);
+    }
+
+    public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots,
+                                ProvidersListS2CPacket.PendingSelection pending) {
+        this(parent, null, ids, names, emptySlots, pending);
+    }
+
+    private ProviderSelectScreen(Screen parent, String mappingKey,
+                                 List<Long> ids, List<Component> names, List<Integer> emptySlots,
+                                 ProvidersListS2CPacket.PendingSelection pending) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
         this.parent = parent;
         this.mappingKey = mappingKey == null || mappingKey.isBlank() ? null : mappingKey.trim();
+        this.pending = pending;
         this.aeStyle = StyleManager.loadStyleDoc("/screens/common/common.json");
         this.ids = ids;
         this.names = names;
@@ -119,12 +142,30 @@ public class ProviderSelectScreen extends Screen {
             this.query = "";
             this.autoUploadRequestedFromPresetSearch = false;
         }
+        if (this.pending != null) {
+            // 搜索词来自这一项自己的映射，与客户端缓存的“上一次”无关；
+            // 命中不唯一是服务端已经判定过的结论，这里再自动上传就等于替玩家瞎猜。
+            this.query = this.pending.presetQuery();
+            this.autoUploadRequestedFromPresetSearch = false;
+        }
         this.buildGroups();
         this.applyFilter();
     }
 
     public boolean isMappingMode() {
         return this.mappingKey != null;
+    }
+
+    public boolean isBatchPendingMode() {
+        return this.pending != null;
+    }
+
+    public Screen getParentScreen() {
+        return this.parent;
+    }
+
+    public static boolean isAutoUploadUniqueMatchEnabled() {
+        return autoUploadUniqueMatchEnabled;
     }
 
     private static boolean nameMatches(String name, String key) {
@@ -220,6 +261,7 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
         long providerId = this.fIds.get(idx);
+        this.choiceSent = true;
         PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
         this.onClose();
     }
@@ -354,11 +396,30 @@ public class ProviderSelectScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (this.mappingKey == null) {
+        if (this.choiceSent) {
+            // 已经选好机器：pending 样板由上传封包接手，再发取消会误伤队列的下一项。
+            Minecraft.getInstance().setScreen(this.parent);
+            return;
+        }
+        if (this.pending != null) {
+            // 批量待选模式下关窗视为放弃整条队列，剩余样板由服务端退回背包；
+            // 只想放过当前一项的话有单独的「跳过」按钮。
+            PacketDistributor.sendToServer(new BatchPendingActionC2SPacket(BatchPendingActionC2SPacket.Action.ABORT));
+        } else if (this.mappingKey == null) {
             // 挑映射机器模式下没有 pending 样板，不能误发取消请求。
             PacketDistributor.sendToServer(CancelPendingPatternC2SPacket.INSTANCE);
         }
         Minecraft.getInstance().setScreen(this.parent);
+    }
+
+    /** 批量待选模式：放过当前这一项（样板退回背包），继续处理队列里的下一项。 */
+    private void skipPendingItem() {
+        if (this.pending == null) {
+            return;
+        }
+        this.choiceSent = true;
+        PacketDistributor.sendToServer(new BatchPendingActionC2SPacket(BatchPendingActionC2SPacket.Action.SKIP));
+        this.onClose();
     }
 
     @Override
@@ -426,6 +487,14 @@ public class ProviderSelectScreen extends Screen {
         next.active = (this.page + 1) * this.pageSize < this.fIds.size();
         this.addRenderableWidget(prev);
         this.addRenderableWidget(next);
+
+        if (this.pending != null) {
+            // 跳过放在翻页行右侧：底部那排已经排满，且「跳过当前项」与翻页一样是逐项操作。
+            Button skip = new AE2Button(centerX + 70, navY, 70, 20,
+                    Component.translatable("extendedae_plus.screen.pending_skip"), b -> this.skipPendingItem());
+            skip.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.screen.pending_skip.tooltip")));
+            this.addRenderableWidget(skip);
+        }
 
         // 底部第二排依次放置中文名、增加映射、映射管理和取消按钮。
         int controlsWidth = Math.min(480, Math.max(240, this.width - 20));
@@ -495,13 +564,51 @@ public class ProviderSelectScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
-        if (this.mappingKey == null) {
+        if (this.mappingKey != null) {
+            // 挑映射机器时必须看得见正在给哪个配方类型建映射，否则点错机器无从察觉。
+            graphics.drawCenteredString(this.font,
+                    Component.translatable("extendedae_plus.screen.choose_provider.mapping_key", this.mappingKey),
+                    this.width / 2, Math.max(4, this.mappingKeyTextY), 0xFFFFAA00);
             return;
         }
-        // 挑映射机器时必须看得见正在给哪个配方类型建映射，否则点错机器无从察觉。
+        if (this.pending != null) {
+            this.renderPendingHeader(graphics);
+        }
+    }
+
+    /**
+     * 批量待选模式的抬头：进度 + 产物图标与名字 + 映射为什么没定下来。
+     * 一次要处理好几项，看不见正在给哪个配方选机器的话玩家只能瞎点。
+     */
+    private void renderPendingHeader(GuiGraphics graphics) {
+        int centerX = this.width / 2;
         graphics.drawCenteredString(this.font,
-                Component.translatable("extendedae_plus.screen.choose_provider.mapping_key", this.mappingKey),
-                this.width / 2, Math.max(4, this.mappingKeyTextY), 0xFFFFAA00);
+                Component.translatable("extendedae_plus.screen.pending_progress",
+                        this.pending.index(), this.pending.total()),
+                centerX, Math.max(4, this.mappingKeyTextY - 11), 0xFFFFAA00);
+
+        ItemStack output = this.pending.output();
+        String key = this.pending.searchKey() == null ? "" : this.pending.searchKey();
+        Component reason = key.isBlank()
+                ? Component.translatable("extendedae_plus.screen.pending_no_mapping")
+                : this.pending.candidates() > 0
+                        ? Component.translatable("extendedae_plus.screen.pending_ambiguous",
+                                key, this.pending.candidates())
+                        : Component.translatable("extendedae_plus.screen.pending_unmatched", key);
+        Component line = Component.empty()
+                .append(output.isEmpty()
+                        ? Component.translatable("extendedae_plus.screen.pending_unknown_output")
+                        : output.getHoverName())
+                .append(Component.literal("  "))
+                .append(reason);
+
+        int textY = Math.max(15, this.mappingKeyTextY);
+        int textX = centerX - this.font.width(line) / 2;
+        if (!output.isEmpty()) {
+            // 图标贴在文字左侧，位置随文字宽度走，长名字也不会压到搜索框。
+            graphics.renderFakeItem(output, textX - 20, textY - 4);
+        }
+        graphics.drawString(this.font, line, textX, textY, 0xFFFFFFFF);
     }
 
     @Override
