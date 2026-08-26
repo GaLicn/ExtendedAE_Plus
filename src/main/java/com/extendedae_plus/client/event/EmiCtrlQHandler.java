@@ -4,6 +4,7 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.emi.BoMMappingStatus;
+import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.compat.EmiRecipeCompat;
 import com.extendedae_plus.network.BatchCreateAndUploadPatternC2SPacket;
@@ -176,7 +177,7 @@ public final class EmiCtrlQHandler {
 				isAllowSubstitutes,
 				isFluidSubstitutes,
 				// 沿用选择界面里的「唯一匹配自动上传」开关：关掉时每一项都由玩家指定机器。
-				com.extendedae_plus.client.screen.ProviderSelectScreen.isAutoUploadUniqueMatchEnabled()
+				ProviderSelectScreen.isAutoUploadUniqueMatchEnabled()
 			));
 		}
 

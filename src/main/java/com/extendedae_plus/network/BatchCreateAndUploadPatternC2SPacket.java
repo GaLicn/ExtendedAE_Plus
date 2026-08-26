@@ -27,8 +27,7 @@ import java.util.Set;
  * 服务端只查一次网络与供应器列表，逐个样板按「装配矩阵 → 映射唯一命中的供应器 → 待选队列 → 背包」回退，
  * 最后只回一条汇总消息（避免 N 个节点刷 N 条聊天）。
  * <p>
- * 映射命中多台或一台都没命中时不替玩家瞎猜，样板进
- * {@link com.extendedae_plus.util.uploadPattern.BatchPendingUploadUtil} 的队列，
+ * 映射命中多台或一台都没命中时不替玩家瞎猜，样板进 {@link BatchPendingUploadUtil} 的队列，
  * 由供应器选择界面逐个问过来。
  * <p>
  * {@code providerSearchKey} 由客户端依据自己的 {@code recipe_type_names.json} 解析后传入：
