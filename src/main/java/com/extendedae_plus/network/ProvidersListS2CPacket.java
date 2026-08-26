@@ -1,6 +1,7 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.emi.BoMPendingSelectOverlay;
 import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -123,6 +124,11 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
         var mc = Minecraft.getInstance();
         if (mc == null) return;
         var current = mc.screen;
+        // 配方树还开着就不切屏：直接在树上开迷你选择区，玩家能一边看树一边点机器。
+        if (msg.pending != null && BoMPendingSelectOverlay.canHost(current)) {
+            BoMPendingSelectOverlay.open(msg.pending, msg.ids, msg.names, msg.emptySlots);
+            return;
+        }
         // 队列里连着下发时，上一屏通常已经自行关闭；万一还在，取它的父屏，避免选择界面层层套娃。
         if (current instanceof ProviderSelectScreen previous && previous.isBatchPendingMode()) {
             current = previous.getParentScreen();

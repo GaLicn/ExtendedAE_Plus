@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.emi;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.emi.BoMMappingOverlay;
+import com.extendedae_plus.client.emi.BoMPendingSelectOverlay;
 import com.extendedae_plus.client.event.EmiCtrlQHandler;
 import dev.emi.emi.bom.BoM;
 import dev.emi.emi.screen.BoMScreen;
@@ -11,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -66,6 +68,8 @@ public abstract class BoMScreenMixin {
 	private void eap$resetOverlayState(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		eapBtnX = Integer.MIN_VALUE;
 		BoMMappingOverlay.reset();
+		// 迷你选择区要认得自己挂在哪个界面上：界面一走就得放弃队列，样板不能烂在服务端。
+		BoMPendingSelectOverlay.noteHost((Screen) (Object) this);
 	}
 
 	/**
@@ -127,10 +131,17 @@ public abstract class BoMScreenMixin {
 		eapBtnY = y;
 	}
 
-	/** 提示必须画在缩放矩阵之外，否则提示框会跟着树一起缩放。 */
+	/** 提示必须画在缩放矩阵之外，否则提示框会跟着树一起缩放。迷你选择区同理，且要压在最上层。 */
 	@Inject(method = "render", at = @At("TAIL"), remap = false)
 	private void eap$drawOverlayTooltips(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+		BoMScreen self = (BoMScreen) (Object) this;
 		Font font = Minecraft.getInstance().font;
+
+		BoMPendingSelectOverlay.render(raw, self.width, self.height, mouseX, mouseY);
+		if (BoMPendingSelectOverlay.contains(mouseX, mouseY)) {
+			// 面板盖住的地方不该再弹树上的提示。
+			return;
+		}
 
 		List<Component> markerTooltip = BoMMappingOverlay.hoveredTooltip();
 		if (markerTooltip != null) {
@@ -147,6 +158,41 @@ public abstract class BoMScreenMixin {
 		raw.renderTooltip(font, tip, mouseX, mouseY);
 	}
 
+	/** 面板盖住的区域不算悬停在树上：EMI 的物品提示与点击语义都由这个方法派生。 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	@Inject(method = "getHoveredStack", at = @At("HEAD"), cancellable = true, remap = false)
+	private void eap$suppressHoverUnderPanel(int mouseX, int mouseY, CallbackInfoReturnable cir) {
+		if (BoMPendingSelectOverlay.contains(mouseX, mouseY)) {
+			cir.setReturnValue(null);
+		}
+	}
+
+	/** 面板上滚轮翻页，不该把整棵树缩掉。 */
+	@Inject(method = "mouseScrolled", at = @At("HEAD"), cancellable = true, remap = false)
+	private void eap$onOverlayScroll(double mouseX, double mouseY, double horizontal, double amount,
+	                                CallbackInfoReturnable<Boolean> cir) {
+		if (BoMPendingSelectOverlay.mouseScrolled(mouseX, mouseY, amount)) {
+			cir.setReturnValue(true);
+		}
+	}
+
+	/** 在面板上按住拖动不该平移整棵树。 */
+	@Inject(method = "mouseDragged", at = @At("HEAD"), cancellable = true, remap = false)
+	private void eap$onOverlayDrag(double mouseX, double mouseY, int button, double deltaX, double deltaY,
+	                              CallbackInfoReturnable<Boolean> cir) {
+		if (BoMPendingSelectOverlay.contains(mouseX, mouseY)) {
+			cir.setReturnValue(true);
+		}
+	}
+
+	/** 面板开着时 ESC 只放弃队列，不连带关掉配方树，否则玩家会连树一起丢。 */
+	@Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true, remap = false)
+	private void eap$onOverlayKey(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+		if (keyCode == GLFW.GLFW_KEY_ESCAPE && BoMPendingSelectOverlay.escapePressed()) {
+			cir.setReturnValue(true);
+		}
+	}
+
 	@Unique
 	private boolean eap$isOverButton(double mouseX, double mouseY) {
 		BoMScreen self = (BoMScreen) (Object) this;
@@ -159,6 +205,11 @@ public abstract class BoMScreenMixin {
 
 	@Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
 	private void eap$onOverlayClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+		// 迷你选择区最优先：它画在屏幕坐标系里、压在树上，点击不能穿透过去展开节点或跳走。
+		if (BoMPendingSelectOverlay.mouseClicked(mouseX, mouseY, button)) {
+			cir.setReturnValue(true);
+			return;
+		}
 		if (button != 0) {
 			return;
 		}
