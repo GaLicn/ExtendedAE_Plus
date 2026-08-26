@@ -9,10 +9,12 @@ import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.extendedae_plus.client.gui.NewIcon;
+import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -48,6 +50,9 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     private ActionEPPButton divideBy2Button;
     private ActionEPPButton x5Button;
     private ActionEPPButton divideBy5Button;
+    @Unique private ActionEPPButton eap$showPatternScalingControlsButton;
+    @Unique private ActionEPPButton eap$hidePatternScalingControlsButton;
+    @Unique private boolean eap$patternScalingControlsVisible = true;
 
     public GuiExPatternProviderMixin(ContainerExPatternProvider menu, Inventory playerInventory, Component title,
                                      ScreenStyle style) {
@@ -131,6 +136,23 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addToLeftToolbar(this.nextPage);
         this.addToLeftToolbar(this.prevPage);
 
+        this.eap$showPatternScalingControlsButton = new ActionEPPButton(
+                b -> this.eap$setPatternScalingControlsVisible(true),
+                NewIcon.SHOW_PATTERN_SCALING_CONTROLS
+        );
+        this.eap$showPatternScalingControlsButton.setTooltip(Tooltip.create(
+                Component.translatable("tooltip.extendedae_plus.show_pattern_scaling_controls")
+        ));
+        this.eap$hidePatternScalingControlsButton = new ActionEPPButton(
+                b -> this.eap$setPatternScalingControlsVisible(false),
+                NewIcon.HIDE_PATTERN_SCALING_CONTROLS
+        );
+        this.eap$hidePatternScalingControlsButton.setTooltip(Tooltip.create(
+                Component.translatable("tooltip.extendedae_plus.hide_pattern_scaling_controls")
+        ));
+        this.addToLeftToolbar(this.eap$showPatternScalingControlsButton);
+        this.addToLeftToolbar(this.eap$hidePatternScalingControlsButton);
+
         // 倍增/除法按钮：使用自有 C2S 包发送到服务端执行样板缩放
         this.x2Button = new ActionEPPButton((b) -> {
             var conn = Minecraft.getInstance().getConnection();
@@ -165,6 +187,8 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addRenderableWidget(this.x2Button);
         this.addRenderableWidget(this.divideBy5Button);
         this.addRenderableWidget(this.x5Button);
+        this.eap$patternScalingControlsVisible = ModConfigs.EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS.get();
+        this.eap$applyPatternScalingControlsVisibility();
     }
 
     @Override
@@ -194,18 +218,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.nextPage.setVisibility(showPageButtons);
             this.prevPage.setVisibility(showPageButtons);
         }
-        if (this.x2Button != null) {
-            this.x2Button.setVisibility(true);
-        }
-        if (this.divideBy2Button != null) {
-            this.divideBy2Button.setVisibility(true);
-        }
-        if (this.divideBy5Button != null) {
-            this.divideBy5Button.setVisibility(true);
-        }
-        if (this.x5Button != null) {
-            this.x5Button.setVisibility(true);
-        }
+        this.eap$applyPatternScalingControlsVisibility();
 
         // 若从 JEI 配方界面返回后，Screen 的 renderables/children 可能被清空，导致按钮丢失
         // 这里在每帧保证这些按钮存在于渲染列表中（不存在则重新注册）
@@ -250,10 +263,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             }
         }
 
-        // 定位到 GUI 右缘外侧一点（使用绝对屏幕坐标）
-        int bx = this.leftPos + this.imageWidth + 1; // 向右平移 1px 到面板外侧
-        int by = this.topPos + 104;
-        int spacing = 22;
+        int spacing = 23;
+        // 以升级槽列为锚点，首个倍率按钮向右偏移一个按钮间距。
+        var firstUpgradeSlot = this.getMenu().getSlots(SlotSemantics.UPGRADE).getFirst();
+        int bx = this.leftPos + firstUpgradeSlot.x + spacing;
+        int by = this.topPos + firstUpgradeSlot.y - 1;
         // 翻页按钮交由左侧工具栏布局，无需手动定位
         if (this.divideBy2Button != null) {
             this.divideBy2Button.setX(bx);
@@ -277,6 +291,30 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     }
 
     // 本文件原包含本地样板缩放实现（单机模式）和 ExtendedAE 网络派发，已移除以兼容 1.21.1 与最小可构建集。
+
+    @Unique
+    private void eap$setPatternScalingControlsVisible(boolean visible) {
+        this.eap$patternScalingControlsVisible = visible;
+        ModConfigs.EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS.set(visible);
+        this.eap$applyPatternScalingControlsVisibility();
+    }
+
+    @Unique
+    private void eap$applyPatternScalingControlsVisibility() {
+        boolean visible = this.eap$patternScalingControlsVisible;
+        if (this.x2Button != null) this.x2Button.setVisibility(visible);
+        if (this.divideBy2Button != null) this.divideBy2Button.setVisibility(visible);
+        if (this.divideBy5Button != null) this.divideBy5Button.setVisibility(visible);
+        if (this.x5Button != null) this.x5Button.setVisibility(visible);
+
+        // 左侧工具栏只保留当前可执行操作对应的图标。
+        if (this.eap$showPatternScalingControlsButton != null) {
+            this.eap$showPatternScalingControlsButton.setVisibility(!visible);
+        }
+        if (this.eap$hidePatternScalingControlsButton != null) {
+            this.eap$hidePatternScalingControlsButton.setVisibility(visible);
+        }
+    }
 
 
     @Unique

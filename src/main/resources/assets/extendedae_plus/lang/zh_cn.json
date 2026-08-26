@@ -3,6 +3,8 @@
   "gui.expatternprovider.hide_slots": "隐藏槽位",
   "gui.expatternprovider.show_slots": "显示槽位",
   "gui.expatternprovider.clear_selection": "取消选择",
+  "tooltip.extendedae_plus.show_pattern_scaling_controls": "显示样板倍率按钮",
+  "tooltip.extendedae_plus.hide_pattern_scaling_controls": "隐藏样板倍率按钮",
   "gui.extendedae_plus.global.toggle_blocking": "切换阻挡模式",
   "gui.extendedae_plus.global.toggle_adv_blocking": "切换高级阻挡",
   "gui.extendedae_plus.global.toggle_smart_doubling": "切换智能翻倍",
@@ -217,6 +219,7 @@
   "extendedae_plus.configuration.client": "显示配置",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "显示样板编码玩家",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "样板终端默认显示槽位",
+  "extendedae_plus.configuration.extendedPatternProviderShowScalingControls": "扩展样板供应器显示倍率按钮",
 
   "extendedae_plus.configuration.ae": "AE2配置",
   "extendedae_plus.configuration.craftingPauseThreshold": "AE合成计算暂停检查阈值",

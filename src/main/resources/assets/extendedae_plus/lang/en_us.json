@@ -3,6 +3,8 @@
   "gui.expatternprovider.hide_slots": "Hide Slots",
   "gui.expatternprovider.show_slots": "Show Slots",
   "gui.expatternprovider.clear_selection": "Clear Selection",
+  "tooltip.extendedae_plus.show_pattern_scaling_controls": "Show Pattern Scaling Controls",
+  "tooltip.extendedae_plus.hide_pattern_scaling_controls": "Hide Pattern Scaling Controls",
   "gui.extendedae_plus.global.toggle_blocking": "Toggle Blocking Mode",
   "gui.extendedae_plus.global.toggle_adv_blocking": "Toggle Advanced Blocking",
   "gui.extendedae_plus.global.toggle_smart_doubling": "Toggle Smart Doubling",
@@ -221,6 +223,7 @@
   "extendedae_plus.configuration.client": "Display Configuration",
   "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Pattern Encoder Player",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots by Default",
+  "extendedae_plus.configuration.extendedPatternProviderShowScalingControls": "Show Pattern Scaling Controls in Extended Pattern Provider",
 
   "extendedae_plus.configuration.ae": "AE2 Configuration",
   "extendedae_plus.configuration.craftingPauseThreshold": "AE Crafting Pause Threshold",

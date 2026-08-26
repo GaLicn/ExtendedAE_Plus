@@ -6,21 +6,16 @@ import appeng.client.Point;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.StackWithBounds;
 import appeng.client.gui.TextOverride;
-import appeng.client.gui.WidgetContainer;
 import appeng.client.gui.implementations.PatternProviderScreen;
 import appeng.client.gui.me.crafting.CraftingCPUScreen;
 import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.client.gui.style.TextAlignment;
-import appeng.client.gui.widgets.ToolboxPanel;
-import appeng.menu.SlotSemantics;
 import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
-import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
-import com.extendedae_plus.mixin.ae2.accessor.WidgetContainerAccessor;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
@@ -45,42 +40,6 @@ import javax.annotation.Nullable;
 
 @Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class AEBaseScreenMixin {
-
-    /** 在所有样板供应器界面初始化前移除第三方注入的工具箱面板。 */
-    @Inject(method = "init", at = @At("HEAD"), remap = false)
-    private void eap$hidePatternProviderToolbox(CallbackInfo ci) {
-        Object self = this;
-        if (!(self instanceof PatternProviderScreen<?>)) {
-            return;
-        }
-
-        try {
-            AEBaseScreen<?> screen = (AEBaseScreen<?>) self;
-            screen.setSlotsHidden(SlotSemantics.TOOLBOX, true);
-
-            WidgetContainer widgets = ((AEBaseScreenAccessor<?>) self).eap$getWidgets();
-            WidgetContainerAccessor accessor = (WidgetContainerAccessor) widgets;
-            accessor.eap$getWidgetsMap().keySet().removeIf(AEBaseScreenMixin::eap$isToolboxId);
-            accessor.eap$getCompositeWidgetsMap().entrySet().removeIf(entry ->
-                    eap$isToolboxId(entry.getKey()) || entry.getValue() instanceof ToolboxPanel);
-        } catch (Throwable ignored) {
-            // 兼容其它界面实现，隐藏失败时不影响界面正常打开。
-        }
-    }
-
-    @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
-    private void eap$keepPatternProviderToolboxHidden(CallbackInfo ci) {
-        eap$hidePatternProviderToolbox(ci);
-    }
-
-    @Unique
-    private static boolean eap$isToolboxId(String id) {
-        if (id == null) {
-            return false;
-        }
-        String normalized = id.replace("_", "").replace("-", "");
-        return normalized.equalsIgnoreCase("toolbox") || normalized.endsWith("toolbox");
-    }
 
     @Unique
     private static int eap$getIntField(Object self, String name, int def) {

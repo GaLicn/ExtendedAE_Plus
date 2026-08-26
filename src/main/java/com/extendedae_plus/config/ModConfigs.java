@@ -13,6 +13,7 @@ public final class ModConfigs {
     public static final ModConfigSpec.BooleanValue SHOW_ENCODER_PATTERN_PLAYER;
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ModConfigSpec.BooleanValue JEI_NETWORK_OVERLAY_ENABLED;
+    public static final ModConfigSpec.BooleanValue EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS;
     public static final ModConfigSpec.BooleanValue PRIORITIZE_DISK_ENERGY;
 
     // Server 配置
@@ -53,6 +54,12 @@ public final class ModConfigs {
                         "可通过 JEI 左下角按钮即时切换"
                 )
                 .define("jeiNetworkOverlayEnabled", true);
+        EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS = clientBuilder
+                .comment(
+                        "扩展样板供应器是否显示倍率调整按钮",
+                        "可通过扩展样板供应器左侧工具栏即时切换"
+                )
+                .define("extendedPatternProviderShowScalingControls", true);
         clientBuilder.pop();
         CLIENT_SPEC = clientBuilder.build();
 
