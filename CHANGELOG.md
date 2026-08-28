@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.6.2]
+
+### Added / 新增
+- JEI 与 AE2 的相关联动操作现支持 EMI
+  - JEI and AE2 integration features now support EMI.
+- 补充莱卓罗水晶系列标签
+  - Added tags for the Lattra Crystal series.
+- 为吞噬盘添加在驱动器中的显示模型
+  - Added an in-drive display model for the Annihilation Plane.
+
+### Changed / 变更
+- 超级水晶装配器与超级电路切片机的配方现与原版机器配方同步
+  - Super Crystal Assembler and Super Circuit Cutter recipes now stay synchronized with their original machine recipes.
+- 调整扩展样板供应器的 UI 布局
+  - Adjusted the Extended Pattern Provider UI layout.
+- 修改终极超级装配矩阵构建工具的贴图
+  - Updated the texture of the Ultimate Super Assembler Matrix Builder.
+
+### Fixed / 修复
+- 修复超级装配矩阵样板倍增后，AE 电量缓存可能不足以完成发配的问题
+  - Fixed AE energy cache potentially being insufficient to complete dispatching after multiplying Super Assembler Matrix patterns.
+- 修复超级装配矩阵部件生命周期管理问题导致的崩溃
+  - Fixed a crash caused by lifecycle management issues in Super Assembler Matrix components.
+- 修复供应器高亮提示文本错误
+  - Fixed incorrect highlight hint text for Pattern Providers.
+- 修复 F 键搜索在部分区域无法获取的问题
+  - Fixed F-key search being unable to retrieve results in certain areas.
+
 ## [1.6.1]
 
 ### Added / 新增
