@@ -165,7 +165,14 @@ public final class InputEvents {
 	}
 
 	private static void onKeyJei(ScreenEvent.KeyPressed.Pre event, Screen screen) {
-		Optional<?> hovered = JeiRuntimeCompat.getIngredientUnderMouse();
+		// 坐标查询覆盖 JEI 位于物品列表侧或书签侧的历史记录。
+		var minecraft = Minecraft.getInstance();
+		double mouseX = minecraft.mouseHandler.xpos() * minecraft.getWindow().getGuiScaledWidth() / minecraft.getWindow().getScreenWidth();
+		double mouseY = minecraft.mouseHandler.ypos() * minecraft.getWindow().getGuiScaledHeight() / minecraft.getWindow().getScreenHeight();
+		Optional<?> hovered = JeiRuntimeCompat.getIngredientUnderMouse(mouseX, mouseY);
+		if (hovered.isEmpty()) {
+			hovered = JeiRuntimeCompat.getIngredientUnderMouse();
+		}
 		if (hovered.isEmpty()) return;
 		Object value = JeiRuntimeCompat.getTypedIngredientValue(hovered.get());
 		if (value instanceof ItemStack stack) {
