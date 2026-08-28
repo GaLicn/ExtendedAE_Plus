@@ -1,0 +1,25 @@
+{
+  "credit": "Based on Applied Energistics 2 drive cell model",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "extendedae_plus:block/drive/infinity_biginteger_cell",
+    "cell": "extendedae_plus:block/drive/infinity_biginteger_cell"
+  },
+  "elements": [
+    {
+      "name": "Cell Backdrop",
+      "from": [0, 0, 0],
+      "to": [6, 2, 2],
+      "rotation": { "angle": 0, "axis": "y", "origin": [9, 8, 8] },
+      "faces": {
+        "north": {
+          "uv": [0, 0, 6, 2],
+          "texture": "#cell",
+          "cullface": "north"
+        },
+        "up": { "uv": [6, 0, 0, 2], "texture": "#cell", "cullface": "north" },
+        "down": { "uv": [6, 0, 0, 2], "texture": "#cell", "cullface": "north" }
+      }
+    }
+  ]
+}

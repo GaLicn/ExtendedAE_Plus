@@ -14,6 +14,7 @@ import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
+import com.extendedae_plus.network.SetBlockHighlightS2CPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
 import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
@@ -40,6 +41,7 @@ public class ModNetwork {
                 ScaleEncodingPatternC2SPacket::handle);
         registrar.playToServer(InterfaceAdjustConfigAmountC2SPacket.TYPE, InterfaceAdjustConfigAmountC2SPacket.STREAM_CODEC, InterfaceAdjustConfigAmountC2SPacket::handle);
         registrar.playToClient(SetPatternHighlightS2CPacket.TYPE, SetPatternHighlightS2CPacket.STREAM_CODEC, SetPatternHighlightS2CPacket::handle);
+        registrar.playToClient(SetBlockHighlightS2CPacket.TYPE, SetBlockHighlightS2CPacket.STREAM_CODEC, SetBlockHighlightS2CPacket::handle);
         registrar.playToClient(ProvidersListS2CPacket.TYPE, ProvidersListS2CPacket.STREAM_CODEC, ProvidersListS2CPacket::handle);
         registrar.playToServer(RequestProvidersListC2SPacket.TYPE, RequestProvidersListC2SPacket.STREAM_CODEC, RequestProvidersListC2SPacket::handle);
         registrar.playToClient(SetProviderPageS2CPacket.TYPE, SetProviderPageS2CPacket.STREAM_CODEC, SetProviderPageS2CPacket::handle);

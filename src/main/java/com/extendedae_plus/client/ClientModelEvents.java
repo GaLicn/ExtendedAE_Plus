@@ -2,11 +2,11 @@ package com.extendedae_plus.client;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.client.model.MatrixFrameModel;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 
 /**
  * 确保在模型烘焙/资源重载期间也会注册内置模型，避免在刷新资源后丢失内置模型映射。
@@ -30,6 +30,7 @@ public final class ClientModelEvents {
         event.register(ModelResourceLocation.standalone(ExtendedAEPlus.id("block/crafting/64x_accelerator_formed_v2")));
         event.register(ModelResourceLocation.standalone(ExtendedAEPlus.id("block/crafting/256x_accelerator_formed_v2")));
         event.register(ModelResourceLocation.standalone(ExtendedAEPlus.id("block/crafting/1024x_accelerator_formed_v2")));
+        event.register(ModelResourceLocation.standalone(ExtendedAEPlus.id("block/drive/cells/infinity_biginteger_cell")));
         ClientProxy.init();
     }
 }
