@@ -53,6 +53,10 @@ public class SuperCrystalAssemblerBlock extends AEBaseEntityBlock<SuperCrystalAs
     @Override
     protected @NotNull ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos,
             Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
+        var parent = super.useItemOn(heldItem, state, level, pos, player, hand, hitResult);
+        if (parent.result() != InteractionResult.PASS) {
+            return parent;
+        }
         if (player.isShiftKeyDown()) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
