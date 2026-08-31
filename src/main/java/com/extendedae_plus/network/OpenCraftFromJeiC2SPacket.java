@@ -40,7 +40,13 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
             var located = WirelessTerminalLocator.find(player);
 
             var grid = WirelessTerminalLocator.getConnectedGrid(player, located);
+            if (grid == null) {
+                return;
+            }
             var craftingService = grid.getCraftingService();
+            if (!craftingService.isCraftable(what)) {
+                return;
+            }
 
             var locator = located.createMenuLocator(player);
             if (locator != null) {
