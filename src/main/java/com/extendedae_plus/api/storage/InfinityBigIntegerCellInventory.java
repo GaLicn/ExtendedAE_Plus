@@ -1,6 +1,7 @@
 package com.extendedae_plus.api.storage;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEItemKey;
@@ -17,7 +18,7 @@ import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.util.storage.InfinityConstants;
 import com.extendedae_plus.util.storage.InfinityDataStorage;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2LongMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -33,10 +34,12 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
- * Original copyright (c) Technici4n<p>
+ * 本代码参考了 AE2Things[](https://github.com/Technici4n/AE2Things-Forge)，并遵循 MIT 许可证。<p>
+ * 原始版权归 Technici4n 所有。<p>
  */
 public class InfinityBigIntegerCellInventory implements StorageCell {
+    private static final BigInteger BI_LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
+
     private final InfinityBigIntegerCellItem cell;
     // 磁盘本身
     private final ItemStack self;
@@ -49,10 +52,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private final ISaveProvider container;
     private final IPartitionList partitionList;
     private final IncludeExclude partitionListMode;
-    // 存储的物品种类数量
-    private int totalAEKeyType;
-    // 存储的物品总数
-    private BigInteger totalAEKey2Amounts = BigInteger.ZERO;
     // 仅用于控制 ItemStack 摘要字段是否需要刷新
     private boolean isPersisted = true;
 
@@ -77,7 +76,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         builder.addAll(config.keySet());
         this.partitionListMode = hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST;
         this.partitionList = builder.build();
-        this.initData();
     }
 
     // 将 BigInteger 格式化为带单位的字符串，保留两位小数
@@ -109,11 +107,11 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
 
     @Nullable
     private InfinityDataStorage getExistingCellStorage() {
-        UUID uuid = this.getUUID();
-        if (uuid == null || this.storageManager == null || !this.storageManager.hasUUID(uuid)) {
+        UUID uuid = this.cellUuid;
+        if (uuid == null || this.storageManager == null) {
             return null;
         }
-        return this.storageManager.getOrCreateCell(uuid);
+        return this.storageManager.getCell(uuid);
     }
 
     @Nullable
@@ -129,28 +127,12 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return this.storageManager.getOrCreateCell(uuid);
     }
 
-    private void initData() {
-        this.refreshCachedStateFromStorage();
-    }
-
-    private void refreshCachedStateFromStorage() {
-        var cellStorage = this.getExistingCellStorage();
-        if (cellStorage != null) {
-            this.totalAEKeyType = cellStorage.amounts.size();
-            this.totalAEKey2Amounts = cellStorage.itemCount == null ? BigInteger.ZERO : cellStorage.itemCount;
-        } else {
-            this.totalAEKeyType = 0;
-            this.totalAEKey2Amounts = BigInteger.ZERO;
-        }
-    }
-
     @Override
     public CellState getStatus() {
-        this.refreshCachedStateFromStorage();
-        if (this.getTotalAEKey2Amounts().equals(BigInteger.ZERO)) {
-            return CellState.EMPTY;
-        }
-        return CellState.NOT_EMPTY;
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        return cellStorage != null && cellStorage.hasItems()
+                ? CellState.NOT_EMPTY
+                : CellState.EMPTY;
     }
 
     @Override
@@ -160,21 +142,24 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
 
     @Override
     public void persist() {
-        this.refreshCachedStateFromStorage();
         if (this.isPersisted) {
             return;
         }
 
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        BigInteger totalAmount = cellStorage == null ? BigInteger.ZERO : cellStorage.getItemCount();
+        int itemTypes = cellStorage == null ? 0 : cellStorage.size();
+
         CompoundTag tag = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        if (this.totalAEKey2Amounts.equals(BigInteger.ZERO)) {
+        if (totalAmount.signum() <= 0) {
             tag.remove(InfinityConstants.INFINITY_ITEM_TOTAL);
             tag.remove(InfinityConstants.INFINITY_ITEM_TYPES);
-            // backward compat
+            // 向后兼容
             tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
         } else {
-            byte[] itemCountBytes = this.totalAEKey2Amounts.toByteArray();
+            byte[] itemCountBytes = totalAmount.toByteArray();
             tag.putByteArray(InfinityConstants.INFINITY_ITEM_TOTAL, itemCountBytes);
-            tag.putInt(InfinityConstants.INFINITY_ITEM_TYPES, this.totalAEKeyType);
+            tag.putInt(InfinityConstants.INFINITY_ITEM_TYPES, itemTypes);
             tag.putByteArray(InfinityConstants.INFINITY_CELL_ITEM_COUNT, itemCountBytes);
         }
 
@@ -184,18 +169,15 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
 
     private void clearCellData() {
         UUID uuid = this.getUUID();
-        if (uuid != null && this.storageManager != null && this.storageManager.hasUUID(uuid)) {
+        if (uuid != null && this.storageManager != null) {
             this.storageManager.removeCell(uuid);
         }
-
-        this.totalAEKeyType = 0;
-        this.totalAEKey2Amounts = BigInteger.ZERO;
 
         CompoundTag tag = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         tag.remove(InfinityConstants.INFINITY_CELL_UUID);
         tag.remove(InfinityConstants.INFINITY_ITEM_TOTAL);
         tag.remove(InfinityConstants.INFINITY_ITEM_TYPES);
-        // backward compat
+        // 向后兼容
         tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
         this.self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         this.cellUuid = null;
@@ -229,20 +211,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return newUUID;
     }
 
-    // 获取存储的物品总数
-    private BigInteger getTotalAEKey2Amounts() {
-        return this.totalAEKey2Amounts;
-    }
-
-    public int getTotalAEKeyType() {
-        this.refreshCachedStateFromStorage();
-        return this.totalAEKeyType;
-    }
-
-    private boolean hasUUID() {
-        return this.cellUuid != null;
-    }
-
     @Nullable
     private UUID readUUIDFromStack() {
         CustomData data = this.self.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
@@ -260,14 +228,6 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return this.cellUuid;
     }
 
-    private Object2ObjectMap<AEKey, BigInteger> getCellStoredMap() {
-        var cellStorage = this.getExistingCellStorage();
-        if (cellStorage == null) {
-            return Object2ObjectMaps.emptyMap();
-        }
-        return cellStorage.amounts;
-    }
-
     private ConfigInventory getConfigInventory() {
         return this.cell.getConfigInventory(this.self);
     }
@@ -276,13 +236,13 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         return this.cell.getUpgrades(this.self);
     }
 
-    private appeng.api.config.FuzzyMode getFuzzyMode() {
+    private FuzzyMode getFuzzyMode() {
         return this.cell.getFuzzyMode(this.self);
     }
 
     @Override
     public long insert(AEKey what, long amount, Actionable mode, IActionSource source) {
-        if (amount == 0) {
+        if (amount <= 0) {
             return 0;
         }
         if (this.storageManager == null) {
@@ -297,31 +257,25 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             return 0;
         }
 
+        // 模拟时不分配UUID或创建SavedData条目。此路径在AE2规划网络操作时被频繁使用。
+        if (mode != Actionable.MODULATE) {
+            return amount;
+        }
+
         var cellStorage = this.getWritableCellStorage();
         if (cellStorage == null) {
             return 0;
         }
 
-        BigInteger currentAmount = cellStorage.amounts.getOrDefault(what, BigInteger.ZERO);
-        if (mode == Actionable.MODULATE) {
-            BigInteger delta = BigInteger.valueOf(amount);
-            if (currentAmount.equals(BigInteger.ZERO)) {
-                this.totalAEKeyType++;
-            }
-
-            BigInteger newAmount = currentAmount.add(delta);
-            cellStorage.amounts.put(what, newAmount);
-            this.totalAEKey2Amounts = this.totalAEKey2Amounts.add(delta);
-            cellStorage.itemCount = this.totalAEKey2Amounts;
-            this.saveChanges();
-        }
+        cellStorage.insert(what, amount);
+        this.saveChanges();
 
         return amount;
     }
 
     @Override
     public long extract(AEKey what, long amount, Actionable mode, IActionSource source) {
-        if (this.storageManager == null) {
+        if (amount <= 0 || this.storageManager == null) {
             return 0;
         }
 
@@ -330,54 +284,64 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             return 0;
         }
 
-        BigInteger currentAmount = cellStorage.amounts.getOrDefault(what, BigInteger.ZERO);
-        if (currentAmount.compareTo(BigInteger.ZERO) <= 0) {
-            return 0;
-        }
-
-        BigInteger requested = BigInteger.valueOf(amount);
-        if (requested.compareTo(currentAmount) >= 0) {
-            if (mode == Actionable.MODULATE) {
-                cellStorage.amounts.remove(what);
-                this.totalAEKeyType--;
-                this.totalAEKey2Amounts = this.totalAEKey2Amounts.subtract(currentAmount);
-                cellStorage.itemCount = this.totalAEKey2Amounts;
-
-                if (cellStorage.amounts.isEmpty()) {
-                    this.clearCellData();
-                } else {
-                    this.saveChanges();
-                }
+        boolean modulate = mode == Actionable.MODULATE;
+        long extractedAmount = cellStorage.extract(what, amount, modulate);
+        if (modulate && extractedAmount > 0) {
+            if (cellStorage.size() == 0) {
+                this.clearCellData();
+            } else {
+                this.saveChanges();
             }
-            return currentAmount.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0 ? Long.MAX_VALUE : currentAmount.longValue();
         }
 
-        if (mode == Actionable.MODULATE) {
-            BigInteger newAmount = currentAmount.subtract(requested);
-            cellStorage.amounts.put(what, newAmount);
-            this.totalAEKey2Amounts = this.totalAEKey2Amounts.subtract(requested);
-            cellStorage.itemCount = this.totalAEKey2Amounts;
-            this.saveChanges();
-        }
-        return requested.longValue();
+        return extractedAmount;
     }
 
     @Override
     public void getAvailableStacks(KeyCounter out) {
-        BigInteger maxLong = BigInteger.valueOf(Long.MAX_VALUE);
-        for (var entry : this.getCellStoredMap().object2ObjectEntrySet()) {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        if (cellStorage == null || !cellStorage.hasItems()) {
+            return;
+        }
+
+        for (var entry : Object2LongMaps.fastIterable(cellStorage.longAmounts)) {
             AEKey key = entry.getKey();
-            BigInteger value = entry.getValue();
+            long value = entry.getLongValue();
+            if (value <= 0) {
+                continue;
+            }
 
             long existing = out.get(key);
-            BigInteger sum = BigInteger.valueOf(existing).add(value);
-            long toSet = sum.compareTo(maxLong) > 0 ? Long.MAX_VALUE : sum.longValue();
             if (existing == Long.MAX_VALUE) {
                 continue;
             }
-            long delta = toSet - existing;
-            if (delta != 0) {
-                out.add(key, delta);
+
+            if (existing > Long.MAX_VALUE - value) {
+                out.set(key, Long.MAX_VALUE);
+            } else {
+                out.add(key, value);
+            }
+        }
+
+        for (var entry : Object2ObjectMaps.fastIterable(cellStorage.bigAmounts)) {
+            AEKey key = entry.getKey();
+            BigInteger value = entry.getValue();
+            if (value == null || value.signum() <= 0) {
+                continue;
+            }
+
+            long existing = out.get(key);
+            if (existing == Long.MAX_VALUE) {
+                continue;
+            }
+
+            // 极大数 Map 中的数量必定超过 Long.MAX_VALUE，正常统计可直接饱和。
+            if (existing >= 0) {
+                out.set(key, Long.MAX_VALUE);
+            } else {
+                // KeyCounter 允许负数，只有这个罕见边界需要进行 BigInteger 加法。
+                BigInteger sum = value.add(BigInteger.valueOf(existing));
+                out.set(key, sum.compareTo(BI_LONG_MAX) > 0 ? Long.MAX_VALUE : sum.longValue());
             }
         }
     }
@@ -385,10 +349,5 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     @Override
     public Component getDescription() {
         return this.self.getHoverName();
-    }
-
-    public String getTotalStorage() {
-        this.refreshCachedStateFromStorage();
-        return formatBigInteger(this.totalAEKey2Amounts);
     }
 }
