@@ -47,6 +47,20 @@ public final class ModConfig {
         }
     }
 
+    /** Updates and immediately saves the JEI network inventory overlay preference. */
+    @SuppressWarnings("unchecked")
+    public static void setJeiNetworkOverlayEnabled(boolean enabled) {
+        synchronized (lock) {
+            if (INSTANCE == null || configHolder == null) {
+                return;
+            }
+            ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
+                    .get("jeiNetworkOverlayEnabled");
+            value.set(enabled);
+            ConfigIO.saveClientValues(configHolder);
+        }
+    }
+
     @Configurable
     @Configurable.Comment(value = {
             "设置AE构建合成计划过程中的 wait/notify 次数，提升吞吐但会降低调度响应性"
@@ -124,7 +138,7 @@ public final class ModConfig {
     @Configurable
     @Configurable.Comment(value = {
             "JEI 中是否显示 AE2 网络库存与可合成状态",
-            "可通过 JEI 左下角按钮即时切换"
+            "可通过 JEI 左下角按钮或 AE2 终端设置即时切换"
     })
     public boolean jeiNetworkOverlayEnabled = true;
 

@@ -270,5 +270,6 @@
   "key.categories.extendedae_plus": "ExtendedAE Plus",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 網路庫存顯示：開啟",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 網路庫存顯示：關閉",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "當身上有可用的 AE2 無線終端時，會在書籤中顯示目前 AE2 中該物品庫存"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "當身上有可用的 AE2 無線終端時，會在 JEI 物品列表和書籤中顯示目前 AE2 庫存",
+  "gui.extendedae_plus.terminal_settings.jei_network_overlay": "JEI 顯示 AE2 網路庫存"
 }
