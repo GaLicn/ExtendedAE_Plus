@@ -357,5 +357,6 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 network inventory display: Enabled",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 network inventory display: Disabled",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, AE2 stock is shown in JEI's ingredient list and bookmarks",
+  "gui.extendedae_plus.terminal_settings.jei_network_overlay": "Show AE2 stock in JEI"
 }

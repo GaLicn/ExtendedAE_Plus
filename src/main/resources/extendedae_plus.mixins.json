@@ -21,6 +21,7 @@
     "ae2.client.gui.InterfaceScreenMixin",
     "ae2.client.gui.ProcessingEncodingPanelMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.client.gui.TerminalSettingsScreenMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.client.gui.patternProvider.PatternProviderHighlightCleanupMixin",
     "ae2.client.gui.patternProvider.PatternProviderScreenMixin",

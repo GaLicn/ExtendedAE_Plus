@@ -82,7 +82,7 @@ public final class JeiNetworkOverlayButton implements IUserInputHandler {
         }
         if (!input.isSimulate()) {
             // JEI 会先模拟输入，只有实际点击阶段才切换并播放声音。
-            ModConfig.INSTANCE.jeiNetworkOverlayEnabled = !ModConfig.INSTANCE.jeiNetworkOverlayEnabled;
+            ModConfig.setJeiNetworkOverlayEnabled(!ModConfig.INSTANCE.jeiNetworkOverlayEnabled);
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }

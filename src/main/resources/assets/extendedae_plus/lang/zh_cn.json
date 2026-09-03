@@ -356,5 +356,6 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 网络库存显示：开启",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 网络库存显示：关闭",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在 JEI 物品列表和书签中显示当前 AE2 库存",
+  "gui.extendedae_plus.terminal_settings.jei_network_overlay": "JEI 显示 AE2 网络库存"
 }
