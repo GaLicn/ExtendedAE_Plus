@@ -1,6 +1,7 @@
 package com.extendedae_plus.content.ae2;
 
 import appeng.api.config.Setting;
+import appeng.api.config.YesNo;
 import appeng.api.ids.AEComponents;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IManagedGridNode;
@@ -12,11 +13,13 @@ import appeng.blockentity.networking.CableBusBlockEntity;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.AEBasePart;
+import appeng.util.ConfigManager;
 import appeng.util.SettingsFrom;
 import appeng.util.inv.AppEngInternalInventory;
-import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
-import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
 import com.extendedae_plus.api.bridge.MirrorPatternProviderMasterBridge;
+import com.extendedae_plus.api.bridge.PatternProviderLogicSyncBridge;
+import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
+import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModBlockEntities;
 import net.minecraft.core.BlockPos;
@@ -632,7 +635,14 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
      * AdvancedAE 含有普通供应器不支持的配置项；仅比较双方共有项，避免无意义的周期性重载。
      */
     private static boolean haveSameSharedConfigSettings(IConfigManager mirror, IConfigManager master) {
+        if (!haveSameConfigSetting(mirror, master, EAPSettings.ADVANCED_BLOCKING)) {
+            return false;
+        }
+
         for (var setting : master.getSettings()) {
+            if (setting == EAPSettings.ADVANCED_BLOCKING) {
+                continue;
+            }
             if (mirror.hasSetting(setting)
                     && !Objects.equals(getConfigValue(mirror, setting), getConfigValue(master, setting))) {
                 return false;
@@ -642,8 +652,12 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
     }
 
     private static boolean syncSharedConfigSettings(IConfigManager master, IConfigManager mirror) {
-        var changed = false;
+        // 智能阻挡必须显式同步，不能只依赖 getSettings() 的迭代结果。
+        var changed = syncConfigSetting(master, mirror, EAPSettings.ADVANCED_BLOCKING);
         for (var setting : master.getSettings()) {
+            if (setting == EAPSettings.ADVANCED_BLOCKING) {
+                continue;
+            }
             if (mirror.hasSetting(setting)
                     && !Objects.equals(getConfigValue(master, setting), getConfigValue(mirror, setting))) {
                 copyConfigValue(master, mirror, setting);
@@ -651,6 +665,29 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
             }
         }
         return changed;
+    }
+
+    private static <T extends Enum<T>> boolean haveSameConfigSetting(
+            IConfigManager mirror, IConfigManager master, Setting<T> setting) {
+        if (!master.hasSetting(setting) || !mirror.hasSetting(setting)) {
+            return true;
+        }
+        return Objects.equals(mirror.getSetting(setting), master.getSetting(setting));
+    }
+
+    private static <T extends Enum<T>> boolean syncConfigSetting(
+            IConfigManager source, IConfigManager target, Setting<T> setting) {
+        if (!source.hasSetting(setting) || !target.hasSetting(setting)) {
+            return false;
+        }
+
+        var sourceValue = source.getSetting(setting);
+        if (Objects.equals(sourceValue, target.getSetting(setting))) {
+            return false;
+        }
+
+        target.putSetting(setting, sourceValue);
+        return true;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -735,6 +772,16 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         private MirrorLogic(IManagedGridNode mainNode, MirrorPatternProviderBlockEntity mirrorHost,
                 int patternInventorySize) {
             super(mainNode, mirrorHost, patternInventorySize);
+            ensureAdvancedBlockingSetting();
+        }
+
+        private void ensureAdvancedBlockingSetting() {
+            var manager = this.getConfigManager();
+            if (manager instanceof ConfigManager configManager
+                    && !configManager.hasSetting(EAPSettings.ADVANCED_BLOCKING)) {
+                // 镜像逻辑必须始终拥有智能阻挡配置，才能正确接收主供应器状态。
+                configManager.registerSetting(EAPSettings.ADVANCED_BLOCKING, YesNo.NO);
+            }
         }
 
         @Override
