@@ -9,7 +9,9 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.PatternProviderMenu;
 import appeng.menu.slot.AppEngSlot;
+import appeng.menu.slot.RestrictedInputSlot;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
+import com.extendedae_plus.compat.DynamicSizeInternalInventory;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import com.glodblock.github.glodium.network.packet.sync.Paras;
@@ -62,12 +64,30 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
         this.eap$actions.put("multiply10", p -> eap$modifyPatterns(10, false));
         this.eap$actions.put("divide10", p -> eap$modifyPatterns(10, true));
 
+        this.eap$ensurePatternSlotPool();
         int totalSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
         this.eap$maxPage = Math.max(1, (totalSlots + SLOTS_PER_PAGE - 1) / SLOTS_PER_PAGE);
         if (this.isServerSide()) {
             this.eap$availablePageCount = this.eap$getDynamicPageCount();
         }
         this.eap$showPage();
+    }
+
+    @Unique
+    private void eap$ensurePatternSlotPool() {
+        if (!(this.logic.getPatternInv() instanceof DynamicSizeInternalInventory dynamicInventory)) {
+            return;
+        }
+
+        // 动态库存用于限制可用页，但菜单必须预先拥有全部槽位才能在插卡后显示新页。
+        var backingInventory = dynamicInventory.getBackingInventory();
+        int existingSlots = this.getSlots(SlotSemantics.ENCODED_PATTERN).size();
+        for (int slot = existingSlots; slot < backingInventory.size(); slot++) {
+            this.addSlot(new RestrictedInputSlot(
+                    RestrictedInputSlot.PlacableItemType.ENCODED_PATTERN,
+                    backingInventory,
+                    slot), SlotSemantics.ENCODED_PATTERN);
+        }
     }
 
     @Unique

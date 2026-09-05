@@ -10,6 +10,7 @@ import com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -82,17 +83,25 @@ public final class EmiCtrlQHandler {
 			return;
 		}
 
-		List<ItemStack> selectedIngredients = selected.selectBestInputs(Map.of());
-		List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
+        List<ItemStack> selectedIngredients = selected.selectBestInputs(Map.of());
+        List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
 
-		ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
-			selected.getRecipe().getId(),
-			selected.isCraftingRecipe(),
-			selectedIngredients,
-			selectedOutputs,
-			isAllowSubstitutes,
-			isFluidSubstitutes
-		));
+        boolean openProviderSelector = !selected.isCraftingRecipe();
+        if (openProviderSelector) {
+            // 加工样板选择供应器时，预填配方类型映射名，便于直接筛选目标供应器。
+            String searchKey = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(selected.getRecipe());
+            RecipeTypeNameConfig.setLastProcessingName(searchKey);
+        }
+
+        ModNetwork.CHANNEL.sendToServer(new CreateCtrlQPatternC2SPacket(
+            selected.getRecipe().getId(),
+            selected.isCraftingRecipe(),
+            selectedIngredients,
+            selectedOutputs,
+            openProviderSelector,
+            isAllowSubstitutes,
+            isFluidSubstitutes
+        ));
 		event.setCanceled(true);
 	}
 
