@@ -88,6 +88,7 @@
     "ae2.autopattern.CraftingSimulationStateMixin",
     "ae2.autopattern.PatternProviderLogicContainsModifyMixin",
     "ae2.compat.PatternProviderCompatMixin",
+    "ae2.compat.GtoCorePatternProviderUpgradeMixin",
     "ae2.compat.PatternProviderLogicCompatMixin",
     "ae2.helpers.InterfaceLogicChannelCardMixin",
     "ae2.helpers.InterfaceLogicTickerMixin",

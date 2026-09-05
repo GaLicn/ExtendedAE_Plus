@@ -33,6 +33,11 @@ public class MixinConditions implements IMixinConfigPlugin {
                 return false;
             }
 
+            if (mixinClassName.equals("com.extendedae_plus.mixin.ae2.compat.GtoCorePatternProviderUpgradeMixin")) {
+                return ModCheckUtils.isLoaded(MODID_GTOCORE)
+                        && !ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPFLUX);
+            }
+
             // EMI 版本变化后旧版 BoM 注入点已不存在，保留其它 EMI 集成功能。
             if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)
                     && mixinClassName.startsWith("com.extendedae_plus.mixin.emi.")) {
