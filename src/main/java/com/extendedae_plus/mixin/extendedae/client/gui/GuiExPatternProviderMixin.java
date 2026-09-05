@@ -9,6 +9,7 @@ import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.gui.NewIcon;
+import com.extendedae_plus.mixin.minecraft.accessor.SlotAccessor;
 import com.extendedae_plus.util.ScaleButtonHelper;
 import com.glodblock.github.extendedae.client.button.ActionEPPButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
@@ -125,6 +126,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     }
 
     @Override
+    public void eap$setCurrentPage(int page) {
+        this.eap$applyPage(page);
+    }
+
+    @Override
     public void eap$updateButtonsLayout() {
         this.eap$syncMenuPageState(false);
 
@@ -215,7 +221,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             bridge.eap$setPage(this.eap$currentPage);
         }
 
-        this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
+        this.eap$repositionPatternPageSlots();
         this.repositionSlots(SlotSemantics.STORAGE);
         this.hoveredSlot = null;
     }
@@ -235,7 +241,7 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         }
 
         if (forceReposition || previousPage != this.eap$currentPage) {
-            this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
+            this.eap$repositionPatternPageSlots();
             this.repositionSlots(SlotSemantics.STORAGE);
             this.hoveredSlot = null;
         }
@@ -245,5 +251,20 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     private Slot eap$getFirstUpgradeSlot(ContainerExPatternProvider menu) {
         List<Slot> upgradeSlots = menu.getSlots(SlotSemantics.UPGRADE);
         return upgradeSlots.isEmpty() ? null : upgradeSlots.get(0);
+    }
+
+    @Unique
+    private void eap$repositionPatternPageSlots() {
+        this.repositionSlots(SlotSemantics.ENCODED_PATTERN);
+        List<Slot> patternSlots = this.menu.getSlots(SlotSemantics.ENCODED_PATTERN);
+        int pageStart = this.eap$currentPage * SLOTS_PER_PAGE;
+        int pageEnd = Math.min(patternSlots.size(), pageStart + SLOTS_PER_PAGE);
+        // 每页槽位复用第一页的网格坐标，避免按总槽位索引落到界面外。
+        for (int index = pageStart; index < pageEnd; index++) {
+            Slot slot = patternSlots.get(index);
+            Slot template = patternSlots.get(index - pageStart);
+            ((SlotAccessor) (Object) slot).eap$setX(template.x);
+            ((SlotAccessor) (Object) slot).eap$setY(template.y);
+        }
     }
 }

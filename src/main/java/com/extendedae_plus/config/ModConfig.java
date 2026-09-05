@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.lang.reflect.Method;
 
 @Config(id = ExtendedAEPlus.MODID)
 public final class ModConfig {
@@ -34,16 +35,35 @@ public final class ModConfig {
     }
 
     /** Updates and immediately saves a client-only UI preference. */
-    @SuppressWarnings("unchecked")
     public static void setExtendedPatternProviderShowScalingControls(boolean visible) {
         synchronized (lock) {
             if (INSTANCE == null || configHolder == null) {
                 return;
             }
-            ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
-                    .get("extendedPatternProviderShowScalingControls");
-            value.set(visible);
+            ConfigValueCompatibility.set(configHolder, "extendedPatternProviderShowScalingControls", visible);
             ConfigIO.saveClientValues(configHolder);
+        }
+    }
+
+    private static final class ConfigValueCompatibility {
+        private static void set(ConfigHolder<ModConfig> holder, String key, boolean value) {
+            ConfigValue<?> configValue = holder.getValueMap().get(key);
+            if (configValue == null) {
+                return;
+            }
+            try {
+                // 3.1.0 使用 setValue，旧版使用 set；按运行时 API 选择方法。
+                Method setter;
+                try {
+                    setter = configValue.getClass().getMethod("setValue", Object.class);
+                } catch (NoSuchMethodException ignored) {
+                    setter = configValue.getClass().getMethod("set", Object.class);
+                }
+                setter.invoke(configValue, value);
+            } catch (ReflectiveOperationException exception) {
+                // 配置实例仍保持当前会话状态，避免兼容调用失败导致界面崩溃。
+                holder.getConfigInstance().extendedPatternProviderShowScalingControls = value;
+            }
         }
     }
 

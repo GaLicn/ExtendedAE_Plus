@@ -7,4 +7,6 @@ public interface IExPatternPage {
     int eap$getCurrentPage();
 
     int eap$getMaxPageLocal();
+
+    void eap$setCurrentPage(int page);
 }

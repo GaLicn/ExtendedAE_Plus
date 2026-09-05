@@ -1,13 +1,12 @@
 package com.extendedae_plus.network.provider;
 
-import appeng.menu.SlotSemantics;
+import com.extendedae_plus.api.IExPatternPage;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.lang.reflect.Field;
 import java.util.function.Supplier;
 
 /**
@@ -34,18 +33,9 @@ public class SetProviderPageS2CPacket {
         ctx.enqueueWork(() -> {
                     try {
                         Screen screen = Minecraft.getInstance().screen;
-                        if (screen instanceof GuiExPatternProvider guiExPatternProvider) {
-                            Field currentPage = screen.getClass().getDeclaredField("eap$currentPage");
-                            currentPage.setAccessible(true);
-                            currentPage.setInt(guiExPatternProvider, msg.page);
-
-
-                            guiExPatternProvider.repositionSlots(SlotSemantics.ENCODED_PATTERN);
-                            guiExPatternProvider.repositionSlots(SlotSemantics.STORAGE);
-
-                            Field hs = screen.getClass().getDeclaredField("hoveredSlot");
-                            hs.setAccessible(true);
-                            hs.set(screen, null);
+                        if (screen instanceof GuiExPatternProvider guiExPatternProvider
+                                && guiExPatternProvider instanceof IExPatternPage pageScreen) {
+                            pageScreen.eap$setCurrentPage(msg.page);
                         }
                     } catch (Throwable ignored) {
                     }
@@ -54,5 +44,3 @@ public class SetProviderPageS2CPacket {
         ctx.setPacketHandled(true);
     }
 }
-
-

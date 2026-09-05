@@ -33,6 +33,7 @@
     "extendedae.accessor.HighlightButtonAccessor",
     "extendedae.client.HighlightButtonMixin",
     "extendedae.client.gui.GuiExPatternProviderMixin",
+    "extendedae.client.gui.GtoCorePatternProviderScrollMixin",
     "extendedae.client.gui.GuiExPatternTerminalMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.BookmarkOverlayMixin",
@@ -43,6 +44,7 @@
     "minecraft.PickFromWirelessMixin",
     "minecraft.accessor.AbstractContainerScreenAccessor",
     "minecraft.accessor.ScreenAccessor",
+    "minecraft.accessor.SlotAccessor",
     "extendedae.client.gui.GuiAssemblerMatrixPatternInfoMixin"
   ],
   "mixins": [
