@@ -18,11 +18,17 @@ public class ProvidersListS2CPacket {
     private final List<Long> ids;
     private final List<String> names;
     private final List<Integer> emptySlots;
+    private final String searchKey;
 
     public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots) {
+        this(ids, names, emptySlots, null);
+    }
+
+    public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots, String searchKey) {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
+        this.searchKey = searchKey;
     }
 
     public static void encode(ProvidersListS2CPacket msg, FriendlyByteBuf buf) {
@@ -31,6 +37,10 @@ public class ProvidersListS2CPacket {
             buf.writeLong(msg.ids.get(i));
             buf.writeUtf(msg.names.get(i));
             buf.writeVarInt(msg.emptySlots.get(i));
+        }
+        buf.writeBoolean(msg.searchKey != null && !msg.searchKey.isBlank());
+        if (msg.searchKey != null && !msg.searchKey.isBlank()) {
+            buf.writeUtf(msg.searchKey, 256);
         }
     }
 
@@ -44,7 +54,8 @@ public class ProvidersListS2CPacket {
             names.add(buf.readUtf());
             slots.add(buf.readVarInt());
         }
-        return new ProvidersListS2CPacket(ids, names, slots);
+        String searchKey = buf.readBoolean() ? buf.readUtf(256) : null;
+        return new ProvidersListS2CPacket(ids, names, slots, searchKey);
     }
 
     public static void handle(ProvidersListS2CPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -58,6 +69,6 @@ public class ProvidersListS2CPacket {
         var mc = Minecraft.getInstance();
         if (mc == null) return;
         var current = mc.screen;
-        mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
+        mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots, msg.searchKey));
     }
 }

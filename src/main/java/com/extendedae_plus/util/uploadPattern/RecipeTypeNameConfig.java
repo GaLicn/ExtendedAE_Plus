@@ -76,6 +76,11 @@ public final class RecipeTypeNameConfig {
         return searchKey;
     }
 
+    /** 上传按钮发包前读取关键字，但不提前消费，保证服务端列表返回时仍可使用。 */
+    public static String peekLastProviderSearchKey() {
+        return lastProviderSearchKey;
+    }
+
     /**
      * 加载 JSON 配置文件，若文件不存在返回空对象。
      *

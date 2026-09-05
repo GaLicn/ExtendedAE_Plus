@@ -105,6 +105,10 @@ public class ProviderSelectScreen extends Screen {
     private boolean lastFilterUsedFallback = false;
 
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<String> names, List<Integer> emptySlots) {
+        this(parent, ids, names, emptySlots, null);
+    }
+
+    public ProviderSelectScreen(Screen parent, List<Long> ids, List<String> names, List<Integer> emptySlots, String packetSearchKey) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
         this.parent = parent;
         this.ids = ids;
@@ -112,7 +116,13 @@ public class ProviderSelectScreen extends Screen {
         this.emptySlots = emptySlots;
         // 如果有来自最近一次写样板流程的预设搜索词，则作为初始查询
         try {
-            String recent = RecipeTypeNameConfig.consumeLastProviderSearchKey();
+            String recent = packetSearchKey;
+            if (recent == null || recent.isBlank()) {
+                recent = RecipeTypeNameConfig.consumeLastProviderSearchKey();
+            } else {
+                // 服务端回传的关键字优先，同时清理本地旧缓存，避免下次打开串值。
+                RecipeTypeNameConfig.consumeLastProviderSearchKey();
+            }
             if (recent != null && !recent.isBlank()) {
                 // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
                 this.query = RecipeTypeNameConfig.resolveProviderSearchKey(recent);

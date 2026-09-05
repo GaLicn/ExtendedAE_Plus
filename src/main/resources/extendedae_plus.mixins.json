@@ -26,6 +26,8 @@
     "ae2.client.gui.patternProvider.PatternProviderSmartFeaturesMixin",
     "ae2.items.QuartzCuttingKnifeItemMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
+    "emi.EmiEncodePatternHandlerMixin",
+    "emi.GtoCorePatternEncodingHandlerMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
     "extendedae.accessor.GuiExPatternTerminalSlotsRowAccessor",

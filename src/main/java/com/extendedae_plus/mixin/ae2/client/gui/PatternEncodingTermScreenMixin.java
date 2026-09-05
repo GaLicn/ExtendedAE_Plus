@@ -13,6 +13,7 @@ import com.extendedae_plus.mixin.minecraft.accessor.ScreenAccessor;
 import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.provider.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -97,7 +98,11 @@ public abstract class PatternEncodingTermScreenMixin {
             if (Screen.hasShiftDown()) {
                 ModNetwork.CHANNEL.sendToServer(new ReturnLastPatternC2SPacket());
             } else {
-                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket());
+                String searchKey = eap$getMenuSearchKey();
+                if (searchKey == null || searchKey.isBlank()) {
+                    searchKey = RecipeTypeNameConfig.peekLastProviderSearchKey();
+                }
+                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(searchKey));
             }
         }) {
             private final float eap$scale = 0.75f;
@@ -170,6 +175,33 @@ public abstract class PatternEncodingTermScreenMixin {
         };
         btn.setTooltip(Tooltip.create(Component.translatable("extendedae_plus.button.choose_provider")));
         return btn;
+    }
+
+    @Unique
+    private String eap$getMenuSearchKey() {
+        // GTOCore 将 EMI 选择的配方类型同步到菜单字段，作为缓存失效时的最终回退。
+        try {
+            Object menu = ((PatternEncodingTermScreen<?>) (Object) this).getMenu();
+            Class<?> type = menu.getClass();
+            while (type != null) {
+                for (String fieldName : new String[]{"gtocore$recipe", "gto$recipe"}) {
+                    try {
+                        var field = type.getDeclaredField(fieldName);
+                        field.setAccessible(true);
+                        Object value = field.get(menu);
+                        if (value instanceof String recipe && !recipe.isBlank()) {
+                            int separator = recipe.indexOf('/');
+                            String key = separator > 0 ? recipe.substring(0, separator) : recipe;
+                            return RecipeTypeNameConfig.resolveProviderSearchKey(key);
+                        }
+                    } catch (NoSuchFieldException ignored) {
+                    }
+                }
+                type = type.getSuperclass();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     @Unique
