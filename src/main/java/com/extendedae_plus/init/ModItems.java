@@ -21,6 +21,9 @@ import net.minecraft.world.item.Rarity;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ExtendedAEPlus.MODID);
     public static final DeferredItem<Item> WIRELESS_TRANSCEIVER = ITEMS.register(
@@ -157,6 +160,12 @@ public final class ModItems {
             "infinity_biginteger_cell", InfinityBigIntegerCellItem::new
     );
 
+    /** Test-only item registrations used by the real StorageCell benchmark server. */
+    public static final List<DeferredItem<Item>> CELL_BENCHMARK_ORDINARY_ITEMS =
+            registerCellBenchmarkOrdinaryItems();
+    public static final DeferredItem<Item> CELL_BENCHMARK_NBT_ITEM =
+            registerCellBenchmarkNbtItem();
+
     // ==================== 基础核心及相关物品 ====================
     // 基础核心 - 用于合成各种高级核心，稀有度由DataComponent动态设置
     public static final DeferredItem<BasicCoreItem> BASIC_CORE = ITEMS.register(
@@ -230,6 +239,29 @@ public final class ModItems {
     );
     public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
+
+    private static List<DeferredItem<Item>> registerCellBenchmarkOrdinaryItems() {
+        if (!Boolean.getBoolean("extendedae_plus.cell_benchmark")) {
+            return List.of();
+        }
+
+        List<DeferredItem<Item>> items = new ArrayList<>(4_096);
+        for (int index = 0; index < 4_096; index++) {
+            int itemIndex = index;
+            items.add(ITEMS.register(
+                    "cell_benchmark_ordinary_" + String.format("%04d", itemIndex),
+                    () -> new Item(new Item.Properties())
+            ));
+        }
+        return List.copyOf(items);
+    }
+
+    private static DeferredItem<Item> registerCellBenchmarkNbtItem() {
+        if (!Boolean.getBoolean("extendedae_plus.cell_benchmark")) {
+            return null;
+        }
+        return ITEMS.register("cell_benchmark_nbt", () -> new Item(new Item.Properties()));
+    }
 
     static {
         // 能源存储核心 - 需要AppFlux模组
