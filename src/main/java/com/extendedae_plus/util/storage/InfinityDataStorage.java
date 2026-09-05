@@ -15,10 +15,6 @@ import net.minecraft.nbt.ListTag;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 
-/**
- * 本代码参考了 AE2Things[](https://github.com/Technici4n/AE2Things-Forge)，并遵循 MIT 许可证。<p>
- * 原始版权归 Technici4n 所有。<p>
- */
 public class InfinityDataStorage {
     // 用于默认或占位场景
     public static final InfinityDataStorage EMPTY = new InfinityDataStorage();
@@ -35,6 +31,9 @@ public class InfinityDataStorage {
     // 总数溢出后的基值。与 longItemCount 相加才是当前精确总数
     @Nullable
     private BigInteger bigItemCount;
+    // 大数基值和 long 增量合并后的读取缓存，下一次数量变更时失效
+    @Nullable
+    private BigInteger cachedItemCount;
 
     public InfinityDataStorage() {
         this(new Object2LongOpenHashMap<>(), new Object2ObjectOpenHashMap<>(), BigInteger.ZERO);
@@ -50,18 +49,25 @@ public class InfinityDataStorage {
 
     // 获取精确总数。只有存在尚未合并的增量时才进行一次 BigInteger 加法
     public BigInteger getItemCount() {
-        if (this.bigItemCount == null) {
-            return BigInteger.valueOf(this.longItemCount);
-        }
-        if (this.longItemCount == 0) {
-            return this.bigItemCount;
+        BigInteger cachedItemCount = this.cachedItemCount;
+        if (cachedItemCount != null) {
+            return cachedItemCount;
         }
 
-        BigInteger itemCount = this.bigItemCount.add(BigInteger.valueOf(this.longItemCount));
-        // 总数重新落入 long 范围时立即降级，避免后续增量逼近 long 边界。
-        if (itemCount.bitLength() <= LONG_MAX_BIT_LENGTH) {
-            this.setItemCount(itemCount);
+        BigInteger itemCount;
+        if (this.bigItemCount == null) {
+            itemCount = BigInteger.valueOf(this.longItemCount);
+        } else if (this.longItemCount == 0) {
+            itemCount = this.bigItemCount;
+        } else {
+            itemCount = this.bigItemCount.add(BigInteger.valueOf(this.longItemCount));
+            // 总数重新落入 long 范围时立即降级，避免后续增量逼近 long 边界。
+            if (itemCount.bitLength() <= LONG_MAX_BIT_LENGTH) {
+                this.setItemCount(itemCount);
+            }
         }
+
+        this.cachedItemCount = itemCount;
         return itemCount;
     }
 
@@ -80,7 +86,7 @@ public class InfinityDataStorage {
             return;
         }
 
-        long currentAmount = this.longAmounts.getOrDefault(key, 0L);
+        long currentAmount = this.longAmounts.getLong(key);
         if (currentAmount > 0) {
             if (amount <= Long.MAX_VALUE - currentAmount) {
                 this.longAmounts.put(key, currentAmount + amount);
@@ -100,23 +106,40 @@ public class InfinityDataStorage {
         this.addToItemCount(amount);
     }
 
-    // 提取物品。模拟操作只读取数量，实际操作才修改 Map 和总数
-    public long extract(AEKey key, long amount, boolean modulate) {
+    // 模拟提取只读取一个数量 Map，不进行 BigInteger 运算或库存状态更新。
+    public long getExtractableAmount(AEKey key, long amount) {
         if (amount <= 0) {
             return 0;
         }
 
-        long currentAmount = this.longAmounts.getOrDefault(key, 0L);
+        long currentAmount = this.longAmounts.getLong(key);
+        if (currentAmount > 0) {
+            return Math.min(currentAmount, amount);
+        }
+
+        // bigAmounts 只保存超过 Long.MAX_VALUE 的数量，可满足任意正 long 请求。
+        BigInteger currentBigAmount = this.bigAmounts.get(key);
+        return currentBigAmount != null && currentBigAmount.signum() > 0 ? amount : 0;
+    }
+
+    // 提取物品。模拟操作走独立只读路径，实际操作才修改 Map 和总数
+    public long extract(AEKey key, long amount, boolean modulate) {
+        if (!modulate) {
+            return this.getExtractableAmount(key, amount);
+        }
+        if (amount <= 0) {
+            return 0;
+        }
+
+        long currentAmount = this.longAmounts.getLong(key);
         if (currentAmount > 0) {
             long extractedAmount = Math.min(currentAmount, amount);
-            if (modulate) {
-                if (extractedAmount == currentAmount) {
-                    this.longAmounts.removeLong(key);
-                } else {
-                    this.longAmounts.put(key, currentAmount - extractedAmount);
-                }
-                this.subtractFromItemCount(extractedAmount);
+            if (extractedAmount == currentAmount) {
+                this.longAmounts.removeLong(key);
+            } else {
+                this.longAmounts.put(key, currentAmount - extractedAmount);
             }
+            this.subtractFromItemCount(extractedAmount);
             return extractedAmount;
         }
 
@@ -127,21 +150,19 @@ public class InfinityDataStorage {
 
         // 正常情况下 BigInteger 表中的数量一定超过 Long.MAX_VALUE。
         // 只有该数量被提取回 long 范围时，才将它移回 long Map。
-        if (modulate) {
-            BigInteger removedAmount = amount == Long.MAX_VALUE
-                    ? BI_LONG_MAX
-                    : BigInteger.valueOf(amount);
-            BigInteger remainingAmount = currentBigAmount.subtract(removedAmount);
-            if (remainingAmount.signum() <= 0) {
-                this.bigAmounts.remove(key);
-            } else if (remainingAmount.bitLength() <= LONG_MAX_BIT_LENGTH) {
-                this.bigAmounts.remove(key);
-                this.longAmounts.put(key, remainingAmount.longValue());
-            } else {
-                this.bigAmounts.put(key, remainingAmount);
-            }
-            this.subtractFromItemCount(amount);
+        BigInteger removedAmount = amount == Long.MAX_VALUE
+                ? BI_LONG_MAX
+                : BigInteger.valueOf(amount);
+        BigInteger remainingAmount = currentBigAmount.subtract(removedAmount);
+        if (remainingAmount.signum() <= 0) {
+            this.bigAmounts.remove(key);
+        } else if (remainingAmount.bitLength() <= LONG_MAX_BIT_LENGTH) {
+            this.bigAmounts.remove(key);
+            this.longAmounts.put(key, remainingAmount.longValue());
+        } else {
+            this.bigAmounts.put(key, remainingAmount);
         }
+        this.subtractFromItemCount(amount);
         return amount;
     }
 
@@ -159,7 +180,7 @@ public class InfinityDataStorage {
 
             keys.add(entry.getKey().toTagGeneric(registries));
             CompoundTag amountTag = new CompoundTag();
-            amountTag.putByteArray("value", BigInteger.valueOf(amount).toByteArray());
+            amountTag.putByteArray("value", encodePositiveLong(amount));
             amountsTag.add(amountTag);
         }
 
@@ -193,7 +214,6 @@ public class InfinityDataStorage {
         Object2LongMap<AEKey> storedLongAmounts = new Object2LongOpenHashMap<>(Math.max(2, limit));
         // 实际存档以 long 数量为主，极大数 Map 按需扩容，避免重复预留同等容量。
         Object2ObjectMap<AEKey, BigInteger> storedBigAmounts = new Object2ObjectOpenHashMap<>();
-        BigInteger computedItemCount = BigInteger.ZERO;
         for (int i = 0; i < limit; i++) {
             AEKey key = AEKey.fromTagGeneric(registries, keys.getCompound(i));
             BigInteger amount = new BigInteger(amounts.getCompound(i).getByteArray("value"));
@@ -201,10 +221,8 @@ public class InfinityDataStorage {
                 continue;
             }
 
-            BigInteger previousAmount = storedBigAmounts.remove(key);
-            if (storedLongAmounts.containsKey(key)) {
-                previousAmount = BigInteger.valueOf(storedLongAmounts.removeLong(key));
-            }
+            storedBigAmounts.remove(key);
+            storedLongAmounts.removeLong(key);
 
             if (amount.bitLength() <= LONG_MAX_BIT_LENGTH) {
                 storedLongAmounts.put(key, amount.longValue());
@@ -212,57 +230,171 @@ public class InfinityDataStorage {
                 storedBigAmounts.put(key, amount);
             }
 
-            computedItemCount = previousAmount == null
-                    ? computedItemCount.add(amount)
-                    : computedItemCount.subtract(previousAmount).add(amount);
         }
 
-        return new InfinityDataStorage(storedLongAmounts, storedBigAmounts, computedItemCount);
+        return new InfinityDataStorage(storedLongAmounts, storedBigAmounts,
+                calculateItemCount(storedLongAmounts, storedBigAmounts));
     }
 
+    /**
+     * 根据两个数量 Map 重新计算磁盘内的物品总数。
+     *
+     * <p>普通数量优先使用 long 累加；只有总数即将超过 {@link Long#MAX_VALUE}
+     * 时才创建并使用 BigInteger，避免加载大量普通物品时为每一项都创建大整数对象。</p>
+     *
+     * <p>调用方传入的 Map 已经是最终状态，因此这里计算的是每个 key 当前数量之和，
+     * 不使用存档中可能过期的总数摘要。</p>
+     */
+    private static BigInteger calculateItemCount(Object2LongMap<AEKey> longAmounts,
+                                                  Object2ObjectMap<AEKey, BigInteger> bigAmounts) {
+        // 在总数没有溢出前，先用原生 long 保存累计值。
+        long longItemCount = 0;
+        // null 表示当前总数仍然可以完全用 long 表示。
+        BigInteger bigItemCount = null;
+
+        // 先处理数量位于 long Map 中的普通物品。
+        for (var entry : Object2LongMaps.fastIterable(longAmounts)) {
+            long amount = entry.getLongValue();
+            if (amount <= 0) {
+                continue;
+            }
+
+            // 通过减法判断是否会溢出，避免直接相加后再检查结果。
+            if (bigItemCount == null && amount <= Long.MAX_VALUE - longItemCount) {
+                longItemCount += amount;
+            } else {
+                // 第一次溢出时，把此前累计的 long 数量转为 BigInteger 基值。
+                if (bigItemCount == null) {
+                    bigItemCount = BigInteger.valueOf(longItemCount);
+                }
+                bigItemCount = bigItemCount.add(BigInteger.valueOf(amount));
+                // 已合并到 BigInteger，long 只作为下一段临时累计值使用。
+                longItemCount = 0;
+            }
+        }
+
+        // BigInteger Map 中的数量本身已经超过 long 范围，必须使用大整数相加。
+        for (var entry : Object2ObjectMaps.fastIterable(bigAmounts)) {
+            BigInteger amount = entry.getValue();
+            if (amount == null || amount.signum() <= 0) {
+                continue;
+            }
+
+            // 如果此前只有普通数量，则先把普通数量并入 BigInteger 基值。
+            if (bigItemCount == null) {
+                bigItemCount = BigInteger.valueOf(longItemCount);
+                longItemCount = 0;
+            }
+            bigItemCount = bigItemCount.add(amount);
+        }
+
+        // 没有发生大数溢出时直接返回 long 结果，否则返回精确的 BigInteger 结果。
+        return bigItemCount == null ? BigInteger.valueOf(longItemCount) : bigItemCount;
+    }
+
+    /**
+     * 将正 long 编码为与 BigInteger.toByteArray() 相同的最短有符号大端字节数组。
+     *
+     * <p>存档加载时会使用 BigInteger(byte[]) 解码，因此当最高有效位为 1 时必须
+     * 增加一个值为 0 的符号字节，避免正数被误解码为负数。这样可以避免先创建
+     * BigInteger 再调用 toByteArray() 的临时对象开销，同时保持旧存档格式兼容。</p>
+     */
+    private static byte[] encodePositiveLong(long value) {
+        // 根据最高有效位计算保存该正数所需的最少字节数。
+        int byteCount = (64 - Long.numberOfLeadingZeros(value) + 7) >>> 3;
+        if (byteCount == 0) {
+            // 当前调用方不会传入 0，但保留该分支可使方法独立处理 0。
+            byteCount = 1;
+        }
+
+        // BigInteger 使用最高位作为符号位；最高位为 1 时需要补一个 0 字节。
+        if ((value & (1L << (byteCount * 8 - 1))) != 0) {
+            byteCount++;
+        }
+
+        byte[] encoded = new byte[byteCount];
+        // 按 BigInteger.toByteArray() 的大端顺序写入字节。
+        for (int index = byteCount - 1; index >= 0; index--) {
+            encoded[index] = (byte) value;
+            value >>>= 8;
+        }
+        return encoded;
+    }
+
+    /**
+     * 将精确总数拆分保存为 long 或 BigInteger。
+     *
+     * <p>总数不超过 long 范围时走低成本的 long 路径；超过范围后只保存一个
+     * BigInteger 基值，后续的小幅增量放在 longItemCount 中，减少高频读写时的
+     * BigInteger 运算。</p>
+     */
     private void setItemCount(BigInteger itemCount) {
+        // 总数表示发生变化，之前缓存的精确结果不能继续使用。
+        this.cachedItemCount = null;
         if (itemCount == null || itemCount.signum() <= 0) {
+            // 空库存统一归零，不保留负数或 null 状态。
             this.longItemCount = 0;
             this.bigItemCount = null;
         } else if (itemCount.bitLength() <= LONG_MAX_BIT_LENGTH) {
+            // BigInteger 仍在正 long 范围内，降级回 long 存储。
             this.longItemCount = itemCount.longValue();
             this.bigItemCount = null;
         } else {
+            // 超出 long 范围时保存完整精确值作为大数基值。
             this.longItemCount = 0;
             this.bigItemCount = itemCount;
         }
     }
 
+    /**
+     * 增加磁盘总数，并尽量保持在 long 快速路径中。
+     *
+     * @param amount 本次输入的正数量
+     */
     private void addToItemCount(long amount) {
+        // 输入会改变总数，先使惰性缓存失效。
+        this.cachedItemCount = null;
         if (this.bigItemCount != null) {
+            // 大数基值已经存在时，优先把增量暂存在 long 中。
             if (this.longItemCount <= Long.MAX_VALUE - amount) {
                 this.longItemCount += amount;
             } else {
-                // 增量即将溢出时才合并到 BigInteger 基值。
+                // 增量自身即将溢出时，才与 BigInteger 基值合并并清空临时增量。
                 this.bigItemCount = this.bigItemCount
                         .add(BigInteger.valueOf(this.longItemCount))
                         .add(BigInteger.valueOf(amount));
                 this.longItemCount = 0;
             }
         } else if (amount <= Long.MAX_VALUE - this.longItemCount) {
+            // 总数仍未溢出，直接使用 long 累加。
             this.longItemCount += amount;
         } else {
+            // 本次输入导致总数首次超过 long 范围，转换为 BigInteger。
             this.bigItemCount = BigInteger.valueOf(this.longItemCount).add(BigInteger.valueOf(amount));
             this.longItemCount = 0;
         }
     }
 
+    /**
+     * 减少磁盘总数，并在总数回落到 long 范围时自动降级。
+     *
+     * @param amount 本次输出的正数量
+     */
     private void subtractFromItemCount(long amount) {
+        // 输出会改变总数，先使惰性缓存失效。
+        this.cachedItemCount = null;
         if (this.bigItemCount != null) {
+            // 允许 long 增量暂时为负数，表示从大数基值中扣除的数量。
             if (this.longItemCount >= Long.MIN_VALUE + amount) {
                 this.longItemCount -= amount;
             } else {
-                // 负增量即将溢出时合并，并顺便尝试降级回 long 总数。
+                // 负增量即将溢出时，与大数基值合并并重新选择 long/BigInteger 表示。
                 this.setItemCount(this.bigItemCount
                         .add(BigInteger.valueOf(this.longItemCount))
                         .subtract(BigInteger.valueOf(amount)));
             }
         } else {
+            // 未使用 BigInteger 时，直接从 long 总数中扣除。
             this.longItemCount -= amount;
         }
     }
