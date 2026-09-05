@@ -39,8 +39,8 @@ public class MixinConditions implements IMixinConfigPlugin {
             }
 
             if (mixinClassName.equals("com.extendedae_plus.mixin.emi.GtoCorePatternEncodingHandlerMixin")) {
-                return ModCheckUtils.isLoaded(MODID_GTOCORE)
-                        && ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI);
+                // 当前发布物是 GTOCore 专用版本，必须强制加载该捕获点。
+                return true;
             }
 
             // EMI 版本变化后旧版 BoM 注入点已不存在，保留其它 EMI 集成功能。

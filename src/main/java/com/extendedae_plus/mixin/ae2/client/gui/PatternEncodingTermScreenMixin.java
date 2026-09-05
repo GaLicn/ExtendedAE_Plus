@@ -14,6 +14,7 @@ import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.provider.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
+import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
@@ -98,10 +99,14 @@ public abstract class PatternEncodingTermScreenMixin {
             if (Screen.hasShiftDown()) {
                 ModNetwork.CHANNEL.sendToServer(new ReturnLastPatternC2SPacket());
             } else {
+                String cachedKey = RecipeTypeNameConfig.peekLastProviderSearchKey();
                 String searchKey = eap$getMenuSearchKey();
                 if (searchKey == null || searchKey.isBlank()) {
-                    searchKey = RecipeTypeNameConfig.peekLastProviderSearchKey();
+                    searchKey = cachedKey;
                 }
+                EAP$LOGGER.info("[UploadDebug] upload clicked: shift={}, screen={}, menu={}, cachedKey='{}', menuKey='{}', requestKey='{}'",
+                        Screen.hasShiftDown(), getClass().getName(), ((PatternEncodingTermScreen<?>) (Object) this).getMenu().getClass().getName(),
+                        cachedKey, eap$getMenuSearchKey(), searchKey);
                 ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(searchKey));
             }
         }) {

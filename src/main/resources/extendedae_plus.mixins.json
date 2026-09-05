@@ -27,6 +27,7 @@
     "ae2.items.QuartzCuttingKnifeItemMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "emi.EmiEncodePatternHandlerMixin",
+    "emi.EmiRecipeFillerMixin",
     "emi.GtoCorePatternEncodingHandlerMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",
