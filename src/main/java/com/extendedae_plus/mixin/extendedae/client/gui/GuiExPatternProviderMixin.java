@@ -18,6 +18,7 @@ import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -91,10 +92,13 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.addToLeftToolbar(this.eap$showPatternScalingControlsButton);
         this.addToLeftToolbar(this.eap$hidePatternScalingControlsButton);
 
-        var firstUpgradeSlot = menu.getSlots(SlotSemantics.UPGRADE).get(0);
+        var firstUpgradeSlot = this.eap$getFirstUpgradeSlot(menu);
+        // GTOCore 可将升级槽延迟注入；没有升级槽时仍保留可打开的基础界面。
+        int scaleX = firstUpgradeSlot == null ? this.leftPos + this.imageWidth : this.leftPos + firstUpgradeSlot.x + 23;
+        int scaleY = firstUpgradeSlot == null ? this.topPos + 50 : this.topPos + firstUpgradeSlot.y - 4;
         var allScaleButtons = ScaleButtonHelper.createAndLayout(
-                this.leftPos + firstUpgradeSlot.x + 23,
-                this.topPos + firstUpgradeSlot.y-4,
+                scaleX,
+                scaleY,
                 22,
                 ScaleButtonHelper.Side.RIGHT,
                 (divide, factor) -> {
@@ -159,9 +163,9 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         }
 
         if (this.scaleButtons != null && this.scaleButtons.size() >= 4) {
-            var firstUpgradeSlot = this.menu.getSlots(SlotSemantics.UPGRADE).get(0);
-            int buttonX = this.leftPos + firstUpgradeSlot.x + 24;
-            int buttonY = this.topPos + firstUpgradeSlot.y - 4;
+            var firstUpgradeSlot = this.eap$getFirstUpgradeSlot(this.menu);
+            int buttonX = firstUpgradeSlot == null ? this.leftPos + this.imageWidth : this.leftPos + firstUpgradeSlot.x + 24;
+            int buttonY = firstUpgradeSlot == null ? this.topPos + 50 : this.topPos + firstUpgradeSlot.y - 4;
             this.scaleButtons.get(0).setX(buttonX);
             this.scaleButtons.get(0).setY(buttonY);
             this.scaleButtons.get(1).setX(buttonX);
@@ -235,5 +239,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.repositionSlots(SlotSemantics.STORAGE);
             this.hoveredSlot = null;
         }
+    }
+
+    @Unique
+    private Slot eap$getFirstUpgradeSlot(ContainerExPatternProvider menu) {
+        List<Slot> upgradeSlots = menu.getSlots(SlotSemantics.UPGRADE);
+        return upgradeSlots.isEmpty() ? null : upgradeSlots.get(0);
     }
 }

@@ -10,6 +10,7 @@ import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.menu.me.items.PatternEncodingTermMenu;
+import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.menu.slot.RestrictedInputSlot;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
@@ -348,12 +349,11 @@ public final class MatrixUploadUtil {
      */
     private static void refundBlankPattern(ServerPlayer player, PatternEncodingTermMenu menu, int count) {
         try {
-            var accessor = (PatternEncodingTermMenuAccessor) menu;
-            var blankSlot = accessor.eap$getBlankPatternSlot();
             ItemStack blanks = AEItems.BLANK_PATTERN.stack(count);
-            if (blankSlot != null && blankSlot.mayPlace(blanks)) {
-                ItemStack remain = blankSlot.safeInsert(blanks);
-                if (!remain.isEmpty() && player != null) {
+            // 魔改 AE2 将空白样板库存挂在终端宿主逻辑上，避免依赖已删除的 blankPatternSlot 字段。
+            if (menu.getTarget() instanceof IPatternTerminalMenuHost host) {
+                ItemStack remain = host.getLogic().getBlankPatternInv().addItems(blanks);
+                if (player != null && !remain.isEmpty()) {
                     player.getInventory().placeItemBackInInventory(remain, false);
                 }
             } else if (player != null) {

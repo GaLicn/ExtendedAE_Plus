@@ -39,7 +39,7 @@ public abstract class BoMScreenMixin {
 	@Unique private int eapBtnR = Integer.MIN_VALUE;
 	@Unique private int eapBtnB = Integer.MIN_VALUE;
 
-	@Inject(method = "render", at = @At("TAIL"), remap = false)
+	@Inject(method = "render", at = @At("TAIL"), remap = false, require = 0)
 	private void eap$drawEncodeButton(GuiGraphics raw, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		eapBtnL = Integer.MIN_VALUE;
 		if (BoM.tree == null || BoM.tree.goal == null) {

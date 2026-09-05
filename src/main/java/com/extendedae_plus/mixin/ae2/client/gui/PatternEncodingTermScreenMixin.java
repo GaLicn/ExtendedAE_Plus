@@ -1,6 +1,5 @@
 package com.extendedae_plus.mixin.ae2.client.gui;
 
-import appeng.api.config.ActionItems;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
@@ -24,8 +23,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * 在图样编码终端界面加入一个上传按钮：
@@ -38,13 +37,40 @@ public abstract class PatternEncodingTermScreenMixin {
 
     @Unique private IconButton eap$uploadBtn;
 
-    @ModifyVariable(method = "<init>", at = @At(value = "STORE"), name = "encodeBtn")
-    private ActionButton eap$wrapEncodeButton(ActionButton original) {
-        return new ActionButton(ActionItems.ENCODE, act -> {
+    /**
+     * GTOCore 魔改版 AE2 将编码按钮保存为字段，不再稳定保留 encodeBtn 局部变量。
+     * 在点击入口补发 Shift 状态，避免依赖构造器局部变量表。
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
+    private void eap$encodeWithShift(double mouseX, double mouseY, int button,
+                                     CallbackInfoReturnable<Boolean> cir) {
+        var encodeButton = eap$getEncodeButton();
+        if (button == 0 && encodeButton != null && encodeButton.isMouseOver(mouseX, mouseY)) {
             ModNetwork.CHANNEL.sendToServer(new EncodeWithShiftFlagC2SPacket(Screen.hasShiftDown()));
             var screen = (PatternEncodingTermScreen<?>) (Object) this;
             screen.getMenu().encode();
-        });
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Unique
+    private ActionButton eap$getEncodeButton() {
+        // 兼容魔改 AE2 的字段按钮，同时允许旧版 AE2 没有该字段时安全回退。
+        try {
+            Class<?> type = PatternEncodingTermScreen.class;
+            while (type != null) {
+                try {
+                    var field = type.getDeclaredField("encodeBtn");
+                    field.setAccessible(true);
+                    return (ActionButton) field.get(this);
+                } catch (NoSuchFieldException ignored) {
+                    type = type.getSuperclass();
+                }
+            }
+        } catch (Throwable ignored) {
+            // 字段不存在时交由 AE2 原生点击逻辑处理。
+        }
+        return null;
     }
 
     // 只创建按钮

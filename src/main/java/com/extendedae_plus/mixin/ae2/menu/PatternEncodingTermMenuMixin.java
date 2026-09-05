@@ -9,13 +9,10 @@ import appeng.api.storage.StorageHelper;
 import appeng.core.definitions.AEItems;
 import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import appeng.menu.slot.RestrictedInputSlot;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,11 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(PatternEncodingTermMenu.class)
 public abstract class PatternEncodingTermMenuMixin {
-
-    /** 空白样板槽位（AE2原字段） */
-    @Final
-    @Shadow(remap = false)
-    private RestrictedInputSlot blankPatternSlot;
 
     /** 防止重复自动填充的标记位 */
     @Unique
@@ -118,12 +110,13 @@ public abstract class PatternEncodingTermMenuMixin {
 
             // 插入到空白样板槽中
             int toInsert = (int) Math.min(extracted, space);
-            var slotStack = blankPatternSlot.getItem();
-            if (slotStack.isEmpty()) {
-                blankPatternSlot.set(AEItems.BLANK_PATTERN.stack(toInsert));
+            var slotStack = current.copy();
+            // 魔改 AE2 将空白样板槽移入 PatternEncodingLogic，统一通过宿主库存访问。
+            if (current.isEmpty()) {
+                blankInv.setItemDirect(0, AEItems.BLANK_PATTERN.stack(toInsert));
             } else {
                 slotStack.grow(toInsert);
-                blankPatternSlot.set(slotStack);
+                blankInv.setItemDirect(0, slotStack);
             }
 
             // 若存在提取但未放入完的剩余物品，退还到网络中

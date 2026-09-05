@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = BlockAssemblerMatrixBase.class, remap = false)
 public abstract class BlockAssemblerMatrixBaseMixin {
 
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "use", at = @At("HEAD"), cancellable = true, require = 0)
     private void eap$openGlassSuperMatrixMenu(BlockState state, Level level, BlockPos pos, Player player,
             InteractionHand hand, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
         if (!((Object) this instanceof BlockAssemblerMatrixGlass)
@@ -46,7 +46,8 @@ public abstract class BlockAssemblerMatrixBaseMixin {
         cir.setReturnValue(InteractionResult.sidedSuccess(level.isClientSide));
     }
 
-    @Inject(method = "neighborChanged", at = @At("HEAD"), cancellable = true)
+    // GTOCore 对扩展样板供应器使用 m_6861_ 覆盖邻居回调，两个名称都允许命中。
+    @Inject(method = {"neighborChanged", "m_6861_"}, at = @At("HEAD"), cancellable = true, require = 0)
     private void eap$handleSuperMatrixNeighborChange(BlockState state, Level level, BlockPos pos, Block block,
             BlockPos fromPos, boolean isMoving, CallbackInfo ci) {
         if (!(level instanceof ServerLevel serverLevel)

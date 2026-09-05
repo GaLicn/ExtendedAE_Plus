@@ -8,6 +8,7 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -19,16 +20,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(value = AEBaseMenu.class, priority = 2000, remap = false)
+@Mixin(value = AbstractContainerMenu.class, priority = 2000)
 public abstract class AEBaseMenuExtendedPatternProviderCardGuardMixin {
     @Unique
     private static final int EAP$SLOTS_PER_PAGE = 36;
 
+    // 魔改 AE2 删除了 AEBaseMenu 覆盖，基类仍稳定声明该点击入口。
     @Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
     private void eap$preventRemovingRequiredExpansionCard(int slotId, int button, ClickType clickType, Player player,
             CallbackInfo ci) {
-        AEBaseMenu menu = (AEBaseMenu) (Object) this;
-        if (!(menu instanceof ContainerExPatternProvider)
+        if (!((Object) this instanceof AEBaseMenu menu)
+                || !(menu instanceof ContainerExPatternProvider)
                 || slotId < 0
                 || slotId >= menu.slots.size()
                 || player == null

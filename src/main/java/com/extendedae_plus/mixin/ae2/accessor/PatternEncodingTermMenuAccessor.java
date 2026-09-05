@@ -11,9 +11,6 @@ public interface PatternEncodingTermMenuAccessor {
     @Accessor(value = "encodedPatternSlot",remap = false)
     RestrictedInputSlot eap$getEncodedPatternSlot();
 
-    @Accessor(value = "blankPatternSlot",remap = false)
-    RestrictedInputSlot eap$getBlankPatternSlot();
-
     @Accessor(value = "encodedInputsInv", remap = false)
     ConfigInventory eap$getEncodedInputsInv();
 
