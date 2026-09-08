@@ -106,7 +106,6 @@
     "ae2.menu.AEBaseMenuExtendedPatternProviderCardGuardMixin",
     "ae2.menu.ContainerPatternEncodingTermMenuMixin",
     "ae2.menu.MEStorageMenuMixin",
-    "ae2.menu.PatternEncodingTermMenuMixin",
     "ae2.menu.PatternProviderMenuAdvancedMixin",
     "ae2.menu.PatternProviderMenuDoublingMixin",
     "ae2.network.PatternAccessTermContainerTrackerMixin",

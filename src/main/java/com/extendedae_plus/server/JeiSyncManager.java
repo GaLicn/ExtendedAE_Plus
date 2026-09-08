@@ -68,8 +68,15 @@ public class JeiSyncManager {
         // survives only via currentCraftables (with amount 0) -- it must NOT be treated as
         // removed, and its amount drop must still be diffed.
         Map<AEKey, Long> currentAmounts = new HashMap<>();
-        for (var entry : currentStacks) {
-            currentAmounts.put(entry.getKey(), entry.getLongValue());
+        // GTOCore 的 AE2 可能返回 Reference2LongMap.Entry；按 Object 遍历避免
+        // FastUtil 不同 primitive map Entry 实现之间的错误强转。
+        for (Object rawEntry : (Iterable<?>) currentStacks) {
+            if (!(rawEntry instanceof Map.Entry<?, ?> entry)
+                    || !(entry.getKey() instanceof AEKey key)
+                    || !(entry.getValue() instanceof Number amount)) {
+                continue;
+            }
+            currentAmounts.put(key, amount.longValue());
         }
         Set<AEKey> currentKeys = new HashSet<>(currentAmounts.keySet());
         currentKeys.addAll(currentCraftables);
