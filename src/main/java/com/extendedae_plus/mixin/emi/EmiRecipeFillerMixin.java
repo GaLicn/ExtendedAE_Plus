@@ -32,8 +32,7 @@ public abstract class EmiRecipeFillerMixin {
     private static void eap$captureBeforeFill(EmiRecipe recipe, AbstractContainerScreen<?> screen,
                                                EmiCraftContext.Type type, EmiCraftContext.Destination destination,
                                                int amount, CallbackInfoReturnable<Boolean> cir) {
-        if (recipe == null || screen == null
-                || !"appeng.menu.me.items.PatternEncodingTermMenu".equals(screen.getMenu().getClass().getName())) {
+        if (recipe == null || screen == null) {
             return;
         }
 
