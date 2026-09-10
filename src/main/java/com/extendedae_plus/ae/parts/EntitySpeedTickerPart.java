@@ -8,6 +8,7 @@ import appeng.api.config.YesNo;
 import appeng.api.ids.AEComponents;
 import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.GridFlags;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.api.networking.security.IActionSource;
@@ -35,6 +36,8 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.config.EAPSettings;
+import com.extendedae_plus.compat.AppliedFluxCompat;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
@@ -54,14 +57,13 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackLinkedSet;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -537,27 +539,77 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
 
     private boolean extractPower(double requiredPower) {
         if (requiredPower <= 0) {
+            this.setNetworkEnergySufficient(true);
             return true;
         }
+
         try {
             var node = this.getMainNode();
             if (node == null || node.getGrid() == null) {
-                this.setNetworkEnergySufficient(false);
-                return false;
+                throw new IllegalStateException("Entity speed ticker is not connected to an ME grid");
             }
-            IEnergyService energyService = node.getGrid().getEnergyService();
-            double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-            if (simulated + 1e-6 < requiredPower) {
-                this.setNetworkEnergySufficient(false);
-                return false;
+
+            var grid = node.getGrid();
+            IEnergyService energyService = grid.getEnergyService();
+            // 先通过不依赖 AppFlux 类型的兼容检测判断模组是否存在。
+            boolean appFluxLoaded = UpgradeSlotCompat.isAppfluxPresent();
+            boolean preferDiskEnergy = appFluxLoaded && ModConfigs.PRIORITIZE_DISK_ENERGY.get();
+            MEStorage storage = null;
+            IActionSource source = IActionSource.ofMachine(this);
+
+            // 优先使用 FE 时，先从 ME 存储提取；失败后仍继续尝试 AE 网络能量。
+            if (preferDiskEnergy) {
+                storage = getNetworkStorage(grid);
+                if (storage != null && AppliedFluxCompat.tryExtractFE(energyService, storage, requiredPower, source)) {
+                    this.setNetworkEnergySufficient(true);
+                    return true;
+                }
             }
-            energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-            this.setNetworkEnergySufficient(true);
-            return true;
+
+            // AE 优先时必须先模拟提取，只有确认足量后才实际扣除网络能量。
+            double remainingPower = requiredPower;
+            double simulated = energyService.extractAEPower(
+                    requiredPower,
+                    Actionable.SIMULATE,
+                    PowerMultiplier.CONFIG
+            );
+            if (simulated + 1e-6 >= requiredPower) {
+                double extracted = energyService.extractAEPower(
+                        requiredPower,
+                        Actionable.MODULATE,
+                        PowerMultiplier.CONFIG
+                );
+                if (extracted + 1e-6 >= requiredPower) {
+                    this.setNetworkEnergySufficient(true);
+                    return true;
+                }
+
+                // 网络状态在两次调用之间发生变化时，FE 只补充实际缺少的部分。
+                remainingPower = Math.max(0, requiredPower - Math.max(0, extracted));
+            }
+
+            // AE 优先时，AE 不足才使用 FE 作为后备能源。
+            if (!preferDiskEnergy && appFluxLoaded) {
+                storage = storage != null ? storage : getNetworkStorage(grid);
+                if (storage != null && AppliedFluxCompat.tryExtractFE(energyService, storage, remainingPower, source)) {
+                    this.setNetworkEnergySufficient(true);
+                    return true;
+                }
+            }
         } catch (Throwable ignored) {
         }
+
         this.setNetworkEnergySufficient(false);
         return false;
+    }
+
+    @Nullable
+    private MEStorage getNetworkStorage(IGrid grid) {
+        try {
+            return grid.getStorageService().getInventory();
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private UUID getFallbackOwner() {

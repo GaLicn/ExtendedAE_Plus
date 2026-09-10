@@ -1,39 +1,77 @@
 package com.extendedae_plus.compat;
 
-import appeng.client.gui.implementations.PatternProviderScreen;
+import appeng.api.config.Actionable;
+import appeng.api.networking.energy.IEnergyService;
+import appeng.api.networking.security.IActionSource;
+import appeng.api.storage.MEStorage;
+import appeng.api.storage.StorageHelper;
+import com.glodblock.github.appflux.common.me.key.FluxKey;
+import com.glodblock.github.appflux.common.me.key.type.EnergyType;
 
 /**
- * AppliedFlux 兼容性处理工具类
- * 用于检测和处理与AppliedFlux模组的UI冲突
+ * Applied Flux 能量存储兼容层。
+ *
+ * <p>AppFlux 是可选模组，调用方必须先确认 AppFlux 已加载，再进入本兼容类。</p>
  */
 public final class AppliedFluxCompat {
-    
-    private AppliedFluxCompat() {}
-    
-    /**
-     * 检查PatternProviderScreen是否已经有AppliedFlux添加的升级面板
-     * 简化版本：主要通过AppliedFlux模组加载状态来判断
-     */
-    public static boolean hasAppliedFluxUpgradePanel(PatternProviderScreen<?> screen) {
-        // 如果AppliedFlux未加载，肯定没有其升级面板
-        if (!UpgradeSlotCompat.shouldUseLowPriorityMode()) {
-            return false;
-        }
-        
-        // 如果 AppliedFlux 加载了，假设它会添加升级面板
-        // 这是一个保守的假设，避免冲突
-        return true;
+    private AppliedFluxCompat() {
     }
-    
+
     /**
-     * 检查是否应该跳过添加我们的升级面板
-     * 主要用于检测 AppliedFlux 是否已经添加了升级面板
+     * 尝试从 ME 网络中提取 FE，并将 FE 转换为实体加速器所需的 AE 数量。
+     *
+     * <p>先模拟提取，确认数量足够后才实际扣除，避免能源不足时部分扣除。
+     * 1 AE 按 2 FE 换算，需求量向上取整。</p>
      */
-    public static boolean shouldSkipOurUpgradePanel(PatternProviderScreen<?> screen) {
-        if (!UpgradeSlotCompat.shouldUseLowPriorityMode()) {
+    public static boolean tryExtractFE(
+            IEnergyService energyService,
+            MEStorage storage,
+            double requiredPower,
+            IActionSource source
+    ) {
+        if (energyService == null || storage == null || requiredPower <= 0) {
             return false;
         }
-        
-        return hasAppliedFluxUpgradePanel(screen);
+
+        long feRequired = toFE(requiredPower);
+        if (feRequired <= 0) {
+            return false;
+        }
+
+        try {
+            FluxKey key = FluxKey.of(EnergyType.FE);
+            long simulated = StorageHelper.poweredExtraction(
+                    energyService,
+                    storage,
+                    key,
+                    feRequired,
+                    source,
+                    Actionable.SIMULATE
+            );
+            if (simulated < feRequired) {
+                return false;
+            }
+
+            long extracted = StorageHelper.poweredExtraction(
+                    energyService,
+                    storage,
+                    key,
+                    feRequired,
+                    source,
+                    Actionable.MODULATE
+            );
+            return extracted >= feRequired;
+        } catch (Throwable ignored) {
+            // AppFlux API 发生变化或未完整加载时，交由 AE 能量路径处理。
+            return false;
+        }
+    }
+
+    private static long toFE(double requiredPower) {
+        double requiredFE = Math.ceil(requiredPower * 2.0D);
+        if (!Double.isFinite(requiredFE) || requiredFE > Long.MAX_VALUE) {
+            return 0;
+        }
+        return (long) requiredFE;
     }
 }
