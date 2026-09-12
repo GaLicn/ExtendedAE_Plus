@@ -42,7 +42,10 @@ public abstract class EmiRecipeFillerMixin {
         }
 
         Object category = eap$getCategory(recipe);
-        String key = eap$resolveCategorySearchKey(recipe, category);
+        // 处理器入口和填充器入口可能分别触发，合成配方始终固定使用 crafting。
+        String key = eap$isCraftingRecipe(recipe)
+                ? RecipeTypeNameConfig.resolveSearchKeyAlias(RecipeTypeNameConfig.DEFAULT_CRAFTING_SEARCH_KEY)
+                : eap$resolveCategorySearchKey(recipe, category);
         if (key != null && !key.isBlank()) {
             RecipeTypeNameConfig.setLastProcessingName(key);
         }
@@ -74,5 +77,11 @@ public abstract class EmiRecipeFillerMixin {
         } catch (Throwable ignored) {
             return category == null ? null : category.toString();
         }
+    }
+
+    private static boolean eap$isCraftingRecipe(EmiRecipe recipe) {
+        String recipeClass = recipe.getClass().getName();
+        return recipeClass.endsWith(".EmiShapedRecipe")
+                || recipeClass.endsWith(".EmiShapelessRecipe");
     }
 }

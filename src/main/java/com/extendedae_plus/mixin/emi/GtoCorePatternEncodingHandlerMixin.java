@@ -64,8 +64,10 @@ public abstract class GtoCorePatternEncodingHandlerMixin {
 
     @Unique
     private static boolean eap$isCraftingRecipe(EmiRecipe recipe) {
-        // GTOCore 将切石机配方作为其自定义合成分支处理。
-        return "dev.emi.emi.recipe.EmiStonecuttingRecipe".equals(recipe.getClass().getName());
+        // EMI 原版有序/无序合成使用独立实现类，统一映射到供应器的 crafting 搜索词。
+        String recipeClass = recipe.getClass().getName();
+        return recipeClass.endsWith(".EmiShapedRecipe")
+                || recipeClass.endsWith(".EmiShapelessRecipe");
     }
 
     @Unique

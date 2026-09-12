@@ -76,7 +76,7 @@ public final class RecipeTypeNameConfig {
         return searchKey;
     }
 
-    /** 上传按钮发包前读取关键字，但不提前消费，保证服务端列表返回时仍可使用。 */
+    /** 读取最近一次配方关键字但不消费；上传按钮发包时负责一次性消费。 */
     public static String peekLastProviderSearchKey() {
         return lastProviderSearchKey;
     }

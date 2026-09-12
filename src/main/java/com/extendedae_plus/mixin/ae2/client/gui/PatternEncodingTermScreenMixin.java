@@ -98,7 +98,8 @@ public abstract class PatternEncodingTermScreenMixin {
             if (Screen.hasShiftDown()) {
                 ModNetwork.CHANNEL.sendToServer(new ReturnLastPatternC2SPacket());
             } else {
-                String cachedKey = RecipeTypeNameConfig.peekLastProviderSearchKey();
+                // 发包前消费缓存，避免本次映射关键字串到下一次上传。
+                String cachedKey = RecipeTypeNameConfig.consumeLastProviderSearchKey();
                 String searchKey = eap$getMenuSearchKey();
                 if (searchKey == null || searchKey.isBlank()) {
                     searchKey = cachedKey;
