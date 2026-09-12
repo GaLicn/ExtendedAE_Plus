@@ -18,7 +18,6 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.glodblock.github.extendedae.common.me.taglist.TagPriorityList;
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -38,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 public class TagInventoryMEInterfaceBlockEntity extends AEBaseBlockEntity
         implements IInWorldGridNodeHost, MenuProvider, IActionHost {
@@ -179,10 +179,12 @@ public class TagInventoryMEInterfaceBlockEntity extends AEBaseBlockEntity
 
         var storage = node.getGrid().getStorageService().getCachedInventory();
         var result = new ArrayList<NetworkItem>();
-        for (Object2LongMap.Entry<AEKey> entry : storage) {
+        // GTO replaces AE2's object-key cache with an identity-key cache at runtime.
+        for (Map.Entry<AEKey, Long> entry : storage) {
             AEKey key = entry.getKey();
-            if (key instanceof AEItemKey itemKey && entry.getLongValue() > 0 && currentFilter.isListed(key)) {
-                result.add(new NetworkItem(itemKey, entry.getLongValue()));
+            long amount = entry.getValue();
+            if (key instanceof AEItemKey itemKey && amount > 0 && currentFilter.isListed(key)) {
+                result.add(new NetworkItem(itemKey, amount));
             }
         }
         return result;
