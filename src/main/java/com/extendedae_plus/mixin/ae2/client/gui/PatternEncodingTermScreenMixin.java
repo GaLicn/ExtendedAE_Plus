@@ -100,9 +100,10 @@ public abstract class PatternEncodingTermScreenMixin {
             } else {
                 // 发包前消费缓存，避免本次映射关键字串到下一次上传。
                 String cachedKey = RecipeTypeNameConfig.consumeLastProviderSearchKey();
-                String searchKey = eap$getMenuSearchKey();
+                // EMI 捕获的映射词优先；无线终端菜单字段只作为捕获失败时的兜底。
+                String searchKey = cachedKey;
                 if (searchKey == null || searchKey.isBlank()) {
-                    searchKey = cachedKey;
+                    searchKey = eap$getMenuSearchKey();
                 }
                 ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(searchKey));
             }
@@ -194,6 +195,12 @@ public abstract class PatternEncodingTermScreenMixin {
                         if (value instanceof String recipe && !recipe.isBlank()) {
                             int separator = recipe.indexOf('/');
                             String key = separator > 0 ? recipe.substring(0, separator) : recipe;
+                            String lowerKey = key.toLowerCase(java.util.Locale.ROOT);
+                            if (lowerKey.endsWith(":shaped") || lowerKey.endsWith(":shapeless")
+                                    || lowerKey.equals("shaped") || lowerKey.equals("shapeless")) {
+                                return RecipeTypeNameConfig.resolveSearchKeyAlias(
+                                        RecipeTypeNameConfig.DEFAULT_CRAFTING_SEARCH_KEY);
+                            }
                             return RecipeTypeNameConfig.resolveProviderSearchKey(key);
                         }
                     } catch (NoSuchFieldException ignored) {
