@@ -39,6 +39,21 @@ public class InfinityDataStorage {
         this(new Object2LongOpenHashMap<>(), new Object2ObjectOpenHashMap<>(), BigInteger.ZERO);
     }
 
+    /**
+     * 使用已经构造好的 long 数量表创建存储。
+     *
+     * <p>调用方将所有权转移给返回的实例，后续不要再修改传入 Map。该入口用于批量加载或基准
+     * 初始化，避免把大量本来就是 long 数量的条目逐个走公开 {@link #insert(AEKey, long)} 路径。</p>
+     */
+    public static InfinityDataStorage fromLongAmounts(Object2LongMap<AEKey> longAmounts) {
+        if (longAmounts == null) {
+            throw new IllegalArgumentException("longAmounts must not be null");
+        }
+        Object2ObjectMap<AEKey, BigInteger> emptyBigAmounts = new Object2ObjectOpenHashMap<>();
+        return new InfinityDataStorage(longAmounts, emptyBigAmounts,
+                calculateItemCount(longAmounts, emptyBigAmounts));
+    }
+
     private InfinityDataStorage(Object2LongMap<AEKey> longAmounts,
                                 Object2ObjectMap<AEKey, BigInteger> bigAmounts,
                                 BigInteger itemCount) {

@@ -8,6 +8,7 @@ import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.api.ids.EAPComponents;
+import com.extendedae_plus.api.storage.AeCellStorageComparisonBenchmark;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
@@ -99,6 +100,23 @@ public class ExtendedAEPlus {
         serverStopping = false;
         storageManagerServer = event.getServer();
         storageManager = InfinityStorageManager.getInstance(event.getServer());
+
+        // 专用基准服务器在注册表和世界加载完成后执行三方 StorageCell 对比，完成后自动退出。
+        if (Boolean.getBoolean("extendedae_plus.cell_benchmark")) {
+            MinecraftServer server = event.getServer();
+            Thread benchmarkThread = new Thread(() -> {
+                try {
+                    AeCellStorageComparisonBenchmark.run(server);
+                } catch (Throwable failure) {
+                    LOGGER.error("Cell storage comparison benchmark failed", failure);
+                } finally {
+                    // 百万 key 预置和终端遍历可能超过服务器单 tick 看门狗阈值，基准在独立线程中运行。
+                    server.halt(false);
+                }
+            }, "extendedae-cell-storage-benchmark");
+            benchmarkThread.setDaemon(false);
+            benchmarkThread.start();
+        }
     }
 
     private static void onServerStopping(ServerStoppingEvent event) {
