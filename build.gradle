@@ -23,10 +23,24 @@ loom {
     silentMojangMappingsLicense()
 
     forge {
-        mixinConfig 'extendedae_plus.mixins.json'
+        mixinConfig 'extendedae_plus_gtladd.mixins.json'
     }
 
     runs {
+        client {
+            client()
+            name "Minecraft Client"
+            runDir 'run/client'
+            vmArgs '-Xmx3G'
+        }
+
+        server {
+            server()
+            name "Minecraft Server"
+            runDir 'run/server'
+            vmArgs '-Xmx3G'
+        }
+
         data {
             data()
             name "Data Generation"
@@ -45,10 +59,18 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven {
+        name = "FirstDarkDev"
+        url = "https://maven.firstdarkdev.xyz/snapshots/"
+    }
+    maven {
         url = "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
         }
+    }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
     }
     maven {
         url = "https://maven.blamejared.com/"
@@ -69,6 +91,8 @@ repositories {
         }
     }
     maven { url "https://repo.spongepowered.org/maven" }
+    maven { url "https://maven.bawnorton.com/releases" }
+    maven { url "https://maven.enjarai.dev/mirrors" }
     maven { url "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
     maven { // Registrate
         url = "https://maven.tterrag.com/"
@@ -86,18 +110,24 @@ dependencies {
     mappings loom.officialMojangMappings()
     forge "net.minecraftforge:forge:${forge_version}"
     annotationProcessor "org.spongepowered:mixin:${mixin_version}:processor"
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.0"))
+    compileOnly(annotationProcessor("com.github.bawnorton.mixinsquared:mixinsquared-common:0.3.7-beta.3"))
+    implementation(include("com.github.bawnorton.mixinsquared:mixinsquared-forge:0.3.7-beta.3"))
 
     //exendedae前置
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
-    modImplementation files('libs/ExtendedAE-1.20-1.4.2-forge.jar')
-    modRuntimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
+    modImplementation "curse.maven:ex-pattern-provider-892005:7144417"
+    modImplementation fileTree(dir: 'libs', includes: ['*.jar'])
 
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
     modImplementation "org.appliedenergistics:guideme:${guideme_version}"
-    modImplementation "curse.maven:applied-energistics-2-wireless-terminals-459929:${wireless_terminals_version}"
-    modImplementation "curse.maven:applied-flux-965012:6755986"
+    modImplementation("maven.modrinth:applied-energistics-2-wireless-terminals:15.3.3-forge") {
+        transitive = false
+    }
+    modImplementation "curse.maven:applied-flux-965012:7072853"
     modImplementation "curse.maven:mega-cells-622112:${mega_cells_version}"
 
     //mae2
@@ -108,24 +138,21 @@ dependencies {
     modCompileOnly "curse.maven:advancedae-1084104:6939473"
     modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
 
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
-    modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:15.20.0.112"
     modImplementation "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
     modImplementation "curse.maven:jade-324717:${jade_version}"
 
     // GregTech
-    modImplementation "curse.maven:gregtechceu-modern-890405:${gregtech_version}"
+//    modImplementation files("libs/gtceu-1.20.1-1.4.4.jar")
     modImplementation "curse.maven:ldlib-626676:5775541"
-    modImplementation files('libs/gtlcore-1.2.2.4-fix8.jar')
-    modImplementation("dev:gtmthings-1.3.5.b")
+//    modImplementation files('libs/gtlcore-1.2.3.2-fix1.jar')
+//    modImplementation files('libs/gtmthings-1.3.5.b.jar')
+    modImplementation("curse.maven:ftb-ultimine-forge-386134:5363345") { transitive = false }
     modImplementation("dev:resourcefullib-forge-1.20.1-2.1.29")
     modImplementation("dev:resourcefulconfig-forge-1.20.1-2.1.3")
     modImplementation("dev:botarium-forge-1.20.1-2.3.4")
     modImplementation("dev:ad_astra-forge-1.20.1-1.15.20")
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.2.0"))
-    implementation(include("io.github.llamalad7:mixinextras-forge:0.2.0"))
     modImplementation("com.tterrag.registrate:Registrate:MC1.20-1.3.11")
-    modImplementation("curse.maven:kubejs-238086:5454840")
+    modImplementation("curse.maven:kubejs-238086:5012072")
     modImplementation("curse.maven:rhino-416294:6186971")
 
     //curios

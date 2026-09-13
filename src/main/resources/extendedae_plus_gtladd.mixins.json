@@ -1,0 +1,27 @@
+{
+  "required": false,
+  "package": "com.extendedae_plus_gtladd.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "client": [
+    "ae.AEBaseScreenMixin",
+    "gtceu.AEPatternViewSlotWidgetMixin",
+    "gtceu.ModularUIGuiContainerCloseMixin",
+    "gtceu.SlotWidgetMixin",
+    "compat.extendedae.ExPatternProviderPaginationCompatMixin"
+  ],
+  "mixins": [
+    "eaep.MatrixUploadUtilMixin",
+    "eaep.content.LabeledWirelessTransceiverBlockMixin",
+    "eaep.content.NetworkPatternControllerBlockMixin",
+    "eaep.content.WirelessTransceiverBlockMixin",
+    "compat.extendedae.TileExPatternProviderCapacityCompatMixin",
+    "compat.extendedae.PartExPatternProviderCapacityCompatMixin",
+    "compat.extendedae.PatternProviderLogicPaginationCompatMixin",
+    "compat.extendedae.ContainerExPatternProviderPaginationCompatMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "priority": 1000
+}
