@@ -20,5 +20,19 @@ versionRange = "[47,)"
 ordering = "NONE"
 side = "BOTH"
 
+[[dependencies.extendedae_plus_gtladd]]
+modId = "extendedae_plus"
+mandatory = true
+versionRange = "[1.6.1,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.extendedae_plus_gtladd]]
+modId = "gtlcore"
+mandatory = true
+versionRange = "[1.2.3.2-fix1,)"
+ordering = "AFTER"
+side = "BOTH"
+
 [[mixins]]
 config = "extendedae_plus_gtladd.mixins.json"
