@@ -18,7 +18,12 @@
     "compat.extendedae.TileExPatternProviderCapacityCompatMixin",
     "compat.extendedae.PartExPatternProviderCapacityCompatMixin",
     "compat.extendedae.PatternProviderLogicPaginationCompatMixin",
-    "compat.extendedae.ContainerExPatternProviderPaginationCompatMixin"
+    "compat.extendedae.ContainerExPatternProviderPaginationCompatMixin",
+    "compat.gtlcore.CraftingCpuSmartDoublingCompatMixin",
+    "compat.gtlcore.TransfiniteCraftingSmartDoublingCompatMixin",
+    "compat.gtlcore.GtlcorePatternIdentityCompatMixin",
+    "compat.gtlcore.GtlcorePatternRelayCompatMixin",
+    "compat.gtlcore.GtlcorePatternBufferCompatMixin"
   ],
   "injectors": {
     "defaultRequire": 1
