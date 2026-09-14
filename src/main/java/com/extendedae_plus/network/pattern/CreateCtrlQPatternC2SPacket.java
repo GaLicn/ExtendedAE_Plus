@@ -195,7 +195,13 @@ public class CreateCtrlQPatternC2SPacket {
                     }
                 }
 
+                // 客户端产物在服务端注册表上偶发为空时，回退使用客户端解析的产物
                 ItemStack output = recipe.getResultItem(player.level().registryAccess()).copy();
+                if (output.isEmpty()) {
+                    for (ItemStack s : selectedOutputs) {
+                        if (!s.isEmpty()) { output = s.copy(); break; }
+                    }
+                }
                 ItemStack encodedPattern = PatternDetailsHelper.encodeCraftingPattern(
                     craftingRecipe,
                     inputs,

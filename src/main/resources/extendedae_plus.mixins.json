@@ -1,9 +1,11 @@
 {
   "required": false,
   "package": "com.extendedae_plus.mixin",
+  "plugin": "com.extendedae_plus.mixin.ExtendedAEMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
+    "emi.BoMScreenMixin",
     "advancedae.client.gui.AdvPatternProviderScreenMixin",
     "advancedae.client.gui.AdvPatternProviderScreenUpgradesMixin",
     "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",
@@ -50,6 +52,7 @@
     "advancedae.accessor.AdvCraftingCPULogicAccessor",
     "advancedae.accessor.AdvExecutingCraftingJobAccessor",
     "advancedae.crafting.AdvCraftingCPULogicManualWaitingMixin",
+    "advancedae.crafting.AdvCraftingCPULogicPatternPowerMixin",
     "advancedae.accessor.AdvExecutingCraftingJobTaskProgressAccessor",
     "advancedae.compat.AdvPatternProviderLogicHostMirrorBridgeMixin",
     "advancedae.compat.AdvPatternProviderLogicChannelCardMixin",
@@ -78,6 +81,7 @@
     "ae2.accessor.PatternProviderLogicPatternInputsAccessor",
     "ae2.autopattern.CraftingCalculationMixin",
     "ae2.autopattern.CraftingServiceGetProvidersMixin",
+    "ae2.autopattern.CraftingCpuLogicPatternPowerMixin",
     "ae2.autopattern.CraftingSimulationStateAccessor",
     "ae2.autopattern.CraftingSimulationStateMixin",
     "ae2.autopattern.PatternProviderLogicContainsModifyMixin",

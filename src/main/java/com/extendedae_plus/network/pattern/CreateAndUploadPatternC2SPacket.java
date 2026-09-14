@@ -136,7 +136,7 @@ public class CreateAndUploadPatternC2SPacket {
             }
 
             // 5. 上传样板到装配矩阵
-            boolean uploaded = MatrixUploadUtil.uploadPatternToMatrix(player, pattern, grid);
+            boolean uploaded = MatrixUploadUtil.uploadPatternToMatrix(player, pattern, grid, true);
 
             if (!uploaded) {
                 // 上传失败，将样板塞到背包。
@@ -157,9 +157,20 @@ public class CreateAndUploadPatternC2SPacket {
     }
 
     /**
-     * 消耗空白样板：优先从AE网络提取
+     * 消耗空白样板：优先从玩家背包消耗，其次从 AE 网络提取。
+     * 仅查网络会导致"身上有空白样板仍提示没有空白样板"，与 Ctrl+Q 流程行为对齐。
      */
     private static boolean consumeBlankPattern(ServerPlayer player, IGrid grid) {
+        // 1) 玩家背包
+        var inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (stack.is(AEItems.BLANK_PATTERN.asItem())) {
+                stack.shrink(1);
+                return true;
+            }
+        }
+        // 2) AE 网络
         AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
         IEnergyService energy = grid.getEnergyService();
         MEStorage storage = grid.getStorageService().getInventory();
@@ -176,9 +187,14 @@ public class CreateAndUploadPatternC2SPacket {
     }
 
     /**
-     * 退还空白样板到网络
+     * 退还空白样板：优先退回玩家背包，背包放不下再存回网络
      */
     private static void refundBlankPattern(ServerPlayer player, IGrid grid) {
+        // 1) 退回背包
+        if (player.getInventory().add(AEItems.BLANK_PATTERN.stack())) {
+            return;
+        }
+        // 2) 存回网络
         AEItemKey blankPatternKey = AEItemKey.of(AEItems.BLANK_PATTERN.stack());
         IEnergyService energy = grid.getEnergyService();
         MEStorage storage = grid.getStorageService().getInventory();
