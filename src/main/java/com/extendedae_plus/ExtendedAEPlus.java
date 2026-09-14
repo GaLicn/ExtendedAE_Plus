@@ -10,6 +10,7 @@ import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.api.storage.AeCellStorageComparisonBenchmark;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.api.storage.TrinityStorageComparisonBenchmark;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
@@ -114,6 +115,19 @@ public class ExtendedAEPlus {
                     server.halt(false);
                 }
             }, "extendedae-cell-storage-benchmark");
+            benchmarkThread.setDaemon(false);
+            benchmarkThread.start();
+        } else if (Boolean.getBoolean("extendedae_plus.trinity_benchmark")) {
+            MinecraftServer server = event.getServer();
+            Thread benchmarkThread = new Thread(() -> {
+                try {
+                    TrinityStorageComparisonBenchmark.run(server);
+                } catch (Throwable failure) {
+                    LOGGER.error("Trinity storage comparison benchmark failed", failure);
+                } finally {
+                    server.halt(false);
+                }
+            }, "extendedae-trinity-storage-benchmark");
             benchmarkThread.setDaemon(false);
             benchmarkThread.start();
         }

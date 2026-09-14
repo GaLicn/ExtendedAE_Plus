@@ -241,7 +241,7 @@ public final class ModItems {
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
 
     private static List<DeferredItem<Item>> registerCellBenchmarkOrdinaryItems() {
-        if (!Boolean.getBoolean("extendedae_plus.cell_benchmark")) {
+        if (!isCellBenchmarkEnabled()) {
             return List.of();
         }
 
@@ -257,10 +257,15 @@ public final class ModItems {
     }
 
     private static DeferredItem<Item> registerCellBenchmarkNbtItem() {
-        if (!Boolean.getBoolean("extendedae_plus.cell_benchmark")) {
+        if (!isCellBenchmarkEnabled()) {
             return null;
         }
         return ITEMS.register("cell_benchmark_nbt", () -> new Item(new Item.Properties()));
+    }
+
+    private static boolean isCellBenchmarkEnabled() {
+        return Boolean.getBoolean("extendedae_plus.cell_benchmark")
+                || Boolean.getBoolean("extendedae_plus.trinity_benchmark");
     }
 
     static {
