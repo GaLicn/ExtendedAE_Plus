@@ -23,3 +23,7 @@ Additional Resources:
 ==========
 Community Documentation: https://docs.neoforged.net/  
 NeoForged Discord: https://discord.neoforged.net/
+
+## 性能测试复现
+
+[吞噬盘、Omni BigInteger 盘与 DE 三位一体：中文测试用例与运行指南](docs/trinity-storage-benchmark-guide.md)
