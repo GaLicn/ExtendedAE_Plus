@@ -27,6 +27,20 @@ loom {
     }
 
     runs {
+        client {
+            client()
+            name "Minecraft Client"
+            runDir 'run/client'
+            vmArgs '-Xmx3G'
+        }
+
+        server {
+            server()
+            name "Minecraft Server"
+            runDir 'run/server'
+            vmArgs '-Xmx3G'
+        }
+
         data {
             data()
             name "Data Generation"

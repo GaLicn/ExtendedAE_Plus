@@ -4,6 +4,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.energy.IEnergyService;
@@ -28,6 +29,8 @@ import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
 import com.extendedae_plus.api.config.Settings;
+import com.extendedae_plus.compat.AppliedFluxCompat;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
@@ -58,6 +61,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -76,26 +80,10 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     @PartModels
     public static final PartModel MODELS_HAS_CHANNEL = new PartModel(MODEL_BASE, new ResourceLocation(ExtendedAEPlus.MODID, "part/entity_speed_ticker_has_channel"));
 
-    private static volatile MethodHandle cachedFEExtractHandle;
-    private static volatile boolean FE_UNAVAILABLE;
     // 红石信号状态
     private YesNo redstoneState = YesNo.UNDECIDED;
 
     // 静态块：初始化缓存
-    static {
-         if (ModCheckUtils.isAppfluxLoading()) {
-            try {
-                Class<?> helperClass = Class.forName("com.extendedae_plus.util.entitySpeed.FluxEnergyHelper");
-                Method method = helperClass.getMethod("extractFE", IEnergyService.class, MEStorage.class, long.class, IActionSource.class);
-                cachedFEExtractHandle = MethodHandles.lookup().unreflect(method);
-                FE_UNAVAILABLE = false;
-            } catch (Exception e) {
-                FE_UNAVAILABLE = true;
-                cachedFEExtractHandle = null;
-            }
-        }
-    }
-
     public EntitySpeedTickerMenu menu;              // 当前打开的菜单实例
     private boolean networkEnergySufficient = true; // 网络能量是否充足
     private int cachedSpeed = -1;                    // 缓存的加速倍率
@@ -367,53 +355,77 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
      * @return 是否成功提取足够能量
      */
     private boolean extractPower(double requiredPower) {
-        IEnergyService energyService = getMainNode().getGrid().getEnergyService();
-        MEStorage storage = getMainNode().getGrid().getStorageService().getInventory();
-        IActionSource source = IActionSource.ofMachine(this);
-
-        boolean preferDiskEnergy = ModConfig.INSTANCE.prioritizeDiskEnergy;
-
-        // 如果优先磁盘能量，先尝试 FE
-        if (preferDiskEnergy && tryExtractFE(energyService, storage, requiredPower, source)) {
+        if (requiredPower <= 0) {
+            setNetworkEnergySufficient(true);
             return true;
         }
 
-        // 先尝试 AE 能量
-        double simulated = energyService.extractAEPower(requiredPower, Actionable.SIMULATE, PowerMultiplier.CONFIG);
-        if (simulated >= requiredPower) {
-            double extracted = energyService.extractAEPower(requiredPower, Actionable.MODULATE, PowerMultiplier.CONFIG);
-            boolean sufficient = extracted >= requiredPower;
-            setNetworkEnergySufficient(sufficient);
-            return sufficient;
+        try {
+            var node = getMainNode();
+            if (node == null || node.getGrid() == null) {
+                throw new IllegalStateException("Entity speed ticker is not connected to an ME grid");
+            }
+
+            IGrid grid = node.getGrid();
+            IEnergyService energyService = grid.getEnergyService();
+            boolean appFluxLoaded = UpgradeSlotCompat.isAppfluxPresent();
+            boolean preferDiskEnergy = appFluxLoaded && ModConfig.INSTANCE.prioritizeDiskEnergy;
+            MEStorage storage = null;
+            IActionSource source = IActionSource.ofMachine(this);
+
+            // 优先使用 FE 时，先从 ME 存储提取；失败后仍继续尝试 AE 网络能量。
+            if (preferDiskEnergy) {
+                storage = getNetworkStorage(grid);
+                if (storage != null && AppliedFluxCompat.tryExtractFE(energyService, storage, requiredPower, source)) {
+                    setNetworkEnergySufficient(true);
+                    return true;
+                }
+            }
+
+            // AE 优先时必须先模拟提取，只有确认足量后才实际扣除网络能量。
+            double remainingPower = requiredPower;
+            double simulated = energyService.extractAEPower(
+                    requiredPower,
+                    Actionable.SIMULATE,
+                    PowerMultiplier.CONFIG
+            );
+            if (simulated + 1e-6 >= requiredPower) {
+                double extracted = energyService.extractAEPower(
+                        requiredPower,
+                        Actionable.MODULATE,
+                        PowerMultiplier.CONFIG
+                );
+                if (extracted + 1e-6 >= requiredPower) {
+                    setNetworkEnergySufficient(true);
+                    return true;
+                }
+
+                // 网络状态在两次调用之间发生变化时，FE 只补充实际缺少的部分。
+                remainingPower = Math.max(0, requiredPower - Math.max(0, extracted));
+            }
+
+            // AE 优先时，AE 不足才使用 FE 作为后备能源。
+            if (!preferDiskEnergy && appFluxLoaded) {
+                storage = storage != null ? storage : getNetworkStorage(grid);
+                if (storage != null && AppliedFluxCompat.tryExtractFE(energyService, storage, remainingPower, source)) {
+                    setNetworkEnergySufficient(true);
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
         }
+
         setNetworkEnergySufficient(false);
-
-        // 如果没成功，且不是优先磁盘能量，再尝试 FE
-        if (!preferDiskEnergy) {
-            return tryExtractFE(energyService, storage, requiredPower, source);
-        }
-
         return false;
     }
 
-    private boolean tryExtractFE(IEnergyService energyService, MEStorage storage, double requiredPower, IActionSource source) {
-        if (FE_UNAVAILABLE || cachedFEExtractHandle == null) {
-            setNetworkEnergySufficient(false);
-            return false;
-        }
+    @Nullable
+    private MEStorage getNetworkStorage(IGrid grid) {
         try {
-            long feRequired = (long) requiredPower << 1; // 1 AE = 2 FE
-            long feExtracted = (long) cachedFEExtractHandle.invokeExact(null, energyService, storage, feRequired, source);
-            if (feExtracted >= feRequired) {
-                setNetworkEnergySufficient(true);
-                return true;
-            }
-        }catch (Throwable e) {
-            // 如果反射调用失败，标记为不可用，避免下次继续尝试
-            FE_UNAVAILABLE = true;
+            return grid.getStorageService().getInventory();
+        } catch (Throwable ignored) {
+            return null;
         }
-        setNetworkEnergySufficient(false);
-        return false;
     }
 
 
@@ -561,5 +573,11 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     private UUID getFallbackOwner() {
         var node = this.getActionableNode();
         return node != null ? node.getOwningPlayerProfileId() : null;
+    }
+}
+
+    @Override
+    public void eap$handleDelayedInit() {
+        handleWirelessLogic();
     }
 }
