@@ -1,5 +1,6 @@
 package com.extendedae_plus.ae.parts;
 
+
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.YesNo;
@@ -14,7 +15,6 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartItem;
-
 import appeng.api.parts.IPartModel;
 import appeng.api.storage.MEStorage;
 import appeng.api.upgrades.IUpgradeableObject;
@@ -35,21 +35,17 @@ import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.util.Logger;
-import com.extendedae_plus.util.ModCheckUtils;
-import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
+import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -58,10 +54,6 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -573,11 +565,5 @@ public class EntitySpeedTickerPart extends UpgradeablePart implements IGridTicka
     private UUID getFallbackOwner() {
         var node = this.getActionableNode();
         return node != null ? node.getOwningPlayerProfileId() : null;
-    }
-}
-
-    @Override
-    public void eap$handleDelayedInit() {
-        handleWirelessLogic();
     }
 }
