@@ -1,9 +1,14 @@
 package com.extendedae_plus.compat;
 
+import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
+import com.extendedae_plus.ExtendedAEPlus;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
+import mekanism.api.IMekanismAccess;
 import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalStack;
+import mezz.jei.api.ingredients.IIngredientType;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Applied Mekanistics 的桥接。
@@ -13,6 +18,28 @@ import mekanism.api.chemical.ChemicalStack;
  */
 public final class AppliedMekanisticsCompat {
 	private AppliedMekanisticsCompat() {
+	}
+
+	/**
+	 * Returns the JEI ingredient type registered by Mekanism, when Applied
+	 * Mekanistics and Mekanism are available at runtime.
+	 */
+	@Nullable
+	public static IIngredientType<?> getChemicalIngredientType() {
+		try {
+			return IMekanismAccess.INSTANCE.jeiHelper().getChemicalStackHelper().getIngredientType();
+		} catch (Throwable error) {
+			ExtendedAEPlus.LOGGER.warn("Failed to resolve Mekanism JEI chemical ingredient type", error);
+			return null;
+		}
+	}
+
+	@Nullable
+	public static AEKey toKey(Object ingredient) {
+		if (!(ingredient instanceof ChemicalStack chemicalStack)) {
+			return null;
+		}
+		return MekanismKey.of(chemicalStack);
 	}
 
 	public static void addBookmark(Object key) {
@@ -40,7 +67,8 @@ public final class AppliedMekanisticsCompat {
 			long mb = Math.max(1, amount);
 			MekanismKey key = MekanismKey.of(new ChemicalStack(chemical, mb));
 			return key == null ? null : new GenericStack(key, mb);
-		} catch (Throwable ignored) {
+		} catch (Throwable error) {
+			ExtendedAEPlus.LOGGER.warn("Failed to convert Mekanism chemical to AE2 stack", error);
 			return null;
 		}
 	}
