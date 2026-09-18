@@ -12,6 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.HitResult;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -118,7 +119,12 @@ public class ChannelCardItem extends UpgradeCardItem {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        
+
+        //防止点到方块还加减
+        if(player.pick(player.getBlockReach(),0.0F,false).getType() == HitResult.Type.BLOCK){
+            return InteractionResultHolder.pass(stack);
+        }
+
         if (!level.isClientSide) {
             long ch = getChannel(stack);
             long next;
