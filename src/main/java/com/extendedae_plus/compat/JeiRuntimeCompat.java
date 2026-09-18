@@ -1,8 +1,15 @@
 package com.extendedae_plus.compat;
 
-import com.extendedae_plus.mixin.jei.accessor.BookmarkListAccessor;
-import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
@@ -12,20 +19,11 @@ import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.runtime.IJeiRuntime;
 import mezz.jei.common.Internal;
-import mezz.jei.gui.bookmarks.BookmarkList;
-import mezz.jei.gui.bookmarks.RecipeBookmark;
 import mezz.jei.gui.input.IClickableIngredientInternal;
 import mezz.jei.gui.overlay.IngredientListOverlay;
-import mezz.jei.gui.overlay.bookmarks.BookmarkOverlay;
-import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.fluids.FluidStack;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 public final class JeiRuntimeCompat {
 	private static volatile IJeiRuntime runtime;
@@ -153,28 +151,56 @@ public final class JeiRuntimeCompat {
 
 	public static List<ITypedIngredient<?>> getBookmarkList() {
 		IJeiRuntime jeiRuntime = runtime;
-		if (!(jeiRuntime != null && jeiRuntime.getBookmarkOverlay() instanceof BookmarkOverlay overlay)) {
+		if (jeiRuntime == null) {
 			return Collections.emptyList();
 		}
-		return ((BookmarkOverlayAccessor) overlay).eap$getBookmarkList().getElements().stream()
-			.<ITypedIngredient<?>>map(IElement::getTypedIngredient)
-			.toList();
+		Object overlay = safeInvoke(jeiRuntime, "getBookmarkOverlay");
+		if (!isBookmarkOverlay(overlay)) {
+			return Collections.emptyList();
+		}
+		Object bookmarkList = safeReadField(overlay, "bookmarkList");
+		if (bookmarkList == null) {
+			return Collections.emptyList();
+		}
+		Object elements = safeInvoke(bookmarkList, "getElements");
+		if (!(elements instanceof Iterable<?> iterable)) {
+			return Collections.emptyList();
+		}
+		List<ITypedIngredient<?>> result = new ArrayList<>();
+		for (Object element : iterable) {
+			Object typed = safeInvoke(element, "getTypedIngredient");
+			if (typed instanceof ITypedIngredient<?> typedIngredient) {
+				result.add(typedIngredient);
+			}
+		}
+		return result;
 	}
 
 	public static Optional<?> getBookmarkUnderMouse() {
 		IJeiRuntime jeiRuntime = runtime;
-		if (!(jeiRuntime != null && jeiRuntime.getBookmarkOverlay() instanceof BookmarkOverlay overlay)) {
+		if (jeiRuntime == null) {
 			return Optional.empty();
 		}
-		return overlay.getIngredientUnderMouse(getGuiMouseX(), getGuiMouseY())
-			.map(IClickableIngredientInternal::getElement)
-			.map(IElement::getBookmark)
-			.flatMap(Optional::stream)
-			.findFirst();
+		Object overlay = safeInvoke(jeiRuntime, "getBookmarkOverlay");
+		if (!isBookmarkOverlay(overlay)) {
+			return Optional.empty();
+		}
+		Object hovered = safeInvoke(overlay, "getIngredientUnderMouse", new Class<?>[]{double.class, double.class}, getGuiMouseX(), getGuiMouseY());
+		if (!(hovered instanceof Optional<?> optionalHovered)) {
+			return Optional.empty();
+		}
+		for (Object hoveredIngredient : optionalHovered.stream().toList()) {
+			Object element = safeInvoke(hoveredIngredient, "getElement");
+			Object bookmark = safeInvoke(element, "getBookmark");
+			if (bookmark != null) {
+				return Optional.of(bookmark);
+			}
+		}
+		return Optional.empty();
 	}
 
 	public static Optional<?> getRecipeBookmarkUnderMouse() {
-		return getBookmarkUnderMouse().filter(RecipeBookmark.class::isInstance);
+		return getBookmarkUnderMouse();
 	}
 
 	public static void addBookmark(ItemStack stack) {
@@ -197,24 +223,46 @@ public final class JeiRuntimeCompat {
 
 	private static <T> void addBookmarkInternal(IIngredientType<T> type, T ingredient) {
 		IJeiRuntime jeiRuntime = runtime;
-		if (jeiRuntime == null || !(jeiRuntime.getBookmarkOverlay() instanceof BookmarkOverlay overlay)) {
+		if (jeiRuntime == null) {
 			return;
 		}
-		BookmarkList bookmarkList = ((BookmarkOverlayAccessor) overlay).eap$getBookmarkList();
+		Object overlay = safeInvoke(jeiRuntime, "getBookmarkOverlay");
+		if (!isBookmarkOverlay(overlay)) {
+			return;
+		}
+		Object bookmarkList = safeReadField(overlay, "bookmarkList");
+		if (bookmarkList == null) {
+			return;
+		}
+		Object bookmarkFactory = safeReadField(bookmarkList, "bookmarkFactory");
+		if (bookmarkFactory == null) {
+			return;
+		}
 		jeiRuntime.getIngredientManager().createTypedIngredient(type, ingredient, false)
-			.map(((BookmarkListAccessor) bookmarkList).eap$getBookmarkFactory()::create)
-                  .ifPresent(bookmarkList::add);
+			.map(item -> safeInvokeFactory(bookmarkFactory, item))
+			.ifPresent(bookmark -> safeInvoke(bookmarkList, "add", new Class<?>[]{Object.class}, bookmark));
 	}
 
 	private static void addBookmarkUnchecked(Object ingredient) {
 		IJeiRuntime jeiRuntime = runtime;
-		if (jeiRuntime == null || !(jeiRuntime.getBookmarkOverlay() instanceof BookmarkOverlay overlay)) {
+		if (jeiRuntime == null) {
 			return;
 		}
-		BookmarkList bookmarkList = ((BookmarkOverlayAccessor) overlay).eap$getBookmarkList();
+		Object overlay = safeInvoke(jeiRuntime, "getBookmarkOverlay");
+		if (!isBookmarkOverlay(overlay)) {
+			return;
+		}
+		Object bookmarkList = safeReadField(overlay, "bookmarkList");
+		if (bookmarkList == null) {
+			return;
+		}
+		Object bookmarkFactory = safeReadField(bookmarkList, "bookmarkFactory");
+		if (bookmarkFactory == null) {
+			return;
+		}
 		jeiRuntime.getIngredientManager().createTypedIngredient(ingredient, false)
-			.map(((BookmarkListAccessor) bookmarkList).eap$getBookmarkFactory()::create)
-			.ifPresent(bookmarkList::add);
+			.map(item -> safeInvokeFactory(bookmarkFactory, item))
+			.ifPresent(bookmark -> safeInvoke(bookmarkList, "add", new Class<?>[]{Object.class}, bookmark));
 	}
 
 	private static Optional<ITypedIngredient<?>> getIngredientUnderMouse(Object overlay, double mouseX, double mouseY) {
@@ -223,12 +271,73 @@ public final class JeiRuntimeCompat {
 				.<ITypedIngredient<?>>map(IClickableIngredientInternal::getTypedIngredient)
 				.findFirst();
 		}
-		if (overlay instanceof BookmarkOverlay bookmarkOverlay) {
-			return bookmarkOverlay.getIngredientUnderMouse(mouseX, mouseY)
-				.<ITypedIngredient<?>>map(IClickableIngredientInternal::getTypedIngredient)
-				.findFirst();
+		if (isBookmarkOverlay(overlay)) {
+			Object result = safeInvoke(overlay, "getIngredientUnderMouse", new Class<?>[]{double.class, double.class}, mouseX, mouseY);
+			if (result instanceof Optional<?> optional) {
+				for (Object candidate : optional.stream().toList()) {
+					Object typed = safeInvoke(candidate, "getTypedIngredient");
+					if (typed instanceof ITypedIngredient<?> ingredient) {
+						return Optional.of(ingredient);
+					}
+				}
+			}
 		}
 		return Optional.empty();
+	}
+
+	private static boolean isBookmarkOverlay(Object overlay) {
+		if (overlay == null) {
+			return false;
+		}
+		try {
+			Class<?> bookmarkOverlayClass = Class.forName("mezz.jei.gui.overlay.bookmarks.BookmarkOverlay");
+			return bookmarkOverlayClass.isInstance(overlay);
+		} catch (Throwable ignored) {
+			return false;
+		}
+	}
+
+	private static Object safeInvoke(Object target, String methodName) {
+		return safeInvoke(target, methodName, new Class<?>[0], new Object[0]);
+	}
+
+	private static Object safeInvoke(Object target, String methodName, Class<?>[] parameterTypes, Object... args) {
+		if (target == null) {
+			return null;
+		}
+		try {
+			Method method = target.getClass().getMethod(methodName, parameterTypes);
+			return method.invoke(target, args);
+		} catch (Throwable ignored) {
+			return null;
+		}
+	}
+
+	private static Object safeReadField(Object target, String fieldName) {
+		if (target == null) {
+			return null;
+		}
+		try {
+			Field field = target.getClass().getDeclaredField(fieldName);
+			field.setAccessible(true);
+			return field.get(target);
+		} catch (Throwable ignored) {
+			return null;
+		}
+	}
+
+	private static Object safeInvokeFactory(Object bookmarkFactory, Object ingredient) {
+		try {
+			Method create = bookmarkFactory.getClass().getMethod("create", Object.class);
+			return create.invoke(bookmarkFactory, ingredient);
+		} catch (Throwable ignored) {
+			try {
+				Method create = bookmarkFactory.getClass().getMethod("create", Object.class, boolean.class);
+				return create.invoke(bookmarkFactory, ingredient, false);
+			} catch (Throwable ignoredAgain) {
+				return null;
+			}
+		}
 	}
 
 	private static double getGuiMouseX() {
