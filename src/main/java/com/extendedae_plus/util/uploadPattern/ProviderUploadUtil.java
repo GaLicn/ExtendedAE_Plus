@@ -7,11 +7,13 @@ import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.implementations.PatternAccessTermMenu;
+import appeng.menu.AEBaseMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
@@ -21,6 +23,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -147,11 +150,16 @@ public final class ProviderUploadUtil {
      * 将图样编码终端的“已编码图样”上传到指定的样板供应器（通过 providerId 定位）。
      */
     public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
+        return uploadFromEncodingMenuToProvider(player, (IPatternUploadMenu) menu, providerId);
+    }
+
+    /** 通过通用菜单契约上传，兼容第三方编码终端。 */
+    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, IPatternUploadMenu menu, long providerId) {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) return false;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -207,14 +215,19 @@ public final class ProviderUploadUtil {
      * 将编码槽样板插入到第 index 个供应器。
      */
     public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
+        return uploadFromEncodingMenuToProviderByIndex(player, (IPatternUploadMenu) menu, index);
+    }
+
+    /** 通过通用菜单契约按网络顺序上传。 */
+    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
         if (player == null || menu == null || index < 0) return false;
-        List<PatternContainer> list = PatternTerminalUtil.listAvailableProvidersFromGrid(menu);
+        List<PatternContainer> list = listAvailableProvidersFromGrid(menu);
         if (index >= list.size()) return false;
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) return false;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -255,6 +268,36 @@ public final class ProviderUploadUtil {
             }
         }
         return false;
+    }
+
+    /** 从通用菜单契约获取编码槽。 */
+    public static Slot getEncodedPatternSlot(Object menu) {
+        if (menu instanceof IPatternUploadMenu uploadMenu) {
+            return uploadMenu.getEncodedPatternSlot();
+        }
+        if (menu instanceof PatternEncodingTermMenu encodingMenu) {
+            return ((PatternEncodingTermMenuAccessor) (Object) encodingMenu).eap$getEncodedPatternSlot();
+        }
+        return null;
+    }
+
+    /** 从编码菜单目标解析 AE 网络。 */
+    public static IGrid resolveGrid(Object menu) {
+        if (!(menu instanceof AEBaseMenu aeMenu)) return null;
+        try {
+            Object target = aeMenu.getTarget();
+            if (target instanceof appeng.api.networking.security.IActionHost host
+                    && host.getActionableNode() != null) {
+                return host.getActionableNode().getGrid();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /** 基于通用菜单契约枚举可用供应器。 */
+    public static List<PatternContainer> listAvailableProvidersFromGrid(IPatternUploadMenu menu) {
+        return PatternTerminalUtil.listAvailableProvidersFromGrid(resolveGrid(menu));
     }
 
     /**

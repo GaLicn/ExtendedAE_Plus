@@ -2,7 +2,7 @@ package com.extendedae_plus.network.provider;
 
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
-import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
@@ -52,7 +52,7 @@ public class RequestProvidersListC2SPacket {
                 return;
             }
 
-            if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
+            if (!(player.containerMenu instanceof IPatternUploadMenu uploadMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
             PatternAccessTermMenu accessMenu = PatternTerminalUtil.getPatternAccessMenu(player);
@@ -78,7 +78,7 @@ public class RequestProvidersListC2SPacket {
             }
 
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
-            List<PatternContainer> containers = PatternTerminalUtil.listAvailableProvidersFromGrid(encMenu);
+            List<PatternContainer> containers = ProviderUploadUtil.listAvailableProvidersFromGrid(uploadMenu);
             List<Long> idxIds = new ArrayList<>();
             List<String> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();

@@ -38,6 +38,7 @@ public abstract class PatternEncodingTermScreenMixin {
 
     @Unique private IconButton eap$uploadBtn;
 
+
     @ModifyVariable(method = "<init>", at = @At(value = "STORE"), name = "encodeBtn")
     private ActionButton eap$wrapEncodeButton(ActionButton original) {
         return new ActionButton(ActionItems.ENCODE, act -> {

@@ -1,6 +1,6 @@
 package com.extendedae_plus.network;
 
-import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -54,7 +54,7 @@ public class UploadEncodedPatternToProviderC2SPacket {
                 return;
             }
 
-            if (player.containerMenu instanceof PatternEncodingTermMenu menu) {
+            if (player.containerMenu instanceof IPatternUploadMenu menu) {
                 if (msg.providerId >= 0) {
                     uploaded = ProviderUploadUtil.uploadFromEncodingMenuToProvider(player, menu, msg.providerId);
                 } else {
