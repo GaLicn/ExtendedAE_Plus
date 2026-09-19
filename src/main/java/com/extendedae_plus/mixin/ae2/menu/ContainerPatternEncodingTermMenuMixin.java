@@ -5,12 +5,14 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
 import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync {
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync, IPatternUploadMenu {
 
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
@@ -94,6 +96,12 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @Override
     public ActionMap getActionMap() {
         return this.eap$actions;
+    }
+
+    // IPatternUploadMenu：暴露编码槽给 EAEP 上传链路
+    @Override
+    public Slot getEncodedPatternSlot() {
+        return this.encodedPatternSlot;
     }
 
     // 服务器端：在 encode() 执行完毕后，如果已编码槽位存在样板且当前为“合成模式”，则上传到装配矩阵

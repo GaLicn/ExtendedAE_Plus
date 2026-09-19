@@ -1,6 +1,6 @@
 package com.extendedae_plus.network;
 
-import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -55,7 +55,7 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
                 return;
             }
 
-            if (player.containerMenu instanceof PatternEncodingTermMenu menu) {
+            if (player.containerMenu instanceof IPatternUploadMenu menu) {
                 // 支持两种模式：
                 // 1) providerId >= 0: 访问终端 byId 模式
                 // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId

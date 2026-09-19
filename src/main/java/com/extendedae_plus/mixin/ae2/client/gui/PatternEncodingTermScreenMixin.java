@@ -2,12 +2,11 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
-import appeng.client.gui.me.items.PatternEncodingTermScreen;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
-import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.IconButton;
 import appeng.menu.AEBaseMenu;
+import com.extendedae_plus.api.upload.IPatternUploadTerminal;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
@@ -19,32 +18,36 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 在图样编码终端界面加入一个上传按钮：
- * 点击后把当前“已编码样板”上传到任意可用的样板供应器（服务端自动选择）。
- * 通过解析 AE2 样式中 encodePattern 的坐标，将按钮放在其左侧紧挨位置。
+ * 给实现了 {@link IPatternUploadTerminal} 的样板编码终端界面加入「上传到供应器」按钮。
+ * 原生 AE2 终端与第三方终端均通过该接口接入。
  */
 @Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
+    private static final Logger log = LoggerFactory.getLogger(PatternEncodingTermScreenMixin.class);
     @Unique
     private IconButton eap$uploadBtn;
 
+    @Unique
+    private float eap$btnScale = 0.75f;
+
     @Inject(method = "init", at = @At("TAIL"), remap = false)
     private void eap$addUploadButton(CallbackInfo ci) {
-        // 仅在图样编码终端界面中添加按钮
-        if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
+        // 仅对实现上传终端契约的界面注入按钮（原生 + 第三方）
+        if (!(((Object) this) instanceof IPatternUploadTerminal terminal)) {
             return;
         }
-        // 复用已存在的按钮实例，避免重复创建
+        this.eap$btnScale = terminal.getUploadScale() > 0 ? terminal.getUploadScale() : 0.75f;
+        final float scale = this.eap$btnScale;
         if (eap$uploadBtn == null) {
             eap$uploadBtn = new IconButton(btn -> {
                 if (Screen.hasShiftDown()) {
@@ -53,8 +56,6 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                     PacketDistributor.sendToServer(RequestProvidersListC2SPacket.INSTANCE);
                 }
             }) {
-                private final float eap$scale = 0.75f; // 约 12x12
-
                 @Override
                 protected Icon getIcon() {
                     return Icon.ARROW_UP;
@@ -62,7 +63,6 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
                 @Override
                 public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partial) {
-                    // 参照 AE2 IconButton 实现，改为自定义缩放
                     if (this.visible) {
                         var icon = this.getIcon();
                         var blitter = icon.getBlitter();
@@ -70,9 +70,8 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                             blitter.opacity(0.5f);
                         }
 
-                        // 动态更新宽高用于聚焦边框/命中框
-                        this.width = Math.round(16 * eap$scale);
-                        this.height = Math.round(16 * eap$scale);
+                        this.width = Math.round(16 * scale);
+                        this.height = Math.round(16 * scale);
 
                         com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
                         com.mojang.blaze3d.systems.RenderSystem.enableBlend();
@@ -87,7 +86,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         var pose = guiGraphics.pose();
                         pose.pushPose();
                         pose.translate(getX(), getY(), 0.0F);
-                        pose.scale(eap$scale, eap$scale, 1.f);
+                        pose.scale(scale, scale, 1.f);
                         if (!this.isDisableBackground()) {
                             Icon.TOOLBAR_BUTTON_BACKGROUND.getBlitter().dest(0, 0).blit(guiGraphics);
                         }
@@ -104,42 +103,14 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
                 @Override
                 public Rect2i getTooltipArea() {
-                    return new Rect2i(getX(), getY(), Math.round(16 * eap$scale), Math.round(16 * eap$scale));
+                    return new Rect2i(getX(), getY(), Math.round(16 * scale), Math.round(16 * scale));
                 }
             };
             eap$updateUploadButtonTooltip();
         }
 
-        // 解析 encodePattern 的样式位置
-        try {
-            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
-            WidgetStyle ws = style.getWidget("encodePattern");
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
-            Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
-            var pos = ws.resolve(bounds);
-            int baseW = ws.getWidth() > 0 ? ws.getWidth() : 12;
-            int baseH = ws.getHeight() > 0 ? ws.getHeight() : 12;
-            int targetW = Math.max(10, Math.round(baseW * 0.75f));
-            int targetH = Math.max(10, Math.round(baseH * 0.75f));
-            // 缩小为原尺寸的 0.75（稍微变大于 8x8）
-            eap$uploadBtn.setWidth(targetW);
-            eap$uploadBtn.setHeight(targetH);
-            // 仍位于其左侧，但整体向右微移（减小间距）约 2px
-            eap$uploadBtn.setX(pos.getX() - baseW - 2); // 原为 -targetW - 2，再右移 2px
-            eap$uploadBtn.setY(pos.getY());
-        } catch (Throwable t) {
-            // 回退：放在界面右侧大致位置，避免不可见
-            eap$uploadBtn.setWidth(12);
-            eap$uploadBtn.setHeight(12);
-            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-            eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2); // 向右微移 2px
-            eap$uploadBtn.setY(topPos + 88);
-        }
+        // 优先使用接口提供的锚点，其次回退 encodePattern 样式
+        eap$applyButtonBounds(terminal, this.eap$btnScale);
 
         // 直接向 renderables / children 列表添加，避免依赖受保护方法
         var accessor = (ScreenAccessor) (Object) this;
@@ -156,7 +127,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
 
     @Inject(method = "containerTick", at = @At("TAIL"), remap = false)
     private void eap$ensureUploadButton(CallbackInfo ci) {
-        if (!(((Object) this) instanceof PatternEncodingTermScreen)) {
+        if (!(((Object) this) instanceof IPatternUploadTerminal terminal)) {
             return;
         }
         if (eap$uploadBtn == null) {
@@ -165,32 +136,7 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         var renderables2 = ((ScreenAccessor) (Object) this).eap$getRenderables();
         if (!renderables2.contains(eap$uploadBtn)) {
             // 被其它模组清空/替换后，重新计算一次位置并补回
-            try {
-                ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
-                WidgetStyle ws = style.getWidget("encodePattern");
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-                int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
-                Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
-                var pos = ws.resolve(bounds);
-                int baseW = ws.getWidth() > 0 ? ws.getWidth() : 16;
-                int baseH = ws.getHeight() > 0 ? ws.getHeight() : 16;
-                int targetW = Math.max(10, Math.round(baseW * 0.75f));
-                int targetH = Math.max(10, Math.round(baseH * 0.75f));
-                eap$uploadBtn.setWidth(targetW);
-                eap$uploadBtn.setHeight(targetH);
-                eap$uploadBtn.setX(pos.getX() - targetW); // 原为 -targetW - 2，再右移 2px
-                eap$uploadBtn.setY(pos.getY());
-            } catch (Throwable t) {
-                int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
-                int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
-                int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
-                eap$uploadBtn.setWidth(12);
-                eap$uploadBtn.setHeight(12);
-                eap$uploadBtn.setX(leftPos + imageWidth - 12 - 8 + 2);
-                eap$uploadBtn.setY(topPos + 88);
-            }
+            eap$applyButtonBounds(terminal, this.eap$btnScale);
             var accessor2 = (ScreenAccessor) (Object) this;
             var r = accessor2.eap$getRenderables();
             var c = accessor2.eap$getChildren();
@@ -202,6 +148,51 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
             }
         }
         eap$updateUploadButtonTooltip();
+    }
+
+    /**
+     * 计算并应用按钮位置与大小：优先接口锚点，回退原样式。
+     */
+    @Unique
+    private void eap$applyButtonBounds(IPatternUploadTerminal terminal, float scale) {
+        if (eap$uploadBtn == null) {
+            return;
+        }
+        // 接口显式锚点（位置 + 大小）
+        Rect2i anchor = null;
+        try {
+            anchor = terminal.getUploadAnchor();
+        } catch (Throwable ignored) {
+        }
+        if (anchor != null) {
+            eap$uploadBtn.setX(anchor.getX());
+            eap$uploadBtn.setY(anchor.getY());
+            eap$uploadBtn.setWidth(anchor.getWidth() > 0 ? anchor.getWidth() : Math.round(16 * scale));
+            eap$uploadBtn.setHeight(anchor.getHeight() > 0 ? anchor.getHeight() : Math.round(16 * scale));
+            return;
+        }
+        // 原本的样式
+        try {
+            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
+            WidgetStyle ws = style.getWidget("encodePattern");
+            int leftPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getLeftPos();
+            int topPos = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getTopPos();
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
+            Rect2i bounds = new Rect2i(leftPos, topPos, imageWidth, imageHeight);
+            var pos = ws.resolve(bounds);
+            int baseW = ws.getWidth() > 0 ? ws.getWidth() : 12;
+            int baseH = ws.getHeight() > 0 ? ws.getHeight() : 12;
+            int targetW = Math.max(10, Math.round(baseW * scale));
+            int targetH = Math.max(10, Math.round(baseH * scale));
+            eap$uploadBtn.setWidth(targetW);
+            eap$uploadBtn.setHeight(targetH);
+            eap$uploadBtn.setX(pos.getX() - baseW - 2);
+            eap$uploadBtn.setY(pos.getY());
+        } catch (Throwable t) {
+            //没找到encodePattern按钮
+            log.error(t.getMessage());
+        }
     }
 
     @Unique

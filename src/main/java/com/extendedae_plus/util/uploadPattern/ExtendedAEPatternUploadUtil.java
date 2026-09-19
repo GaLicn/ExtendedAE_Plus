@@ -16,6 +16,7 @@ import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
@@ -608,6 +609,55 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
+     * 从菜单目标解析 AE 网络。
+     * 统一走 target -> IActionHost -> getGrid()。
+     */
+    public static IGrid resolveGrid(Object menu) {
+        if (!(menu instanceof AEBaseMenu abm)) {
+            return null;
+        }
+        try {
+            Object target = abm.getTarget();
+            if (target instanceof IActionHost host && host.getActionableNode() != null) {
+                return host.getActionableNode().getGrid();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 通过上传菜单接口读取编码槽物品。
+     */
+    public static ItemStack getEncodedPatternFromMenu(Object menu) {
+        var slot = getEncodedPatternSlot(menu);
+        return slot != null ? slot.getItem() : ItemStack.EMPTY;
+    }
+
+    /**
+     * 通过上传菜单接口获取编码槽。
+     */
+    public static net.minecraft.world.inventory.Slot getEncodedPatternSlot(Object menu) {
+        if (menu instanceof IPatternUploadMenu uploadMenu) {
+            return uploadMenu.getEncodedPatternSlot();
+        }
+        if (menu instanceof PatternEncodingTermMenu encMenu) {
+            return ((PatternEncodingTermMenuAccessor) (Object) encMenu).eap$getEncodedPatternSlot();
+        }
+        return null;
+    }
+
+    /**
+     * 写回编码槽内容（清空或保留剩余）。
+     */
+    public static void setEncodedPatternSlot(Object menu, ItemStack stack) {
+        var slot = getEncodedPatternSlot(menu);
+        if (slot != null) {
+            slot.set(stack == null ? ItemStack.EMPTY : stack);
+        }
+    }
+
+    /**
      * 从 AE2 的图样编码终端菜单上传当前“已编码图样”至 ExtendedAE 装配矩阵（仅合成图样）。
      * 不会处理“处理图样”。
      *
@@ -639,15 +689,7 @@ public class ExtendedAEPatternUploadUtil {
         }
 
         // 获取 AE 网络
-        IGrid grid = null;
-        try {
-            if (menu instanceof AEBaseMenu abm) {
-                Object target = abm.getTarget();
-                if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                    grid = host.getActionableNode().getGrid();
-                }
-            }
-        } catch (Throwable ignored) {}
+        IGrid grid = resolveGrid(menu);
         if (grid == null) {
             sendMessage(player, "extendedae_plus.message.network.invalid");
             return false;
@@ -1442,27 +1484,28 @@ public class ExtendedAEPatternUploadUtil {
      * 5) 成功后清空 encoded 槽位，返回 true；否则返回 false。
      */
     public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, PatternEncodingTermMenu menu) {
+        return uploadFromEncodingMenuToAnyProvider(player, (Object) menu);
+    }
+
+    /**
+     * 接口重载：兼容第三方编码终端菜单（实现 {@link IPatternUploadMenu}）。
+     */
+    public static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, IPatternUploadMenu menu) {
+        return uploadFromEncodingMenuToAnyProvider(player, (Object) menu);
+    }
+
+    private static boolean uploadFromEncodingMenuToAnyProvider(ServerPlayer player, Object menu) {
         if (player == null || menu == null) {
             return false;
         }
-        // 读取已编码槽位的物品（通过 accessor）
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
-        ItemStack stack = encodedSlot.getItem();
+        // 读取已编码槽位的物品（优先走上传菜单契约）
+        ItemStack stack = getEncodedPatternFromMenu(menu);
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
         }
 
         // 获取 AE 网络（1.21 经由 AEBaseMenu target + IActionHost）
-        IGrid grid = null;
-        try {
-            if (menu instanceof AEBaseMenu abm) {
-                Object target = abm.getTarget();
-                if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                    grid = host.getActionableNode().getGrid();
-                }
-            }
-        } catch (Throwable ignored) {}
+        IGrid grid = resolveGrid(menu);
         if (grid == null) {
             return false;
         }
@@ -1501,11 +1544,7 @@ public class ExtendedAEPatternUploadUtil {
                         if (remain.getCount() < toInsert.getCount()) {
                             int inserted = toInsert.getCount() - remain.getCount();
                             stack.shrink(inserted);
-                            if (stack.isEmpty()) {
-                                encodedSlot.set(ItemStack.EMPTY);
-                            } else {
-                                encodedSlot.set(stack);
-                            }
+                            setEncodedPatternSlot(menu, stack.isEmpty() ? ItemStack.EMPTY : stack);
                             recordProviderUpload(player, Long.MIN_VALUE, container, findLastChangedSlot(inv, before, slotLimit));
                             return true;
                         }
@@ -1522,11 +1561,20 @@ public class ExtendedAEPatternUploadUtil {
      * 将图样编码终端的“已编码图样”上传到指定的样板供应器（通过 providerId 定位）。
      */
     public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
+        return uploadFromEncodingMenuToProvider(player, (IPatternUploadMenu) menu, providerId);
+    }
+
+    /**
+     * 通过上传菜单契约将已编码样板上传到指定供应器（byId 模式）。
+     */
+    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, IPatternUploadMenu menu, long providerId) {
         if (player == null || menu == null) {
             return false;
         }
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = menu.getEncodedPatternSlot();
+        if (encodedSlot == null) {
+            return false;
+        }
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
@@ -1604,37 +1652,15 @@ public class ExtendedAEPatternUploadUtil {
      * 返回顺序稳定：按 grid 的 machineClasses 顺序，再按 activeMachines 迭代顺序。
      */
     public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
-        List<PatternContainer> list = new ArrayList<>();
-        if (menu == null) return list;
-        try {
-        IGrid grid = null;
-        if (menu instanceof AEBaseMenu abm) {
-            Object target = abm.getTarget();
-            if (target instanceof IActionHost host && host.getActionableNode() != null) {
-                grid = host.getActionableNode().getGrid();
-            }
-        }
-        if (grid == null) return list;
-            for (var machineClass : grid.getMachineClasses()) {
-                if (PatternContainer.class.isAssignableFrom(machineClass)) {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                    for (var container : grid.getActiveMachines(containerClass)) {
-                        if (container == null || !container.isVisibleInTerminal()) continue;
-                        InternalInventory inv = container.getTerminalPatternInventory();
-                        if (inv == null || inv.size() <= 0) continue;
-                        boolean hasEmpty = false;
-                        int slotLimit = getAccessiblePatternSlotCount(container, inv);
-                        for (int i = 0; i < slotLimit; i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) { hasEmpty = true; break; }
-                        }
-                        if (hasEmpty) list.add(container);
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return list;
+        // 原生菜单：统一走 resolveGrid 从 target 解析网络
+        return listAvailableProvidersFromGrid(resolveGrid(menu));
+    }
+
+    /**
+     * 基于上传菜单契约的 AE Grid 遍历，供第三方终端复用。
+     */
+    public static List<PatternContainer> listAvailableProvidersFromGrid(IPatternUploadMenu menu) {
+        return listAvailableProvidersFromGrid(resolveGrid(menu));
     }
 
     public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
@@ -1743,14 +1769,21 @@ public class ExtendedAEPatternUploadUtil {
      * 将编码槽样板插入到第 index 个供应器。
      */
     public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
+        return uploadFromEncodingMenuToProviderByIndex(player, (IPatternUploadMenu) menu, index);
+    }
+
+    /**
+     * 接口重载：兼容第三方编码终端菜单（实现 {@link IPatternUploadMenu}）。
+     */
+    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
         if (player == null || menu == null || index < 0) return false;
         List<PatternContainer> list = listAvailableProvidersFromGrid(menu);
         if (index >= list.size()) return false;
         var container = list.get(index);
         if (container == null) return false;
 
-        var encodedSlot = ((PatternEncodingTermMenuAccessor) (Object) menu)
-                .eap$getEncodedPatternSlot();
+        var encodedSlot = menu.getEncodedPatternSlot();
+        if (encodedSlot == null) return false;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
