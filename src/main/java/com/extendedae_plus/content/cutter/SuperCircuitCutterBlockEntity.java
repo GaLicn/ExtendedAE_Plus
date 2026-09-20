@@ -23,6 +23,7 @@ import appeng.blockentity.grid.AENetworkedPoweredBlockEntity;
 import appeng.core.definitions.AEItems;
 import appeng.core.settings.TickRates;
 import appeng.util.ConfigManager;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.AppEngInternalInventory;
 import appeng.util.inv.CombinedInternalInventory;
 import appeng.util.inv.FilteredInternalInventory;
@@ -31,11 +32,17 @@ import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
+import com.glodblock.github.extendedae.common.EAESingletons;
+import com.glodblock.github.extendedae.util.FCUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
@@ -61,6 +68,8 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
             new FilteredInternalInventory(output, AEItemFilters.EXTRACT_ONLY));
     private final IUpgradeInventory upgrades;
     private final ConfigManager configManager;
+    /** 允许自动输出的面；对齐 EAE 原机，可单独配置。 */
+    private final Set<Direction> outputSides = EnumSet.noneOf(Direction.class);
     private boolean working;
     private int progress;
 
@@ -80,6 +89,11 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
 
     public AppEngInternalInventory getOutput() {
         return output;
+    }
+
+    /** 自动输出面集合；供菜单同步与输出侧配置界面使用。 */
+    public Set<Direction> getOutputSides() {
+        return outputSides;
     }
 
     public boolean isWorking() {
@@ -229,18 +243,9 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         if (level == null || configManager.getSetting(Settings.AUTO_EXPORT) != YesNo.YES || output.getStackInSlot(0).isEmpty()) {
             return false;
         }
-        for (var direction : Direction.values()) {
-            var target = InternalInventory.wrapExternal(level, worldPosition.relative(direction), direction.getOpposite());
-            if (target == null) {
-                continue;
-            }
-            int count = output.getStackInSlot(0).getCount();
-            output.insertItem(0, target.addItems(output.extractItem(0, 64, false)), false);
-            if (count != output.getStackInSlot(0).getCount()) {
-                return true;
-            }
-        }
-        return false;
+        // 只向被选中的输出面推送，且跳过同为超级电路切片机的方块，避免互相灌料。
+        return FCUtil.ejectInv(level, worldPosition, output, outputSides,
+                te -> te instanceof SuperCircuitCutterBlockEntity);
     }
 
     private static int speedFor(int cards) {
@@ -308,6 +313,12 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         data.putInt("progress", progress);
         upgrades.writeToNBT(data, "upgrades", registries);
         configManager.writeToNBT(data, registries);
+        // 与 EAE 原机保持同名 NBT 键，便于存档互认。
+        var sides = new ListTag();
+        for (var side : outputSides) {
+            sides.add(StringTag.valueOf(side.getName()));
+        }
+        data.put("output_side", sides);
     }
 
     @Override
@@ -316,6 +327,42 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         progress = data.getInt("progress");
         upgrades.readFromNBT(data, "upgrades", registries);
         configManager.readFromNBT(data, registries);
+        outputSides.clear();
+        if (data.contains("output_side")) {
+            var list = data.getList("output_side", CompoundTag.TAG_STRING);
+            for (var name : list) {
+                outputSides.add(Direction.byName(name.getAsString()));
+            }
+        } else {
+            // 旧存档没有该字段时，与 EAE 一致默认输出到所有面。
+            outputSides.addAll(List.of(Direction.values()));
+        }
+    }
+
+    @Override
+    public void importSettings(SettingsFrom mode, DataComponentMap input, @Nullable Player player) {
+        super.importSettings(mode, input, player);
+        var nbt = input.get(EAESingletons.EXTRA_SETTING);
+        if (nbt != null) {
+            outputSides.clear();
+            for (var side : nbt.getList("output_side", CompoundTag.TAG_STRING)) {
+                outputSides.add(Direction.byName(side.getAsString()));
+            }
+        }
+    }
+
+    @Override
+    public void exportSettings(SettingsFrom mode, DataComponentMap.Builder output, @Nullable Player player) {
+        super.exportSettings(mode, output, player);
+        if (mode == SettingsFrom.MEMORY_CARD) {
+            var nbt = new CompoundTag();
+            var sides = new ListTag();
+            for (var side : outputSides) {
+                sides.add(StringTag.valueOf(side.getName()));
+            }
+            nbt.put("output_side", sides);
+            output.set(EAESingletons.EXTRA_SETTING, nbt);
+        }
     }
 
     @Override
