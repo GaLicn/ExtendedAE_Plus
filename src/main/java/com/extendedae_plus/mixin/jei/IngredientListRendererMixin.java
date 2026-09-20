@@ -70,7 +70,7 @@ public class IngredientListRendererMixin {
                     eap$renderCraftableMarker(guiGraphics, x, y);
                 }
             } else {
-                GuiUtil.drawAmountText(guiGraphics, font, "Craft", x, y);
+                GuiUtil.drawAmountText(guiGraphics, font, "+", x, y);
             }
         }
     }
