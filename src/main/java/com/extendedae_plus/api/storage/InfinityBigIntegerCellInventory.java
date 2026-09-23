@@ -30,15 +30,15 @@ import org.jetbrains.annotations.Nullable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * 本代码参考了 AE2Things[](https://github.com/Technici4n/AE2Things-Forge)，并遵循 MIT 许可证。<p>
- * 原始版权归 Technici4n 所有。<p>
- */
 public class InfinityBigIntegerCellInventory implements StorageCell {
     private static final BigInteger BI_LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger BI_THOUSAND = BigInteger.valueOf(1_000);
+    private static final BigDecimal DECIMAL_THOUSAND = BigDecimal.valueOf(1_000);
+    private static final String[] BIG_INTEGER_UNITS = {"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
 
     private final InfinityBigIntegerCellItem cell;
     // 磁盘本身
@@ -48,10 +48,14 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     private UUID cellUuid;
     @Nullable
     private final InfinityStorageManager storageManager;
+    @Nullable
+    private InfinityDataStorage cachedCellStorage;
+    private long cachedStorageRevision = Long.MIN_VALUE;
     // AE2 提供的保存提供者，用于在容器中批量保存时触发回调
     private final ISaveProvider container;
     private final IPartitionList partitionList;
     private final IncludeExclude partitionListMode;
+    private final boolean hasPartitionFilter;
     // 仅用于控制 ItemStack 摘要字段是否需要刷新
     private boolean isPersisted = true;
 
@@ -76,21 +80,23 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         builder.addAll(config.keySet());
         this.partitionListMode = hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST;
         this.partitionList = builder.build();
+        this.hasPartitionFilter = !this.partitionList.isEmpty();
     }
 
     // 将 BigInteger 格式化为带单位的字符串，保留两位小数
     public static String formatBigInteger(BigInteger number) {
-        java.text.DecimalFormat df = new java.text.DecimalFormat("#.##");
+        if (number.compareTo(BI_THOUSAND) < 0) {
+            return number.toString();
+        }
+
+        DecimalFormat df = new DecimalFormat("#.##");
         BigDecimal bd = new BigDecimal(number);
-        BigDecimal thousand = new BigDecimal(1000);
-        String[] units = new String[]{"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
+        BigDecimal thousand = DECIMAL_THOUSAND;
+        String[] units = BIG_INTEGER_UNITS;
         int idx = 0;
         while (bd.compareTo(thousand) >= 0 && idx < units.length - 1) {
             bd = bd.divide(thousand, 2, RoundingMode.HALF_UP);
             idx++;
-        }
-        if (idx == 0) {
-            return bd.setScale(0, RoundingMode.DOWN).toPlainString();
         }
         return df.format(bd.doubleValue()) + units[idx];
     }
@@ -111,7 +117,13 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (uuid == null || this.storageManager == null) {
             return null;
         }
-        return this.storageManager.getCell(uuid);
+
+        long storageRevision = this.storageManager.getStorageRevision();
+        if (this.cachedStorageRevision != storageRevision) {
+            this.cachedCellStorage = this.storageManager.getCell(uuid);
+            this.cachedStorageRevision = storageRevision;
+        }
+        return this.cachedCellStorage;
     }
 
     @Nullable
@@ -124,7 +136,14 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (uuid == null) {
             uuid = this.assignNewUUID();
         }
-        return this.storageManager.getOrCreateCell(uuid);
+
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        if (cellStorage == null) {
+            cellStorage = this.storageManager.getOrCreateCell(uuid);
+            this.cachedCellStorage = cellStorage;
+            this.cachedStorageRevision = this.storageManager.getStorageRevision();
+        }
+        return cellStorage;
     }
 
     @Override
@@ -181,6 +200,8 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         tag.remove(InfinityConstants.INFINITY_CELL_ITEM_COUNT);
         this.self.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         this.cellUuid = null;
+        this.cachedCellStorage = null;
+        this.cachedStorageRevision = Long.MIN_VALUE;
         this.isPersisted = true;
 
         if (this.container != null) {
@@ -248,7 +269,7 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
         if (this.storageManager == null) {
             return 0;
         }
-        if (!this.partitionList.matchesFilter(what, this.partitionListMode)) {
+        if (this.hasPartitionFilter && !this.partitionList.matchesFilter(what, this.partitionListMode)) {
             return 0;
         }
         if (what instanceof AEItemKey itemKey &&
@@ -284,9 +305,12 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             return 0;
         }
 
-        boolean modulate = mode == Actionable.MODULATE;
-        long extractedAmount = cellStorage.extract(what, amount, modulate);
-        if (modulate && extractedAmount > 0) {
+        if (mode != Actionable.MODULATE) {
+            return cellStorage.getExtractableAmount(what, amount);
+        }
+
+        long extractedAmount = cellStorage.extract(what, amount, true);
+        if (extractedAmount > 0) {
             if (cellStorage.size() == 0) {
                 this.clearCellData();
             } else {
@@ -304,10 +328,17 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             return;
         }
 
+        // 网络聚合器通常从空 KeyCounter 开始；本磁盘内每个 key 唯一时无需逐项查询旧值。
+        boolean outputWasEmpty = out.isEmpty();
         for (var entry : Object2LongMaps.fastIterable(cellStorage.longAmounts)) {
             AEKey key = entry.getKey();
             long value = entry.getLongValue();
             if (value <= 0) {
+                continue;
+            }
+
+            if (outputWasEmpty) {
+                out.add(key, value);
                 continue;
             }
 
@@ -327,6 +358,11 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
             AEKey key = entry.getKey();
             BigInteger value = entry.getValue();
             if (value == null || value.signum() <= 0) {
+                continue;
+            }
+
+            if (outputWasEmpty) {
+                out.set(key, Long.MAX_VALUE);
                 continue;
             }
 

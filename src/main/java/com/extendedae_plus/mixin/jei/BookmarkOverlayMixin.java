@@ -2,8 +2,8 @@ package com.extendedae_plus.mixin.jei;
 
 import com.extendedae_plus.client.jei.JeiNetworkOverlayButton;
 import mezz.jei.gui.elements.IconButton;
-import mezz.jei.gui.input.IUserInputHandler;
-import mezz.jei.gui.input.handlers.CombinedInputHandler;
+import mezz.jei.common.input.IUserInputHandler;
+import mezz.jei.common.input.handlers.CombinedInputHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Final;
@@ -47,27 +47,6 @@ public abstract class BookmarkOverlayMixin {
     private void eap$beginModernNetworkOverlayButtonFrame(CallbackInfo ci) {
         // 新版 JEI 会拆分前景与背景绘制，背景入口同样作为一帧的起点。
         this.eap$networkOverlayButton.beginFrame();
-    }
-
-    @Inject(
-            method = "drawScreen",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lmezz/jei/gui/elements/IconButton;draw(Lnet/minecraft/client/gui/GuiGraphics;IIF)V",
-                    ordinal = 1,
-                    shift = At.Shift.AFTER
-            ),
-            require = 0
-    )
-    private void eap$drawNetworkOverlayButtonLegacy(
-            Minecraft minecraft,
-            GuiGraphics guiGraphics,
-            int mouseX,
-            int mouseY,
-            float partialTicks,
-            CallbackInfo ci
-    ) {
-        this.eap$networkOverlayButton.draw(guiGraphics);
     }
 
     @Inject(

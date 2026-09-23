@@ -18,6 +18,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import org.jetbrains.annotations.NotNull;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -29,7 +30,10 @@ public class InfinityBigIntegerCellItem extends Item implements ICellWorkbenchIt
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag tooltipFlag) {
+    public void appendHoverText(ItemStack stack,
+                                @NotNull TooltipContext context,
+                                List<Component> tooltip,
+                                @NotNull TooltipFlag tooltipFlag) {
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.line1"));
         tooltip.add(Component.translatable("tooltip.extendedae_plus.infinity_biginteger_cell.line2"));
 

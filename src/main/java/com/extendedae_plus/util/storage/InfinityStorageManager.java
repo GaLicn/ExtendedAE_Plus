@@ -24,6 +24,8 @@ public class InfinityStorageManager extends SavedData {
     private static final Factory<InfinityStorageManager> FACTORY = new Factory<>(InfinityStorageManager::new, InfinityStorageManager::readNbt);
     // 存储所有磁盘的Map，键为UUID，值为DataStorage对象
     private final Object2ObjectMap<UUID, InfinityDataStorage> cells;
+    // 仅在磁盘条目被创建、替换或删除时变化，供库存实例安全缓存数据对象。
+    private long storageRevision;
     @Nullable
     private WeakReference<HolderLookup.Provider> registries;
 
@@ -93,7 +95,10 @@ public class InfinityStorageManager extends SavedData {
 
     // 更新或添加某个 UUID 对应的数据并标记为脏（需要保存）
     public void updateCell(UUID uuid, InfinityDataStorage infinityDataStorage) {
-        cells.put(uuid, infinityDataStorage);
+        InfinityDataStorage previous = cells.put(uuid, infinityDataStorage);
+        if (previous != infinityDataStorage) {
+            storageRevision++;
+        }
         // 标记数据为“脏”，确保修改后的数据会在下次保存时写入磁盘
         setDirty();
     }
@@ -101,6 +106,7 @@ public class InfinityStorageManager extends SavedData {
     // 删除某个 UUID 的持久化记录并标记为脏
     public void removeCell(UUID uuid) {
         if (cells.remove(uuid) != null) {
+            storageRevision++;
             // 标记数据为“脏”，确保移除操作会在下次保存时反映到磁盘
             setDirty();
         }
@@ -117,12 +123,17 @@ public class InfinityStorageManager extends SavedData {
         return cells.get(uuid);
     }
 
+    public long getStorageRevision() {
+        return storageRevision;
+    }
+
     // 获取或创建某个 UUID 对应的数据容器
     public InfinityDataStorage getOrCreateCell(UUID uuid) {
         InfinityDataStorage cell = cells.get(uuid);
         if (cell == null) {
             cell = new InfinityDataStorage();
             cells.put(uuid, cell);
+            storageRevision++;
             setDirty();
         }
         // 返回指定 UUID 对应的 DataStorage 对象

@@ -2,8 +2,8 @@ package com.extendedae_plus.network;
 
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
-import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -54,7 +54,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                 return;
             }
 
-            if (!(player.containerMenu instanceof PatternEncodingTermMenu encMenu)) return;
+            if (!(player.containerMenu instanceof IPatternUploadMenu encMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
             PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);

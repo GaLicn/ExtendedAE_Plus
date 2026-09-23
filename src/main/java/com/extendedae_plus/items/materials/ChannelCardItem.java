@@ -17,6 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
+import static net.minecraft.world.phys.HitResult.Type.BLOCK;
+
 /**
  * 频道卡：存储频道号、所有者UUID和团队信息
  * - 右键空气：增加频道号
@@ -121,7 +123,12 @@ public class ChannelCardItem extends UpgradeCardItem {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        
+
+        // 避免插入升级卡后还触发
+        if (player.pick(player.blockInteractionRange(), 0.0F, false).getType() == BLOCK) {
+            return InteractionResultHolder.pass(stack);
+        }
+
         if (!level.isClientSide) {
             long ch = getChannel(stack);
             long next;
