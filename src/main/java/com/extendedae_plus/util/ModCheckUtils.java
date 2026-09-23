@@ -27,6 +27,8 @@ public class ModCheckUtils {
             MODID_MEKANISM = "mekanism",
             MODID_APPMEK = "appmek",
             MODID_EPA = "expandedae";
+            MODID_EPA = "expandedae",
+            MODID_ECO = "neoecoae";
 
     /**
      * 检查指定模组是否存在
