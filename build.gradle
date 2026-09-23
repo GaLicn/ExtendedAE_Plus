@@ -145,7 +145,7 @@ dependencies {
 
     compileOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
-    compileOnly "curse.maven:mega-cells-622112:6005043"
+    compileOnly "curse.maven:mega-cells-622112:7952621"
     compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
     compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
     compileOnly "curse.maven:applied-mekanistics-574300:5978711"
@@ -154,14 +154,14 @@ dependencies {
     compileOnly "curse.maven:framedblocks-441647:6127891"
     compileOnly "curse.maven:advancedae-1084104:6225993"
     compileOnly "curse.maven:functional-storage-556861:6467726"
-    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.51.0.417"
     compileOnly "curse.maven:ae2-jei-integration-1074338:5748513"
 
     // runtime test
     runtimeOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "de.mari_023:ae2wtlib_api:19.2.0"
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
-    runtimeOnly "curse.maven:mega-cells-622112:6005043"
+    runtimeOnly "curse.maven:mega-cells-622112:7952621"
 
     runtimeOnly "curse.maven:mekanism-268560:6895130"
     runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
@@ -208,7 +208,7 @@ dependencies {
         case 'emi_jei':
             // EMI + JEI 同时加载：EAEP 两套集成并行（输入交互走 EMI 路径，JEI 分类/书签照常）
             runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.51.0.417"
             runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
             break
         case 'rei':
@@ -217,7 +217,7 @@ dependencies {
             runtimeOnly "curse.maven:cloth-config-348521:5424576"
             break
         case 'jei':
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.51.0.417"
             runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
             break
     }

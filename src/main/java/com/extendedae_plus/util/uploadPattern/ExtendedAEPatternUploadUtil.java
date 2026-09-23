@@ -619,6 +619,10 @@ public class ExtendedAEPatternUploadUtil {
      * <p>ECO 合成系统仅在模组已加载且配置启用时参与；任一侧的「已存在」判定同样视为
      * 已满足，不会继续写入另一侧。</p>
      *
+     * <p>成功写入后按实际目标发送提示：矩阵与 ECO 各自使用对应的成功文案，ECO 侧「已存在」
+     * 单独提示，避免玩家误以为写入失败。提示仅在编排层发送，优先目标被拒时不产生中间提示，
+     * 因此回退流程不会出现「先失败后成功」的连续消息。</p>
+     *
      * @param player 服务器玩家
      * @param menu   图样编码终端菜单
      * @return 是否有目标接受了该样板
@@ -630,16 +634,58 @@ public class ExtendedAEPatternUploadUtil {
 
         boolean ecoEnabled = isEcoAutoUploadEnabled();
         if (resolveUploadPriority() == PatternUploadPriority.ECO && ecoEnabled) {
-            if (NeoECOAECompat.isAccepted(NeoECOAECompat.tryUploadFromEncodingMenu(player, menu))) {
+            NeoECOAECompat.UploadOutcome ecoOutcome = NeoECOAECompat.tryUploadFromEncodingMenu(player, menu);
+            if (NeoECOAECompat.isAccepted(ecoOutcome)) {
+                notifyEcoUpload(player, ecoOutcome);
                 return true;
             }
-            return uploadFromEncodingMenuToMatrix(player, menu);
+            if (uploadFromEncodingMenuToMatrix(player, menu)) {
+                notifyMatrixUpload(player);
+                return true;
+            }
+            return false;
         }
 
         if (uploadFromEncodingMenuToMatrix(player, menu)) {
+            notifyMatrixUpload(player);
             return true;
         }
-        return ecoEnabled && NeoECOAECompat.isAccepted(NeoECOAECompat.tryUploadFromEncodingMenu(player, menu));
+        if (ecoEnabled) {
+            NeoECOAECompat.UploadOutcome ecoOutcome = NeoECOAECompat.tryUploadFromEncodingMenu(player, menu);
+            if (NeoECOAECompat.isAccepted(ecoOutcome)) {
+                notifyEcoUpload(player, ecoOutcome);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 发送装配矩阵上传成功提示。
+     *
+     * <p>不复用 {@link #sendMessage}：该方法是刻意保留的空实现，恢复其实现会同时激活回退流程中
+     * 被拒目标的失败文案。此处只负责已确认成功的提示。</p>
+     */
+    private static void notifyMatrixUpload(ServerPlayer player) {
+        if (player != null) {
+            player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_matrix.success"));
+        }
+    }
+
+    /**
+     * 按 ECO 侧插入结果发送提示。
+     *
+     * <p>{@link NeoECOAECompat.UploadOutcome#ALREADY_PRESENT} 使用独立文案：样板已存在于 ECO
+     * 合成系统，与本次写入成功需要区分。</p>
+     */
+    private static void notifyEcoUpload(ServerPlayer player, NeoECOAECompat.UploadOutcome outcome) {
+        if (player == null) {
+            return;
+        }
+        String key = outcome == NeoECOAECompat.UploadOutcome.ALREADY_PRESENT
+                ? "extendedae_plus.upload_to_eco.duplicate"
+                : "extendedae_plus.upload_to_eco.success";
+        player.sendSystemMessage(Component.translatable(key));
     }
 
     /**
