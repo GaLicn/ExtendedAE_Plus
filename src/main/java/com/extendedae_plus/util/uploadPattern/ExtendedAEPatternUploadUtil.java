@@ -16,6 +16,9 @@ import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.compat.NeoECOAECompat;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.config.PatternUploadPriority;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
@@ -605,6 +608,64 @@ public class ExtendedAEPatternUploadUtil {
             return (PatternAccessTermMenu) player.containerMenu;
         }
         return null;
+    }
+
+    /**
+     * 编码后自动上传的编排入口：按配置的优先级尝试装配矩阵与 ECO 合成系统。
+     *
+     * <p>每次调用只会向一个目标写入样板：优先目标接受后立即返回，仅在优先目标拒绝时
+     * 才回退到另一个目标，避免同一样板被重复写入两处。</p>
+     *
+     * <p>ECO 合成系统仅在模组已加载且配置启用时参与；任一侧的「已存在」判定同样视为
+     * 已满足，不会继续写入另一侧。</p>
+     *
+     * @param player 服务器玩家
+     * @param menu   图样编码终端菜单
+     * @return 是否有目标接受了该样板
+     */
+    public static boolean uploadFromEncodingMenuByPriority(ServerPlayer player, PatternEncodingTermMenu menu) {
+        if (player == null || menu == null) {
+            return false;
+        }
+
+        boolean ecoEnabled = isEcoAutoUploadEnabled();
+        if (resolveUploadPriority() == PatternUploadPriority.ECO && ecoEnabled) {
+            if (NeoECOAECompat.isAccepted(NeoECOAECompat.tryUploadFromEncodingMenu(player, menu))) {
+                return true;
+            }
+            return uploadFromEncodingMenuToMatrix(player, menu);
+        }
+
+        if (uploadFromEncodingMenuToMatrix(player, menu)) {
+            return true;
+        }
+        return ecoEnabled && NeoECOAECompat.isAccepted(NeoECOAECompat.tryUploadFromEncodingMenu(player, menu));
+    }
+
+    /**
+     * 读取上传优先级配置。
+     *
+     * <p>服务端配置在专用服务器启动阶段即完成加载；此处仍做兜底，避免配置尚未就绪时
+     * 中断自动上传流程。</p>
+     */
+    private static PatternUploadPriority resolveUploadPriority() {
+        try {
+            return ModConfigs.PATTERN_AUTO_UPLOAD_PRIORITY.get();
+        } catch (Throwable ignored) {
+            return PatternUploadPriority.MATRIX;
+        }
+    }
+
+    /** 判断 ECO 自动上传是否同时满足「模组已加载」与「配置已启用」两个条件。 */
+    private static boolean isEcoAutoUploadEnabled() {
+        if (!NeoECOAECompat.isAvailable()) {
+            return false;
+        }
+        try {
+            return ModConfigs.ECO_AUTO_UPLOAD_ENABLE.get();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     /**

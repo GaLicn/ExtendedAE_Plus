@@ -89,6 +89,18 @@ versionRange = "*"
 ordering = "AFTER"
 side = "BOTH"
 
+# Neo ECO AE Extension is optional, but the automatic pattern upload integration depends on
+# IECOPatternStorage#insertPatternWithResult, which first appears in the 21.2.0-beta1 build.
+# Earlier builds carry 1.x version numbers and only expose insertPattern, which cannot report
+# the insertion outcome. Version ranges use Maven comparison semantics, where a prerelease
+# sorts before its release (21.2.0-beta2 < 21.2.0), so the lower bound must name the prerelease.
+[[dependencies.${ mod_id }]]
+modId = "neoecoae"
+type = "optional"
+versionRange = "[21.2.0-beta1,)"
+ordering = "AFTER"
+side = "BOTH"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

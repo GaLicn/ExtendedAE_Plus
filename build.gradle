@@ -40,6 +40,10 @@ repositories {
     maven {
         url = uri("https://maven.latvian.dev/releases/")
     }
+    maven {
+        name = "Modrinth"
+        url = uri("https://api.modrinth.com/maven")
+    }
     mavenCentral()
 }
 
@@ -176,8 +180,8 @@ dependencies {
     runtimeOnly "curse.maven:geckolib-388172:7009924"
 
     // eco
-//    runtimeOnly "curse.maven:ldlib-626676:8133369"
-    compileOnly "curse.maven:neo-eco-ae-extension-1460639:7884362"
+    implementation "curse.maven:neo-eco-ae-extension-1460639:8881114"
+    implementation "maven.modrinth:ldlib:mc1.21.1-2.2.40-neoforge"
 
     //ftbteams
     runtimeOnly "curse.maven:ftb-teams-forge-404468:6930910"

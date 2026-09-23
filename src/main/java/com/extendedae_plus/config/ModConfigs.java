@@ -26,6 +26,8 @@ public final class ModConfigs {
     public static final ModConfigSpec.IntValue ENTITY_TICKER_COST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_BLACK_LIST;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> ENTITY_TICKER_MULTIPLIERS;
+    public static final ModConfigSpec.BooleanValue ECO_AUTO_UPLOAD_ENABLE;
+    public static final ModConfigSpec.EnumValue<PatternUploadPriority> PATTERN_AUTO_UPLOAD_PRIORITY;
 
     static {
         // Common 配置
@@ -135,6 +137,25 @@ public final class ModConfigs {
                         "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
                 )
                 .define("prioritizeDiskEnergy", true);
+        serverBuilder.pop();
+
+        serverBuilder.push("patternAutoUpload");
+        ECO_AUTO_UPLOAD_ENABLE = serverBuilder
+                .comment(
+                        "是否允许编码后自动上传样板到 ECO 合成系统（仅当 NeoECOAE 模组存在时生效）",
+                        "关闭后自动上传只会写入装配矩阵，ECO 合成系统不再参与",
+                        "默认: true"
+                )
+                .define("ecoAutoUploadEnable", true);
+        PATTERN_AUTO_UPLOAD_PRIORITY = serverBuilder
+                .comment(
+                        "编码后自动上传的目标优先级",
+                        "MATRIX：优先写入装配矩阵，矩阵不可用时回退到 ECO 合成系统",
+                        "ECO：优先写入 ECO 合成系统，ECO 不可用时回退到装配矩阵",
+                        "自动上传每次只向一个目标写入样板，优先目标接受后即结束",
+                        "默认: MATRIX"
+                )
+                .defineEnum("uploadPriority", PatternUploadPriority.MATRIX);
         serverBuilder.pop();
         SERVER_SPEC = serverBuilder.build();
     }

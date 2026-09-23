@@ -24,7 +24,8 @@ public class ModCheckUtils {
             MODID_GUIDEME = "guideme",
             MODID_MAE2 = "mae2",
             MODID_MEGA = "megacells",
-            MODID_EPA = "expandedae";
+            MODID_EPA = "expandedae",
+            MODID_ECO = "neoecoae";
 
     /**
      * 检查指定模组是否存在
@@ -88,5 +89,9 @@ public class ModCheckUtils {
 
     public static boolean isAAELoading() {
         return ModCheckUtils.isLoaded(ModCheckUtils.MODID_AAE);
+    }
+
+    public static boolean isECOLoading() {
+        return ModCheckUtils.isLoaded(ModCheckUtils.MODID_ECO);
     }
 }

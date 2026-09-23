@@ -64,7 +64,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
                 }
                 var stack = this.encodedPatternSlot != null ? this.encodedPatternSlot.getItem() : net.minecraft.world.item.ItemStack.EMPTY;
                 if (stack != null && !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
-                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuByPriority(sp, menu);
                 } else {
                     // 槽位可能尚未同步到位，继续下一 tick 重试
                     if (attemptsLeft > 0) {
@@ -125,7 +125,7 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             // 为避免与 AE2 后续同步竞争，切到下一 tick 执行
             sp.server.execute(() -> {
                 try {
-                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToMatrix(sp, menu);
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuByPriority(sp, menu);
                 } catch (Throwable ignored) {
                 }
             });
