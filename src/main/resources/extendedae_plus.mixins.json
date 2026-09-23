@@ -120,6 +120,7 @@
     "extendedae.common.matrix.BlockAssemblerMatrixBaseMixin",
     "extendedae.common.matrix.TileAssemblerMatrixBaseMixin",
     "extendedae.common.matrix.TileAssemblerMatrixGlassMixin",
+    "extendedae.common.matrix.TileAssemblerMatrixGlassLifecycleMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileCircuitCutterParallelMixin",
     "extendedae.common.TileExPatternProviderMixin",
