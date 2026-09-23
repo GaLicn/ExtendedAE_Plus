@@ -51,6 +51,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
  * ExtendedAE扩展样板管理终端专用的样板上传工具类
  * 兼容ExtendedAE的ContainerExPatternTerminal和原版AE2的PatternAccessTermMenu
@@ -495,39 +497,8 @@ public class ExtendedAEPatternUploadUtil {
         return ResourceLocation.tryParse(type.toString());
     }
 
-    // 注意：GTCEu 的映射方法已在下方提供基于 Object 的反射版本，避免重复定义。
-
     /**
-     * 仅使用反射的 GTCEu GTRecipe -> 搜索关键字（避免在运行时直接引用 GTCEu 类）。
-     */
-    public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
-        if (gtRecipeObj == null) return null;
-        try {
-            // 通过反射调用 getType()，其 toString() 应返回 registryName，即 namespace:path
-            java.lang.reflect.Method mGetType = gtRecipeObj.getClass().getMethod("getType");
-            Object typeObj = mGetType.invoke(gtRecipeObj);
-            String idStr = String.valueOf(typeObj);
-            if (idStr == null || idStr.isBlank()) return null;
-            var rl = ResourceLocation.tryParse(idStr);
-            // 1) 别名优先（使用 path 作为最终搜索关键字）
-            String path = rl != null ? rl.getPath() : null;
-            if (path != null) {
-                String alias = CUSTOM_ALIASES.get(path.toLowerCase());
-                if (alias != null && !alias.isBlank()) return alias;
-            }
-            // 2) 再查完整ID映射
-            String custom = rl != null ? CUSTOM_NAMES.get(rl) : null;
-            if (custom != null && !custom.isBlank()) return custom;
-            // 3) 默认返回 path 作为搜索关键字
-            return (path != null && !path.isBlank()) ? path : idStr;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    /**
-     * 当 JEI 传入的 recipeBase 不是原版 Recipe<?> 时，根据类的包名/类名推导一个尽量可用的搜索关键字。
-     * 例如："moe.gregtech.recipe.SomeAssemblerRecipe" -> "gtceu assembler"
+     * 当 JEI 传入的 recipeBase 不是原版 Recipe<?> 时，优先解析类型 ID，再根据类名推导搜索关键字。
      */
     public static String deriveSearchKeyFromUnknownRecipe(Object recipeBase) {
         if (recipeBase == null) return null;
@@ -535,14 +506,16 @@ public class ExtendedAEPatternUploadUtil {
         // 避免所有机器配方被类名推导成同一个关键字。
         try {
             Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
-            if (type instanceof RecipeType<?> rt) {
-                ResourceLocation key = resolveRecipeTypeId(rt);
-                if (key != null) {
-                    String resolved = resolveRecipeTypeSearchKey(key, null);
-                    if (resolved != null && !resolved.isBlank()) return resolved;
-                }
+            // 非原版类型也可通过其 namespace:path 标识走同一套映射。
+            ResourceLocation key = type instanceof RecipeType<?> rt
+                    ? resolveRecipeTypeId(rt)
+                    : type == null ? null : ResourceLocation.tryParse(type.toString());
+            if (key != null) {
+                String resolved = resolveRecipeTypeSearchKey(key, null);
+                if (resolved != null && !resolved.isBlank()) return resolved;
             }
-        } catch (Throwable ignored) {
+        } catch (ReflectiveOperationException | IllegalArgumentException e) {
+            LOGGER.debug("无法从配方类型解析搜索关键字，改用类名: {}", recipeBase.getClass().getName(), e);
         }
         try {
             Class<?> cls = recipeBase.getClass();
@@ -551,9 +524,7 @@ public class ExtendedAEPatternUploadUtil {
 
             String ns = null;
             String lower = pkg.toLowerCase();
-            if (lower.contains("gtceu")) ns = "gtceu";
-            else if (lower.contains("gregtech")) ns = "gregtech";
-            else if (lower.contains("projecte")) ns = "projecte";
+            if (lower.contains("projecte")) ns = "projecte";
             else if (lower.contains("create")) ns = "create";
             else if (lower.contains("immersiveengineering")) ns = "immersive";
 
@@ -565,7 +536,8 @@ public class ExtendedAEPatternUploadUtil {
             // 尝试别名映射（大小写不敏感）
             String alias = CUSTOM_ALIASES.get(key.toLowerCase());
             return (alias != null && !alias.isBlank()) ? alias : key;
-        } catch (Throwable ignored) {
+        } catch (RuntimeException e) {
+            LOGGER.warn("无法根据配方类名推导搜索关键字: {}", recipeBase.getClass().getName(), e);
             return null;
         }
     }

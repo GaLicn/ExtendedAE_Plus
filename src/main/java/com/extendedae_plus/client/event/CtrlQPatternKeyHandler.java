@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
+
 /**
  * Ctrl+Q 快速创建样板事件监听器
  */
@@ -352,7 +354,8 @@ public final class CtrlQPatternKeyHandler {
 				if (actualRecipe != null) {
 					recipeBase = actualRecipe;
 				}
-			} catch (Throwable ignored) {
+			} catch (ReflectiveOperationException e) {
+				LOGGER.debug("无法解包配方记录，使用原始配方对象", e);
 			}
 		}
 		
@@ -361,17 +364,6 @@ public final class CtrlQPatternKeyHandler {
 			if (name == null || name.isBlank()) {
 				// 注册表反查失败时按配方类名保底，保证供应器搜索词不会为空。
 				name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
-			}
-		} else if (recipeBase != null
-			&& "com.gregtechceu.gtceu.api.recipe.GTRecipe".equals(recipeBase.getClass().getName())) {
-			name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(recipeBase);
-		} else if (recipeBase != null
-			&& "com.gregtechceu.gtceu.integration.jei.recipe.GTRecipeWrapper".equals(recipeBase.getClass().getName())) {
-			try {
-				var field = recipeBase.getClass().getField("recipe");
-				Object inner = field.get(recipeBase);
-				name = ExtendedAEPatternUploadUtil.mapGTCEuRecipeToSearchKey(inner);
-			} catch (Throwable ignored) {
 			}
 		}
 
