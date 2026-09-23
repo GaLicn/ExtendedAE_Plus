@@ -81,8 +81,11 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 				return false;
 			}
 		}
-		if (!isNeoECOAEPresent()) {
-			if (mixinClassName.startsWith("com.extendedae_plus.mixin.neoecoae.")) {
+		if (mixinClassName.startsWith("com.extendedae_plus.mixin.neoecoae.")) {
+			// 新版 ECO 在自己的投料事务中处理虚拟卡记账，旧 api.me 实现类和 getLogic 已迁移。
+			// 检测到新版兼容入口时停用旧访问器和完成回调；旧版 ECO 继续使用原兼容逻辑。
+			if (!isNeoECOAEPresent() || isClassPresent(
+					"cn.dancingsnow.neoecoae.compat.extendedaeplus.ECOExtendedAEPlusVirtualCrafting")) {
 				return false;
 			}
 		}
