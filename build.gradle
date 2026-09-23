@@ -71,6 +71,7 @@ neoForge {
     runs {
         client {
             client()
+            gameDirectory = project.file('run/client')
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             jvmArguments.addAll '-Xmx3G', '-Xms3G'
@@ -78,6 +79,7 @@ neoForge {
 
         server {
             server()
+            gameDirectory = project.file('run/server')
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             jvmArguments.addAll '-Xmx3G', '-Xms3G'
@@ -143,7 +145,7 @@ dependencies {
 
     compileOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
-    compileOnly "curse.maven:mega-cells-622112:6005043"
+    compileOnly "curse.maven:mega-cells-622112:7952621"
     compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
     compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
     compileOnly "curse.maven:applied-mekanistics-574300:5978711"
@@ -159,7 +161,7 @@ dependencies {
     runtimeOnly "curse.maven:applied-flux-965012:8204513"
     compileOnly "de.mari_023:ae2wtlib_api:19.2.0"
     runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
-    runtimeOnly "curse.maven:mega-cells-622112:6005043"
+    runtimeOnly "curse.maven:mega-cells-622112:7952621"
 
     runtimeOnly "curse.maven:mekanism-268560:6895130"
     runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
