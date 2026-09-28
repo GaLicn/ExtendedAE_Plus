@@ -1,0 +1,17 @@
+{
+  "model": {
+    "type": "ae2:composite",
+    "models": [
+      {
+        "type": "ae2:model",
+        "model": "extendedae_plus:part/entity_speed_ticker_part"
+      },
+      {
+        "type": "ae2:status_indicator",
+        "active": "extendedae_plus:part/entity_speed_ticker_has_channel",
+        "powered": "extendedae_plus:part/entity_speed_ticker_on",
+        "unpowered": "extendedae_plus:part/entity_speed_ticker_off"
+      }
+    ]
+  }
+}

@@ -1,0 +1,347 @@
+package com.extendedae_plus.content.wireless;
+
+import appeng.api.networking.GridFlags;
+import appeng.api.networking.GridHelper;
+import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridNodeListener;
+import appeng.api.networking.IInWorldGridNodeHost;
+import appeng.api.networking.IManagedGridNode;
+import appeng.api.util.AECableType;
+import appeng.blockentity.AEBaseBlockEntity;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
+import com.extendedae_plus.ae.wireless.LabelLink;
+import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.UUID;
+
+public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity implements IWirelessEndpoint, IInWorldGridNodeHost, MenuProvider {
+
+    private IManagedGridNode managedNode;
+
+    private long frequency = 0L;
+    @Nullable
+    private String labelForDisplay;
+    private boolean beingRemoved = false;
+
+    @Nullable
+    private UUID placerId;
+    @Nullable
+    private String placerName;
+
+    private final LabelLink labelLink = new LabelLink(this);
+
+    public LabeledWirelessTransceiverBlockEntity(BlockPos pos, BlockState state) {
+        super(ModBlockEntities.LABELED_WIRELESS_TRANSCEIVER_BE.get(), pos, state);
+        this.managedNode = GridHelper.createManagedNode(this, NodeListener.INSTANCE)
+                .setFlags(GridFlags.DENSE_CAPACITY);
+        this.managedNode.setIdlePowerUsage(ModConfigs.WIRELESS_IDLE_POWER.get());
+        this.managedNode.setTagName("labeled_wireless_node");
+        this.managedNode.setInWorldNode(true);
+        this.managedNode.setExposedOnSides(EnumSet.allOf(Direction.class));
+        this.managedNode.setVisualRepresentation(ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
+    }
+
+    @Override
+    public @Nullable IGridNode getGridNode(Direction dir) {
+        return getGridNode();
+    }
+
+    @Override
+    public ServerLevel getServerLevel() {
+        Level lvl = super.getLevel();
+        return lvl instanceof ServerLevel sl ? sl : null;
+    }
+
+    @Override
+    public BlockPos getBlockPos() {
+        return this.worldPosition;
+    }
+
+    @Override
+    public IGridNode getGridNode() {
+        return managedNode == null ? null : managedNode.getNode();
+    }
+
+    @Override
+    public boolean isEndpointRemoved() {
+        return super.isRemoved();
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.extendedae_plus.labeled_wireless_transceiver");
+    }
+
+    @Override
+    public @Nullable AbstractContainerMenu createMenu(int id, Inventory inv, Player player) {
+        return new LabeledWirelessTransceiverMenu(id, inv, this.worldPosition);
+    }
+
+    @Override
+    public void writeClientSideData(AbstractContainerMenu menu, RegistryFriendlyByteBuf buf) {
+        buf.writeBlockPos(this.worldPosition);
+    }
+
+    public void setPlacerId(@Nullable UUID placerId, @Nullable String placerName) {
+        this.placerId = placerId;
+        this.placerName = placerName;
+        setChanged();
+    }
+
+    @Nullable
+    public UUID getPlacerId() {
+        return placerId;
+    }
+
+    @Nullable
+    public String getPlacerName() {
+        return placerName;
+    }
+
+    public void setPlacerIdFrom(ItemStack stack, @Nullable LivingEntity placer) {
+        if (placer instanceof Player player) {
+            this.setPlacerId(player.getUUID(), player.getName().getString());
+        } else if (stack.has(DataComponents.CUSTOM_NAME)) {
+            this.setPlacerId(null, stack.getHoverName().getString());
+        }
+    }
+
+    public long getFrequency() {
+        return frequency;
+    }
+
+    @Nullable
+    public String getLabelForDisplay() {
+        return labelForDisplay;
+    }
+
+    public void applyLabel(@Nullable String rawLabel) {
+        ServerLevel sl = getServerLevel();
+        if (sl == null) return;
+
+        LabelNetworkRegistry.get(sl).unregister(this);
+
+        var network = LabelNetworkRegistry.get(sl).register(sl, rawLabel, placerId, this);
+        if (network == null) {
+            clearLabel();
+            return;
+        }
+
+        this.labelForDisplay = rawLabel;
+        this.frequency = network.channel();
+        this.labelLink.setTarget(network);
+        updateState();
+        setChanged();
+    }
+
+    public void clearLabel() {
+        ServerLevel sl = getServerLevel();
+        if (sl != null) {
+            LabelNetworkRegistry.get(sl).unregister(this);
+        }
+        this.labelForDisplay = null;
+        this.frequency = 0L;
+        this.labelLink.clearTarget();
+        updateState();
+        setChanged();
+    }
+
+    public void refreshLabel(boolean ensureRegister) {
+        ServerLevel sl = getServerLevel();
+        if (sl == null) return;
+        if (labelForDisplay == null || labelForDisplay.isEmpty()) {
+            this.frequency = 0L;
+            this.labelLink.clearTarget();
+            updateState();
+            return;
+        }
+        var registry = LabelNetworkRegistry.get(sl);
+        // 加载时必须重新登记端点；SavedData 可能只保留了网络定义而没有当前端点。
+        var network = ensureRegister
+                ? registry.register(sl, labelForDisplay, placerId, this)
+                : registry.getNetwork(sl, labelForDisplay, placerId);
+        if (network == null) {
+            this.frequency = 0L;
+            this.labelLink.clearTarget();
+        } else {
+            network.ensureVirtualNode(sl);
+            this.frequency = network.channel();
+            this.labelLink.setTarget(network);
+        }
+        updateState();
+        setChanged();
+    }
+
+    public void refreshLabel() {
+        refreshLabel(false);
+    }
+
+    public void onRemoved() {
+        cleanupForRemoval();
+    }
+
+    @Override
+    public void onChunkUnloaded() {
+        // 区块卸载是临时生命周期，不应注销持久化标签端点或销毁 AE 节点。
+        this.labelLink.onUnloadOrRemove();
+        super.onChunkUnloaded();
+    }
+
+    @Override
+    public void setRemoved() {
+        cleanupForRemoval();
+        super.setRemoved();
+    }
+
+    private void cleanupForRemoval() {
+        if (this.beingRemoved) {
+            return;
+        }
+
+        this.beingRemoved = true;
+        this.labelLink.onUnloadOrRemove();
+
+        ServerLevel sl = getServerLevel();
+        if (sl != null) {
+            LabelNetworkRegistry.get(sl).unregister(this);
+        }
+
+        if (this.managedNode != null) {
+            this.managedNode.destroy();
+        }
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, LabeledWirelessTransceiverBlockEntity be) {
+        if (!(level instanceof ServerLevel)) return;
+        if (ExtendedAEPlus.isServerStopping()) return;
+        be.labelLink.updateStatus();
+        be.updateState();
+    }
+
+    private void updateState() {
+        if (this.level == null || this.level.isClientSide()) return;
+        if (ExtendedAEPlus.isServerStopping()) return;
+        if (this.beingRemoved || this.isRemoved()) return;
+        BlockState currentState = this.getBlockState();
+        if (!(currentState.getBlock() instanceof LabeledWirelessTransceiverBlock)) {
+            return;
+        }
+
+        IGridNode node = this.getGridNode();
+        boolean online = false;
+        if (node != null && node.isActive()) {
+            try {
+                var grid = node.getGrid();
+                online = grid != null && grid.getEnergyService().isNetworkPowered();
+            } catch (Throwable ignored) {
+                online = false;
+            }
+        }
+
+        if (currentState.getValue(LabeledWirelessTransceiverBlock.STATE) != online) {
+            this.level.setBlock(this.worldPosition, currentState.setValue(LabeledWirelessTransceiverBlock.STATE, online), 3);
+        }
+    }
+
+    @Override
+    public AECableType getCableConnectionType(Direction dir) {
+        if (this.level == null) return AECableType.GLASS;
+        var adjacentPos = this.worldPosition.relative(dir);
+        if (!Objects.requireNonNull(this.getLevel()).hasChunkAt(adjacentPos)) return AECableType.GLASS;
+        var adjacentHost = GridHelper.getNodeHost(this.getLevel(), adjacentPos);
+        if (adjacentHost != null) {
+            var t = adjacentHost.getCableConnectionType(dir.getOpposite());
+            if (t != null) return t;
+        }
+        return AECableType.GLASS;
+    }
+
+    @Override
+    public void onLoad() {
+        this.beingRemoved = false;
+        super.onLoad();
+        ServerLevel sl = getServerLevel();
+        if (sl == null) return;
+        GridHelper.onFirstTick(this, be -> {
+            // AE2 节点在区块重新加载时需要再次绑定到当前世界。
+            be.managedNode.create(be.getLevel(), be.getBlockPos());
+            be.refreshLabel(true);
+            be.labelLink.updateStatus();
+            be.updateState();
+        });
+    }
+
+    @Override
+    public void saveAdditional(ValueOutput data) {
+        super.saveAdditional(data);
+        data.putLong("frequency", frequency);
+        if (labelForDisplay != null) {
+            data.putString("label", labelForDisplay);
+        }
+        if (placerId != null) {
+            data.store("placerId", UUIDUtil.CODEC, placerId);
+        }
+        if (placerName != null) {
+            data.putString("placerName", placerName);
+        }
+        if (managedNode != null) {
+            managedNode.serialize(data);
+        }
+    }
+
+    @Override
+    public void loadTag(ValueInput data) {
+        super.loadTag(data);
+        this.frequency = data.getLongOr("frequency", 0L);
+        this.labelForDisplay = data.getString("label").orElse(null);
+        this.placerId = data.read("placerId", UUIDUtil.CODEC).orElse(null);
+        this.placerName = data.getString("placerName").orElse(null);
+        if (managedNode != null) {
+            managedNode.deserialize(data);
+        }
+    }
+
+    enum NodeListener implements IGridNodeListener<LabeledWirelessTransceiverBlockEntity> {
+        INSTANCE;
+        @Override
+        public void onSaveChanges(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {
+            host.setChanged();
+        }
+        @Override
+        public void onStateChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node, State state) {
+        }
+        @Override
+        public void onInWorldConnectionChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {
+        }
+        @Override
+        public void onGridChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {
+        }
+        @Override
+        public void onOwnerChanged(LabeledWirelessTransceiverBlockEntity host, IGridNode node) {}
+    }
+}

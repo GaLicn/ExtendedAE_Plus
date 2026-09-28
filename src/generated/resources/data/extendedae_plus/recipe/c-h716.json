@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:netherite_block",
+    "B": "extendedae_plus:oblivion_singularity",
+    "C": "extendedae_plus:infinity_core",
+    "D": "extendedae_plus:infinity_biginteger_cell"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ADA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:c-h716"
+  }
+}

@@ -1,0 +1,374 @@
+package com.extendedae_plus.mixin.ae2.client.gui;
+
+import appeng.api.crafting.PatternDetailsHelper;
+import appeng.api.stacks.AEKey;
+import appeng.client.Point;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.StackWithBounds;
+import appeng.client.gui.TextOverride;
+import appeng.client.gui.WidgetContainer;
+import appeng.client.gui.implementations.PatternProviderScreen;
+import appeng.client.gui.me.crafting.CraftingCPUScreen;
+import appeng.client.gui.style.PaletteColor;
+import appeng.client.gui.style.ScreenStyle;
+import appeng.client.gui.style.Text;
+import appeng.client.gui.style.TextAlignment;
+import appeng.client.gui.widgets.ToolboxPanel;
+import appeng.menu.SlotSemantics;
+import appeng.menu.slot.AppEngSlot;
+import com.extendedae_plus.api.IExPatternPage;
+import com.extendedae_plus.api.IInputBackgroundRenderer;
+import com.extendedae_plus.content.ClientPatternHighlightStore;
+import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.WidgetContainerAccessor;
+import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
+import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
+import com.extendedae_plus.util.GuiUtil;
+import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.world.inventory.Slot;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import javax.annotation.Nullable;
+
+@Mixin(value = AEBaseScreen.class, remap = false)
+public abstract class AEBaseScreenMixin {
+
+    /** 在所有样板供应器界面初始化前移除第三方注入的工具箱面板。 */
+    @Inject(method = "init", at = @At("HEAD"), remap = false)
+    private void eap$hidePatternProviderToolbox(CallbackInfo ci) {
+        Object self = this;
+        if (!(self instanceof PatternProviderScreen<?>)) {
+            return;
+        }
+
+        try {
+            AEBaseScreen<?> screen = (AEBaseScreen<?>) self;
+            screen.setSlotsHidden(SlotSemantics.TOOLBOX, true);
+
+            WidgetContainer widgets = ((AEBaseScreenAccessor<?>) self).eap$getWidgets();
+            WidgetContainerAccessor accessor = (WidgetContainerAccessor) widgets;
+            accessor.eap$getWidgetsMap().keySet().removeIf(AEBaseScreenMixin::eap$isToolboxId);
+            accessor.eap$getCompositeWidgetsMap().entrySet().removeIf(entry ->
+                    eap$isToolboxId(entry.getKey()) || entry.getValue() instanceof ToolboxPanel);
+        } catch (Throwable ignored) {
+            // 兼容其它界面实现，隐藏失败时不影响界面正常打开。
+        }
+    }
+
+    @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
+    private void eap$keepPatternProviderToolboxHidden(CallbackInfo ci) {
+        eap$hidePatternProviderToolbox(ci);
+    }
+
+    @Unique
+    private static boolean eap$isToolboxId(String id) {
+        if (id == null) {
+            return false;
+        }
+        String normalized = id.replace("_", "").replace("-", "");
+        return normalized.equalsIgnoreCase("toolbox") || normalized.endsWith("toolbox");
+    }
+
+    @Unique
+    private static int eap$getIntField(Object self, String name, int def) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Integer i) return i;
+            } catch (Throwable ignored) {}
+            c = c.getSuperclass();
+        }
+        return def;
+    }
+
+    @Unique
+    private static Font eap$getFont(Object self) {
+        Class<?> c = self.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                var f = c.getDeclaredField("font");
+                f.setAccessible(true);
+                Object v = f.get(self);
+                if (v instanceof Font font) return font;
+            } catch (Throwable ignored) {}
+            c = c.getSuperclass();
+        }
+        return net.minecraft.client.Minecraft.getInstance().font;
+    }
+
+    @Unique
+    private ScreenStyle eap$getStyle(Object self) {
+        try {
+            var f = self.getClass().getDeclaredField("style");
+            f.setAccessible(true);
+            Object v = f.get(self);
+            if (v instanceof ScreenStyle s) return s;
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    /**
+     * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+左键，
+     * 读取鼠标下的 AEKey 并发送 CraftingMonitorJumpC2SPacket。
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
+    private void eap$craftingCpuShiftLeftClick(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        // 仅处理 CraftingCPUScreen 实例
+        Object self = this;
+        if (!(self instanceof CraftingCPUScreen<?> screen)) {
+            return;
+        }
+        // 仅在 Shift + 左键 时触发
+        if (event.button() != 0 || !Minecraft.getInstance().hasShiftDown()) {
+            return;
+        }
+        try {
+            StackWithBounds hovered = screen.getStackUnderMouse(event.x(), event.y());
+            if (hovered == null || hovered.stack() == null) {
+                return;
+            }
+            AEKey key = hovered.stack().what();
+            if (key == null) {
+                return;
+            }
+            ClientPacketDistributor.sendToServer(new CraftingMonitorJumpC2SPacket(key));
+            cir.setReturnValue(true);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+右键，
+     * 读取鼠标下的 AEKey 并发送 CraftingMonitorOpenProviderC2SPacket（打开样板供应器UI）。
+     */
+    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false)
+    private void eap$craftingCpuShiftRightClick(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
+        // 仅处理 CraftingCPUScreen 实例
+        Object self = this;
+        if (!(self instanceof CraftingCPUScreen<?> screen)) {
+            return;
+        }
+        // 仅在 Shift + 右键 时触发
+        if (event.button() != 1 || !Minecraft.getInstance().hasShiftDown()) {
+            return;
+        }
+        try {
+            StackWithBounds hovered = screen.getStackUnderMouse(event.x(), event.y());
+            if (hovered == null || hovered.stack() == null) {
+                return;
+            }
+            AEKey key = hovered.stack().what();
+            if (key == null) {
+                return;
+            }
+            ClientPacketDistributor.sendToServer(new CraftingMonitorOpenProviderC2SPacket(key));
+            cir.setReturnValue(true);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 重写renderSlot方法，为所有可见的样板槽位添加数量显示
+     */
+    @Inject(method = "extractSlot", at = @At("TAIL"), remap = false)
+    private void eap$renderSlotAmounts(GuiGraphicsExtractor guiGraphics, Slot s, int mouseX, int mouseY, CallbackInfo ci) {
+        Object self = this;
+
+        // 只处理AppEngSlot类型的槽位
+        if (!(s instanceof AppEngSlot appEngSlot)) {
+            return;
+        }
+
+        // 检查槽位是否可见且有效
+        if (!appEngSlot.isActive() || !appEngSlot.isSlotEnabled()) {
+            return;
+        }
+
+        // 获取槽位中的物品
+        var itemStack = appEngSlot.getItem();
+        if (itemStack.isEmpty()) {
+            return;
+        }
+
+        // 使用GuiUtil的格式化方法获取数量文本
+        String amountText = GuiUtil.getPatternOutputText(itemStack);
+        if (amountText.isEmpty()) {
+            return;
+        }
+
+        // 在槽位右下角绘制数量文本（字号随 AE2 的 useTerminalUseLargeFont 配置）
+        Font font = eap$getFont(self);
+        GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y);
+
+        try {
+            var details = PatternDetailsHelper.decodePattern(itemStack, Minecraft.getInstance().level);
+            try {
+                if (details != null && details.getOutputs() != null && !details.getOutputs().isEmpty()) {
+                    AEKey key = details.getOutputs().get(0).what();
+                    if (key != null && ClientPatternHighlightStore.hasHighlight(key)) {
+                        try {
+                            GuiUtil.drawSlotRainbowHighlight(guiGraphics, s.x, s.y);
+                        } catch (Throwable ignored) {}
+                    }
+                }
+            } catch (Throwable ignore) {}
+        } catch (Throwable ignore) {}
+    }
+
+    // 在 AEBaseScreen.drawText 完成某个文本绘制后，若该文本为“样板”标签，则紧接着绘制页码。
+    @Inject(method = "drawText", at = @At("TAIL"), remap = false)
+    private void eap$appendPageAfterPatternsLabel(GuiGraphicsExtractor guiGraphics,
+                                                  Text text,
+                                                  @Nullable TextOverride override,
+                                                  CallbackInfo ci) {
+        Object self = this;
+        if (!(self instanceof GuiExPatternProvider)) {
+            return;
+        }
+
+        try {
+            // 解析最终用于显示的标签内容
+            Component content = text.getText();
+            if (override != null && override.getContent() != null) {
+                content = override.getContent().copy().withStyle(content.getStyle());
+            }
+
+            // 计算“样板”文本起点与宽度，按对齐方式与缩放修正 x/y
+            int imageWidth = eap$getIntField(self, "imageWidth", 0);
+            int imageHeight = eap$getIntField(self, "imageHeight", 0);
+            Rect2i bounds = new Rect2i(0, 0, imageWidth, imageHeight);
+            Point pos = text.getPosition().resolve(bounds);
+
+            float scale = text.getScale();
+
+            Font font = eap$getFont(self);
+            // 只关心第一行（标题类文本无换行或 maxWidth<=0）
+            var contentLine = (text.getMaxWidth() <= 0)
+                    ? content.getVisualOrderText()
+                    : font.split(content, text.getMaxWidth()).get(0);
+            int lineWidth = font.width(contentLine);
+
+            int x = pos.getX();
+            int y = pos.getY();
+            // 对齐修正
+            var align = text.getAlign();
+            if (align == TextAlignment.CENTER) {
+                int textPx = Math.round(lineWidth * scale);
+                x -= textPx / 2;
+            } else if (align == TextAlignment.RIGHT) {
+                int textPx = Math.round(lineWidth * scale);
+                x -= textPx;
+            }
+
+            // 判断是否为“样板”组标题（多语言兼容且避免标题）
+            boolean isPatterns = false;
+            // 1) 基于翻译键
+            var contents = content.getContents();
+            if (contents instanceof TranslatableContents tc) {
+                String key = tc.getKey();
+                if (key != null && key.endsWith(".patterns")) {
+                    isPatterns = true;
+                }
+            }
+            // 2) 基于已知本地化键的字符串解析
+            if (!isPatterns) {
+                String label = content.getString();
+                if (label != null) {
+                    if (label.equals(Component.translatable("gui.pattern_provider.patterns").getString()))
+                        isPatterns = true;
+                    else if (label.equals(Component.translatable("gui.extendedae.patterns").getString()))
+                        isPatterns = true;
+                    else if (label.equals(Component.translatable("gui.ae2.patterns").getString())) isPatterns = true;
+                }
+            }
+            // 3) 容错：中文“样板”且在标题下方（放宽到 y>=14）或文本正好等于“样板”
+            if (!isPatterns) {
+                String s = content.getString();
+                if (s != null && ("样板".equals(s) || (s.contains("样板") && y >= 14))) {
+                    isPatterns = true;
+                }
+            }
+            if (!isPatterns) return;
+
+            int cur = 1;
+            int max = 1;
+            if (self instanceof IExPatternPage accessor) {
+                cur = Math.max(0, accessor.eap$getCurrentPage()) + 1;
+            }
+            try {
+                var fMax = self.getClass().getDeclaredField("eap$maxPageLocal");
+                fMax.setAccessible(true);
+                Object v = fMax.get(self);
+                if (v instanceof Integer i) {
+                    max = Math.max(1, i);
+                }
+            } catch (Throwable ignored) {
+            }
+
+            String pageText = "第" + cur + "页" + "/" + max + "页";
+
+            ScreenStyle style = this.eap$getStyle(self);
+            int color = 0xFFFFFFFF;
+            if (style != null) {
+                try {
+                    color = style.getColor(PaletteColor.DEFAULT_TEXT_COLOR).toARGB();
+                } catch (Throwable ignored) {
+                }
+            }
+            int padding = 4;
+            if (scale == 1.0f) {
+                guiGraphics.text(font, pageText, x + lineWidth + padding, y, color, false);
+            } else {
+                guiGraphics.pose().pushMatrix();
+                guiGraphics.pose().translate(x, y);
+                guiGraphics.pose().scale(scale, scale);
+                guiGraphics.text(font, pageText, lineWidth + padding, 0, color, false);
+                guiGraphics.pose().popMatrix();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+
+    @Shadow
+    protected void setTextContent(String id, Component content) {};
+
+    @Inject(method = "updateBeforeRender", at = @At("RETURN"), remap = false)
+    private void onUpdateBeforeRender(CallbackInfo ci) {
+        try {
+            AEBaseScreen<?> self = (AEBaseScreen<?>) (Object) this;
+            if (self instanceof PatternProviderScreen screen){
+                Component t = screen.getTitle();
+                if (t != null && !t.getString().isEmpty()) {
+                    this.setTextContent(AEBaseScreen.TEXT_ID_DIALOG_TITLE, t);
+                }
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    // 在 drawBG 方法末尾调用输入框背景渲染
+    @Inject(method = "drawBG", at = @At("TAIL"), remap = false)
+    private void eap$renderInputBackground(GuiGraphicsExtractor guiGraphics, int offsetX, int offsetY, int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
+        Object self = this;
+        if (self instanceof IInputBackgroundRenderer renderer) {
+            renderer.eap$renderInputBackground(guiGraphics);
+        }
+    }
+}

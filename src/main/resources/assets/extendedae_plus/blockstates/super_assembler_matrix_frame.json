@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "type": "extendedae_plus:matrix_frame"
+      }
+    }
+  ]
+}

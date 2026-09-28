@@ -1,0 +1,291 @@
+package com.extendedae_plus.datagen;
+
+import appeng.core.definitions.AEBlocks;
+import appeng.core.definitions.AEItems;
+import appeng.recipes.transform.TransformCircumstance;
+import appeng.recipes.transform.TransformRecipeBuilder;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.init.ModItems;
+import com.glodblock.github.extendedae.common.EAESingletons;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.PackOutput;
+import net.minecraft.resources.Identifier;
+import net.minecraft.data.recipes.RecipeCategory;
+import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.ShapelessRecipeBuilder;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
+import net.neoforged.neoforge.common.Tags;
+import net.pedroksl.advanced_ae.common.definitions.AAEItems;
+import net.pedroksl.advanced_ae.recipes.ReactionChamberRecipeBuilder;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * ExtendedAE Plus 配方数据生成器
+ * 用于 NeoForge 1.21.1
+ */
+public class CrafterRecipe extends RecipeProvider.Runner {
+
+    @Override
+    public String getName() {
+        return "ExtendedAE Plus recipes";
+    }
+
+    public CrafterRecipe(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries);
+    }
+
+    @Override
+    protected RecipeProvider createRecipeProvider(HolderLookup.Provider registries, RecipeOutput output) {
+        return new Recipes(registries, output);
+    }
+
+    private static final class Recipes extends RecipeProvider {
+        private Recipes(HolderLookup.Provider registries, RecipeOutput output) {
+            super(registries, output);
+        }
+
+        @Override
+        protected void buildRecipes() {
+        // 高级合成加速器拆解：只返还对应存储核心，不返还基础壳子
+        addAcceleratorCoreRecoveryRecipe(output, "4x_crafting_accelerator", ModItems.ACCELERATOR_4x.get(),
+                                         AEItems.CELL_COMPONENT_4K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "16x_crafting_accelerator", ModItems.ACCELERATOR_16x.get(),
+                                         AEItems.CELL_COMPONENT_16K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "64x_crafting_accelerator", ModItems.ACCELERATOR_64x.get(),
+                                         AEItems.CELL_COMPONENT_64K
+        );
+        addAcceleratorCoreRecoveryRecipe(output, "256x_crafting_accelerator", ModItems.ACCELERATOR_256x.get(),
+                                         AEItems.CELL_COMPONENT_256K
+        );
+
+        //超级装配矩阵速度核心
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get())
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_SPEED)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
+
+        //超级装配矩阵合成核心
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_CRAFTER)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
+
+        //超级装配矩阵样板核心
+        shaped(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+                           .pattern("BRB")
+                           .pattern("RLR")
+                           .pattern("BRB")
+                           .define('R', EAESingletons.ASSEMBLER_MATRIX_PATTERN)
+                           .define('L', Items.NETHER_STAR)
+                           .define('B', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
+                           .save(output);
+
+        //标签无线收发器
+        shaped(RecipeCategory.MISC, ModItems.LABELED_WIRELESS_TRANSCEIVER.get())
+                           .pattern("CAC")
+                           .pattern("ABA")
+                           .pattern("CAC")
+                           .unlockedBy("has_wireless_transceiver", has(ModItems.WIRELESS_TRANSCEIVER.get()))
+                           .define('A', Items.PAPER)
+                           .define('B', ModItems.WIRELESS_TRANSCEIVER.get())
+                           .define('C', Items.EMERALD)
+                           .save(output);
+
+        //镜像样板供应器
+        shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_PROVIDER.get())
+                           .pattern("AAA")
+                           .pattern("ABA")
+                           .pattern("AAA")
+                           .unlockedBy("has_mirror_pattern_provider", has(ModItems.MIRROR_PATTERN_PROVIDER.get()))
+                           .define('A', Items.GLASS)
+                           .define('B', AEBlocks.PATTERN_PROVIDER)
+                           .save(output);
+
+        //镜像样板绑定工具
+        shaped(RecipeCategory.MISC, ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
+                           .pattern("  A")
+                           .pattern("BCD")
+                           .pattern("BBB")
+                           .unlockedBy("has_mirror_pattern_binding_tool",
+                                       has(ModItems.MIRROR_PATTERN_BINDING_TOOL.get())
+                           )
+                           .define('A', AEItems.WIRELESS_RECEIVER)
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', Items.REDSTONE)
+                           .define('D', AEItems.CALCULATION_PROCESSOR)
+                           .save(output);
+
+        // 标签库存 ME 接口
+        shapeless(RecipeCategory.MISC, ModItems.TAG_INVENTORY_ME_INTERFACE.get())
+                              .requires(AEBlocks.INTERFACE)
+                              .requires(EAESingletons.TAG_EXPORT_BUS)
+                              .unlockedBy("has_interface", has(AEBlocks.INTERFACE))
+                              .save(output);
+
+        // 湮灭奇点 - 爆炸转换
+        TransformRecipeBuilder.transform(output,
+                                         ExtendedAEPlus.id("transform/oblivion_singularity"),
+                                         ModItems.OBLIVION_SINGULARITY.get(), 1,
+                                         TransformCircumstance.EXPLOSION,
+                                         AEItems.SINGULARITY, Items.NETHER_STAR, Items.NETHERITE_BLOCK
+        );
+
+        // 湮灭奇点 - AAE反应仓配方
+        ReactionChamberRecipeBuilder.react(ModItems.OBLIVION_SINGULARITY.get(), 1, 100000)
+                                    .input(AEItems.SINGULARITY, 2)
+                                    .input(Items.NETHER_STAR, 1)
+                                    .input(AAEItems.QUANTUM_ALLOY_PLATE, 4)
+                                    .fluid(BuiltInRegistries.FLUID.getValue(
+                                            Identifier.fromNamespaceAndPath("advanced_ae", "quantum_infusion")), 2000)
+                                    .save(output, "oblivion_singularity");
+
+        // 基础核心配方
+        shaped(RecipeCategory.MISC, ModItems.BASIC_CORE.get())
+                           .pattern("ABA")
+                           .pattern("CDE")
+                           .pattern("AFA")
+                           .define('A', Items.NETHERITE_BLOCK)
+                           .define('B', Items.NETHER_STAR)
+                           .define('C', AEItems.LOGIC_PROCESSOR)
+                           .define('D', AEItems.FLUIX_PEARL)
+                           .define('E', AEItems.ENGINEERING_PROCESSOR)
+                           .define('F', AEItems.CALCULATION_PROCESSOR)
+                           .unlockedBy("has_nether_star", has(Items.NETHER_STAR))
+                           .save(output);
+
+        // 吞噬盘
+        shaped(RecipeCategory.MISC, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get())
+                           .pattern("GOG")
+                           .pattern("NIN")
+                           .pattern("BBB")
+                           .define('G', AEBlocks.QUARTZ_VIBRANT_GLASS)
+                           .define('O', ModItems.OBLIVION_SINGULARITY.get())
+                           .define('N', Items.NETHER_STAR)
+                           .define('I', ModItems.INFINITY_CORE.get())
+                           .define('B', Items.NETHERITE_BLOCK)
+                           .unlockedBy("has_oblivion_singularity", has(ModItems.OBLIVION_SINGULARITY.get()))
+                           .save(output);
+
+        //超级装配矩阵框架
+        shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ABA")
+                           .define('A', ModItems.LATTRA_CRYSTAL.get())
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', EAESingletons.ASSEMBLER_MATRIX_FRAME)
+                           .unlockedBy("has_super_assembler_matrix_frame",
+                                       has(ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get())
+                           )
+                           .save(output);
+
+        //超级装配矩阵墙壁
+        shaped(RecipeCategory.MISC, ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ABA")
+                           .define('A', ModItems.LATTRA_CRYSTAL.get())
+                           .define('B', Items.IRON_INGOT)
+                           .define('C', EAESingletons.ASSEMBLER_MATRIX_WALL)
+                           .unlockedBy("has_super_assembler_matrix_frame",
+                                       has(ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get())
+                           )
+                           .save(output);
+
+        //超级装配矩阵混合核心
+        shapeless(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+                              .requires(ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get())
+                              .requires(ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get())
+                              .unlockedBy("has_assembler_matrix_hybrid_plus",
+                                          has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get())
+                              )
+                              .save(output);
+
+        //超级扩展样板供应器扩展卡
+        shapeless(RecipeCategory.MISC,
+                                         ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get()
+                              )
+                              .requires(EAESingletons.EX_PATTERN_PROVIDER)
+                              .requires(AEItems.BASIC_CARD)
+                              .unlockedBy("has_extended_pattern_provider_expansion_card_plus",
+                                          has(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get())
+                              )
+                              .save(output);
+
+        //终极超级装配矩阵搭建器
+        shaped(RecipeCategory.MISC, ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                           .pattern(" A ")
+                           .pattern("ABA")
+                           .pattern(" A ")
+                           .define('A', Items.STICK)
+                           .define('B', ModItems.LATTRA_CRYSTAL.get())
+                           .unlockedBy("has_ultimate_super_assembler_matrix_builder",
+                                       has(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
+                           )
+                           .save(output);
+
+        //伪装适用方块
+        shaped(RecipeCategory.MISC, ModItems.DISGUISED_BLOCK.get(), 32)
+                           .pattern("AAA")
+                           .pattern("ABA")
+                           .pattern("AAA")
+                           .define('A', Tags.Items.STONES)
+                           .define('B', ModItems.LATTRA_CRYSTAL)
+                           .unlockedBy("has_disguised_block", has(ModItems.DISGUISED_BLOCK.get()))
+                           .save(output);
+
+        // iava 人偶
+        shaped(RecipeCategory.MISC, ModItems.C_H716.get(), 1)
+                           .pattern("ABA")
+                           .pattern("BCB")
+                           .pattern("ADA")
+                           .define('A', Items.NETHERITE_BLOCK)
+                           .define('B', ModItems.OBLIVION_SINGULARITY)
+                           .define('C', ModItems.INFINITY_CORE)
+                           .define('D', ModItems.INFINITY_BIGINTEGER_CELL_ITEM)
+                           .unlockedBy("has_infinity_biginteger_cell", has(ModItems.INFINITY_BIGINTEGER_CELL_ITEM))
+                           .save(output);
+
+        // Xbai 玩偶
+        shaped(RecipeCategory.MISC, ModItems.XBAI.get(), 1)
+                           .pattern("ABA")
+                           .pattern("CDE")
+                           .pattern("AFA")
+                           .define('A', ModItems.SUPER_ASSEMBLER_MATRIX_FRAME)
+                           .define('B', ModItems.MIRROR_PATTERN_PROVIDER)
+                           .define('C', ModItems.WIRELESS_TRANSCEIVER)
+                           .define('D', ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS)
+                           .define('E', ModItems.LABELED_WIRELESS_TRANSCEIVER)
+                           .define('F', ModItems.CRYSTAL_ASSEMBLER_PLUS)
+                           .unlockedBy("has_assembler_matrix_hybrid_plus", has(ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS))
+                           .save(output);
+    }
+
+    private void addAcceleratorCoreRecoveryRecipe(RecipeOutput output, String acceleratorName, ItemLike accelerator,
+                                                  ItemLike component) {
+        shapeless(RecipeCategory.MISC, component)
+                              .requires(accelerator)
+                              .unlockedBy("has_" + acceleratorName, has(accelerator))
+                              .save(output, acceleratorName + "_core_recovery");
+    }
+    }
+}

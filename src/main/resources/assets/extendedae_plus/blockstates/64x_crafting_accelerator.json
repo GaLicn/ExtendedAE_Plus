@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "formed=false": { "model": "extendedae_plus:block/crafting/64x_accelerator" },
+    "formed=true":  {
+      "type": "extendedae_plus:crafting_cube",
+      "unit_type": "accelerator_64x"
+    }
+  }
+}

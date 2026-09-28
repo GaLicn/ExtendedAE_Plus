@@ -1,0 +1,276 @@
+package com.extendedae_plus;
+
+import appeng.api.storage.StorageCells;
+import appeng.block.AEBaseEntityBlock;
+import appeng.blockentity.crafting.CraftingBlockEntity;
+import appeng.menu.locator.MenuLocators;
+import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
+import net.minecraft.server.level.ServerLevel;
+import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
+import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
+import com.extendedae_plus.api.ids.EAPComponents;
+import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.config.ModConfigs;
+import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
+import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
+import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
+import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
+import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.init.ModCapabilities;
+import com.extendedae_plus.init.ModCreativeTabs;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.init.ModNetwork;
+import com.extendedae_plus.init.ModRecipeSerializers;
+import com.extendedae_plus.init.UpgradeCards;
+import com.extendedae_plus.server.JeiSyncManager;
+import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
+import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
+import com.glodblock.github.extendedae.recipe.CircuitCutterRecipe;
+import com.glodblock.github.extendedae.recipe.CrystalAssemblerRecipe;
+import com.extendedae_plus.util.storage.InfinityStorageManager;
+import com.mojang.logging.LogUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+
+@Mod(ExtendedAEPlus.MODID)
+public class ExtendedAEPlus {
+    public static final String MODID = "extendedae_plus";
+    public static final Logger LOGGER = LogUtils.getLogger();
+    // 移除 MDK 示例注册，改为使用实际模组的方块/物品/创造物品栏注册见 ModBlocks、ModItems、ModCreativeTabs
+    @Nullable
+    private static InfinityStorageManager storageManager;
+    @Nullable
+    private static MinecraftServer storageManagerServer;
+    private static volatile boolean serverStopping;
+
+    public ExtendedAEPlus(IEventBus modEventBus, ModContainer modContainer) {
+        modEventBus.addListener(this::commonSetup);
+        // 注册网络负载处理器（NeoForge 1.21 新式 Payload API）
+        modEventBus.addListener(ModNetwork::registerPayloadHandlers);
+        // 注册能力：让 AE2 电缆识别我们的 In-World Grid Node Host
+        modEventBus.addListener(ModCapabilities::onRegisterCapabilities);
+
+        // 注册本模组方块/物品/创造物品栏
+        ModBlocks.BLOCKS.register(modEventBus);
+        // AE2 会在模型加载前冻结部件模型集合，必须在模组构造阶段完成登记。
+        ModItems.registerPartModels();
+        ModItems.ITEMS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
+        ModCreativeTabs.TABS.register(modEventBus);
+        ModMenuTypes.MENUS.register(modEventBus);
+        ModRecipeSerializers.SERIALIZERS.register(modEventBus);
+        ModRecipeSerializers.TYPES.register(modEventBus);
+
+        EAPComponents.DR.register(modEventBus);
+        NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(JeiSyncManager.class);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStarted);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopping);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onServerStopped);
+        NeoForge.EVENT_BUS.addListener(ExtendedAEPlus::onLevelTick);
+        NeoForge.EVENT_BUS.addListener((OnDatapackSyncEvent event) -> event.sendRecipes(
+                SuperCircuitCutterRecipe.TYPE, SuperCrystalAssemblerRecipe.TYPE,
+                CircuitCutterRecipe.TYPE, CrystalAssemblerRecipe.TYPE));
+        // 注册配置：接入自定义的 ModConfigs
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModConfigs.COMMON_SPEC, "extendedae_plus-common.toml");
+        modContainer.registerConfig(ModConfig.Type.CLIENT, ModConfigs.CLIENT_SPEC, "extendedae_plus-client.toml");
+        modContainer.registerConfig(ModConfig.Type.SERVER, ModConfigs.SERVER_SPEC, "extendedae_plus-server.toml");
+    }
+    // 便捷 Identifier 工具
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MODID, path);
+    }
+
+    private static void onServerStarted(ServerStartedEvent event) {
+        serverStopping = false;
+        storageManagerServer = event.getServer();
+        storageManager = InfinityStorageManager.getInstance(event.getServer());
+    }
+
+    private static void onServerStopping(ServerStoppingEvent event) {
+        serverStopping = true;
+        LabelNetworkRegistry.get(event.getServer()).shutdownAllVirtualNodes();
+        WirelessMasterRegistry.clear();
+    }
+
+    private static void onServerStopped(ServerStoppedEvent event) {
+        serverStopping = false;
+        if (storageManagerServer == event.getServer()) {
+            storageManagerServer = null;
+            storageManager = null;
+        }
+    }
+
+    private static void onLevelTick(LevelTickEvent.Post event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            SuperAssemblerMatrixCalculator.processScheduledRecalculations(serverLevel);
+        }
+    }
+
+    public static boolean isServerStopping() {
+        return serverStopping;
+    }
+
+    @Nullable
+    public static InfinityStorageManager currentStorageManager() {
+        return storageManager;
+    }
+
+    private void commonSetup(FMLCommonSetupEvent event) {
+        LOGGER.info("HELLO FROM COMMON SETUP");
+        // 示例日志，避免引用不存在的模板 Config 字段
+        LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
+        StorageCells.addCellHandler(InfinityBigIntegerCellHandler.INSTANCE);
+
+        // 绑定 AE2 的 CraftingBlockEntity 到本模组的自定义加速器方块，避免 AEBaseEntityBlock.blockEntityType 为空
+        try {
+            AEBaseEntityBlock<CraftingBlockEntity> b4 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_4x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b16 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_16x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b64 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_64x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b256 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_256x.get();
+            AEBaseEntityBlock<CraftingBlockEntity> b1024 = (AEBaseEntityBlock<CraftingBlockEntity>) ModBlocks.ACCELERATOR_1024x.get();
+
+            // 使用我们自定义的 CraftingBlockEntity 类型，它的有效方块列表包含自定义加速器
+            var type = ModBlockEntities.EPLUS_CRAFTING_UNIT_BE.get();
+            // 不提供专用 ticker（AE2 会在其注册时按接口注入），此处传 null 即可
+            b4.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b16.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b64.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b256.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            b1024.setBlockEntity(CraftingBlockEntity.class, type, null, null);
+            LOGGER.info("Bound AE2 CraftingBlockEntity to ExtendedAE Plus accelerators.");
+
+            // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
+            ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
+                UploadCoreBlockEntity.class,
+                ModBlockEntities.UPLOAD_CORE_BE.get(),
+                null,
+                null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get().setBlockEntity(
+                    SpeedCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_SPEED_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().setBlockEntity(
+                    CrafterCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_CRAFTER_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get().setBlockEntity(
+                    PatternCorePlusBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_PATTERN_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.ASSEMBLER_MATRIX_HYBRID_PLUS.get().setBlockEntity(
+                    HybridCoreBlockEntity.class,
+                    ModBlockEntities.ASSEMBLER_MATRIX_HYBRID_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get().setBlockEntity(
+                    SuperAssemblerMatrixFrameBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_FRAME_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get().setBlockEntity(
+                    SuperAssemblerMatrixWallBlockEntity.class,
+                    ModBlockEntities.SUPER_ASSEMBLER_MATRIX_WALL_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get().setBlockEntity(
+                    SuperCrystalAssemblerBlockEntity.class,
+                    ModBlockEntities.CRYSTAL_ASSEMBLER_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ModBlocks.CIRCUIT_CUTTER_PLUS.get().setBlockEntity(
+                    SuperCircuitCutterBlockEntity.class,
+                    ModBlockEntities.CIRCUIT_CUTTER_PLUS_BE.get(),
+                    null,
+                    null
+            );
+
+            ((AEBaseEntityBlock) ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get()).setBlockEntity(
+                    MirrorPatternProviderBlockEntity.class,
+                    ModBlockEntities.MIRROR_PATTERN_PROVIDER_BE.get(),
+                    null,
+                    (level, pos, state, blockEntity) -> MirrorPatternProviderBlockEntity.serverTick(
+                            level,
+                            pos,
+                            state,
+                            (MirrorPatternProviderBlockEntity) blockEntity)
+            );
+
+            LOGGER.info("Bound UploadCoreBlockEntity to assembler matrix upload core block.");
+        } catch (Throwable t) {
+            LOGGER.error("Failed to bind block entities: {}", t.toString());
+            throw new RuntimeException("Critical error: Failed to bind block entities", t);
+        }
+
+        event.enqueueWork(() -> {
+            try {
+                // 注册升级卡
+                new UpgradeCards(event);
+
+                // 注册自定义 AE2 MenuLocator（用于 Curios 槽位打开菜单）
+                try {
+                    MenuLocators.register(
+                            CuriosItemLocator.class,
+                            CuriosItemLocator::writeToPacket,
+                            CuriosItemLocator::readFromPacket
+                    );
+                    LOGGER.info("Registered AE2 MenuLocator: CuriosItemLocator");
+                } catch (Throwable t) {
+                    LOGGER.warn("Failed to register CuriosItemLocator with AE2 MenuLocators: {}", t.toString());
+                }
+            } catch (Throwable t) {
+                LOGGER.warn("Failed to complete enqueued setup work: {}", t.toString());
+            }
+        });
+    }
+
+    @SubscribeEvent
+    public void onServerStarting(ServerStartingEvent event) {
+        LOGGER.info("HELLO from server starting");
+    }
+}

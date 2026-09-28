@@ -1,0 +1,37 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.classpath
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+runs
+run-data
+
+repo
+
+othermods
+crashreport
+.cursor
+/src/generated/resources/.cache
+doc
+.vscode
+oldVersonMod
+oldVersion
+.codex-compile-build
+/AGENTS.md

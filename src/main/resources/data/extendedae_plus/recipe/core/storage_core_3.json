@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "extendedae_plus:basic_core",
+      "components": {
+        "extendedae_plus:core_type": "STORAGE",
+        "extendedae_plus:core_stage": 2
+      }
+    },
+    "C": "ae2:cell_component_256k",
+    "M": "ae2:quartz_block",
+    "O": "extendedae_plus:oblivion_singularity"
+  },
+  "pattern": [
+    "MOM",
+    "CBC",
+    "MCM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:basic_core",
+    "components": {
+      "extendedae_plus:core_type": "STORAGE",
+      "extendedae_plus:core_stage": 3,
+      "minecraft:rarity": "rare"
+    }
+  },
+  "show_notification": true
+}

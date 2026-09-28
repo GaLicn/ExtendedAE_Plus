@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "ae2:advanced_card",
+    "minecraft:crafting_table",
+    "minecraft:lever"
+  ],
+  "result": {
+    "id": "extendedae_plus:virtual_crafting_card",
+    "count": 1
+  }
+}

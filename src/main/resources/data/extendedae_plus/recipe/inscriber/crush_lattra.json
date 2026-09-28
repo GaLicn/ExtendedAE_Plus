@@ -1,0 +1,11 @@
+{
+  "type": "ae2:inscriber",
+  "ingredients": {
+    "middle": "#c:gems/lattra"
+  },
+  "mode": "inscribe",
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:lattra_dust"
+  }
+}

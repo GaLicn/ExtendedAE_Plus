@@ -1,0 +1,122 @@
+package com.extendedae_plus.network;
+
+import appeng.helpers.patternprovider.PatternContainer;
+import appeng.menu.implementations.PatternAccessTermMenu;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.api.upload.IPatternUploadMenu;
+import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * C2S: 请求当前终端可见的样板供应器列表（用于弹窗选择）。
+ */
+public class RequestProvidersListC2SPacket implements CustomPacketPayload {
+    public static final Type<RequestProvidersListC2SPacket> TYPE = new Type<>(
+            Identifier.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
+
+    public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket();
+
+    public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC =
+            StreamCodec.unit(INSTANCE);
+
+    private RequestProvidersListC2SPacket() {}
+
+    public static void sendProvidersList(ServerPlayer player) {
+        List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
+        List<Long> ids = new ArrayList<>();
+        List<Component> names = new ArrayList<>();
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < containers.size(); i++) {
+            PatternContainer container = containers.get(i);
+            int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(container);
+            if (empty > 0) {
+                ids.add(-1L - i);
+                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(container));
+                slots.add(empty);
+            }
+        }
+        player.connection.send(new ProvidersListS2CPacket(ids, names, slots));
+    }
+
+    public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
+
+            // Ctrl+Q pending 模式：不依赖编码终端，直接基于玩家网络给出列表（负数索引 ID）
+            if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
+                List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
+                List<Long> idxIds = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
+                List<Integer> slots = new ArrayList<>();
+                for (int i = 0; i < containers.size(); i++) {
+                    var c = containers.get(i);
+                    if (c == null) continue;
+                    int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(c);
+                    if (empty <= 0) continue;
+                    long encodedId = -1L - i;
+                    idxIds.add(encodedId);
+                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
+                    slots.add(empty);
+                }
+                player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
+                return;
+            }
+
+            if (!(player.containerMenu instanceof IPatternUploadMenu encMenu)) return;
+
+            // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
+            PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);
+            if (accessMenu != null) {
+                List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
+                List<Long> filteredIds = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
+                List<Integer> slots = new ArrayList<>();
+
+                for (Long id : ids) {
+                    if (id == null) continue;
+                    if (!ExtendedAEPatternUploadUtil.isProviderAvailable(id, accessMenu)) continue;
+                    int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(id, accessMenu);
+                    if (empty <= 0) continue; // 只列出有空位的
+                    filteredIds.add(id);
+                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(id, accessMenu));
+                    slots.add(empty);
+                }
+
+                player.connection.send(new ProvidersListS2CPacket(filteredIds, names, slots));
+                return;
+            }
+
+            // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
+            List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
+            List<Long> idxIds = new ArrayList<>();
+            List<Component> names = new ArrayList<>();
+            List<Integer> slots = new ArrayList<>();
+            for (int i = 0; i < containers.size(); i++) {
+                var c = containers.get(i);
+                if (c == null) continue;
+                int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(c);
+                if (empty <= 0) continue;
+                long encodedId = -1L - i; // 约定：负数代表按索引
+                idxIds.add(encodedId);
+                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
+                slots.add(empty);
+            }
+            player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
+        });
+    }
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+}

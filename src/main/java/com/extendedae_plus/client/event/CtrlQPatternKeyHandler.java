@@ -1,0 +1,393 @@
+package com.extendedae_plus.client.event;
+
+import appeng.api.stacks.AEItemKey;
+import com.mojang.blaze3d.platform.InputConstants;
+import appeng.api.stacks.GenericStack;
+import com.extendedae_plus.client.ModKeybindings;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
+import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
+import com.extendedae_plus.util.RecipeFinderUtil;
+import com.extendedae_plus.util.RecipeInfo;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.ingredients.ITypedIngredient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * Ctrl+Q 快速创建样板事件监听器
+ */
+public final class CtrlQPatternKeyHandler {
+	private CtrlQPatternKeyHandler() {
+	}
+
+	@SubscribeEvent
+	public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+		Screen screen = event.getScreen();
+		if (screen == null) {
+			return;
+		}
+
+		int keyCode = event.getKeyCode();
+		int scanCode = event.getScanCode();
+		boolean isAllowSubstitutes = false;
+		boolean isFluidSubstitutes = false;
+		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
+		if (!ModKeybindings.CREATE_PATTERN_KEY.isActiveAndMatches(
+				InputConstants.Type.KEYSYM.getOrCreate(keyCode))) {
+			return;
+		}
+
+		// EMI 26.1.2 发布后恢复仲裁逻辑；当前保留 JEI Ctrl+Q 路径。
+
+		if (JeiRuntimeCompat.getRuntime() == null) {
+			return;
+		}
+
+		Optional<?> recipeBookmark = JeiRuntimeCompat.getRecipeBookmarkUnderMouse();
+		if (recipeBookmark.isPresent()) {
+			handleRecipeBookmark(recipeBookmark.get(), isAllowSubstitutes, isFluidSubstitutes);
+			event.setCanceled(true);
+			return;
+		}
+
+		Optional<ITypedIngredient<?>> ingredient = castTypedIngredient(JeiRuntimeCompat.getIngredientUnderMouse());
+		if (ingredient.isEmpty()) {
+			Minecraft mc = Minecraft.getInstance();
+			if (mc.player != null) {
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.hover_item_first"));
+			}
+			return;
+		}
+
+		List<RecipeInfo> recipes = RecipeFinderUtil.findRecipesByIngredient(ingredient.get());
+		if (recipes.isEmpty()) {
+			Minecraft mc = Minecraft.getInstance();
+			if (mc.player != null) {
+				mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
+			}
+			return;
+		}
+
+		RecipeInfo selected = RecipeFinderUtil.selectBestRecipe(recipes);
+		if (selected == null || selected.getRecipeId() == null) {
+			return;
+		}
+
+		List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(selected);
+		List<ItemStack> selectedOutputs = convertOutputsToItemStacks(selected);
+
+		ClientPacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
+			selected.getRecipeId(),
+			selected.isCraftingRecipe(),
+			selectedIngredients,
+			selectedOutputs,
+			isAllowSubstitutes,
+			isFluidSubstitutes
+		));
+		event.setCanceled(true);
+	}
+
+	private static void handleRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+		if (isCraftingRecipe(recipeBookmark)) {
+			handleCraftingRecipeBookmark(recipeBookmark, isAllowSubstitutes, isFluidSubstitutes);
+		} else {
+			handleProcessingRecipeBookmark(recipeBookmark, isAllowSubstitutes, isFluidSubstitutes);
+		}
+	}
+
+	private static boolean isCraftingRecipe(Object recipeBookmark) {
+		try {
+			var getRecipeCategoryMethod = recipeBookmark.getClass().getMethod("getRecipeCategory");
+			Object recipeCategory = getRecipeCategoryMethod.invoke(recipeBookmark);
+
+			var getRecipeTypeMethod = recipeCategory.getClass().getMethod("getRecipeType");
+			Object recipeType = getRecipeTypeMethod.invoke(recipeCategory);
+			return RecipeTypes.CRAFTING.equals(recipeType)
+				|| RecipeTypes.STONECUTTING.equals(recipeType)
+				|| RecipeTypes.SMITHING.equals(recipeType);
+		} catch (Throwable ignored) {
+			return false;
+		}
+	}
+
+	private static void handleCraftingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+		try {
+			Identifier recipeId = getRecipeId(recipeBookmark);
+			if (recipeId == null) {
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.player != null) {
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.recipe_not_found"));
+				}
+				return;
+			}
+
+			Minecraft mc = Minecraft.getInstance();
+			if (mc.level == null) {
+				return;
+			}
+			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
+			if (recipeInfos.isEmpty()) {
+				if (mc.player != null) {
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
+				}
+				return;
+			}
+
+			RecipeInfo matching = matchById(recipeInfos, recipeId);
+			List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matching);
+			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
+			ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+
+			ClientPacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
+				recipeId,
+				matching.isCraftingRecipe(),
+				selectedIngredients,
+				selectedOutputs,
+				isAllowSubstitutes,
+				isFluidSubstitutes
+			));
+		} catch (Throwable ignored) {
+		}
+	}
+
+	private static void handleProcessingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+		try {
+			Identifier recipeId = getRecipeId(recipeBookmark);
+			if (recipeId == null) {
+				Minecraft mc = Minecraft.getInstance();
+				if (mc.player != null) {
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.recipe_not_found"));
+				}
+				return;
+			}
+
+			Minecraft mc = Minecraft.getInstance();
+			if (mc.level == null) {
+				return;
+			}
+			Object recipeBase = null;
+			try {
+				var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
+				recipeBase = getRecipeMethod.invoke(recipeBookmark);
+			} catch (Throwable ignored) {
+			}
+			setLastProcessingNameFromRecipe(recipeBase);
+
+			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
+			if (recipeInfos.isEmpty()) {
+				if (mc.player != null) {
+					mc.player.sendSystemMessage(Component.translatable("message.extendedae_plus.no_recipes_found"));
+				}
+				return;
+			}
+
+			RecipeInfo matching = matchById(recipeInfos, recipeId);
+			List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matching);
+			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
+
+			ClientPacketDistributor.sendToServer(new CreateCtrlQPatternC2SPacket(
+				recipeId,
+				matching.isCraftingRecipe(),
+				selectedIngredients,
+				selectedOutputs,
+				true,
+				isAllowSubstitutes,
+				isFluidSubstitutes
+			));
+		} catch (Throwable ignored) {
+		}
+	}
+
+	private static List<RecipeInfo> findRecipeInfosForBookmark(Object recipeBookmark) {
+		Optional<ITypedIngredient<?>> hovered = castTypedIngredient(JeiRuntimeCompat.getIngredientUnderMouse());
+		if (hovered.isPresent()) {
+			List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(hovered.get());
+			if (!infos.isEmpty()) {
+				return infos;
+			}
+		}
+
+		try {
+			var getDisplayIngredientMethod = recipeBookmark.getClass().getMethod("getDisplayIngredient");
+			Object displayIngredient = getDisplayIngredientMethod.invoke(recipeBookmark);
+			if (displayIngredient instanceof ITypedIngredient<?> typed) {
+				List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(typed);
+				if (!infos.isEmpty()) {
+					return infos;
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+
+		try {
+			var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
+			Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
+			if (recipeOutput instanceof ITypedIngredient<?> typed) {
+				return RecipeFinderUtil.findRecipesByIngredient(typed);
+			}
+		} catch (Throwable ignored) {
+		}
+		return List.of();
+	}
+
+	private static RecipeInfo matchById(List<RecipeInfo> recipeInfos, Identifier recipeId) {
+		for (RecipeInfo info : recipeInfos) {
+			if (recipeId.equals(info.getRecipeId())) {
+				return info;
+			}
+		}
+		return recipeInfos.get(0);
+	}
+
+	private static Identifier getRecipeId(Object recipeBookmark) {
+		if (recipeBookmark == null) {
+			return null;
+		}
+
+		// JEI 1.20 兼容分支
+		try {
+			var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
+			Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
+			if (recipeId instanceof Identifier rl) {
+				return rl;
+			}
+		} catch (Throwable ignored) {
+		}
+
+		// JEI 1.21+：从 recipeCategory.getRegistryName(recipe) 获取
+		try {
+			Object recipe = recipeBookmark.getClass().getMethod("getRecipe").invoke(recipeBookmark);
+			Object recipeCategory = recipeBookmark.getClass().getMethod("getRecipeCategory").invoke(recipeBookmark);
+			if (recipe != null && recipeCategory != null) {
+				try {
+					Object recipeId = recipeCategory.getClass().getMethod("getRegistryName", Object.class).invoke(recipeCategory, recipe);
+					if (recipeId instanceof Identifier rl) {
+						return rl;
+					}
+				} catch (Throwable ignored) {
+					for (var m : recipeCategory.getClass().getMethods()) {
+						if (!"getRegistryName".equals(m.getName()) || m.getParameterCount() != 1) {
+							continue;
+						}
+						Object recipeId = m.invoke(recipeCategory, recipe);
+						if (recipeId instanceof Identifier rl) {
+							return rl;
+						}
+					}
+				}
+			}
+		} catch (Throwable ignored) {
+		}
+
+		// 反射字段兜底（JEI 内部 RecipeBookmark 存在 recipeUid 字段）
+		try {
+			var f = recipeBookmark.getClass().getDeclaredField("recipeUid");
+			f.setAccessible(true);
+			Object recipeId = f.get(recipeBookmark);
+			if (recipeId instanceof Identifier rl) {
+				return rl;
+			}
+		} catch (Throwable ignored) {
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Optional<ITypedIngredient<?>> castTypedIngredient(Optional<?> opt) {
+		if (opt == null || opt.isEmpty()) {
+			return Optional.empty();
+		}
+		Object value = opt.get();
+		if (value instanceof ITypedIngredient<?>) {
+			return (Optional<ITypedIngredient<?>>) (Optional<?>) Optional.of(value);
+		}
+		return Optional.empty();
+	}
+
+	private static void setLastProcessingNameFromRecipe(Object recipeBase) {
+		String name = null;
+		
+		// 处理 RecipeHolder
+		if (recipeBase != null && "net.minecraft.world.item.crafting.RecipeHolder".equals(recipeBase.getClass().getName())) {
+			try {
+				var valueMethod = recipeBase.getClass().getMethod("value");
+				Object actualRecipe = valueMethod.invoke(recipeBase);
+				if (actualRecipe != null) {
+					recipeBase = actualRecipe;
+				}
+			} catch (Throwable ignored) {
+			}
+		}
+		
+		if (recipeBase instanceof Recipe<?> recipe) {
+			name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+			if (name == null || name.isBlank()) {
+				// 注册表反查失败时按配方类名保底，保证供应器搜索词不会为空。
+				name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+			}
+		} else if (recipeBase != null
+			&& false) {
+			name = null;
+		} else if (recipeBase != null
+			&& "".equals(recipeBase.getClass().getName())) {
+			try {
+				var field = recipeBase.getClass().getField("recipe");
+				Object inner = field.get(recipeBase);
+				name = null;
+			} catch (Throwable ignored) {
+			}
+		}
+
+		if (name == null || name.isBlank()) {
+			name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+		}
+		if (name != null && !name.isBlank()) {
+			ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+		}
+	}
+
+	private static List<ItemStack> selectIngredientsWithJeiPriority(RecipeInfo recipeInfo) {
+		List<?> bookmarks = JeiRuntimeCompat.getBookmarkList();
+		Map<Item, Integer> priorities = new HashMap<>();
+		AtomicInteger index = new AtomicInteger(Integer.MAX_VALUE);
+
+		for (Object obj : bookmarks) {
+			if (obj instanceof ITypedIngredient<?> ingredient) {
+				ingredient.getIngredient(VanillaTypes.ITEM_STACK).ifPresent(itemStack ->
+					priorities.put(itemStack.getItem(), index.getAndDecrement())
+				);
+			}
+		}
+
+		return recipeInfo.selectBestInputs(priorities);
+	}
+
+	private static List<ItemStack> convertOutputsToItemStacks(RecipeInfo recipeInfo) {
+		return recipeInfo.getOutputs().stream()
+			.map(genericStack -> {
+				if (genericStack.what() instanceof AEItemKey itemKey) {
+					return itemKey.toStack((int) genericStack.amount());
+				}
+				return GenericStack.wrapInItemStack(genericStack);
+			})
+			.toList();
+	}
+}

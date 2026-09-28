@@ -1,0 +1,490 @@
+package com.extendedae_plus.client.screen;
+
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
+import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
+import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
+import com.extendedae_plus.network.LabelNetworkListC2SPacket;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Inventory;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<LabeledWirelessTransceiverMenu> {
+    private static final Identifier TEX = ExtendedAEPlus.id("textures/gui/lable_wireless_transceiver_gui.png");
+    private static final int BTN_U = 2;
+    private static final int BTN_V = 159;
+    private static final int BTN_W = 28;
+    private static final int BTN_H = 16;
+    private static final int TEX_W = 256;
+    private static final int TEX_H = 256;
+
+    private static final int LIST_X = 9;
+    private static final int LIST_Y = 27;
+    private static final int LIST_W = 110; // 118-9+1
+    private static final int LIST_H = 114; // 140-27+1
+    private static final int ROW_H = 11; // 10px text height + 1px 分隔
+    private static final int VISIBLE_ROWS = LIST_H / ROW_H; // 10
+    private static final int SCROLL_X = 123;
+    private static final int SCROLL_Y = 21;
+    private static final int SCROLL_W = 6;
+    private static final int SCROLL_H = 121; // 141-21+1
+    private static final int INFO_MAX_WIDTH = 116; // 信息区实际宽度(249-134+1=116)
+
+    private EditBox searchBox;
+    private AbstractWidget newBtn;
+    private AbstractWidget deleteBtn;
+    private AbstractWidget setBtn;
+    private AbstractWidget disconnectBtn;
+
+    private final BlockPos bePos;
+    private final List<LabelEntry> entries = new ArrayList<>();
+    private final List<LabelEntry> filtered = new ArrayList<>();
+    private int scrollOffset = 0;
+    private int selectedIndex = -1;
+    private String lastSelectedLabel = "";
+    private String currentLabel = "";
+    private String currentOwner = "";
+    private int onlineCount = 0;
+    private int usedChannels = 0;
+    private int maxChannels = 0;
+
+    public LabeledWirelessTransceiverScreen(LabeledWirelessTransceiverMenu menu, Inventory inv, Component title) {
+        super(menu, inv, title, TEX_W, 156);
+        this.inventoryLabelY = this.imageHeight; // 不显示玩家物品栏标签
+        this.bePos = menu.getBlockEntityPos();
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        // 搜索框：起点(134,23) 终点(249,31) => 宽116 高9（取整为9）
+        int sx = this.leftPos + 134;
+        int sy = this.topPos + 23;
+        this.searchBox = new EditBox(this.font, sx, sy, 116, 9, Component.empty());
+        this.searchBox.setBordered(false);
+        this.searchBox.setMaxLength(64);
+        this.searchBox.setVisible(true);
+        this.searchBox.setFocused(false);
+        this.searchBox.setResponder(s -> {
+            applyFilter();
+        });
+        this.addRenderableWidget(this.searchBox);
+
+        int startX = this.leftPos + 145;
+        int startY = this.topPos + 101;
+        int hGap = 30;
+        int vGap = 8;
+        int secondColX = startX + BTN_W + hGap;
+        int secondRowY = startY + BTN_H + vGap;
+
+        this.newBtn = new StateButton(startX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendSet(searchBox.getValue()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"));
+        this.deleteBtn = new StateButton(secondColX, startY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendDelete(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"));
+        this.setBtn = new StateButton(startX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendSet(getSelectedLabel()), Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"));
+        this.disconnectBtn = new StateButton(secondColX, secondRowY, BTN_W, BTN_H, BTN_U, BTN_V, 2, 177, 2, 195, TEX, TEX_W, TEX_H,
+                b -> sendDisconnect(), Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"));
+
+        this.addRenderableWidget(this.newBtn);
+        this.addRenderableWidget(this.deleteBtn);
+        this.addRenderableWidget(this.setBtn);
+        this.addRenderableWidget(this.disconnectBtn);
+
+        requestList();
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(gfx, mouseX, mouseY, partialTicks);
+        drawAllButtonText(gfx);
+    }
+
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor gfx, int mouseX, int mouseY) {
+        float titleScale = getTitleScale();
+        var pose = gfx.pose();
+        pose.pushMatrix();
+        pose.translate(8, 8);
+        pose.scale(titleScale, titleScale);
+        gfx.text(this.font, this.title, 0, 0, 0xFF404040, false);
+        pose.popMatrix();
+
+        pose.pushMatrix();
+        pose.translate(134, 8);
+        pose.scale(titleScale, titleScale);
+        gfx.text(this.font, Component.translatable("gui.extendedae_plus.labeled_wireless.info"), 0, 0, 0xFF404040, false);
+        pose.popMatrix();
+    }
+
+    @Override
+    public void extractBackground(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+        gfx.blit(RenderPipelines.GUI_TEXTURED, TEX,
+                this.leftPos, this.topPos, 0, 0,
+                this.imageWidth, this.imageHeight, TEX_W, TEX_H);
+
+        renderList(gfx);
+        renderScrollBar(gfx);
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        if (this.searchBox != null && this.searchBox.mouseClicked(event, doubleClick)) {
+            setFocused(this.searchBox);
+            return true;
+        }
+        if (isMouseInList(mouseX, mouseY)) {
+            int localY = (int) mouseY - (this.topPos + LIST_Y);
+            int row = localY / ROW_H;
+            int idx = scrollOffset + row;
+            if (idx >= 0 && idx < filtered.size()) {
+                selectedIndex = idx;
+                lastSelectedLabel = filtered.get(idx).label();
+            }
+            return true;
+        }
+        if (isMouseInScrollbar(mouseX, mouseY)) {
+            updateScrollByMouse((int) mouseY);
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (this.searchBox != null && this.searchBox.isFocused()
+                && Minecraft.getInstance().options.keyInventory.matches(event)) {
+            return true;
+        }
+        if (this.searchBox != null && this.searchBox.keyPressed(event)) {
+            return true;
+        }
+        return super.keyPressed(event);
+    }
+
+    @Override
+    public boolean charTyped(CharacterEvent event) {
+        if (this.searchBox != null && this.searchBox.charTyped(event)) {
+            return true;
+        }
+        return super.charTyped(event);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta, double scrollDeltaY) {
+        if (isMouseInList(mouseX, mouseY) || isMouseInScrollbar(mouseX, mouseY)) {
+            int maxOffset = Math.max(0, filtered.size() - VISIBLE_ROWS);
+            scrollOffset = Math.max(0, Math.min(maxOffset, scrollOffset - (int) Math.signum(scrollDeltaY)));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollDelta, scrollDeltaY);
+    }
+
+    private void renderList(GuiGraphicsExtractor gfx) {
+        int baseX = this.leftPos + LIST_X;
+        int baseY = this.topPos + LIST_Y;
+        for (int row = 0; row < VISIBLE_ROWS; row++) {
+            int idx = scrollOffset + row;
+            if (idx >= filtered.size()) break;
+            int y = baseY + row * ROW_H;
+            if (idx == selectedIndex) {
+                gfx.fill(baseX, y, baseX + LIST_W, y + ROW_H, 0x40FFFFFF);
+            }
+            LabelEntry e = filtered.get(idx);
+            String text = this.font.plainSubstrByWidth(e.label(), LIST_W - 2);
+            int ty = y + (ROW_H - this.font.lineHeight) / 2;
+            gfx.text(this.font, text, baseX + 2, ty, 0xFF404040, false);
+        }
+
+        // 信息显示
+        int infoX = this.leftPos + 134;
+        int infoY = this.topPos + 41;
+        float infoScale = getInfoScale();
+        String labelLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_label").getString() + ": " + (currentLabel == null || currentLabel.isEmpty() ? "-" : currentLabel);
+        String ownerLine = Component.translatable("gui.extendedae_plus.labeled_wireless.current_owner").getString() + ": " + (currentOwner == null || currentOwner.isEmpty() ? Component.translatable("extendedae_plus.jade.owner.public").getString() : currentOwner);
+        String onlineLine = Component.translatable("gui.extendedae_plus.labeled_wireless.online_count").getString() + ": " + onlineCount;
+        Component channelComp = maxChannels <= 0
+                ? Component.translatable("extendedae_plus.jade.channels", usedChannels)
+                : Component.translatable("extendedae_plus.jade.channels_of", usedChannels, maxChannels);
+        drawInfoLine(gfx, labelLine, infoX, infoY, infoScale);
+        drawInfoLine(gfx, ownerLine, infoX, infoY + 12, infoScale);
+        drawInfoLine(gfx, onlineLine, infoX, infoY + 24, infoScale);
+        drawInfoLine(gfx, channelComp.getString(), infoX, infoY + 36, infoScale);
+    }
+
+    private void renderScrollBar(GuiGraphicsExtractor gfx) {
+        int total = filtered.size();
+        if (total <= VISIBLE_ROWS) {
+            // 画静态条
+            gfx.fill(this.leftPos + SCROLL_X, this.topPos + SCROLL_Y, this.leftPos + SCROLL_X + SCROLL_W, this.topPos + SCROLL_Y + SCROLL_H, 0x20000000);
+            return;
+        }
+        int maxOffset = total - VISIBLE_ROWS;
+        int trackX1 = this.leftPos + SCROLL_X;
+        int trackY1 = this.topPos + SCROLL_Y;
+        int trackY2 = trackY1 + SCROLL_H;
+        gfx.fill(trackX1, trackY1, trackX1 + SCROLL_W, trackY2, 0x20000000);
+        int knobH = Math.max(10, (int) ((double) VISIBLE_ROWS / total * SCROLL_H));
+        int knobY = trackY1 + (int) ((SCROLL_H - knobH) * (scrollOffset / (double) maxOffset));
+        gfx.fill(trackX1, knobY, trackX1 + SCROLL_W, knobY + knobH, 0x80FFFFFF);
+    }
+
+    private boolean isMouseInList(double mouseX, double mouseY) {
+        return mouseX >= this.leftPos + LIST_X && mouseX < this.leftPos + LIST_X + LIST_W
+                && mouseY >= this.topPos + LIST_Y && mouseY < this.topPos + LIST_Y + LIST_H;
+    }
+
+    private boolean isMouseInScrollbar(double mouseX, double mouseY) {
+        return mouseX >= this.leftPos + SCROLL_X && mouseX < this.leftPos + SCROLL_X + SCROLL_W
+                && mouseY >= this.topPos + SCROLL_Y && mouseY < this.topPos + SCROLL_Y + SCROLL_H;
+    }
+
+    private void updateScrollByMouse(int mouseY) {
+        int total = filtered.size();
+        if (total <= VISIBLE_ROWS) return;
+        int maxOffset = total - VISIBLE_ROWS;
+        int relativeY = mouseY - (this.topPos + SCROLL_Y);
+        relativeY = Math.max(0, Math.min(SCROLL_H, relativeY));
+        int knobH = Math.max(10, (int) ((double) VISIBLE_ROWS / total * SCROLL_H));
+        double ratio = (relativeY - knobH / 2.0) / (double) (SCROLL_H - knobH);
+        ratio = Math.max(0.0, Math.min(1.0, ratio));
+        scrollOffset = (int) Math.round(ratio * maxOffset);
+    }
+
+    private void applyFilter() {
+        String prevSelected = lastSelectedLabel;
+        String q = searchBox.getValue() == null ? "" : searchBox.getValue().trim();
+        filtered.clear();
+        if (q.isEmpty()) {
+            filtered.addAll(entries);
+        } else {
+            for (LabelEntry e : entries) {
+                if (e.label().contains(q)) {
+                    filtered.add(e);
+                }
+            }
+        }
+        scrollOffset = 0;
+        selectedIndex = -1;
+        if (prevSelected != null && !prevSelected.isEmpty()) {
+            for (int i = 0; i < filtered.size(); i++) {
+                if (filtered.get(i).label().equals(prevSelected)) {
+                    selectedIndex = i;
+                    ensureSelectionVisible();
+                    break;
+                }
+            }
+        }
+    }
+
+    private void requestList() {
+        ClientPacketDistributor.sendToServer(new LabelNetworkListC2SPacket(bePos));
+    }
+
+    private void sendSet(String label) {
+        if (label == null) label = "";
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.SET));
+        this.lastSelectedLabel = label;
+        this.searchBox.setValue("");
+        requestList();
+    }
+
+    private void sendDelete() {
+        String label = getSelectedLabel();
+        if (label == null || label.isEmpty()) {
+            label = searchBox.getValue();
+        }
+        if (label == null) label = "";
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, label, LabelNetworkActionC2SPacket.Action.DELETE));
+        this.lastSelectedLabel = "";
+        requestList();
+    }
+
+    private void sendDisconnect() {
+        ClientPacketDistributor.sendToServer(new LabelNetworkActionC2SPacket(bePos, "", LabelNetworkActionC2SPacket.Action.DISCONNECT));
+        this.lastSelectedLabel = "";
+        requestList();
+    }
+
+    private String getSelectedLabel() {
+        if (selectedIndex >= 0 && selectedIndex < filtered.size()) {
+            return filtered.get(selectedIndex).label();
+        }
+        return "";
+    }
+
+    public void updateList(List<LabelNetworkRegistry.LabelNetworkSnapshot> list, String currentLabel, String ownerName, int usedChannels, int maxChannels, int onlineCount) {
+        String prevSelected = getSelectedLabel();
+        this.entries.clear();
+        for (LabelNetworkRegistry.LabelNetworkSnapshot s : list) {
+            this.entries.add(new LabelEntry(s.label(), s.channel()));
+        }
+        this.currentLabel = currentLabel == null ? "" : currentLabel;
+        this.currentOwner = ownerName == null ? "" : ownerName;
+        this.onlineCount = onlineCount;
+        this.usedChannels = usedChannels;
+        this.maxChannels = maxChannels;
+
+        if (prevSelected != null && !prevSelected.isEmpty()) {
+            this.lastSelectedLabel = prevSelected;
+        } else if (this.currentLabel != null && !this.currentLabel.isEmpty()) {
+            this.lastSelectedLabel = this.currentLabel;
+        } else {
+            this.lastSelectedLabel = "";
+        }
+        applyFilter();
+    }
+
+    public boolean isFor(BlockPos pos) {
+        return this.bePos.equals(pos);
+    }
+
+    private record LabelEntry(String label, long channel) {}
+
+    private void drawAllButtonText(GuiGraphicsExtractor gfx) {
+        int startX = this.leftPos + 145;
+        int startY = this.topPos + 101;
+        int hGap = 30;
+        int vGap = 8;
+        int secondColX = startX + BTN_W + hGap;
+        int secondRowY = startY + BTN_H + vGap;
+
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.new"), startX, startY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.delete"), secondColX, startY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.set"), startX, secondRowY);
+        drawButtonText(gfx, Component.translatable("gui.extendedae_plus.labeled_wireless.button.refresh"), secondColX, secondRowY);
+    }
+
+    private void drawButtonText(GuiGraphicsExtractor gfx, Component text, int x, int y) {
+        String s = this.font.plainSubstrByWidth(text.getString(), BTN_W - 4);
+        int tx = x + (BTN_W - this.font.width(s)) / 2;
+        int ty = y + (BTN_H - this.font.lineHeight) / 2 + 1;
+        gfx.text(this.font, s, tx, ty, 0xFFFFFFFF, false);
+    }
+
+    private void ensureSelectionVisible() {
+        if (selectedIndex < 0) return;
+        int maxOffset = Math.max(0, filtered.size() - VISIBLE_ROWS);
+        int targetRow = selectedIndex;
+        if (targetRow < scrollOffset) {
+            scrollOffset = targetRow;
+        } else if (targetRow >= scrollOffset + VISIBLE_ROWS) {
+            scrollOffset = Math.min(maxOffset, targetRow - VISIBLE_ROWS + 1);
+        }
+    }
+
+    private String trimInfo(String text, float scale) {
+        if (text == null) return "";
+        int maxWidth = (int) (INFO_MAX_WIDTH / Math.max(0.0001f, scale));
+        return this.font.plainSubstrByWidth(text, maxWidth);
+    }
+
+    private void drawInfoLine(GuiGraphicsExtractor gfx, String text, int x, int y, float scale) {
+        String trimmed = trimInfo(text, scale);
+        var pose = gfx.pose();
+        pose.pushMatrix();
+        pose.translate(x, y);
+        pose.scale(scale, scale);
+        gfx.text(this.font, trimmed, 0, 0, 0xFF404040, false);
+        pose.popMatrix();
+    }
+
+    private boolean isEnglish() {
+        Minecraft mc = Minecraft.getInstance();
+        var lang = mc.getLanguageManager().getSelected();
+        return lang != null && lang.equalsIgnoreCase("en_us");
+    }
+
+    private float getInfoScale() {
+        return isEnglish() ? 0.75f : 1.0f;
+    }
+
+    private float getTitleScale() {
+        return isEnglish() ? 0.75f : 1.0f;
+    }
+
+    private static class StateButton extends AbstractWidget {
+        private final Identifier tex;
+        private final int texW;
+        private final int texH;
+        private final int baseU;
+        private final int baseV;
+        private final int hoverU;
+        private final int hoverV;
+        private final int pressU;
+        private final int pressV;
+        private final Consumer<StateButton> onPress;
+        private boolean pressedVisual = false;
+
+        public StateButton(int x, int y, int w, int h, int baseU, int baseV, int hoverU, int hoverV, int pressU, int pressV,
+                           Identifier tex, int texW, int texH, Consumer<StateButton> onPress, Component tooltip) {
+            super(x, y, w, h, tooltip);
+            this.tex = tex;
+            this.texW = texW;
+            this.texH = texH;
+            this.baseU = baseU;
+            this.baseV = baseV;
+            this.hoverU = hoverU;
+            this.hoverV = hoverV;
+            this.pressU = pressU;
+            this.pressV = pressV;
+            this.onPress = onPress;
+            this.setTooltip(Tooltip.create(tooltip));
+        }
+
+        @Override
+        protected void extractWidgetRenderState(GuiGraphicsExtractor gfx, int mouseX, int mouseY, float partialTicks) {
+            boolean hovered = this.isHoveredOrFocused();
+            boolean pressed = pressedVisual;
+            int u = baseU;
+            int v = baseV;
+            if (pressed) {
+                u = pressU;
+                v = pressV;
+            } else if (hovered) {
+                u = hoverU;
+                v = hoverV;
+            }
+            gfx.blit(RenderPipelines.GUI_TEXTURED, tex,
+                    this.getX(), this.getY(), u, v,
+                    this.getWidth(), this.getHeight(), texW, texH);
+        }
+
+        @Override
+        public void onClick(MouseButtonEvent event, boolean doubleClick) {
+            this.pressedVisual = true;
+            this.onPress.accept(this);
+            this.playDownSound(Minecraft.getInstance().getSoundManager());
+        }
+
+        @Override
+        public void onRelease(MouseButtonEvent event) {
+            this.pressedVisual = false;
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
+            defaultButtonNarrationText(narration);
+        }
+    }
+}

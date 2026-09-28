@@ -1,0 +1,12 @@
+{
+  "type": "ae2:transform",
+  "ingredients": [
+    "extendedae:entro_crystal",
+    "minecraft:redstone",
+    "minecraft:ghast_tear"
+  ],
+  "result": {
+    "count": 2,
+    "id": "extendedae_plus:lattra_crystal"
+  }
+}

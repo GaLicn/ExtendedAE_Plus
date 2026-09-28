@@ -1,0 +1,14 @@
+{
+  "parent": "item/generated",
+  "overrides": [
+    { "predicate": { "extendedae_plus:mult": 2.0 }, "model": "extendedae_plus:item/entity_speed_card_x2" },
+    { "predicate": { "extendedae_plus:mult": 4.0 }, "model": "extendedae_plus:item/entity_speed_card_x4" },
+    { "predicate": { "extendedae_plus:mult": 8.0 }, "model": "extendedae_plus:item/entity_speed_card_x8" },
+    { "predicate": { "extendedae_plus:mult": 16.0 }, "model": "extendedae_plus:item/entity_speed_card_x16" }
+  ],
+  "textures": {
+    "layer0": "extendedae_plus:item/entity_speed_card_x2"
+  }
+}
+
+

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "ae2:semi_dark_monitor",
+    "ae2:pattern_provider",
+    "ae2:network_tool"
+  ],
+  "result": {
+    "id": "extendedae_plus:network_pattern_controller",
+    "count": 1
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "advanced_ae"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "extendedae_plus:basic_core",
+      "components": {
+        "extendedae_plus:core_type": "QUANTUM",
+        "extendedae_plus:core_stage": 1
+      }
+    },
+    "C": "advanced_ae:quantum_storage_component",
+    "M": "advanced_ae:quantum_alloy_block",
+    "O": "extendedae_plus:oblivion_singularity"
+  },
+  "pattern": [
+    "MOM",
+    "CBC",
+    "MOM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:basic_core",
+    "components": {
+      "extendedae_plus:core_type": "QUANTUM",
+      "extendedae_plus:core_stage": 2,
+      "minecraft:rarity": "uncommon"
+    }
+  },
+  "show_notification": true
+}

@@ -1,0 +1,26 @@
+{
+  "type": "extendedae:crystal_assembler",
+  "energy": 10000,
+  "input_fluid": {
+    "amount": 100,
+    "ingredient": "minecraft:water"
+  },
+  "input_items": [
+    {
+      "amount": 4,
+      "ingredient": "extendedae:entro_crystal"
+    },
+    {
+      "amount": 4,
+      "ingredient": "minecraft:redstone"
+    },
+    {
+      "amount": 4,
+      "ingredient": "minecraft:ghast_tear"
+    }
+  ],
+  "output": {
+    "count": 8,
+    "id": "extendedae_plus:lattra_crystal"
+  }
+}
