@@ -26,7 +26,6 @@ public class ModCheckUtils {
             MODID_MEGA = "megacells",
             MODID_MEKANISM = "mekanism",
             MODID_APPMEK = "appmek",
-            MODID_EPA = "expandedae";
             MODID_EPA = "expandedae",
             MODID_ECO = "neoecoae";
 
@@ -102,5 +101,9 @@ public class ModCheckUtils {
     public static boolean isAppMekLoading() {
         return ModCheckUtils.isLoaded(ModCheckUtils.MODID_MEKANISM)
                 && ModCheckUtils.isLoaded(ModCheckUtils.MODID_APPMEK);
+    }
+
+    public static boolean isECOLoading() {
+        return ModCheckUtils.isLoaded(ModCheckUtils.MODID_ECO);
     }
 }
