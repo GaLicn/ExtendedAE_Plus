@@ -2,8 +2,6 @@ package com.extendedae_plus.init;
 
 import appeng.menu.implementations.MenuTypeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.NetworkPatternControllerMenu;
@@ -33,12 +31,6 @@ public final class ModMenuTypes {
     public static final RegistryObject<MenuType<TagInventoryMEInterfaceMenu>> TAG_INVENTORY_ME_INTERFACE =
             MENUS.register("tag_inventory_me_interface",
                     () -> IForgeMenuType.create(TagInventoryMEInterfaceMenu::new));
-
-    public static final RegistryObject<MenuType<EntitySpeedTickerMenu>> ENTITY_TICKER_MENU =
-            MENUS.register("entity_speed_ticker",
-                    () -> MenuTypeBuilder
-                            .create(EntitySpeedTickerMenu::new, EntitySpeedTickerPart.class)
-                            .build("entity_speed_ticker"));
 
     public static final RegistryObject<MenuType<SuperAssemblerMatrixMenu>> SUPER_ASSEMBLER_MATRIX =
             MENUS.register("super_assembler_matrix",

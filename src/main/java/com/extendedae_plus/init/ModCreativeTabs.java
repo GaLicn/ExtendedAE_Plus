@@ -42,19 +42,6 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.MIRROR_PATTERN_BINDING_TOOL.get());
 
 
-                        //实体加速器&加速卡
-                        output.accept(ModItems.CRAFTING_ACCELERATOR_4x.get());
-                        output.accept(ModItems.CRAFTING_ACCELERATOR_16x.get());
-                        output.accept(ModItems.CRAFTING_ACCELERATOR_64x.get());
-                        output.accept(ModItems.CRAFTING_ACCELERATOR_256x.get());
-                        output.accept(ModItems.CRAFTING_ACCELERATOR_1024x.get());
-                        output.accept(ModItems.ENTITY_TICKER_PART_ITEM.get());
-
-                        // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
-                        output.accept(ModItems.createEntitySpeedCardStack(2));
-                        output.accept(ModItems.createEntitySpeedCardStack(4));
-                        output.accept(ModItems.createEntitySpeedCardStack(8));
-                        output.accept(ModItems.createEntitySpeedCardStack(16));
                         // 频道卡
                         output.accept(ModItems.CHANNEL_CARD.get());
                         output.accept(ModItems.VIRTUAL_CRAFTING_CARD.get());

@@ -8,7 +8,6 @@ import appeng.recipes.transform.TransformRecipeBuilder;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.appflux.common.AFItemAndBlock;
 import com.glodblock.github.extendedae.common.EPPItemAndBlock;
@@ -22,7 +21,6 @@ import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Blocks;
 import net.pedroksl.advanced_ae.common.definitions.AAEBlocks;
 import net.pedroksl.advanced_ae.common.definitions.AAEFluids;
 import net.pedroksl.advanced_ae.common.definitions.AAEItems;
@@ -82,20 +80,6 @@ public class CraftingRecipes extends RecipeProvider {
                            .define('L', AEBlocks.QUANTUM_LINK)
                            .unlockedBy("has_quantum_ring", has(AEBlocks.QUANTUM_RING))
                            .save(consumer);
-
-        // 实体加速器
-/*        NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC, ModItems.ENTITY_TICKER_PART_ITEM.get())
-                .pattern("SZS")
-                .pattern("QXQ")
-                .pattern("SIS")
-                .defineNbt('S', EntitySpeedCardItem.withMultiplier(2))
-                .define('Z', AEBlocks.DENSE_ENERGY_CELL)
-                .define('Q', AEItems.SINGULARITY)
-                .define('X', Items.NETHER_STAR)
-                .define('I', EPPItemAndBlock.EX_IO_PORT)
-                .unlockedBy("has_entity_speed_card_x2", has(EntitySpeedCardItem.withMultiplier(2).getItem()))
-                .unlockedBy("has_singularity", has(AEItems.SINGULARITY))
-                .save(consumer);*/
 
         // 上传核心
         ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get())
@@ -340,64 +324,7 @@ public class CraftingRecipes extends RecipeProvider {
                               .unlockedBy("has_virtual_crafting_card_ingredients", has(AEItems.ADVANCED_CARD))
                               .save(consumer);
 
-        // 2x Entity Speed Card
-        NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC, EntitySpeedCardItem.withMultiplier(2))
-                              .pattern("SBS")
-                              .pattern("QXQ")
-                              .pattern("SBS")
-                              .define('S', AEItems.SPEED_CARD)
-                              .define('B', ModItems.CRAFTING_ACCELERATOR_64x.get())
-                              .define('Q', AEItems.SPATIAL_2_CELL_COMPONENT)
-                              .define('X', AEItems.CELL_COMPONENT_256K)
-                              .unlockedBy("has_speed_card", has(AEItems.SPEED_CARD))
-                              .unlockedBy("has_64x_accelerator", has(ModItems.CRAFTING_ACCELERATOR_64x.get()))
-                              .save(consumer, ExtendedAEPlus.id("entity_speed_card_2x"));
-
-        // 4x Entity Speed Card
-        NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC, EntitySpeedCardItem.withMultiplier(4))
-                              .pattern("SBS")
-                              .pattern("QXQ")
-                              .pattern("SBS")
-                              .defineNbt('S', EntitySpeedCardItem.withMultiplier(2))
-                              .define('B', ModItems.CRAFTING_ACCELERATOR_256x.get())
-                              .define('Q', AEItems.SPATIAL_16_CELL_COMPONENT)
-                              .define('X', AEBlocks.DENSE_ENERGY_CELL)
-                              .unlockedBy("has_entity_speed_card_2x",
-                                          has(EntitySpeedCardItem.withMultiplier(2).getItem())
-                              )
-                              .save(consumer, ExtendedAEPlus.id("entity_speed_card_4x"));
-
-        // 8x Entity Speed Card
-        NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC, EntitySpeedCardItem.withMultiplier(8))
-                              .pattern("SBS")
-                              .pattern("QXQ")
-                              .pattern("SBS")
-                              .defineNbt('S', EntitySpeedCardItem.withMultiplier(4))
-                              .define('B', ModItems.CRAFTING_ACCELERATOR_1024x.get())
-                              .define('Q', AEItems.SPATIAL_128_CELL_COMPONENT)
-                              .define('X', Items.NETHER_STAR)
-                              .unlockedBy("has_entity_speed_card_4x",
-                                          has(EntitySpeedCardItem.withMultiplier(4).getItem())
-                              )
-                              .save(consumer, ExtendedAEPlus.id("entity_speed_card_8x"));
-
-        // 16x Entity Speed Card
-        NBTShapedRecipeBuilder.shaped(RecipeCategory.MISC,
-                                      EntitySpeedCardItem.withMultiplier(16)
-                              )
-                              .pattern("SAS")
-                              .pattern("QXQ")
-                              .pattern("SBS")
-                              .defineNbt('S', EntitySpeedCardItem.withMultiplier(8))
-                              .define('A', Items.NETHER_STAR)
-                              .define('Q', AEItems.SPATIAL_128_CELL_COMPONENT)
-                              .define('X', Items.DRAGON_EGG)
-                              .define('B', Blocks.BEACON)
-                              .unlockedBy("has_entity_speed_card_8x",
-                                          has(EntitySpeedCardItem.withMultiplier(8).getItem())
-                              )
-                              .save(consumer, ExtendedAEPlus.id("entity_speed_card_16x"));
-    }
+        }
 
     private void addAcceleratorCoreRecoveryRecipe(Consumer<FinishedRecipe> consumer, String acceleratorName,
                                                   ItemLike accelerator, ItemLike component) {

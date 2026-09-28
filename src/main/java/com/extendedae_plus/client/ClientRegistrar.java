@@ -3,8 +3,6 @@ package com.extendedae_plus.client;
 import appeng.client.render.crafting.CraftingCubeModel;
 import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.menu.EntitySpeedTickerMenu;
-import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
@@ -14,11 +12,8 @@ import com.extendedae_plus.menu.SuperAssemblerMatrixMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
-import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -35,9 +30,6 @@ public final class ClientRegistrar {
     public static void initBuiltInModels() {
         if (REGISTERED) return;
         REGISTERED = true;
-        // 注册 Item property，用于根据 ItemStack 的 NBT exponent 切换模型
-        ItemProperties.register(ModItems.ENTITY_SPEED_CARD.get(), ExtendedAEPlus.id("mult"),
-                (stack, world, entity, seed) -> (float) EntitySpeedCardItem.readMultiplier(stack));
         // 注册四种形成态模型为内置模型
         BuiltInModelHooks.addBuiltInModel(
                 ExtendedAEPlus.id("block/crafting/4x_accelerator_formed_v2"),
@@ -73,9 +65,6 @@ public final class ClientRegistrar {
      * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
      */
     public static void registerInitScreens() {
-        InitScreens.register(ModMenuTypes.ENTITY_TICKER_MENU.get(),
-                EntitySpeedTickerScreen<EntitySpeedTickerMenu>::new,
-                "/screens/entity_speed_ticker.json");
         InitScreens.register(ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(),
                 SuperAssemblerMatrixScreen::new,
                 "/screens/super_assembler_matrix.json");

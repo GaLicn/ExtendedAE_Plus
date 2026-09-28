@@ -152,12 +152,6 @@ public final class ModNetwork {
                 .consumerNetworkThread(SetGlobalScalingLimitC2SPacket::handle)
                 .add();
 
-        CHANNEL.messageBuilder(ToggleEntityTickerC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
-                .encoder(ToggleEntityTickerC2SPacket::encode)
-                .decoder(ToggleEntityTickerC2SPacket::decode)
-                .consumerNetworkThread(ToggleEntityTickerC2SPacket::handle)
-                .add();
-
         CHANNEL.messageBuilder(InterfaceAdjustConfigAmountC2SPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .encoder(InterfaceAdjustConfigAmountC2SPacket::encode)
                 .decoder(InterfaceAdjustConfigAmountC2SPacket::decode)

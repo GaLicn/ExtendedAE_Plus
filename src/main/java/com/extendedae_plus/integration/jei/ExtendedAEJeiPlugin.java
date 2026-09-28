@@ -3,7 +3,6 @@ package com.extendedae_plus.integration.jei;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.extendedae.xmod.jei.recipe.CircuitCutterCategory;
 import mezz.jei.api.IModPlugin;
@@ -29,12 +28,6 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        // Entity Speed Card
-        registration.registerSubtypeInterpreter(
-                ModItems.ENTITY_SPEED_CARD.get(),
-                (stack, ctx) -> String.valueOf(EntitySpeedCardItem.readMultiplier(stack))
-        );
-
         // Basic Core – 使用 CustomModelData + core_stage
         registration.registerSubtypeInterpreter(
                 ModItems.BASIC_CORE.get(),

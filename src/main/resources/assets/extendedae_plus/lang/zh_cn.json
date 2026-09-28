@@ -29,12 +29,6 @@
   "item.extendedae_plus.fish_dan_": "Fish_Dan_ 玩偶",
   "item.extendedae_plus._leng": "麦激凌 玩偶",
   "item.extendedae_plus.xbai": "Xbai 玩偶",
-  "item.extendedae_plus.entity_speed_card": "实体加速卡",
-  "item.extendedae_plus.entity_speed_card.x1": "§k§l?#@§r§8不§k§l1§r限§k§l0§r存于§k§l%§r现实的§c实§k&0%§r体加§k§l*§r速卡§k§l...§r",
-  "item.extendedae_plus.entity_speed_card.x2": "实体加速卡 (x2)",
-  "item.extendedae_plus.entity_speed_card.x4": "实体加速卡 (x4)",
-  "item.extendedae_plus.entity_speed_card.x8": "实体加速卡 (x8)",
-  "item.extendedae_plus.entity_speed_card.x16": "实体加速卡 (x16)",
   "item.extendedae_plus.basic_core": "基础核心",
   "item.extendedae_plus.storage_core": "存储核心",
   "item.extendedae_plus.energy_storage_core": "能源存储核心",
@@ -70,8 +64,7 @@
   "tooltip.extendedae_plus.basic_core.progress": "构建进度：",
   "tooltip.extendedae_plus.basic_core.ready_to_craft": "核心构建完成，等待最终合成",
   "tooltip.extendedae_plus.infinity_biginteger_cell": "§7——§b绝对存储的现实投影，§e\"有限\"§6已被定义为§c非法\n§b其存在本身，即是对§d熵增§b的终极否定",
-  "tooltip.extendedae_plus.entity_speed_card.multiplier": "乘数: %s",
-  "tooltip.extendedae_plus.entity_speed_card.max": "最大生效: %s 倍",
+  
   "extendedae_plus.tooltip.swap_processing_outputs": "主副切换",
   "extendedae_plus.tooltip.restore_processing_ratio": "恢复比例",
 
@@ -187,18 +180,6 @@
   "extendedae_plus.button.return_last_pattern":"取回上一个上传样板",
   "extendedae_plus.pattern.hovertext.player": "由 %s 编码",
 
-  "item.extendedae_plus.entity_speed_ticker": "实体加速器",
-  "screen.extendedae_plus.entity_speed_ticker.enable": "§c§l机器已被禁用",
-  "screen.extendedae_plus.entity_speed_ticker.energy": "能耗: %s FE/t",
-  "screen.extendedae_plus.entity_speed_ticker.power_ratio": "功耗比例: %s",
-  "screen.extendedae_plus.entity_speed_ticker.speed": "当前加速倍率: %d",
-  "screen.extendedae_plus.entity_speed_ticker.multiplier": "额外消耗倍率: %s",
-  "screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient": "§c§l网络能量不足",
-
-  "item.extendedae_plus.entity_speed_ticker.tip.requirement": "需要放入实体加速卡以启用加速",
-  "item.extendedae_plus.entity_speed_ticker.tip.max": "最高可达 1024x 加速",
-  "item.extendedae_plus.entity_speed_ticker.tip.energy": "加速将消耗 AE 网络能量，网络能量不足时无法加速",
-
   "config.screen.extendedae_plus": "ExtendedAE Plus 配置",
   "config.extendedae_plus.option.wirelessMaxRange": "无线最大距离",
   "config.extendedae_plus.option.wirelessMaxRange_with_range": "无线最大距离",
@@ -212,10 +193,6 @@
   "config.extendedae_plus.option.smartScalingMaxMultiplier": "智能倍增最大倍数",
   "config.extendedae_plus.option.smartScalingMaxMultiplier_with_range": "智能倍增最大倍数",
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "智能倍增最小收益因子",
-  "config.extendedae_plus.option.entityTickerCost": "实体加速器能量消耗基础值",
-  "config.extendedae_plus.option.entityTickerBlackList": "实体加速器黑名单",
-  "config.extendedae_plus.option.entityTickerMultipliers": "实体加速器额外消耗倍率",
-  "config.extendedae_plus.option.prioritizeDiskEnergy": "优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE合成计算暂停检查阈值",
   "config.extendedae_plus.option.wirelessTransceiverIdlePower": "无线收发器能耗",
 
@@ -250,7 +227,7 @@
   "extendedae_plus.screen.frequency_input.confirm": "确认",
   
   "group.pattern_provider.name": "样板供应器",
-  "group.entity_ticker.name": "实体加速器",
+  
   "group.storage.name": "存储总线",
 
   "extendedae_plus.chat.wireless_transceiver.locked": "收发器已锁定，无法修改",

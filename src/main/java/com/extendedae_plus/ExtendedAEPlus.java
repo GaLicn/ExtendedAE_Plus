@@ -257,8 +257,6 @@ public class ExtendedAEPlus {
             evt.register("matrix_frame", new MatrixFrameModel.Loader());
             try {
                 ClientRegistrar.initBuiltInModels();
-                // 注册 AE2 部件模型（例如 entity_ticker_part_item），仿照 CrazyAddons 的做法
-                ModItems.registerPartModels();
             } catch (Exception ignored) {}
         }
 

@@ -29,12 +29,6 @@
   "item.extendedae_plus.fish_dan_": "Fish Dan Doll",
   "item.extendedae_plus._leng": "_leng Doll",
   "item.extendedae_plus.xbai": "Xbai Doll",
-  "item.extendedae_plus.entity_speed_card": "Entity Acceleration Card",
-  "item.extendedae_plus.entity_speed_card.x1": "§k§l?#@§r§8Should not be stored in §k§l%§r real §centity §k&0%§r speed §k§l*§r cards§k§l...§r",
-  "item.extendedae_plus.entity_speed_card.x2": "Entity Acceleration Card (x2)",
-  "item.extendedae_plus.entity_speed_card.x4": "Entity Acceleration Card (x4)",
-  "item.extendedae_plus.entity_speed_card.x8": "Entity Acceleration Card (x8)",
-  "item.extendedae_plus.entity_speed_card.x16": "Entity Acceleration Card (x16)",
   "item.extendedae_plus.basic_core": "Basic Core",
   "item.extendedae_plus.storage_core": "Storage Core",
   "item.extendedae_plus.energy_storage_core": "Energy Storage Core",
@@ -72,8 +66,7 @@
   "tooltip.extendedae_plus.basic_core.progress": "Construction Progress: ",
   "tooltip.extendedae_plus.basic_core.ready_to_craft": "Core construction complete. Awaiting final synthesis",
   "tooltip.extendedae_plus.infinity_biginteger_cell": "§7—§bThe tangible projection of absolute storage§r, §ewhere '§6The Finite§e' §chas been deemed illegal§r\n§bIts very existence§r §bis the ultimate negation of §dentropy§r",
-  "tooltip.extendedae_plus.entity_speed_card.multiplier": "Multiplier: %s",
-  "tooltip.extendedae_plus.entity_speed_card.max": "Max effective: %s x",
+  
   "extendedae_plus.tooltip.swap_processing_outputs": "Swap Primary/Secondary Outputs",
   "extendedae_plus.tooltip.restore_processing_ratio": "Restore Simplified Ratio",
 
@@ -188,18 +181,6 @@
   "extendedae_plus.button.return_last_pattern": "Return Last Uploaded Pattern",
   "extendedae_plus.pattern.hovertext.player": "Encoded by %s",
 
-  "item.extendedae_plus.entity_speed_ticker": "Entity Speed Ticker",
-  "screen.extendedae_plus.entity_speed_ticker.enable": "§c§lThe machine has been disabled",
-  "screen.extendedae_plus.entity_speed_ticker.energy": "Energy Usage: %s FE/t",
-  "screen.extendedae_plus.entity_speed_ticker.power_ratio": "Power ratio: %s",
-  "screen.extendedae_plus.entity_speed_ticker.speed": "Current speed multiplier: %d",
-  "screen.extendedae_plus.entity_speed_ticker.multiplier": "Extra consumption multiplier: %s",
-  "screen.extendedae_plus.entity_speed_ticker.warning_network_energy_insufficient": "§c§lInsufficient network energy",
-
-  "item.extendedae_plus.entity_speed_ticker.tip.requirement": "Requires Entity Acceleration Card(s) to enable acceleration",
-  "item.extendedae_plus.entity_speed_ticker.tip.max": "Maximum up to 1024x speed",
-  "item.extendedae_plus.entity_speed_ticker.tip.energy": "Acceleration consumes AE network power; insufficient power disables acceleration",
-
   "config.screen.extendedae_plus": "ExtendedAE Plus Config",
   "config.extendedae_plus.option.wirelessMaxRange": "Wireless Max Range",
   "config.extendedae_plus.option.wirelessMaxRange_with_range": "Wireless Max Range",
@@ -213,11 +194,7 @@
   "config.extendedae_plus.option.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
   "config.extendedae_plus.option.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier",
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "Smart Scaling Min Benefit Factor",
-  "config.extendedae_plus.option.entityTickerCost": "Entity Ticker Base Energy Cost",
-  "config.extendedae_plus.option.entityTickerBlackList": "Entity Ticker Blacklist",
-  "config.extendedae_plus.option.entityTickerMultipliers": "Entity Ticker Extra Consumption Multipliers",
   "config.extendedae_plus.option.craftingPauseThreshold": "AE synthesis calculation pause check threshold",
-  "config.extendedae_plus.option.prioritizeDiskEnergy": "Prioritize FE energy from disk (requires Applied Flux)",
   "config.extendedae_plus.option.wirelessTransceiverIdlePower": "Wireless Transceiver Idle Power",
 
   "item.extendedae_plus.channel_card": "Channel Card",
@@ -251,7 +228,7 @@
   "extendedae_plus.screen.frequency_input.confirm": "Confirm",
 
   "group.pattern_provider.name": "Pattern Provider",
-  "group.entity_ticker.name": "Entity Accelerator",
+  
   "group.storage.name": "StorageBus",
 
   "extendedae_plus.chat.wireless_transceiver.locked": "Transceiver locked, cannot modify",
