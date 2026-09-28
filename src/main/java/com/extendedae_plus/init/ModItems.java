@@ -1,0 +1,273 @@
+package com.extendedae_plus.init;
+
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
+import com.extendedae_plus.items.BasicCoreItem;
+import com.extendedae_plus.items.EntitySpeedTickerPartItem;
+import com.extendedae_plus.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.materials.ChannelCardItem;
+import com.extendedae_plus.items.materials.EntitySpeedCardItem;
+import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
+import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
+import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
+import com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem;
+import com.extendedae_plus.util.ModCheckUtils;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+public final class ModItems {
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ExtendedAEPlus.MODID);
+
+    private static Item.Properties properties(Identifier id) {
+        return new Item.Properties().setId(ResourceKey.create(Registries.ITEM, id));
+    }
+    public static final DeferredItem<Item> WIRELESS_TRANSCEIVER = ITEMS.register(
+            "wireless_transceiver",
+            id -> new BlockItem(ModBlocks.WIRELESS_TRANSCEIVER.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LABELED_WIRELESS_TRANSCEIVER = ITEMS.register(
+            "labeled_wireless_transceiver",
+            id -> new BlockItem(ModBlocks.LABELED_WIRELESS_TRANSCEIVER.get(), properties(id))
+    );
+    // Crafting Accelerators
+    public static final DeferredItem<Item> ACCELERATOR_4x = ITEMS.register(
+            "4x_crafting_accelerator",
+            id -> new BlockItem(ModBlocks.ACCELERATOR_4x.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ACCELERATOR_16x = ITEMS.register(
+            "16x_crafting_accelerator",
+            id -> new BlockItem(ModBlocks.ACCELERATOR_16x.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ACCELERATOR_64x = ITEMS.register(
+            "64x_crafting_accelerator",
+            id -> new BlockItem(ModBlocks.ACCELERATOR_64x.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ACCELERATOR_256x = ITEMS.register(
+            "256x_crafting_accelerator",
+            id -> new BlockItem(ModBlocks.ACCELERATOR_256x.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ACCELERATOR_1024x = ITEMS.register(
+            "1024x_crafting_accelerator",
+            id -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), properties(id))
+    );
+    public static final DeferredItem<EntitySpeedTickerPartItem> ENTITY_TICKER_PART_ITEM = ITEMS.register(
+            "entity_speed_ticker",
+            id -> new EntitySpeedTickerPartItem(properties(id))
+    );
+    // AE Upgrade Cards: 实体加速卡（四个等级：x2,x4,x8,x16）
+    // 单一实体加速卡 Item（不同等级由 ItemStack.nbt 存储）
+    public static final DeferredItem<EntitySpeedCardItem> ENTITY_SPEED_CARD = ITEMS.register(
+            "entity_speed_card",
+            id -> new EntitySpeedCardItem(properties(id))
+    );
+    // 频道卡：用于AE机器的无线频道连接
+    public static final DeferredItem<ChannelCardItem> CHANNEL_CARD = ITEMS.register(
+            "channel_card",
+            id -> new ChannelCardItem(properties(id))
+    );
+    public static final DeferredItem<VirtualCraftingCardItem> VIRTUAL_CRAFTING_CARD = ITEMS.register(
+            "virtual_crafting_card",
+            id -> new VirtualCraftingCardItem(properties(id))
+    );
+    public static final DeferredItem<ExtendedPatternProviderExpansionCardItem> EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS = ITEMS.register(
+            "extended_pattern_provider_expansion_card_plus",
+            id -> new ExtendedPatternProviderExpansionCardItem(properties(id))
+    );
+    // 装配矩阵上传核心物品
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_UPLOAD_CORE = ITEMS.register(
+            "assembler_matrix_upload_core",
+            id -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get(), properties(id))
+    );
+    //超级装配矩阵速度核心
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_SPEED_PLUS = ITEMS.register(
+            "assembler_matrix_speed_plus",
+            id -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_SPEED_PLUS.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_CRAFTER_PLUS = ITEMS.register(
+            "assembler_matrix_crafter_plus",
+            id -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_CRAFTER_PLUS.get(),  properties(id))
+    );
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_PATTERN_PLUS = ITEMS.register(
+            "assembler_matrix_pattern_plus",
+            id -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_PATTERN_PLUS.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ASSEMBLER_MATRIX_HYBRID_PLUS = ITEMS.register(
+            "assembler_matrix_hybrid_plus",
+            id -> new BlockItem(ModBlocks.ASSEMBLER_MATRIX_HYBRID_PLUS.get(), properties(id))
+    );
+    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_FRAME = ITEMS.register(
+            "super_assembler_matrix_frame",
+            id -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get(), properties(id))
+    );
+    public static final DeferredItem<Item> SUPER_ASSEMBLER_MATRIX_WALL = ITEMS.register(
+            "super_assembler_matrix_wall",
+            id -> new BlockItem(ModBlocks.SUPER_ASSEMBLER_MATRIX_WALL.get(), properties(id))
+    );
+    public static final DeferredItem<Item> MIRROR_PATTERN_PROVIDER = ITEMS.register(
+            "mirror_pattern_provider",
+            id -> new BlockItem(ModBlocks.MIRROR_PATTERN_PROVIDER_BLOCK.get(), properties(id))
+    );
+    public static final DeferredItem<Item> TAG_INVENTORY_ME_INTERFACE = ITEMS.register(
+            "tag_inventory_me_interface",
+            id -> new BlockItem(ModBlocks.TAG_INVENTORY_ME_INTERFACE.get(), properties(id))
+    );
+    public static final DeferredItem<Item> CRYSTAL_ASSEMBLER_PLUS = ITEMS.register(
+            "crystal_assembler_plus",
+            id -> new BlockItem(ModBlocks.CRYSTAL_ASSEMBLER_PLUS.get(), properties(id))
+    );
+    public static final DeferredItem<Item> CIRCUIT_CUTTER_PLUS = ITEMS.register(
+            "circuit_cutter_plus",
+            id -> new BlockItem(ModBlocks.CIRCUIT_CUTTER_PLUS.get(), properties(id))
+    );
+    public static final DeferredItem<Item> DISGUISED_BLOCK = ITEMS.register(
+            "disguised_block",
+            id -> new BlockItem(ModBlocks.DISGUISED_BLOCK.get(), properties(id))
+    );
+    public static final DeferredItem<Item> C_H716 = ITEMS.register(
+            "c-h716",
+            id -> new BlockItem(ModBlocks.C_H716.get(), properties(id))
+    );
+    public static final DeferredItem<Item> FISH_DAN = ITEMS.register(
+            "fish_dan_",
+            id -> new BlockItem(ModBlocks.FISH_DAN.get(), properties(id))
+    );
+    public static final DeferredItem<Item> _LENG = ITEMS.register(
+            "_leng",
+            id -> new BlockItem(ModBlocks._LENG.get(), properties(id))
+    );
+    public static final DeferredItem<Item> XBAI = ITEMS.register(
+            "xbai",
+            id -> new BlockItem(ModBlocks.XBAI.get(), properties(id))
+    );
+    public static final DeferredItem<MirrorPatternBindingToolItem> MIRROR_PATTERN_BINDING_TOOL = ITEMS.register(
+            "mirror_pattern_binding_tool",
+            id -> new MirrorPatternBindingToolItem(properties(id))
+    );
+    public static final DeferredItem<UltimateSuperAssemblerMatrixBuilderItem> ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER = ITEMS.register(
+            "ultimate_super_assembler_matrix_builder",
+            id -> new UltimateSuperAssemblerMatrixBuilderItem(properties(id).rarity(Rarity.EPIC))
+    );
+    static final DeferredItem<Item> NETWORK_PATTERN_CONTROLLER = ITEMS.register(
+            "network_pattern_controller",
+            id -> new BlockItem(ModBlocks.NETWORK_PATTERN_CONTROLLER.get(), properties(id))
+    );
+    public static final DeferredItem<Item> INFINITY_BIGINTEGER_CELL_ITEM = ITEMS.register(
+            "infinity_biginteger_cell", id -> new InfinityBigIntegerCellItem(properties(id))
+    );
+
+    // ==================== 基础核心及相关物品 ====================
+    // 基础核心 - 用于合成各种高级核心，稀有度由DataComponent动态设置
+    public static final DeferredItem<BasicCoreItem> BASIC_CORE = ITEMS.register(
+            "basic_core",
+            id -> new BasicCoreItem(properties(id))
+    );
+    // 存储核心
+    public static final DeferredItem<Item> STORAGE_CORE = ITEMS.register(
+            "storage_core",
+            id -> new Item(properties(id).fireResistant().rarity(Rarity.EPIC))
+    );
+    // 空间核心
+    public static final DeferredItem<Item> SPATIAL_CORE = ITEMS.register(
+            "spatial_core",
+            id -> new Item(properties(id).fireResistant().rarity(Rarity.EPIC))
+    );
+    // 吞噬核心
+    public static final DeferredItem<Item> INFINITY_CORE = ITEMS.register(
+            "infinity_core",
+            id -> new Item(properties(id).fireResistant().rarity(Rarity.EPIC))
+    );
+    // 湮灭奇点
+    public static final DeferredItem<Item> OBLIVION_SINGULARITY = ITEMS.register(
+            "oblivion_singularity",
+            id -> new Item(properties(id).fireResistant().rarity(Rarity.RARE))
+    );
+    // 莱卓罗水晶暂作为基础材料注册，工具和其余衍生物留待后续实现。
+    public static final DeferredItem<Item> LATTRA_CRYSTAL = ITEMS.register(
+            "lattra_crystal",
+            id -> new Item(properties(id).rarity(Rarity.UNCOMMON))
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BLOCK = ITEMS.register(
+            "lattra_crystal_block",
+            id -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BLOCK.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_DUST = ITEMS.register(
+            "lattra_dust",
+            id -> new Item(properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_HARDLY = ITEMS.register(
+            "lattra_budding_hardly",
+            id -> new BlockItem(ModBlocks.LATTRA_BUDDING_HARDLY.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_HALF = ITEMS.register(
+            "lattra_budding_half",
+            id -> new BlockItem(ModBlocks.LATTRA_BUDDING_HALF.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_MOSTLY = ITEMS.register(
+            "lattra_budding_mostly",
+            id -> new BlockItem(ModBlocks.LATTRA_BUDDING_MOSTLY.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_BUDDING_FULLY = ITEMS.register(
+            "lattra_budding_fully",
+            id -> new BlockItem(ModBlocks.LATTRA_BUDDING_FULLY.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_SMALL = ITEMS.register(
+            "lattra_crystal_bud_small",
+            id -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_SMALL.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_MEDIUM = ITEMS.register(
+            "lattra_crystal_bud_medium",
+            id -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_MEDIUM.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_BUD_LARGE = ITEMS.register(
+            "lattra_crystal_bud_large",
+            id -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_BUD_LARGE.get(), properties(id))
+    );
+    public static final DeferredItem<Item> LATTRA_CRYSTAL_CLUSTER = ITEMS.register(
+            "lattra_crystal_cluster",
+            id -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_CLUSTER.get(), properties(id))
+    );
+    public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
+    public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
+
+    static {
+        // 能源存储核心 - 需要AppFlux模组
+        if (ModCheckUtils.isAppfluxLoading()) {
+            ENERGY_STORAGE_CORE = ITEMS.register(
+                    "energy_storage_core",
+                    id -> new Item(properties(id).fireResistant().rarity(Rarity.EPIC))
+            );
+        } else {
+            ENERGY_STORAGE_CORE = null;
+        }
+
+        // 量子存储核心 - 需要AdvancedAE模组
+        if (ModCheckUtils.isAAELoading()) {
+            QUANTUM_STORAGE_CORE = ITEMS.register(
+                    "quantum_storage_core",
+                    id -> new Item(properties(id).fireResistant().rarity(Rarity.EPIC))
+            );
+        } else {
+            QUANTUM_STORAGE_CORE = null;
+        }
+    }
+
+    private ModItems() {}
+
+    /** Part model registration is handled by AE2's 26.1.10 model event. */
+    public static void registerPartModels() {
+    }
+
+    /**
+     * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
+     */
+    static ItemStack createEntitySpeedCardStack(byte multiplier) {
+        return EntitySpeedCardItem.withMultiplier(multiplier);
+    }
+}

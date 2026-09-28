@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "extendedae_plus:lattra_crystal",
+    "B": "minecraft:iron_ingot",
+    "C": "extendedae:assembler_matrix_wall"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:super_assembler_matrix_wall"
+  }
+}

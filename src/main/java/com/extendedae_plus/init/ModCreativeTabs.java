@@ -1,0 +1,85 @@
+package com.extendedae_plus.init;
+
+import com.extendedae_plus.ExtendedAEPlus;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.List;
+
+public final class ModCreativeTabs {
+    public static final DeferredRegister<CreativeModeTab> TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ExtendedAEPlus.MODID);
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MAIN = TABS.register("main",
+            () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup." + ExtendedAEPlus.MODID + ".main"))
+                    .icon(() -> ModItems.WIRELESS_TRANSCEIVER.get().getDefaultInstance())
+                    .displayItems((params, output) -> {
+                        List.of(
+                                ModItems.WIRELESS_TRANSCEIVER.get().getDefaultInstance(),
+                                ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance(),
+                                ModItems.NETWORK_PATTERN_CONTROLLER.get().getDefaultInstance(),
+                                ModItems.ACCELERATOR_4x.get().getDefaultInstance(),
+                                ModItems.ACCELERATOR_16x.get().getDefaultInstance(),
+                                ModItems.ACCELERATOR_64x.get().getDefaultInstance(),
+                                ModItems.ACCELERATOR_256x.get().getDefaultInstance(),
+                                ModItems.ACCELERATOR_1024x.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get().getDefaultInstance(),
+                                ModItems.CHANNEL_CARD.get().getDefaultInstance(),
+                                ModItems.VIRTUAL_CRAFTING_CARD.get().getDefaultInstance(),
+                                ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get().getDefaultInstance(),
+                                ModItems.ENTITY_TICKER_PART_ITEM.get().getDefaultInstance(),
+                                ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_PATTERN_PLUS.get().getDefaultInstance(),
+                                ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get().getDefaultInstance(),
+                                ModItems.SUPER_ASSEMBLER_MATRIX_FRAME.get().getDefaultInstance(),
+                                ModItems.SUPER_ASSEMBLER_MATRIX_WALL.get().getDefaultInstance(),
+                                ModItems.MIRROR_PATTERN_PROVIDER.get().getDefaultInstance(),
+                                ModItems.TAG_INVENTORY_ME_INTERFACE.get().getDefaultInstance(),
+                                ModItems.CRYSTAL_ASSEMBLER_PLUS.get().getDefaultInstance(),
+                                ModItems.CIRCUIT_CUTTER_PLUS.get().getDefaultInstance(),
+                                ModItems.DISGUISED_BLOCK.get().getDefaultInstance(),
+                                ModItems.C_H716.get().getDefaultInstance(),
+                                ModItems.FISH_DAN.get().getDefaultInstance(),
+                                ModItems._LENG.get().getDefaultInstance(),
+                                ModItems.XBAI.get().getDefaultInstance(),
+                                ModItems.MIRROR_PATTERN_BINDING_TOOL.get().getDefaultInstance(),
+                                ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get().getDefaultInstance(),
+                                // 基础核心相关物品
+                                ModItems.OBLIVION_SINGULARITY.get().getDefaultInstance(),
+                                ModItems.BASIC_CORE.get().getDefaultInstance(),
+                                ModItems.STORAGE_CORE.get().getDefaultInstance(),
+                                ModItems.SPATIAL_CORE.get().getDefaultInstance(),
+                                ModItems.INFINITY_CORE.get().getDefaultInstance(),
+                                ModItems.LATTRA_CRYSTAL.get().getDefaultInstance(),
+                                ModItems.LATTRA_CRYSTAL_BLOCK.get().getDefaultInstance(),
+                                ModItems.LATTRA_DUST.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_HARDLY.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_HALF.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_MOSTLY.get().getDefaultInstance(),
+                                ModItems.LATTRA_BUDDING_FULLY.get().getDefaultInstance()
+                        ).forEach(output::accept);
+
+                        if (ModItems.ENERGY_STORAGE_CORE != null) {
+                            output.accept(ModItems.ENERGY_STORAGE_CORE.get());
+                        }
+                        if (ModItems.QUANTUM_STORAGE_CORE != null) {
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
+                        }
+
+                        // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
+                        for (byte multiplier : new byte[] {2, 4, 8, 16}) {
+                            ItemStack stack = ModItems.createEntitySpeedCardStack(multiplier);
+                            output.accept(stack);
+                        }
+                    })
+                    .build());
+
+    private ModCreativeTabs() {
+    }
+}

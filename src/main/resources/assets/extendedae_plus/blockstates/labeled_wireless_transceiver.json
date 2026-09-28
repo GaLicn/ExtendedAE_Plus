@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "state=false": {
+      "model": "extendedae_plus:block/wirelesstransceiver/lable_wireless_transceiver_off"
+    },
+    "state=true": {
+      "model": "extendedae_plus:block/wirelesstransceiver/lable_wireless_transceiver_on"
+    }
+  }
+}

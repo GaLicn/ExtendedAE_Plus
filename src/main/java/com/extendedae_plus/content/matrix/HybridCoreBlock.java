@@ -1,0 +1,36 @@
+package com.extendedae_plus.content.matrix;
+
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
+import com.extendedae_plus.init.ModItems;
+import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.redstone.Orientation;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+/** 超级装配矩阵的混合核心方块。 */
+public class HybridCoreBlock extends BlockAssemblerMatrixBase<HybridCoreBlockEntity> {
+
+    public HybridCoreBlock(Properties props) {
+        super(props);
+    }
+
+    @Override
+    public Item getPresentItem() {
+        return ModItems.ASSEMBLER_MATRIX_HYBRID_PLUS.get();
+    }
+
+    @Override
+    public void neighborChanged(@NotNull BlockState state, @NotNull Level level, @NotNull BlockPos pos,
+            @NotNull Block block, @Nullable Orientation orientation, boolean isMoving) {
+        super.neighborChanged(state, level, pos, block, orientation, isMoving);
+        if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {
+            SuperAssemblerMatrixCalculator.scheduleAfterNeighborChange(serverLevel, pos, pos);
+        }
+    }
+}

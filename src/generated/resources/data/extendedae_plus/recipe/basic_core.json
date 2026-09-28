@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:netherite_block",
+    "B": "minecraft:nether_star",
+    "C": "ae2:logic_processor",
+    "D": "ae2:fluix_pearl",
+    "E": "ae2:engineering_processor",
+    "F": "ae2:calculation_processor"
+  },
+  "pattern": [
+    "ABA",
+    "CDE",
+    "AFA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:basic_core"
+  }
+}

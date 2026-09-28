@@ -1,0 +1,15 @@
+{
+  "type": "ae2:transform",
+  "circumstance": {
+    "type": "explosion"
+  },
+  "ingredients": [
+    "ae2:singularity",
+    "minecraft:nether_star",
+    "minecraft:netherite_block"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:oblivion_singularity"
+  }
+}

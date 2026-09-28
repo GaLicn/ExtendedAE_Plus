@@ -1,0 +1,266 @@
+# 发布前必须配置：
+# 1. GitHub 仓库变量（Settings -> Secrets and variables -> Actions -> Variables）：
+#    CURSEFORGE_PROJECT_ID  CurseForge 项目 ID
+#    MODRINTH_PROJECT_ID    Modrinth 项目 ID 或项目 slug
+# 2. GitHub 仓库 Secrets（Settings -> Secrets and variables -> Actions -> Secrets）：
+#    CURSEFORGE_TOKEN       CurseForge API Token
+#    MODRINTH_TOKEN         Modrinth Personal Access Token（需要创建版本/上传权限）
+# 3. gradle.properties 中必须维护以下参数：
+#    mod_id、mod_loader、mod_name、mod_version、minecraft_version
+# 4. 自动发布要求 push 提交信息匹配“更新.+版本”；也可以通过 workflow_dispatch 手动发布。
+
+name: Release Mods
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: CurseForge release type
+        required: true
+        type: choice
+        default: release
+        options:
+          - release
+          - beta
+          - alpha
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Check Trigger
+    if: github.ref_protected == true
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
+      release_type: ${{ steps.check.outputs.release_type }}
+
+    steps:
+      - name: Check commit message
+        id: check
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            should_publish="true"
+            release_type="${{ inputs.version_type }}"
+          else
+            commit_message="${{ github.event.head_commit.message }}"
+            # 兼容原格式，以及追加“;日志:<修订号>”的指定日志格式。
+            if [[ "${commit_message}" =~ ^更新.+版本([;；]日志:[^[:space:];；]+)?$ ]]; then
+              should_publish="true"
+            else
+              should_publish="false"
+            fi
+            release_type="release"
+          fi
+
+          {
+            echo "should_publish=${should_publish}"
+            echo "release_type=${release_type}"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build
+    needs: prepare
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_path: ${{ steps.metadata.outputs.artifact_path }}
+      artifact_name: ${{ steps.metadata.outputs.artifact_name }}
+      mod_loader: ${{ steps.metadata.outputs.mod_loader }}
+      mod_name: ${{ steps.metadata.outputs.mod_name }}
+      mod_version: ${{ steps.metadata.outputs.mod_version }}
+      mc_version: ${{ steps.metadata.outputs.mc_version }}
+      release_name: ${{ steps.metadata.outputs.release_name }}
+      release_version: ${{ steps.metadata.outputs.release_version }}
+      release_type: ${{ needs.prepare.outputs.release_type }}
+      changelog: ${{ steps.changelog.outputs.content }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # 保留提交历史，用于计算本次提交新增的 CHANGELOG 内容。
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Read release metadata
+        id: metadata
+        shell: bash
+        run: |
+          mod_id="$(grep '^mod_id=' gradle.properties | cut -d'=' -f2-)"
+          mod_loader="$(grep '^mod_loader=' gradle.properties | cut -d'=' -f2-)"
+          mod_name="$(grep '^mod_name=' gradle.properties | cut -d'=' -f2-)"
+          mod_version="$(grep '^mod_version=' gradle.properties | cut -d'=' -f2-)"
+          mc_version="$(grep '^minecraft_version=' gradle.properties | cut -d'=' -f2-)"
+
+          case "${mod_loader}" in
+            neoforge)
+              loader_display_name="NeoForge"
+              ;;
+            forge)
+              loader_display_name="Forge"
+              ;;
+            *)
+              loader_display_name="${mod_loader}"
+              ;;
+          esac
+
+          artifact_name="${mod_id}-${mod_version}.jar"
+          release_name="${mod_name} ${mod_version} [${loader_display_name} ${mc_version}]"
+          release_version="${mod_version}"
+
+          {
+            echo "artifact_path=build/libs/${artifact_name}"
+            echo "artifact_name=${artifact_name}"
+            echo "mod_loader=${mod_loader}"
+            echo "mod_name=${mod_name}"
+            echo "mod_version=${mod_version}"
+            echo "mc_version=${mc_version}"
+            echo "release_name=${release_name}"
+            echo "release_version=${release_version}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve changelog
+        id: changelog
+        shell: bash
+        run: |
+          head_commit="${{ github.sha }}"
+          base_commit="${{ github.event.before }}"
+          commit_message="$(git log -1 --format=%B "${head_commit}")"
+
+          # 提交信息包含“日志:<修订号>”时，改用指定修订号对应提交的日志变更。
+          changelog_revision=""
+          if [[ "${commit_message}" =~ 日志:([^[:space:]]+) ]]; then
+            changelog_revision="${BASH_REMATCH[1]}"
+          fi
+
+          # 手动触发没有 event.before，使用当前提交的父提交作为比较基准。
+          if [[ -z "${base_commit}" || "${base_commit}" =~ ^0+$ ]]; then
+            base_commit="$(git rev-parse "${head_commit}^" 2>/dev/null || true)"
+          fi
+
+          changelog_content=""
+          if [[ -n "${changelog_revision}" ]]; then
+            target_commit="$(git rev-parse --verify "${changelog_revision}^{commit}" 2>/dev/null || true)"
+            if [[ -z "${target_commit}" ]]; then
+              echo "::error::无法解析日志修订号: ${changelog_revision}" >&2
+              exit 1
+            fi
+
+            changelog_content="$(git show --format= --unified=0 --no-ext-diff "${target_commit}" -- CHANGELOG.md \
+              | awk '/^\+\+\+ / { next } /^\+/ { sub(/^\+/, ""); print }')"
+          elif [[ -n "${base_commit}" ]] && git cat-file -e "${base_commit}^{commit}" 2>/dev/null; then
+            changelog_content="$(git diff --unified=0 "${base_commit}" "${head_commit}" -- CHANGELOG.md \
+              | awk '/^\+\+\+ / { next } /^\+/ { sub(/^\+/, ""); print }')"
+          fi
+
+          if [[ -z "${changelog_content}" ]]; then
+            changelog_content="本次提交未检测到 CHANGELOG.md 新增内容。"
+          fi
+
+          {
+            echo "content<<EOF"
+            printf '%s\n' "${changelog_content}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build mod
+        run: ./gradlew build
+
+      - name: Validate built artifact
+        run: test -f "${{ steps.metadata.outputs.artifact_path }}"
+
+      - name: Archive build artifact
+        run: tar -czf release-artifact.tar.gz "${{ steps.metadata.outputs.artifact_path }}"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-build
+          path: release-artifact.tar.gz
+          if-no-files-found: error
+          retention-days: 3
+
+  publish-curseforge:
+    name: Publish to CurseForge
+    needs: build
+    environment:
+      name: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build
+
+      - name: Unpack build artifact
+        run: tar -xzf release-artifact.tar.gz
+
+      - name: Validate artifact exists
+        run: test -f "${{ needs.build.outputs.artifact_path }}"
+
+      - name: Upload to CurseForge
+        uses: Kira-NT/mc-publish@v3.3.1
+        with:
+          name: ${{ needs.build.outputs.release_name }}
+          version: ${{ needs.build.outputs.release_version }}
+          version-type: ${{ needs.build.outputs.release_type }}
+          changelog: ${{ needs.build.outputs.changelog }}
+          files: ${{ needs.build.outputs.artifact_path }}
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          loaders: |
+            ${{ needs.build.outputs.mod_loader }}
+          environment: client | server
+          game-versions: |
+            ${{ needs.build.outputs.mc_version }}
+
+  publish-modrinth:
+    name: Publish to Modrinth
+    needs: build
+    environment:
+      name: publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-build
+
+      - name: Unpack build artifact
+        run: tar -xzf release-artifact.tar.gz
+
+      - name: Validate artifact exists
+        run: test -f "${{ needs.build.outputs.artifact_path }}"
+
+      - name: Upload to Modrinth
+        uses: Kira-NT/mc-publish@v3.3.1
+        with:
+          name: ${{ needs.build.outputs.release_name }}
+          version: ${{ needs.build.outputs.release_version }}
+          version-type: ${{ needs.build.outputs.release_type }}
+          changelog: ${{ needs.build.outputs.changelog }}
+          files: ${{ needs.build.outputs.artifact_path }}
+          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          modrinth-featured: false
+          loaders: |
+            ${{ needs.build.outputs.mod_loader }}
+          game-versions: |
+            ${{ needs.build.outputs.mc_version }}

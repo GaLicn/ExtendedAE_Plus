@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "extendedae_plus:basic_core",
+      "components": {
+        "extendedae_plus:core_type": "STORAGE",
+        "extendedae_plus:core_stage": 1
+      }
+    },
+    "C": "ae2:cell_component_64k",
+    "M": "#c:gems/certus_quartz",
+    "O": "extendedae_plus:oblivion_singularity"
+  },
+  "pattern": [
+    "MOM",
+    "CBC",
+    "MOM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:basic_core",
+    "components": {
+      "extendedae_plus:core_type": "STORAGE",
+      "extendedae_plus:core_stage": 2,
+      "minecraft:rarity": "uncommon"
+    }
+  },
+  "show_notification": true
+}

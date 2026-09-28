@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": { "all": "extendedae_plus:block/crafting/1024x_accelerator" }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "particle": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_default",
+    "down": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_back",
+    "up": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_front",
+    "north": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_side",
+    "south": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_side",
+    "east": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_side",
+    "west": "extendedae_plus:block/mirror_pattern_provider/mirror_pattern_provider_side"
+  }
+}

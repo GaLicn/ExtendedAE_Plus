@@ -1,0 +1,10 @@
+{
+  "multipart": [
+    { "when": { "facing": "down" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large", "x": 180 } },
+    { "when": { "facing": "east" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large", "x": 90, "y": 90 } },
+    { "when": { "facing": "north" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large", "x": 90 } },
+    { "when": { "facing": "south" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large", "x": 90, "y": 180 } },
+    { "when": { "facing": "up" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large" } },
+    { "when": { "facing": "west" }, "apply": { "model": "extendedae_plus:block/lattra_crystal_bud_large", "x": 90, "y": 270 } }
+  ]
+}

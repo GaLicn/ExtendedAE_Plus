@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": "extendedae:assembler_matrix_wall",
+    "L": "minecraft:nether_star",
+    "R": "extendedae:assembler_matrix_speed"
+  },
+  "pattern": [
+    "BRB",
+    "RLR",
+    "BRB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:assembler_matrix_speed_plus"
+  }
+}

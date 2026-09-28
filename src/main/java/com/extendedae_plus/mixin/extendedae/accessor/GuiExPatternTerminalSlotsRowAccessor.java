@@ -1,0 +1,17 @@
+package com.extendedae_plus.mixin.extendedae.accessor;
+
+import appeng.client.gui.me.patternaccess.PatternContainerRecord;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+@Mixin(targets = "com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal$SlotsRow", remap = false)
+public interface GuiExPatternTerminalSlotsRowAccessor {
+    @Accessor("container")
+    PatternContainerRecord getContainer();
+
+    @Accessor("offset")
+    int getOffset();
+
+    @Accessor("slots")
+    int getSlots();
+}

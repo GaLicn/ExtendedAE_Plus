@@ -1,0 +1,63 @@
+package com.extendedae_plus.mixin.jei;
+
+import appeng.integration.modules.itemlists.EncodingHelper;
+import appeng.menu.me.items.PatternEncodingTermMenu;
+import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import tamaized.ae2jeiintegration.integration.modules.jei.transfer.EncodePatternTransferHandler;
+
+/**
+ * 针对 AE2 JEI Integration 的转移处理器：在点击 JEI 的 "+" 将配方填入编码终端时，
+ * 捕获处理配方并记录一个可用于搜索的关键字，以便 ProviderSelectScreen 自动预填搜索框。
+ */
+@Mixin(value = EncodePatternTransferHandler.class, remap = false)
+public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternEncodingTermMenu> {
+
+    @Inject(method = "transferRecipe", at = @At("HEAD"), require = 0, remap = false)
+    private void extendedae_plus$captureProcessingName(T menu,
+                                                       Object recipeBase,
+                                                       IRecipeSlotsView slotsView,
+                                                       Player player,
+                                                       boolean maxTransfer,
+                                                       boolean doTransfer,
+                                                       CallbackInfoReturnable<mezz.jei.api.recipe.transfer.IRecipeTransferError> cir) {
+        if (!doTransfer) return;
+        String name = null;
+        Recipe<?> recipe = null;
+        if (recipeBase instanceof RecipeHolder<?> holder) {
+            recipe = holder.value();
+        } else if (recipeBase instanceof Recipe<?> r) {
+            // 部分模组（如 Oritech）向 JEI 注册的是未包装的 Recipe 对象而非 RecipeHolder
+            recipe = r;
+        }
+        if (recipe != null && EncodingHelper.isSupportedCraftingRecipe(recipe)) {
+            ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+            return;
+        }
+
+        // JEI 分类标题最接近玩家看到的机器名称，且适用于所有注册到 JEI 的配方。
+        name = JeiRuntimeCompat.getRecipeCategorySearchKey(recipeBase);
+        if (name == null || name.isBlank()) {
+            if (recipe != null) {
+                name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+                if (name == null || name.isBlank()) {
+                    // 类型 ID 无法解析时再按通用对象信息生成搜索词。
+                    name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+                }
+            } else {
+                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+            }
+        }
+        if (name != null && !name.isBlank()) {
+            ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+        }
+    }
+}

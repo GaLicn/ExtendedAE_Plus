@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "extendedae_plus:assembler_matrix_crafter_plus",
+    "extendedae_plus:assembler_matrix_pattern_plus"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:assembler_matrix_hybrid_plus"
+  }
+}

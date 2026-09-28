@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "extendedae_plus:lattra_crystal_block",
+    "B": "extendedae_plus:oblivion_singularity",
+    "C": "ae2:cell_component_256k",
+    "D": "extendedae:circuit_cutter"
+  },
+  "pattern": ["ABA", "CDC", "ABA"],
+  "result": { "count": 1, "id": "extendedae_plus:circuit_cutter_plus" }
+}

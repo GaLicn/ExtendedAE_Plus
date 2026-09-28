@@ -1,0 +1,26 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:component",
+    "component": "extendedae_plus:core_type",
+    "cases": [
+      {
+        "when": "STORAGE",
+        "model": {"type": "minecraft:model", "model": "extendedae_plus:item/core/basic_core_storage"}
+      },
+      {
+        "when": "SPATIAL",
+        "model": {"type": "minecraft:model", "model": "extendedae_plus:item/core/basic_core_spatial"}
+      },
+      {
+        "when": "ENERGY",
+        "model": {"type": "minecraft:model", "model": "extendedae_plus:item/core/basic_core_energy"}
+      },
+      {
+        "when": "QUANTUM",
+        "model": {"type": "minecraft:model", "model": "extendedae_plus:item/core/basic_core_quantum"}
+      }
+    ],
+    "fallback": {"type": "minecraft:model", "model": "extendedae_plus:item/basic_core"}
+  }
+}

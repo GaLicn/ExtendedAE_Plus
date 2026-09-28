@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "extendedae_plus:ultimate_super_assembler_matrix_builder"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_ultimate_super_assembler_matrix_builder": {
+      "conditions": {
+        "items": [
+          {
+            "items": "extendedae_plus:ultimate_super_assembler_matrix_builder"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ultimate_super_assembler_matrix_builder"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "extendedae_plus:ultimate_super_assembler_matrix_builder"
+    ]
+  }
+}

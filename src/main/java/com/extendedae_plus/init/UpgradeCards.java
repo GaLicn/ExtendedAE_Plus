@@ -1,0 +1,111 @@
+package com.extendedae_plus.init;
+
+import appeng.api.upgrades.Upgrades;
+import com.glodblock.github.extendedae.common.EAESingletons;
+import appeng.core.definitions.AEBlocks;
+import appeng.core.definitions.AEItems;
+import appeng.core.definitions.AEParts;
+import appeng.core.localization.GuiText;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.ModList;
+
+/**
+ * 
+ */
+public class UpgradeCards {
+    public UpgradeCards(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            // 
+            Upgrades.add(AEItems.ENERGY_CARD, ModItems.ENTITY_TICKER_PART_ITEM.get(), 8, "group.entity_ticker.name");
+            // 
+            Upgrades.add(ModItems.ENTITY_SPEED_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 4, "group.entity_ticker.name");
+            // 
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 1, "group.entity_ticker.name");
+
+            // 超级水晶装配器沿用原机规则：仅接受至多四张速度卡。
+            Upgrades.add(AEItems.SPEED_CARD, ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), 4,
+                    "group.crystal_assembler_plus.name");
+            Upgrades.add(AEItems.SPEED_CARD, ModItems.CIRCUIT_CUTTER_PLUS.get(), 4,
+                    "group.circuit_cutter_plus.name");
+
+            // 
+            String interfaceGroup = GuiText.Interface.getTranslationKey();
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.INTERFACE, 1, interfaceGroup);
+
+            // 
+            String patternProviderGroup = "group.pattern_provider.name";
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEBlocks.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), AEBlocks.PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), AEParts.PATTERN_PROVIDER, 1, patternProviderGroup);
+
+            // 
+            String ioBusGroup = GuiText.IOBuses.getTranslationKey();
+            String storageGroup = "group.storage.name";
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.IMPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), AEParts.STORAGE_BUS, 1, storageGroup);
+
+            // 
+            // 
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_INTERFACE_PART, 1, interfaceGroup);
+            
+            // 
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), EAESingletons.EX_PATTERN_PROVIDER, 3, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 3, patternProviderGroup);
+            
+            // 
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_IMPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_EXPORT_BUS, 1, ioBusGroup);
+            
+            // 
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.TAG_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.TAG_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.MOD_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.MOD_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.PRECISE_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.PRECISE_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.THRESHOLD_EXPORT_BUS, 1, ioBusGroup);
+
+            String storageCellGroup = GuiText.StorageCells.getTranslationKey();
+            Upgrades.add(AEItems.FUZZY_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
+            Upgrades.add(AEItems.INVERTER_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
+            
+            // 超大接口
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.OVERSIZE_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.OVERSIZE_INTERFACE_PART, 1, interfaceGroup);
+
+            registerAdvancedAePatternProviderChannelCards(patternProviderGroup);
+        });
+    }
+
+    /** AdvancedAE 为可选前置，仅在其物品已注册时添加频道卡规则。 */
+    private static void registerAdvancedAePatternProviderChannelCards(String patternProviderGroup) {
+        if (!ModList.get().isLoaded("advanced_ae")) {
+            return;
+        }
+
+        registerChannelCardFor("advanced_ae", "adv_pattern_provider", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "small_adv_pattern_provider", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "adv_pattern_provider_part", patternProviderGroup);
+        registerChannelCardFor("advanced_ae", "small_adv_pattern_provider_part", patternProviderGroup);
+    }
+
+    private static void registerChannelCardFor(String namespace, String path, String group) {
+        var item = BuiltInRegistries.ITEM.get(Identifier.fromNamespaceAndPath(namespace, path))
+                .map(holder -> holder.value())
+                .orElse(Items.AIR);
+        if (item != Items.AIR) {
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), item, 1, group);
+        }
+    }
+}
