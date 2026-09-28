@@ -18,7 +18,7 @@ import java.util.*;
 
 public class JeiSyncManager {
 
-    private static final int SYNC_INTERVAL_TICKS = 20;
+    private static final int SYNC_INTERVAL_TICKS = 10;
     private static final int MAX_ENTRIES_PER_PACKET = 8192;
 
     private static final Map<UUID, PlayerSyncState> playerStates = new HashMap<>();
