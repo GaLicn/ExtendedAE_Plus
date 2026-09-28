@@ -17,13 +17,6 @@ import net.neoforged.fml.ModList;
 public class UpgradeCards {
     public UpgradeCards(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
-            // 
-            Upgrades.add(AEItems.ENERGY_CARD, ModItems.ENTITY_TICKER_PART_ITEM.get(), 8, "group.entity_ticker.name");
-            // 
-            Upgrades.add(ModItems.ENTITY_SPEED_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 4, "group.entity_ticker.name");
-            // 
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), ModItems.ENTITY_TICKER_PART_ITEM.get(), 1, "group.entity_ticker.name");
-
             // 超级水晶装配器沿用原机规则：仅接受至多四张速度卡。
             Upgrades.add(AEItems.SPEED_CARD, ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), 4,
                     "group.crystal_assembler_plus.name");

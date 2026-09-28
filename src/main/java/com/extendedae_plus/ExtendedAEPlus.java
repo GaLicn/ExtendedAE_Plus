@@ -70,8 +70,6 @@ public class ExtendedAEPlus {
 
         // 注册本模组方块/物品/创造物品栏
         ModBlocks.BLOCKS.register(modEventBus);
-        // AE2 会在模型加载前冻结部件模型集合，必须在模组构造阶段完成登记。
-        ModItems.registerPartModels();
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);

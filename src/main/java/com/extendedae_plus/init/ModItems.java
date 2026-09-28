@@ -1,14 +1,9 @@
 package com.extendedae_plus.init;
 
-import appeng.api.parts.PartModels;
-import appeng.items.parts.PartModelsHelper;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.parts.EntitySpeedTickerPart;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.items.EntitySpeedTickerPartItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
 import com.extendedae_plus.items.tools.MirrorPatternBindingToolItem;
@@ -16,7 +11,6 @@ import com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem;
 import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -51,16 +45,6 @@ public final class ModItems {
     public static final DeferredItem<Item> ACCELERATOR_1024x = ITEMS.register(
             "1024x_crafting_accelerator",
             () -> new BlockItem(ModBlocks.ACCELERATOR_1024x.get(), new Item.Properties())
-    );
-    public static final DeferredItem<EntitySpeedTickerPartItem> ENTITY_TICKER_PART_ITEM = ITEMS.register(
-            "entity_speed_ticker",
-            () -> new EntitySpeedTickerPartItem(new Item.Properties())
-    );
-    // AE Upgrade Cards: 实体加速卡（四个等级：x2,x4,x8,x16）
-    // 单一实体加速卡 Item（不同等级由 ItemStack.nbt 存储）
-    public static final DeferredItem<EntitySpeedCardItem> ENTITY_SPEED_CARD = ITEMS.register(
-            "entity_speed_card",
-            () -> new EntitySpeedCardItem(new Item.Properties())
     );
     // 频道卡：用于AE机器的无线频道连接
     public static final DeferredItem<ChannelCardItem> CHANNEL_CARD = ITEMS.register(
@@ -254,16 +238,4 @@ public final class ModItems {
     }
 
     private ModItems() {}
-
-    /** 在 AE2 冻结 CableBus 模型依赖前登记实体加速器的全部部件模型。 */
-    public static void registerPartModels() {
-        PartModels.registerModels(PartModelsHelper.createModels(EntitySpeedTickerPart.class));
-    }
-
-    /**
-     * 工厂：创建带 multiplier 的实体加速卡 ItemStack（2/4/8/16）
-     */
-    static ItemStack createEntitySpeedCardStack(byte multiplier) {
-        return EntitySpeedCardItem.withMultiplier(multiplier);
-    }
 }

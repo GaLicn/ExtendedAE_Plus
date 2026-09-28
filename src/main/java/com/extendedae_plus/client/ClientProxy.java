@@ -3,7 +3,6 @@ package com.extendedae_plus.client;
 import appeng.client.render.crafting.CraftingCubeModel;
 import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.ae.screen.EntitySpeedTickerScreen;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
@@ -15,7 +14,6 @@ import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
@@ -38,9 +36,6 @@ public final class ClientProxy {
     public static void init() {
         if (REGISTERED) return;
         REGISTERED = true;
-        // 注册 Item property
-        ItemProperties.register(ModItems.ENTITY_SPEED_CARD.get(), ExtendedAEPlus.id("mult"),
-                (stack, world, entity, seed) -> (float) EntitySpeedCardItem.readMultiplier(stack));
 
         // 注册 BasicCore 的 core_type 属性用于模型切换
         ItemProperties.register(ModItems.BASIC_CORE.get(), ExtendedAEPlus.id("core_type"),
@@ -118,7 +113,6 @@ public final class ClientProxy {
         /**
          * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
          */
-        InitScreens.register(event, ModMenuTypes.ENTITY_TICKER_MENU.get(), EntitySpeedTickerScreen::new, "/screens/entity_speed_ticker.json");
         InitScreens.register(event, ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), SuperAssemblerMatrixScreen::new,
                 "/screens/super_assembler_matrix.json");
         InitScreens.register(event, ModMenuTypes.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerScreen::new,

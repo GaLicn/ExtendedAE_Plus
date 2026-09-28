@@ -4,7 +4,6 @@ import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -31,7 +30,6 @@ public final class ModCreativeTabs {
                                 ModItems.CHANNEL_CARD.get().getDefaultInstance(),
                                 ModItems.VIRTUAL_CRAFTING_CARD.get().getDefaultInstance(),
                                 ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get().getDefaultInstance(),
-                                ModItems.ENTITY_TICKER_PART_ITEM.get().getDefaultInstance(),
                                 ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_SPEED_PLUS.get().getDefaultInstance(),
                                 ModItems.ASSEMBLER_MATRIX_CRAFTER_PLUS.get().getDefaultInstance(),
@@ -70,12 +68,6 @@ public final class ModCreativeTabs {
                         }
                         if (ModItems.QUANTUM_STORAGE_CORE != null) {
                             output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
-                        }
-
-                        // 放入四个预设的 stacks（x2,x4,x8,x16），使用 ModItems 工厂创建
-                        for (byte multiplier : new byte[] {2, 4, 8, 16}) {
-                            ItemStack stack = ModItems.createEntitySpeedCardStack(multiplier);
-                            output.accept(stack);
                         }
                     })
                     .build());

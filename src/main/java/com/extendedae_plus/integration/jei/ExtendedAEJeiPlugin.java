@@ -6,7 +6,6 @@ import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.items.materials.EntitySpeedCardItem;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
@@ -48,24 +47,6 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration registration) {
-        registration.registerSubtypeInterpreter(
-                VanillaTypes.ITEM_STACK,
-                ModItems.ENTITY_SPEED_CARD.get(),
-                new ISubtypeInterpreter<>() {
-                    @Override
-                    public @NotNull Object getSubtypeData(@NotNull ItemStack ingredient, @NotNull UidContext context) {
-                        return EntitySpeedCardItem.readMultiplier(ingredient);
-                    }
-
-                    @Override
-                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack ingredient,
-                                                                      @NotNull UidContext context) {
-                        // 返回同样的值给旧接口兼容
-                        return String.valueOf(EntitySpeedCardItem.readMultiplier(ingredient));
-                    }
-                }
-        );
-
         // Basic Core - 基础核心的NBT变体支持
         registration.registerSubtypeInterpreter(
                 VanillaTypes.ITEM_STACK,
