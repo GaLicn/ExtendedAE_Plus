@@ -41,7 +41,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -52,7 +53,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
         ICraftingProvider, IGridTickable, PatternContainer, SuperAssemblerMatrixPart {
 
     private static final InternalInventory EMPTY_PATTERN_INVENTORY = InternalInventory.empty();
-    private static final IItemHandler EMPTY_PATTERN_HANDLER = null;
+    private static final ResourceHandler<ItemResource> EMPTY_PATTERN_HANDLER = null;
 
     private boolean core;
     private boolean unloading;
@@ -233,7 +234,7 @@ public abstract class SuperAssemblerMatrixBlockEntity extends AENetworkedBlockEn
     }
 
     /** 对齐原版矩阵：外部存储总线只能插入编码样板，不能抽取。 */
-    public IItemHandler getExposedPatternItemHandler(@Nullable Direction side) {
+    public ResourceHandler<ItemResource> getExposedPatternItemHandler(@Nullable Direction side) {
         if (this.superCluster == null) {
             return EMPTY_PATTERN_HANDLER;
         }

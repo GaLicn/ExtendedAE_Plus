@@ -21,7 +21,8 @@ import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -191,7 +192,7 @@ public class SuperAssemblerMatrixCluster {
         return sources;
     }
 
-    public IItemHandler getPatternInputHandler() {
+    public ResourceHandler<ItemResource> getPatternInputHandler() {
         if (this.patternInputHandler == null) {
             this.patternInputHandler = new SuperAssemblerMatrixPatternInputHandler(this.getPatternInventorySources());
         }

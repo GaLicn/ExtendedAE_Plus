@@ -27,10 +27,11 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class TagInventoryMEInterfaceBlockEntity extends BlockEntity
     private static final String TAG_BLACK = "tagBlack";
 
     private final IManagedGridNode managedNode;
-    private final IItemHandler itemHandler = new TagFilteredItemHandler();
+    private final ResourceHandler<ItemResource> itemHandler = new TagFilteredItemHandler();
 
     private String whiteListExpression = "";
     private String blackListExpression = "";
@@ -136,7 +137,7 @@ public class TagInventoryMEInterfaceBlockEntity extends BlockEntity
         this.setChanged();
     }
 
-    public IItemHandler getItemHandler(@Nullable Direction side) {
+    public ResourceHandler<ItemResource> getItemHandler(@Nullable Direction side) {
         return this.itemHandler;
     }
 
@@ -199,68 +200,85 @@ public class TagInventoryMEInterfaceBlockEntity extends BlockEntity
         }
     }
 
-    private final class TagFilteredItemHandler implements IItemHandler {
+    private final class TagFilteredItemHandler implements ResourceHandler<ItemResource> {
 
         @Override
-        public int getSlots() {
+        public int size() {
             return collectMatchingItems().size();
         }
 
         @Override
-        public ItemStack getStackInSlot(int slot) {
+        public ItemResource getResource(int slot) {
             NetworkItem item = this.getNetworkItem(slot);
             if (item == null) {
-                return ItemStack.EMPTY;
+                return ItemResource.EMPTY;
             }
-
-            int displayAmount = (int) Math.min(item.amount(), item.key().getMaxStackSize());
-            return item.key().toStack(displayAmount);
+            return ItemResource.of(item.key().toStack());
         }
 
         @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            return stack;
+        public long getAmountAsLong(int slot) {
+            NetworkItem item = this.getNetworkItem(slot);
+            return item == null ? 0 : item.amount();
         }
 
         @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if (amount <= 0) {
-                return ItemStack.EMPTY;
+        public long getCapacityAsLong(int slot, ItemResource resource) {
+            NetworkItem item = this.getNetworkItem(slot);
+            if (item == null) {
+                return 0;
+            }
+            return resource.isEmpty() || resource.matches(item.key().toStack(1))
+                    ? item.key().getMaxStackSize()
+                    : 0;
+        }
+
+        @Override
+        public boolean isValid(int slot, ItemResource resource) {
+            this.checkSlot(slot);
+            return false;
+        }
+
+        @Override
+        public int insert(int slot, ItemResource resource, int amount, TransactionContext transaction) {
+            return 0;
+        }
+
+        @Override
+        public int extract(int slot, ItemResource resource, int amount, TransactionContext transaction) {
+            if (amount <= 0 || resource.isEmpty()) {
+                return 0;
             }
 
             NetworkItem item = this.getNetworkItem(slot);
             IGridNode node = managedNode.getNode();
             if (item == null || node == null || !node.isActive()) {
-                return ItemStack.EMPTY;
+                return 0;
+            }
+            if (!resource.matches(item.key().toStack(1))) {
+                return 0;
             }
 
             long requested = Math.min(amount, item.key().getMaxStackSize());
             long extracted = node.getGrid().getStorageService().getInventory().extract(
                     item.key(),
                     requested,
-                    simulate ? Actionable.SIMULATE : Actionable.MODULATE,
+                    Actionable.MODULATE,
                     IActionSource.ofMachine(TagInventoryMEInterfaceBlockEntity.this));
-            return extracted > 0 ? item.key().toStack((int) extracted) : ItemStack.EMPTY;
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            NetworkItem item = this.getNetworkItem(slot);
-            return item == null ? 64 : item.key().getMaxStackSize();
-        }
-
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            return false;
+            return (int) Math.min(extracted, Integer.MAX_VALUE);
         }
 
         @Nullable
         private NetworkItem getNetworkItem(int slot) {
-            if (slot < 0) {
-                return null;
-            }
+            this.checkSlot(slot);
             List<NetworkItem> items = collectMatchingItems();
             return slot < items.size() ? items.get(slot) : null;
+        }
+
+        private void checkSlot(int slot) {
+            if (slot < 0 || slot >= this.size()) {
+                throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range");
+            }
         }
     }
 }

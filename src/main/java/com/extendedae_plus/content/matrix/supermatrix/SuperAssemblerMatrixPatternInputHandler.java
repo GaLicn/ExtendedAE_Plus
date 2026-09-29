@@ -2,12 +2,17 @@ package com.extendedae_plus.content.matrix.supermatrix;
 
 import appeng.api.inventories.InternalInventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** 以单个虚拟插入口暴露超级矩阵样板库存，避免外部存储逐槽扫描。 */
-final class SuperAssemblerMatrixPatternInputHandler implements IItemHandler {
+final class SuperAssemblerMatrixPatternInputHandler extends SnapshotJournal<SuperAssemblerMatrixPatternInputHandler.HandlerState>
+        implements ResourceHandler<ItemResource> {
 
     private final InternalInventory[] inventories;
     private final int totalSlots;
@@ -29,39 +34,53 @@ final class SuperAssemblerMatrixPatternInputHandler implements IItemHandler {
     }
 
     @Override
-    public int getSlots() {
+    public int size() {
         return this.totalSlots == 0 ? 0 : 1;
     }
 
     @Override
-    public ItemStack getStackInSlot(int slot) {
-        this.checkSlot(slot);
-        return ItemStack.EMPTY;
+    public ItemResource getResource(int index) {
+        this.checkSlot(index);
+        return ItemResource.EMPTY;
     }
 
     @Override
-    public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-        this.checkSlot(slot);
-        if (stack.isEmpty() || this.knownFull || !this.isAcceptedPattern(stack)) {
-            return stack;
+    public long getAmountAsLong(int index) {
+        this.checkSlot(index);
+        return 0;
+    }
+
+    @Override
+    public long getCapacityAsLong(int index, ItemResource resource) {
+        this.checkSlot(index);
+        return resource.isEmpty() || this.isValid(index, resource) ? 1 : 0;
+    }
+
+    @Override
+    public boolean isValid(int index, ItemResource resource) {
+        this.checkSlot(index);
+        return !resource.isEmpty() && !this.knownFull && this.isAcceptedPattern(resource.toStack(1));
+    }
+
+    @Override
+    public int insert(int index, ItemResource resource, int amount, TransactionContext transaction) {
+        this.checkSlot(index);
+        if (resource.isEmpty() || amount <= 0 || this.knownFull || !this.isAcceptedPattern(resource.toStack(1))) {
+            return 0;
         }
 
-        var remainder = stack;
+        int inserted = 0;
         int checkedSlots = 0;
         int currentInventory = this.inventoryCursor;
         int currentSlot = this.slotCursor;
-
-        // 模拟和实际插入都从同一游标开始；实际成功后游标直接指向下一个候选槽。
-        while (checkedSlots < this.totalSlots && !remainder.isEmpty()) {
+        while (inserted < amount && checkedSlots < this.totalSlots) {
             var inventory = this.inventories[currentInventory];
             if (inventory.getStackInSlot(currentSlot).isEmpty()) {
-                if (!simulate) {
-                    var insertedPattern = remainder.copy();
-                    insertedPattern.setCount(1);
-                    // 样板槽固定单件写入，避免容量卡兼容层对每个候选槽重复反射查询。
-                    inventory.setItemDirect(currentSlot, insertedPattern);
+                if (inserted == 0) {
+                    this.updateSnapshots(transaction);
                 }
-                remainder = shrinkByOne(remainder);
+                inventory.setItemDirect(currentSlot, resource.toStack(1));
+                inserted++;
             }
             checkedSlots++;
 
@@ -72,32 +91,21 @@ final class SuperAssemblerMatrixPatternInputHandler implements IItemHandler {
             }
         }
 
-        if (!simulate) {
+        if (inserted > 0) {
             this.inventoryCursor = currentInventory;
             this.slotCursor = currentSlot;
         }
-        if (checkedSlots == this.totalSlots && !remainder.isEmpty()) {
+        if (checkedSlots == this.totalSlots && inserted < amount) {
+            this.updateSnapshots(transaction);
             this.knownFull = true;
         }
-        return remainder;
+        return inserted;
     }
 
     @Override
-    public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        this.checkSlot(slot);
-        return ItemStack.EMPTY;
-    }
-
-    @Override
-    public int getSlotLimit(int slot) {
-        this.checkSlot(slot);
-        return 1;
-    }
-
-    @Override
-    public boolean isItemValid(int slot, ItemStack stack) {
-        this.checkSlot(slot);
-        return !stack.isEmpty() && !this.knownFull && this.isAcceptedPattern(stack);
+    public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
+        this.checkSlot(index);
+        return 0;
     }
 
     void invalidateFullState() {
@@ -113,18 +121,39 @@ final class SuperAssemblerMatrixPatternInputHandler implements IItemHandler {
         return false;
     }
 
-    private static ItemStack shrinkByOne(ItemStack stack) {
-        if (stack.getCount() == 1) {
-            return ItemStack.EMPTY;
+    private void checkSlot(int slot) {
+        if (slot < 0 || slot >= this.size()) {
+            throw new IndexOutOfBoundsException("Slot " + slot + " not in valid range");
         }
-        var remainder = stack.copy();
-        remainder.shrink(1);
-        return remainder;
     }
 
-    private void checkSlot(int slot) {
-        if (slot != 0 || this.totalSlots == 0) {
-            throw new IllegalArgumentException("Slot " + slot + " not in valid range");
+    @Override
+    protected HandlerState createSnapshot() {
+        var stacks = new ArrayList<List<ItemStack>>(this.inventories.length);
+        for (var inventory : this.inventories) {
+            var contents = new ArrayList<ItemStack>(inventory.size());
+            for (int slot = 0; slot < inventory.size(); slot++) {
+                contents.add(inventory.getStackInSlot(slot).copy());
+            }
+            stacks.add(contents);
         }
+        return new HandlerState(stacks, this.inventoryCursor, this.slotCursor, this.knownFull);
+    }
+
+    @Override
+    protected void revertToSnapshot(HandlerState state) {
+        for (int inventoryIndex = 0; inventoryIndex < this.inventories.length; inventoryIndex++) {
+            var inventory = this.inventories[inventoryIndex];
+            var contents = state.contents().get(inventoryIndex);
+            for (int slot = 0; slot < inventory.size(); slot++) {
+                inventory.setItemDirect(slot, contents.get(slot).copy());
+            }
+        }
+        this.inventoryCursor = state.inventoryCursor();
+        this.slotCursor = state.slotCursor();
+        this.knownFull = state.knownFull();
+    }
+
+    record HandlerState(List<List<ItemStack>> contents, int inventoryCursor, int slotCursor, boolean knownFull) {
     }
 }

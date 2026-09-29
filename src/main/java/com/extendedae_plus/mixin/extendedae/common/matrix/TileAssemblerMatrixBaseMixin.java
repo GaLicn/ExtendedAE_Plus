@@ -7,7 +7,8 @@ import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerM
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixGlass;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -43,7 +44,7 @@ public abstract class TileAssemblerMatrixBaseMixin {
     /** EAE 基类的物品处理器入口统一转发超级集群样板库存，包含原版矩阵玻璃。 */
     @Inject(method = "getPatternInv", at = @At("HEAD"), cancellable = true)
     private void eap$exposeSuperMatrixPatternInventory(Direction facing,
-            CallbackInfoReturnable<IItemHandler> cir) {
+            CallbackInfoReturnable<ResourceHandler<ItemResource>> cir) {
         if (!((Object) this instanceof SuperAssemblerMatrixPart part)) {
             return;
         }

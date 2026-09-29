@@ -140,8 +140,8 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerCategory.TYPE);
-        registration.addRecipeCatalyst(ModItems.CIRCUIT_CUTTER_PLUS.get(), SuperCircuitCutterCategory.TYPE);
+        registration.addCraftingStation(SuperCrystalAssemblerCategory.TYPE, ModItems.CRYSTAL_ASSEMBLER_PLUS.get());
+        registration.addCraftingStation(SuperCircuitCutterCategory.TYPE, ModItems.CIRCUIT_CUTTER_PLUS.get());
     }
 
     @Override

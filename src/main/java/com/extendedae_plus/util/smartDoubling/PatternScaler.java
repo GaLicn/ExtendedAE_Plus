@@ -7,7 +7,7 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
-import net.neoforged.fml.loading.LoadingModList;
+import net.neoforged.fml.loading.FMLLoader;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -31,7 +31,8 @@ public final class PatternScaler {
             iface = Class.forName("net.pedroksl.advanced_ae.common.patterns.IAdvPatternDetails");
 
             // 检查是否安装 Advanced AE
-            if (LoadingModList.get() != null && LoadingModList.get().getModFileById("advanced_ae") != null) {
+            var loadingModList = FMLLoader.getCurrent().getLoadingModList();
+            if (loadingModList != null && loadingModList.getModFileById("advanced_ae") != null) {
                 available = true;
             }
         } catch (Throwable ignored) {

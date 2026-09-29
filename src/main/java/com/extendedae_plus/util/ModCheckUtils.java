@@ -3,6 +3,7 @@ package com.extendedae_plus.util;
 
 import net.neoforged.fml.loading.LoadingModList;
 import net.neoforged.fml.loading.moddiscovery.ModFileInfo;
+import net.neoforged.fml.loading.FMLLoader;
 
 /**
  * Forge 加载阶段的 Mod 检测工具
@@ -11,7 +12,7 @@ import net.neoforged.fml.loading.moddiscovery.ModFileInfo;
  */
 public class ModCheckUtils {
 
-    private static final LoadingModList MOD_LIST = LoadingModList.get();
+    private static final LoadingModList MOD_LIST = FMLLoader.getCurrent().getLoadingModList();
 
     public static final String
             MODID_JEI = "jei",

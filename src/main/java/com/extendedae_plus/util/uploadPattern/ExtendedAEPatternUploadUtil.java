@@ -1028,7 +1028,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * 在给定 AE Grid 中收集所有已成型的装配矩阵的聚合图样仓 IItemHandler（若可用）。
+     * 在给定 AE Grid 中收集所有已成型的装配矩阵的聚合图样仓 ResourceHandler（若可用）。
      */
     private static List<?> findAllMatrixPatternHandlers(IGrid grid) {
         // NeoForge 1.21 能力系统与 API 变更，此处先返回空列表，避免编译期依赖旧能力系统
@@ -1186,7 +1186,7 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * 能力系统（IItemHandler）未迁移前的占位插入：直接返回原始栈，表示未能插入。
+     * Transfer 能力未接入上传流程前的占位插入：直接返回原始栈，表示未能插入。
      */
     private static ItemStack insertIntoAnySlot(Object handler, ItemStack stack) {
         return stack.copy();

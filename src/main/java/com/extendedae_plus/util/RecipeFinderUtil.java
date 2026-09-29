@@ -17,7 +17,7 @@ import mezz.jei.api.recipe.IFocusFactory;
 import mezz.jei.api.recipe.IRecipeLookup;
 import mezz.jei.api.recipe.IRecipeManager;
 import mezz.jei.api.recipe.RecipeIngredientRole;
-import mezz.jei.api.recipe.RecipeType;
+import mezz.jei.api.recipe.types.IRecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.resources.Identifier;
@@ -86,7 +86,7 @@ public final class RecipeFinderUtil {
 				try {
 					IRecipeCategory<?> category = recipeManager.getRecipeCategory(recipeType);
 					@SuppressWarnings({ "rawtypes", "unchecked" })
-					IRecipeLookup<Object> lookup = (IRecipeLookup) recipeManager.createRecipeLookup((RecipeType) recipeType);
+					IRecipeLookup<Object> lookup = (IRecipeLookup) recipeManager.createRecipeLookup((IRecipeType) recipeType);
 
 					lookup.limitFocus(List.of(outputFocus))
 						.get()
