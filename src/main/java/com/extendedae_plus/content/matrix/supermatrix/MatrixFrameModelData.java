@@ -3,7 +3,7 @@ package com.extendedae_plus.content.matrix.supermatrix;
 import com.extendedae_plus.init.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.world.level.BlockGetter;
 import net.neoforged.neoforge.model.data.ModelData;
 import net.neoforged.neoforge.model.data.ModelProperty;
 
@@ -14,7 +14,7 @@ public final class MatrixFrameModelData {
     private MatrixFrameModelData() {
     }
 
-    public static ModelData create(BlockAndTintGetter level, BlockPos pos, ModelData baseModelData) {
+    public static ModelData create(BlockGetter level, BlockPos pos, ModelData baseModelData) {
         if (baseModelData.has(CONNECTIONS)) {
             return baseModelData;
         }
