@@ -1,5 +1,67 @@
 # Changelog
 
+## [1.6.3]
+
+### Added / 新增
+- 开放样板上传 API，方便第三方集成上传功能
+  - Exposed the pattern upload API to simplify third-party integration.
+- 超级机器系列支持配置输出面
+  - Added configurable output sides for the Super Machine series.
+
+### Changed / 变更
+- JEI 书签栏任意位置均可通过鼠标中键触发下单
+  - Middle-click ordering can now be triggered from anywhere in the JEI bookmark list.
+- JEI 中的可合成标记由 `craft` 改为 `+`
+  - Changed the craftable indicator in JEI from `craft` to `+`.
+- 更新 iava 玩偶皮肤
+  - Updated the iava doll skin.
+- 将 JEI 最低版本要求调整为 19.56.0
+  - Raised the minimum required JEI version to 19.56.0.
+- 移除获取映射名称时对 GregTech 的特殊处理
+  - Removed GregTech-specific handling when retrieving mapping names.
+
+### Fixed / 修复
+- 修复镜像样板供应器的智能阻挡不生效的问题
+  - Fixed smart blocking not working for the Mirror Pattern Provider.
+- 修正“无瑕的莱卓罗水晶母岩”的命名文本
+  - Corrected the display name of Flawless Lattra Budding Crystal.
+- 修复频道卡右键交互异常
+  - Fixed the Channel Card right-click interaction.
+- 修复 JEI 中流体与化学品不显示的问题
+  - Fixed fluids and chemicals not appearing in JEI.
+
+### Performance / 性能
+- 优化“吞噬万籁的寂静”的性能
+  - Optimized the performance of Devouring Silence.
+
+## [1.6.2]
+
+### Added / 新增
+- JEI 与 AE2 的相关联动操作现支持 EMI
+  - JEI and AE2 integration features now support EMI.
+- 补充莱卓罗水晶系列标签
+  - Added tags for the Lattra Crystal series.
+- 为吞噬盘添加在驱动器中的显示模型
+  - Added an in-drive display model for the Annihilation Plane.
+
+### Changed / 变更
+- 超级水晶装配器与超级电路切片机的配方现与原版机器配方同步
+  - Super Crystal Assembler and Super Circuit Cutter recipes now stay synchronized with their original machine recipes.
+- 调整扩展样板供应器的 UI 布局
+  - Adjusted the Extended Pattern Provider UI layout.
+- 修改终极超级装配矩阵构建工具的贴图
+  - Updated the texture of the Ultimate Super Assembler Matrix Builder.
+
+### Fixed / 修复
+- 修复超级装配矩阵样板倍增后，AE 电量缓存可能不足以完成发配的问题
+  - Fixed AE energy cache potentially being insufficient to complete dispatching after multiplying Super Assembler Matrix patterns.
+- 修复超级装配矩阵部件生命周期管理问题导致的崩溃
+  - Fixed a crash caused by lifecycle management issues in Super Assembler Matrix components.
+- 修复供应器高亮提示文本错误
+  - Fixed incorrect highlight hint text for Pattern Providers.
+- 修复 F 键搜索在部分区域无法获取的问题
+  - Fixed F-key search being unable to retrieve results in certain areas.
+
 ## [1.6.1]
 
 ### Added / 新增
