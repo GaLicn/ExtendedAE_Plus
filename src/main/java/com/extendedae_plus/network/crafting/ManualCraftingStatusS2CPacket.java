@@ -2,13 +2,10 @@ package com.extendedae_plus.network.crafting;
 
 import appeng.api.stacks.AEKey;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.content.ClientManualCraftingStatusStore;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,20 +42,12 @@ public class ManualCraftingStatusS2CPacket implements CustomPacketPayload {
         this.manualWaiting = manualWaiting;
     }
 
-    public static void handle(final ManualCraftingStatusS2CPacket msg, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> handleClient(msg));
+    public int containerId() {
+        return containerId;
     }
 
-    private static void handleClient(ManualCraftingStatusS2CPacket msg) {
-        var mc = Minecraft.getInstance();
-        if (mc == null || mc.player == null || mc.player.containerMenu == null) {
-            ClientManualCraftingStatusStore.clear();
-            return;
-        }
-        if (mc.player.containerMenu.containerId != msg.containerId) {
-            return;
-        }
-        ClientManualCraftingStatusStore.setStatus(msg.containerId, msg.manualWaiting);
+    public Map<AEKey, Long> manualWaiting() {
+        return manualWaiting;
     }
 
     @Override

@@ -1,13 +1,10 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record SuperAssemblerMatrixStatsS2CPacket(long concurrentExecutions) implements CustomPacketPayload {
 
@@ -24,13 +21,4 @@ public record SuperAssemblerMatrixStatsS2CPacket(long concurrentExecutions) impl
         return TYPE;
     }
 
-    public static void handle(SuperAssemblerMatrixStatsS2CPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> handleClient(packet));
-    }
-
-    private static void handleClient(SuperAssemblerMatrixStatsS2CPacket packet) {
-        if (Minecraft.getInstance().screen instanceof SuperAssemblerMatrixScreen screen) {
-            screen.setConcurrentExecutions(packet.concurrentExecutions);
-        }
-    }
 }

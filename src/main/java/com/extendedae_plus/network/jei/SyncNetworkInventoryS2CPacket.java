@@ -2,12 +2,10 @@ package com.extendedae_plus.network.jei;
 
 import appeng.api.stacks.AEKey;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.jei.NetworkItemCache;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +42,6 @@ public record SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entr
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
-    }
-
-    public static void handle(SyncNetworkInventoryS2CPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> NetworkItemCache.INSTANCE.handleUpdate(packet.fullUpdate, packet.entries));
     }
 
     public record Entry(long serial, AEKey key, long amount, boolean craftable) {

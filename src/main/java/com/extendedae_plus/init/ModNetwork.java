@@ -26,6 +26,7 @@ import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.ScaleEncodingPatternC2SPacket;
 import com.extendedae_plus.network.ScalePatternsC2SPacket;
 import com.extendedae_plus.network.SetPatternHighlightS2CPacket;
+import com.extendedae_plus.network.SetBlockHighlightS2CPacket;
 import com.extendedae_plus.network.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetGlobalScalingLimitC2SPacket;
 import com.extendedae_plus.network.SetProviderPageS2CPacket;
@@ -50,12 +51,13 @@ public class ModNetwork {
         registrar.playToServer(ScaleEncodingPatternC2SPacket.TYPE, ScaleEncodingPatternC2SPacket.STREAM_CODEC,
                 ScaleEncodingPatternC2SPacket::handle);
         registrar.playToServer(InterfaceAdjustConfigAmountC2SPacket.TYPE, InterfaceAdjustConfigAmountC2SPacket.STREAM_CODEC, InterfaceAdjustConfigAmountC2SPacket::handle);
-        registrar.playToClient(SetPatternHighlightS2CPacket.TYPE, SetPatternHighlightS2CPacket.STREAM_CODEC, SetPatternHighlightS2CPacket::handle);
-        registrar.playToClient(ProvidersListS2CPacket.TYPE, ProvidersListS2CPacket.STREAM_CODEC, ProvidersListS2CPacket::handle);
+        registrar.playToClient(SetPatternHighlightS2CPacket.TYPE, SetPatternHighlightS2CPacket.STREAM_CODEC);
+        registrar.playToClient(SetBlockHighlightS2CPacket.TYPE, SetBlockHighlightS2CPacket.STREAM_CODEC);
+        registrar.playToClient(ProvidersListS2CPacket.TYPE, ProvidersListS2CPacket.STREAM_CODEC);
         registrar.playToServer(RequestProvidersListC2SPacket.TYPE, RequestProvidersListC2SPacket.STREAM_CODEC, RequestProvidersListC2SPacket::handle);
         registrar.playToServer(RequestMappingProvidersC2SPacket.TYPE, RequestMappingProvidersC2SPacket.STREAM_CODEC, RequestMappingProvidersC2SPacket::handle);
-        registrar.playToClient(MappingProvidersS2CPacket.TYPE, MappingProvidersS2CPacket.STREAM_CODEC, MappingProvidersS2CPacket::handle);
-        registrar.playToClient(SetProviderPageS2CPacket.TYPE, SetProviderPageS2CPacket.STREAM_CODEC, SetProviderPageS2CPacket::handle);
+        registrar.playToClient(MappingProvidersS2CPacket.TYPE, MappingProvidersS2CPacket.STREAM_CODEC);
+        registrar.playToClient(SetProviderPageS2CPacket.TYPE, SetProviderPageS2CPacket.STREAM_CODEC);
         registrar.playToServer(GlobalToggleProviderModesC2SPacket.TYPE, GlobalToggleProviderModesC2SPacket.STREAM_CODEC, GlobalToggleProviderModesC2SPacket::handle);
         registrar.playToServer(CraftingMonitorJumpC2SPacket.TYPE, CraftingMonitorJumpC2SPacket.STREAM_CODEC, CraftingMonitorJumpC2SPacket::handle);
         registrar.playToServer(CraftingMonitorOpenProviderC2SPacket.TYPE, CraftingMonitorOpenProviderC2SPacket.STREAM_CODEC, CraftingMonitorOpenProviderC2SPacket::handle);
@@ -95,17 +97,14 @@ public class ModNetwork {
                 LabelNetworkActionC2SPacket.STREAM_CODEC,
                 LabelNetworkActionC2SPacket::handle);
         registrar.playToClient(LabelNetworkListS2CPacket.TYPE,
-                LabelNetworkListS2CPacket.STREAM_CODEC,
-                LabelNetworkListS2CPacket::handle);
+                LabelNetworkListS2CPacket.STREAM_CODEC);
         registrar.playToServer(ForceCraftStartFlagC2SPacket.TYPE,
                 ForceCraftStartFlagC2SPacket.STREAM_CODEC,
                 ForceCraftStartFlagC2SPacket::handle);
         registrar.playToClient(ManualCraftingStatusS2CPacket.TYPE,
-                ManualCraftingStatusS2CPacket.STREAM_CODEC,
-                ManualCraftingStatusS2CPacket::handle);
+                ManualCraftingStatusS2CPacket.STREAM_CODEC);
         registrar.playToClient(SyncNetworkInventoryS2CPacket.TYPE,
-                SyncNetworkInventoryS2CPacket.STREAM_CODEC,
-                SyncNetworkInventoryS2CPacket::handle);
+                SyncNetworkInventoryS2CPacket.STREAM_CODEC);
 
         registrar.playToServer(EAPConfigButtonPacket.TYPE, EAPConfigButtonPacket.STREAM_CODEC, EAPConfigButtonPacket::handleOnServer);
         registrar.playToServer(TagInventoryFilterC2SPacket.TYPE,
@@ -114,11 +113,9 @@ public class ModNetwork {
         registrar.playToServer(SetPerProviderScalingLimitC2SPacket.TYPE, SetPerProviderScalingLimitC2SPacket.STREAM_CODEC, SetPerProviderScalingLimitC2SPacket::handle);
         registrar.playToServer(SetGlobalScalingLimitC2SPacket.TYPE, SetGlobalScalingLimitC2SPacket.STREAM_CODEC, SetGlobalScalingLimitC2SPacket::handle);
         registrar.playToClient(SuperAssemblerMatrixUpdateS2CPacket.TYPE,
-                SuperAssemblerMatrixUpdateS2CPacket.STREAM_CODEC,
-                SuperAssemblerMatrixUpdateS2CPacket::handle);
+                SuperAssemblerMatrixUpdateS2CPacket.STREAM_CODEC);
         registrar.playToClient(SuperAssemblerMatrixStatsS2CPacket.TYPE,
-                SuperAssemblerMatrixStatsS2CPacket.STREAM_CODEC,
-                SuperAssemblerMatrixStatsS2CPacket::handle);
+                SuperAssemblerMatrixStatsS2CPacket.STREAM_CODEC);
         registrar.playToServer(SuperAssemblerMatrixActionC2SPacket.TYPE,
                 SuperAssemblerMatrixActionC2SPacket.STREAM_CODEC,
                 SuperAssemblerMatrixActionC2SPacket::handle);

@@ -1,6 +1,7 @@
 package com.extendedae_plus;
 
 import com.extendedae_plus.client.ModKeybindings;
+import com.extendedae_plus.client.network.ClientPayloadRegistration;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -18,6 +19,7 @@ import net.neoforged.fml.ModList;
 @EventBusSubscriber(modid = ExtendedAEPlus.MODID, value = Dist.CLIENT)
 public class ExtendedAEPlusClient {
 	public ExtendedAEPlusClient(ModContainer container, IEventBus modEventBus) {
+		modEventBus.addListener(ClientPayloadRegistration::register);
 
 		container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
 		

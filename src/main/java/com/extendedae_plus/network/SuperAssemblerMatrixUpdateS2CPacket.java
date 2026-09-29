@@ -1,16 +1,13 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class SuperAssemblerMatrixUpdateS2CPacket implements CustomPacketPayload {
 
@@ -29,6 +26,18 @@ public class SuperAssemblerMatrixUpdateS2CPacket implements CustomPacketPayload 
         this.patternId = patternId;
         this.inventorySize = inventorySize;
         this.updateMap = new Int2ObjectOpenHashMap<>(updateMap);
+    }
+
+    public long patternId() {
+        return patternId;
+    }
+
+    public int inventorySize() {
+        return inventorySize;
+    }
+
+    public Int2ObjectMap<ItemStack> updateMap() {
+        return updateMap;
     }
 
     private static void write(RegistryFriendlyByteBuf buf, SuperAssemblerMatrixUpdateS2CPacket packet) {
@@ -57,13 +66,4 @@ public class SuperAssemblerMatrixUpdateS2CPacket implements CustomPacketPayload 
         return TYPE;
     }
 
-    public static void handle(SuperAssemblerMatrixUpdateS2CPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> handleClient(packet));
-    }
-
-    private static void handleClient(SuperAssemblerMatrixUpdateS2CPacket packet) {
-        if (Minecraft.getInstance().screen instanceof SuperAssemblerMatrixScreen screen) {
-            screen.receiveUpdate(packet.patternId, packet.inventorySize, packet.updateMap);
-        }
-    }
 }

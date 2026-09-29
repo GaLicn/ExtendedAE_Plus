@@ -1,15 +1,12 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.client.screen.ProviderSelectScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,14 +56,20 @@ public class MappingProvidersS2CPacket implements CustomPacketPayload {
 		this.emptySlots = emptySlots;
 	}
 
-	public static void handle(final MappingProvidersS2CPacket msg, final IPayloadContext ctx) {
-		ctx.enqueueWork(() -> handleClient(msg));
+	public String mappingKey() {
+		return mappingKey;
 	}
 
-	private static void handleClient(MappingProvidersS2CPacket msg) {
-		var mc = Minecraft.getInstance();
-		if (mc == null) return;
-		mc.setScreen(new ProviderSelectScreen(mc.screen, msg.mappingKey, msg.ids, msg.names, msg.emptySlots));
+	public List<Long> ids() {
+		return ids;
+	}
+
+	public List<Component> names() {
+		return names;
+	}
+
+	public List<Integer> emptySlots() {
+		return emptySlots;
 	}
 
 	@Override

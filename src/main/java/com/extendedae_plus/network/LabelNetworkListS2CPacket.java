@@ -2,14 +2,11 @@ package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
-import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,14 +61,4 @@ public record LabelNetworkListS2CPacket(BlockPos pos,
         return TYPE;
     }
 
-    public static void handle(LabelNetworkListS2CPacket pkt, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> handleClient(pkt));
-    }
-
-    private static void handleClient(LabelNetworkListS2CPacket pkt) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof LabeledWirelessTransceiverScreen screen && screen.isFor(pkt.pos)) {
-            screen.updateList(pkt.list, pkt.currentLabel, pkt.ownerName, pkt.usedChannels, pkt.maxChannels, pkt.onlineCount);
-        }
-    }
 }

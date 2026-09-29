@@ -15,27 +15,17 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.util.PatternProviderDataUtil;
-import com.glodblock.github.extendedae.util.FCClientUtil;
-import com.glodblock.github.glodium.util.GlodUtil;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Collection;
 import java.util.Objects;
 
-import static com.glodblock.github.extendedae.client.render.EAEHighlightHandler.highlight;
 
 /**
  * 客户端从 CraftingCPUScreen 发送：鼠标下条目对应的 AEKey。
@@ -111,10 +101,14 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
                             // 部件与方块实体分别选择定位器并打开界面
                             if (host instanceof AEBasePart part) {
                                 host.openMenu(player, MenuLocators.forPart(part));
-                                highlightWithMessage(pbe.getBlockPos(), part.getSide(), Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
+                                var level = Objects.requireNonNull(pbe.getLevel());
+                                PacketDistributor.sendToPlayer(player, new SetBlockHighlightS2CPacket(
+                                        pbe.getBlockPos(), part.getSide(), level.dimension().identifier(), 6000));
                             } else {
                                 host.openMenu(player, MenuLocators.forBlockEntity(pbe));
-                                highlightWithMessage(pbe.getBlockPos(), null, Objects.requireNonNull(pbe.getLevel()).dimension(), 1.0, player);
+                                var level = Objects.requireNonNull(pbe.getLevel());
+                                PacketDistributor.sendToPlayer(player, new SetBlockHighlightS2CPacket(
+                                        pbe.getBlockPos(), null, level.dimension().identifier(), 6000));
                             }
 
                             // 高亮打开的供应器位置并发送聊天提示
@@ -138,7 +132,8 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
                             }
 
                             return;
-                        } catch (Exception ignored) {
+                        } catch (Exception exception) {
+                            ExtendedAEPlus.LOGGER.error("打开样板供应器界面时处理网络包失败。", exception);
                         }
                     }
                 }
@@ -146,28 +141,4 @@ public class CraftingMonitorOpenProviderC2SPacket implements CustomPacketPayload
         });
     }
 
-    private static void highlightWithMessage(BlockPos pos, Direction face, ResourceKey<Level> dim, double multiplier, Player player) {
-        if (pos == null || dim == null) {
-            return;
-        }
-        long endTime = System.currentTimeMillis() + (long) (6000 * GlodUtil.clamp(multiplier, 1, 30));
-        if (face == null) {
-            highlight(pos, dim, endTime);
-        } else {
-            var origin = new AABB(2 / 16D, 2 / 16D, 0, 14 / 16D, 14 / 16D, 2 / 16D).move(pos);
-            var center = new AABB(pos).getCenter();
-            switch (face) {
-                case WEST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (Math.PI / 2));
-                case SOUTH -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) Math.PI);
-                case EAST -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.Y, (float) (-Math.PI / 2));
-                case UP -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (-Math.PI / 2));
-                case DOWN -> origin = FCClientUtil.rotor(origin, center, Direction.Axis.X, (float) (Math.PI / 2));
-            }
-            highlight(pos, face, dim, endTime, origin);
-        }
-
-        if (player != null) {
-            player.sendSystemMessage(Component.translatable("chat.ex_pattern_access_terminal.pos", pos.toShortString(), dim.identifier().getPath()));
-        }
-    }
 }

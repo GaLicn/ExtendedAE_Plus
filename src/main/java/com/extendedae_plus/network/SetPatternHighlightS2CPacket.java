@@ -1,13 +1,11 @@
 package com.extendedae_plus.network;
 
 import appeng.api.stacks.AEKey;
-import com.extendedae_plus.content.ClientPatternHighlightStore;
 import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * S2C: 指示客户端对某个 AEKey 的样板进行高亮/取消高亮（仅作用于接收该包的客户端）。
@@ -41,14 +39,6 @@ public class SetPatternHighlightS2CPacket implements CustomPacketPayload {
         return TYPE;
     }
 
-    public static void handle(final SetPatternHighlightS2CPacket msg, final IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            try {
-                ClientPatternHighlightStore.setHighlight(msg.key, msg.highlight);
-            } catch (Throwable ignored) {
-            }
-        });
-    }
 }
 
 
