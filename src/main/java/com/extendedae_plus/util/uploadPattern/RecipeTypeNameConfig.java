@@ -9,7 +9,6 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -358,37 +357,6 @@ public final class RecipeTypeNameConfig {
     }
 
     /**
-     * 通过反射映射 GTCEu 配方到搜索关键字。
-     *
-     * @param gtRecipeObj GTCEu 配方对象
-     * @return 搜索关键字，或 null 如果映射失败
-     */
-    public static String mapGTCEuRecipeToSearchKey(Object gtRecipeObj) {
-        if (gtRecipeObj == null) return null;
-        try {
-            // 获取配方类型
-            Method mGetType = gtRecipeObj.getClass().getMethod("getType");
-            Object typeObj = mGetType.invoke(gtRecipeObj);
-            String idStr = String.valueOf(typeObj);
-            if (idStr == null || idStr.isBlank()) return null;
-            // 解析类型 ID
-            ResourceLocation rl = new ResourceLocation(idStr);
-            // 1) 别名优先（使用 path 作为最终搜索关键字）
-            String path = rl.getPath();
-            if (path != null) {
-                String alias = resolveSearchKeyAlias(path);
-                if (alias != null && !alias.isBlank()) return alias;
-            }
-            // 2) 再查完整ID映射
-            String custom = CUSTOM_NAMES.get(rl);
-            // 3) 默认返回自定义名称或路径
-            return custom != null && !custom.isBlank() ? custom : path;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    /**
      * 从未知配方类推导搜索关键字。
      *
      * @param recipeBase 配方对象
@@ -398,12 +366,14 @@ public final class RecipeTypeNameConfig {
         if (recipeBase == null) return null;
         try {
             Object type = recipeBase.getClass().getMethod("getType").invoke(recipeBase);
-            if (type instanceof RecipeType<?> recipeType) {
-                ResourceLocation key = resolveRecipeTypeId(recipeType);
-                String resolved = resolveRecipeTypeSearchKey(key, null);
-                if (resolved != null && !resolved.isBlank()) return resolved;
-            }
-        } catch (Throwable ignored) {
+            // 非原版类型也可通过 namespace:path 标识使用统一映射。
+            ResourceLocation key = type instanceof RecipeType<?> recipeType
+                    ? resolveRecipeTypeId(recipeType)
+                    : type == null ? null : new ResourceLocation(type.toString());
+            String resolved = resolveRecipeTypeSearchKey(key, null);
+            if (resolved != null && !resolved.isBlank()) return resolved;
+        } catch (ReflectiveOperationException | IllegalArgumentException e) {
+            EAP$LOGGER.debug("无法从配方类型解析搜索关键字，改用类名: {}", recipeBase.getClass().getName(), e);
         }
         try {
             Class<?> cls = recipeBase.getClass();
@@ -413,9 +383,7 @@ public final class RecipeTypeNameConfig {
             String namespace = null;
             String lower = pkg.toLowerCase();
             // 检测模组命名空间
-            if (lower.contains("gtceu")) namespace = "gtceu";
-            else if (lower.contains("gregtech")) namespace = "gregtech";
-            else if (lower.contains("projecte")) namespace = "projecte";
+            if (lower.contains("projecte")) namespace = "projecte";
             else if (lower.contains("create")) namespace = "create";
             else if (lower.contains("immersiveengineering")) namespace = "immersive";
 
@@ -428,7 +396,8 @@ public final class RecipeTypeNameConfig {
             String alias = CUSTOM_ALIASES.get(key.toLowerCase());
             // 返回别名或推导的键
             return alias != null && !alias.isBlank() ? alias : key;
-        } catch (Throwable ignored) {
+        } catch (RuntimeException e) {
+            EAP$LOGGER.warn("无法根据配方类名推导搜索关键字: {}", recipeBase.getClass().getName(), e);
             return null;
         }
     }

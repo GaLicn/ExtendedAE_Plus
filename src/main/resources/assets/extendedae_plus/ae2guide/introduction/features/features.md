@@ -92,7 +92,7 @@ A multiplication control button is added in the pattern provider GUI, allowing p
 
 ### 6. Quartz Cutter Function Extension
 
-- **Shift + Right-click Block or AE Component:** Copies its name, supporting copying of sub-recipe names from large GregTech machines.
+- **Shift + Right-click Block or AE Component:** Copies its displayed or custom name.
 
 ---
 

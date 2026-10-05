@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.6.3]
+
+### Added / 新增
+- 开放样板上传 API，方便第三方集成上传功能
+  - Exposed the pattern upload API to simplify third-party integration.
+
+### Changed / 变更
+- JEI 书签栏任意位置均可通过鼠标中键触发下单
+  - Middle-click ordering can now be triggered from anywhere in the JEI bookmark list.
+- JEI 中的可合成标记由 `craft` 改为 `+`
+  - Changed the craftable indicator in JEI from `craft` to `+`.
+- 更新 iava 玩偶皮肤
+  - Updated the iava doll skin.
+- 移除获取映射名称时对 GregTech 的特殊处理
+  - Removed GregTech-specific handling when retrieving mapping names.
+
+### Fixed / 修复
+- 修复镜像样板供应器的智能阻挡不生效的问题
+  - Fixed smart blocking not working for the Mirror Pattern Provider.
+- 修复频道卡右键交互异常
+  - Fixed the Channel Card right-click interaction.
+- 修复 JEI 中流体与化学品不显示的问题
+  - Fixed fluids and chemicals not appearing in JEI.
+
+### Performance / 性能
+- 优化“吞噬万籁的寂静”的性能
+  - Optimized the performance of Devouring Silence.
+
 ## [1.6.2]
 
 ### Added / 新增

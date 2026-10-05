@@ -1,7 +1,6 @@
 {
   "required": false,
   "package": "com.extendedae_plus.mixin",
-  "plugin": "com.extendedae_plus.mixin.ExtendedAEMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
@@ -21,6 +20,7 @@
     "ae2.client.gui.InterfaceScreenMixin",
     "ae2.client.gui.ProcessingEncodingPanelMixin",
     "ae2.client.gui.PatternEncodingTermScreenMixin",
+    "ae2.client.gui.PatternEncodingTermScreenUploadMixin",
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.client.gui.patternProvider.PatternProviderHighlightCleanupMixin",
     "ae2.client.gui.patternProvider.PatternProviderScreenMixin",
@@ -119,6 +119,7 @@
     "extendedae.common.matrix.BlockAssemblerMatrixBaseMixin",
     "extendedae.common.matrix.TileAssemblerMatrixBaseMixin",
     "extendedae.common.matrix.TileAssemblerMatrixGlassMixin",
+    "extendedae.common.matrix.TileAssemblerMatrixGlassLifecycleMixin",
     "extendedae.common.PartExPatternProviderMixin",
     "extendedae.common.TileCircuitCutterParallelMixin",
     "extendedae.common.TileExPatternProviderMixin",
