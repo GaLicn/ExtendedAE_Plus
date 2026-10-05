@@ -238,6 +238,9 @@ public class ExtendedAEPlus {
             ClientRegistrar.registerMenuScreens();
 
             event.enqueueWork(() -> {
+                // 世界方块强制下单不依赖任何查看器模组，须无条件注册。
+                MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.event.ForceCraftKeyHandler.class);
+
                 // EMI 或 JEI 任一存在即注册对应输入监听；InputEvents 内部按查看器来源自守卫，
                 // 未安装对应查看器时相关分支不会被触发，避免触碰缺失模组的类导致类加载失败。
                 if (ModList.get().isLoaded("jei")) {

@@ -43,6 +43,7 @@
     "minecraft.PickFromWirelessMixin",
     "minecraft.accessor.AbstractContainerScreenAccessor",
     "minecraft.accessor.ScreenAccessor",
+    "minecraft.accessor.MinecraftPickBlockAccessor",
     "extendedae.client.gui.GuiAssemblerMatrixPatternInfoMixin"
   ],
   "mixins": [

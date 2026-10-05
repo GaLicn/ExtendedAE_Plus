@@ -12,6 +12,7 @@ import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -26,11 +27,14 @@ public class PickFromWirelessC2SPacket {
     private final BlockPos pos;
     private final Direction face;
     private final Vec3 hitLoc;
+    /** 强制下单标记：为真时跳过网络存量检查，直接打开下单界面。 */
+    private final boolean forceCraft;
 
-    public PickFromWirelessC2SPacket(BlockPos pos, Direction face, Vec3 hitLoc) {
+    public PickFromWirelessC2SPacket(BlockPos pos, Direction face, Vec3 hitLoc, boolean forceCraft) {
         this.pos = pos;
         this.face = face;
         this.hitLoc = hitLoc;
+        this.forceCraft = forceCraft;
     }
 
     public static void encode(PickFromWirelessC2SPacket msg, FriendlyByteBuf buf) {
@@ -39,6 +43,7 @@ public class PickFromWirelessC2SPacket {
         buf.writeDouble(msg.hitLoc.x);
         buf.writeDouble(msg.hitLoc.y);
         buf.writeDouble(msg.hitLoc.z);
+        buf.writeBoolean(msg.forceCraft);
     }
 
     public static PickFromWirelessC2SPacket decode(FriendlyByteBuf buf) {
@@ -47,7 +52,8 @@ public class PickFromWirelessC2SPacket {
         double x = buf.readDouble();
         double y = buf.readDouble();
         double z = buf.readDouble();
-        return new PickFromWirelessC2SPacket(pos, face, new Vec3(x, y, z));
+        boolean forceCraft = buf.readBoolean();
+        return new PickFromWirelessC2SPacket(pos, face, new Vec3(x, y, z), forceCraft);
     }
 
     public static void handle(PickFromWirelessC2SPacket msg, Supplier<NetworkEvent.Context> ctx) {
@@ -82,6 +88,26 @@ public class PickFromWirelessC2SPacket {
                 picked = state.getBlock().asItem().getDefaultInstance();
             }
             if (picked.isEmpty()) {
+                return;
+            }
+
+            // 强制下单：不检查网络存量，直接打开下单界面。不可合成时回一条动作栏提示，
+            // 避免组合键按下后无任何反馈。
+            if (msg.forceCraft) {
+                AEItemKey forcedKey = AEItemKey.of(picked);
+                if (forcedKey == null) {
+                    return;
+                }
+                var craftingService = grid.getCraftingService();
+                if (!craftingService.isCraftable(forcedKey)) {
+                    player.displayClientMessage(
+                            Component.translatable("message.extendedae_plus.force_craft.not_craftable"), true);
+                    return;
+                }
+                var locator = located.createMenuLocator(player);
+                if (locator != null) {
+                    CraftAmountMenu.open(player, locator, forcedKey, 64);
+                }
                 return;
             }
 
