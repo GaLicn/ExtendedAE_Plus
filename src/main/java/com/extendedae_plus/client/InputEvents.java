@@ -2,6 +2,7 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
+import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.compat.JeiRuntimeCompat;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
@@ -15,6 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -206,6 +208,9 @@ public final class InputEvents {
 		}
 		if (value instanceof FluidStack stack && !stack.isEmpty()) {
 			return GenericStack.fromFluidStack(stack);
+		}
+		if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
+            return AppliedMekanisticsCompat.fromJeiIngredient(value);
 		}
 		return null;
 	}

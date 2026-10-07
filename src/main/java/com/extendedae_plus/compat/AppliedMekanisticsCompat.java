@@ -72,4 +72,28 @@ public final class AppliedMekanisticsCompat {
 			return null;
 		}
 	}
+
+	/**
+	 * JEI 化学品条目 → AE2 {@link GenericStack}。
+	 * <p>
+	 * 与 {@link #toGenericStack(Object, long)} 的差异在入参形态：JEI 悬停给出的是已携带
+	 * 数量的 {@link ChemicalStack}，而 EMI 只给出 {@link Chemical} 种类与独立数量。
+	 * 两侧数量单位同为 mB，因此直接采用栈内数量。
+	 *
+	 * @param ingredient JEI 侧化学品条目
+	 * @return 对应的 AE2 GenericStack；入参不是非空化学品栈时返回 null
+	 */
+	@Nullable
+	public static GenericStack fromJeiIngredient(@Nullable Object ingredient) {
+		if (!(ingredient instanceof ChemicalStack chemicalStack) || chemicalStack.isEmpty()) {
+			return null;
+		}
+		try {
+			MekanismKey key = MekanismKey.of(chemicalStack);
+			return key == null ? null : new GenericStack(key, chemicalStack.getAmount());
+		} catch (Throwable error) {
+			ExtendedAEPlus.LOGGER.warn("Failed to convert Mekanism chemical stack to AE2 stack", error);
+			return null;
+		}
+	}
 }
