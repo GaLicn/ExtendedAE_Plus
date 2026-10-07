@@ -40,9 +40,7 @@ public class PullFromJeiOrCraftC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null || msg.stack == null) return;
 
-            // 仅处理物品
             AEKey what = msg.stack.what();
-            if (!(what instanceof AEItemKey itemKey)) return;
 
             // 定位玩家持有/Curios 的无线终端
             LocatedTerminal located = WirelessTerminalLocator.find(player);
@@ -53,25 +51,28 @@ public class PullFromJeiOrCraftC2SPacket {
             IGrid grid = WirelessTerminalLocator.getConnectedGrid(player, located);
             if (grid == null) return;
 
-            // 仅放入背包空槽位
-            var inv = player.getInventory();
-            int free = inv.getFreeSlot();
-            if (free == -1) return; // 背包已满
+            // 物品：优先从 ME 网络提取一格到背包；背包已满时维持既有行为直接放弃。
+            // 非物品键（流体、Mekanism 化学品等）无法落入物品栏，跳过提取直接进入下单流程。
+            if (what instanceof AEItemKey itemKey) {
+                var inv = player.getInventory();
+                int free = inv.getFreeSlot();
+                if (free == -1) return; // 背包已满
 
-            int targetMax = itemKey.toStack(1).getMaxStackSize();
-            IEnergyService energy = grid.getEnergyService();
-            MEStorage storage = grid.getStorageService().getInventory();
+                int targetMax = itemKey.toStack(1).getMaxStackSize();
+                IEnergyService energy = grid.getEnergyService();
+                MEStorage storage = grid.getStorageService().getInventory();
 
-            long extracted = StorageHelper.poweredExtraction(energy, storage, itemKey, targetMax, new PlayerSource(player));
-            if (extracted > 0) {
-                inv.setItem(free, itemKey.toStack((int) extracted));
-                WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
-                located.commit();
-                player.containerMenu.broadcastChanges();
-                return;
+                long extracted = StorageHelper.poweredExtraction(energy, storage, itemKey, targetMax, new PlayerSource(player));
+                if (extracted > 0) {
+                    inv.setItem(free, itemKey.toStack((int) extracted));
+                    WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
+                    located.commit();
+                    player.containerMenu.broadcastChanges();
+                    return;
+                }
             }
 
-            // 无库存时：若可合成则打开下单界面
+            // 无库存（或该键不可提取）时：若可合成则打开下单界面
             var craftingService = grid.getCraftingService();
             if (!craftingService.isCraftable(what)) return;
 

@@ -3,6 +3,7 @@ package com.extendedae_plus.client;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
 import appeng.integration.modules.jei.GenericEntryStackHelper;
+import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.EmiHelper;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
@@ -141,7 +142,7 @@ public final class InputEvents {
                         return;
                     }
                     ITypedIngredient<?> typed = hovered.get();
-                    GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+                    GenericStack stack = toGenericStack(typed);
                     if (stack != null) {
                         ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
                         event.setCanceled(true);
@@ -167,7 +168,7 @@ public final class InputEvents {
                 if (JeiRuntimeProxy.isJeiCheatModeEnabled()) {
                     return;
                 }
-                GenericStack stack = GenericEntryStackHelper.ingredientToStack(typed);
+                GenericStack stack = toGenericStack(typed);
                 if (stack == null) return;
 
                 ModNetwork.CHANNEL.sendToServer(new OpenCraftFromJeiC2SPacket(stack));
@@ -196,6 +197,27 @@ public final class InputEvents {
     }
 
     // ---- 共享逻辑 ----
+
+    /**
+     * JEI 条目 → AE2 {@link GenericStack}。
+     *
+     * <p>AE2 原生的 {@link GenericEntryStackHelper#ingredientToStack} 只识别物品与流体，
+     * Mekanism 化学品条目在其内部返回 null，导致中键与 Shift+左键在化学品上无任何响应。
+     * 因此原生转换失败后，再由 AppMek 桥接层补一次化学品转换。</p>
+     *
+     * <p>守卫必须位于调用桥接层之前且使用 {@code ModList}：桥接类直接引用 mekanism 与
+     * appmek 的类型，任一缺失时触碰该类都会在链接阶段抛 {@link NoClassDefFoundError}。</p>
+     */
+    private static GenericStack toGenericStack(ITypedIngredient<?> typed) {
+        GenericStack nativeStack = GenericEntryStackHelper.ingredientToStack(typed);
+        if (nativeStack != null) {
+            return nativeStack;
+        }
+        if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
+            return AppliedMekanisticsCompat.fromJeiIngredient(typed.getIngredient());
+        }
+        return null;
+    }
 
     /** 中键=打开下单界面，其余（Shift+左键）=拉取或下单。 */
     private static void sendViewerAction(boolean openCraft, GenericStack stack) {
