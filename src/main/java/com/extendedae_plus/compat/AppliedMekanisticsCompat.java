@@ -3,6 +3,7 @@ package com.extendedae_plus.compat;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.IMekanismAccess;
 import mekanism.api.chemical.Chemical;

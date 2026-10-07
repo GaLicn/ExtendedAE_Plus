@@ -1,10 +1,10 @@
-package com.extendedae_plus.compat;
+package com.extendedae_plus.compat.emi;
 
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.util.RecipeInfo;
-import com.extendedae_plus.util.ModCheckUtils;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import dev.emi.emi.api.stack.EmiIngredient;
@@ -15,6 +15,8 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
+import net.neoforged.fml.ModList;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -139,22 +141,31 @@ public final class EmiRecipeCompat {
 	 * EmiStack → GenericStack，支持物品、流体与 Mekanism 化学品。
 	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
 	 * 化学品经 Applied Mekanistics 的 MekanismKey 转换，两侧都是 mB，数量 1:1。
+	 *
+	 * <p>包内私有：入参声明为 {@link Object} 以避免方法签名直接引用 EMI 类型，
+	 * 外部（如 EMI 中键下单）一律经 {@link EmiHelper#getSidebarGenericStackUnderMouse} 调用，
+	 * 不直接接触本方法。入参不是 EmiStack 时返回 null。</p>
 	 */
-	private static GenericStack toGenericStack(EmiStack stack) {
+	@Nullable
+	static GenericStack toGenericStack(@Nullable Object stack) {
+		if (!(stack instanceof EmiStack emiStack)) {
+			return null;
+		}
 		try {
-			ItemStack item = stack.getItemStack();
+			ItemStack item = emiStack.getItemStack();
 			if (item != null && !item.isEmpty()) {
-				return new GenericStack(AEItemKey.of(item), Math.max(1, stack.getAmount()));
+				return new GenericStack(AEItemKey.of(item), Math.max(1, emiStack.getAmount()));
 			}
-			Object key = stack.getKey();
+			Object key = emiStack.getKey();
 			if (key instanceof Fluid fluid && fluid != Fluids.EMPTY) {
-				long amount = stack.getAmount();
+				long amount = emiStack.getAmount();
 				long mb = Math.max(1, amount / 81);
 				return new GenericStack(AEFluidKey.of(fluid), mb);
 			}
 			// 化学品（Mek 氧化机、溶解室、注入室等一整批配方的输入/产物）需要 AppMek 提供的 AE2 键类型。
-			if (ModCheckUtils.isAppMekLoading()) {
-				GenericStack chemical = AppliedMekanisticsCompat.toGenericStack(key, stack.getAmount());
+			// 判定使用运行期 ModList：桥接类直接引用 mekanism 与 appmek 的类型，任一缺失时触碰即抛错。
+			if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
+				GenericStack chemical = AppliedMekanisticsCompat.toGenericStack(key, emiStack.getAmount());
 				if (chemical != null) {
 					return chemical;
 				}

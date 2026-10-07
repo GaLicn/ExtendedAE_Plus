@@ -3,12 +3,13 @@ package com.extendedae_plus.client;
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
-import com.extendedae_plus.compat.EmiHelper;
-import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.compat.emi.EmiHelper;
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -34,7 +35,7 @@ public final class InputEvents {
 	public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
 		// 按查看器来源分派：对应模组的代码只在已安装该模组时执行，
 		// 避免另一模组的类在缺失时被加载/校验而触发 NoClassDefFoundError。
-		if (EmiHelper.isLoaded()) {
+		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
 			onMouseEmi(event);
 		} else {
 			onMouseJei(event);
@@ -50,7 +51,7 @@ public final class InputEvents {
 		if (!(screen instanceof MEStorageScreen<?> || screen instanceof GuiExPatternTerminal<?>)) {
 			return;
 		}
-		if (EmiHelper.isLoaded()) {
+		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
 			onKeyEmi(event, screen);
 		} else {
 			onKeyJei(event, screen);
@@ -65,15 +66,12 @@ public final class InputEvents {
 		// 对终端网格等屏幕槽位 EMI 零介入，且默认 cheatMode=CREATIVE 会让创造模式误判跳过。
 		// 使用严格查找（仅 EMI 侧边栏/provider 区域），避免劫持背包等普通槽位的点击。
 		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-			ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-			if (!hovered.isEmpty()) {
-				GenericStack stack = GenericStack.fromItemStack(hovered);
-				if (stack != null) {
-					emiActionPressHandled = true;
-					PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
-					event.setCanceled(true);
-					return;
-				}
+			GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
+			if (stack != null) {
+				emiActionPressHandled = true;
+				PacketDistributor.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+				event.setCanceled(true);
+				return;
 			}
 		}
 
@@ -82,10 +80,7 @@ public final class InputEvents {
 		// 接管中键与 EMI 原生交互零冲突；且默认 cheatMode=CREATIVE 会让创造模式下误判跳过。
 		// 同样使用严格查找，仅对 EMI 自有区域的条目生效。
 		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-			ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-			if (hovered.isEmpty()) return;
-
-			GenericStack stack = GenericStack.fromItemStack(hovered);
+			GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
 			if (stack == null) return;
 			emiActionPressHandled = true;
 			sendViewerAction(true, stack);
@@ -95,7 +90,7 @@ public final class InputEvents {
 
 	@SubscribeEvent
 	public static void onMouseButtonReleasedPre(ScreenEvent.MouseButtonReleased.Pre event) {
-		if (!EmiHelper.isLoaded()) return;
+		if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) return;
 
 		// EMI 对侧边栏栈的"按下"会在 GLFW 层消费掉（本监听器收不到），
 		// 但无绑定的按键会放行"松开"；因此中键下单 / Shift+左键拉取在此补一次处理。
@@ -107,10 +102,7 @@ public final class InputEvents {
 			emiActionPressHandled = false;
 			return;
 		}
-		ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-		if (hovered.isEmpty()) return;
-
-		GenericStack stack = GenericStack.fromItemStack(hovered);
+		GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
 		if (stack == null) return;
 		sendViewerAction(isMiddle, stack);
 		event.setCanceled(true);

@@ -6,7 +6,7 @@ import appeng.api.stacks.AEKey;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.common.GridInventoryEntry;
 import appeng.menu.me.common.MEStorageMenu;
-import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.neoforge.NeoForgeTypes;

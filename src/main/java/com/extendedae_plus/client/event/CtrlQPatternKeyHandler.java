@@ -3,9 +3,11 @@ package com.extendedae_plus.client.event;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
-import com.extendedae_plus.compat.JeiRuntimeCompat;
+
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
@@ -57,7 +59,7 @@ public final class CtrlQPatternKeyHandler {
 		}
 
 		// 双查看器仲裁：EMI 在场时由 EmiCtrlQHandler 接管（与 InputEvents 的分派优先级一致）。
-		if (com.extendedae_plus.compat.EmiHelper.isLoaded()) {
+		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
 			return;
 		}
 

@@ -3,7 +3,7 @@ package com.extendedae_plus.util;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
-import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.IRecipeLayoutDrawable;

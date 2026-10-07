@@ -1,4 +1,4 @@
-package com.extendedae_plus.compat;
+package com.extendedae_plus.compat.jei;
 
 import com.extendedae_plus.mixin.jei.accessor.BookmarkListAccessor;
 import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;

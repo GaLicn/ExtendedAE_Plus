@@ -6,7 +6,7 @@ import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
-import com.extendedae_plus.compat.JeiRuntimeCompat;
+import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
