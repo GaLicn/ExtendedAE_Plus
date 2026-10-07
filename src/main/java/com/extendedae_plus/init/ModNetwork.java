@@ -66,6 +66,10 @@ public class ModNetwork {
         registrar.playToServer(com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket.TYPE,
                 com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket.STREAM_CODEC,
                 com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket::handle);
+        // 世界方块强制下单
+        registrar.playToServer(com.extendedae_plus.network.ForceCraftFromWorldC2SPacket.TYPE,
+                com.extendedae_plus.network.ForceCraftFromWorldC2SPacket.STREAM_CODEC,
+                com.extendedae_plus.network.ForceCraftFromWorldC2SPacket::handle);
         // 频道卡绑定
         registrar.playToServer(com.extendedae_plus.network.ChannelCardBindPacket.TYPE,
                 com.extendedae_plus.network.ChannelCardBindPacket.STREAM_CODEC,

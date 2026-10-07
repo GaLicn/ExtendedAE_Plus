@@ -24,6 +24,7 @@ public class ExtendedAEPlusClient {
 		modEventBus.addListener((net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) -> {
 			event.register(ModKeybindings.CREATE_PATTERN_KEY);
 			event.register(ModKeybindings.FILL_SEARCH_KEY);
+			event.register(ModKeybindings.FORCE_CRAFT_KEY);
 		});
 	}
 
