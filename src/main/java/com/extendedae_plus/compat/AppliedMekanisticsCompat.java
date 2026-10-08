@@ -6,7 +6,6 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.IMekanismAccess;
-import mekanism.api.chemical.Chemical;
 import mekanism.api.chemical.ChemicalStack;
 import mezz.jei.api.ingredients.IIngredientType;
 import org.jetbrains.annotations.Nullable;
@@ -50,36 +49,10 @@ public final class AppliedMekanisticsCompat {
 	}
 
 	/**
-	 * Mekanism 化学品 → AE2 {@link GenericStack}。
-	 * <p>
-	 * 量纲：Mekanism 的 {@link ChemicalStack} 与 AppMek 的 {@code MekanismKeyType}
-	 * 都以 mB 为单位（{@code getAmountPerUnit() == 1000}），因此数量 1:1 直传，
-	 * 不像流体那样需要 EMI droplets ÷ 81 的换算。
-	 *
-	 * @param emiKey EMI 栈的 key（Mekanism 的 ChemicalEmiStack 会返回 {@link Chemical}）
-	 * @param amount EMI 栈的数量，单位 mB
-	 * @return 对应的 AE2 GenericStack；key 不是化学品时返回 null
-	 */
-	public static GenericStack toGenericStack(Object emiKey, long amount) {
-		try {
-			if (!(emiKey instanceof Chemical chemical) || chemical.isEmptyType()) {
-				return null;
-			}
-			long mb = Math.max(1, amount);
-			MekanismKey key = MekanismKey.of(new ChemicalStack(chemical, mb));
-			return key == null ? null : new GenericStack(key, mb);
-		} catch (Throwable error) {
-			ExtendedAEPlus.LOGGER.warn("Failed to convert Mekanism chemical to AE2 stack", error);
-			return null;
-		}
-	}
-
-	/**
 	 * JEI 化学品条目 → AE2 {@link GenericStack}。
 	 * <p>
-	 * 与 {@link #toGenericStack(Object, long)} 的差异在入参形态：JEI 悬停给出的是已携带
-	 * 数量的 {@link ChemicalStack}，而 EMI 只给出 {@link Chemical} 种类与独立数量。
-	 * 两侧数量单位同为 mB，因此直接采用栈内数量。
+	 * JEI 悬停给出的是已携带数量的 {@link ChemicalStack}，两侧数量单位同为 mB，
+	 * 因此直接采用栈内数量。EMI 侧不经本方法，改由 AE2 官方转换器注册表处理。
 	 *
 	 * @param ingredient JEI 侧化学品条目
 	 * @return 对应的 AE2 GenericStack；入参不是非空化学品栈时返回 null

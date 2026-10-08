@@ -1,9 +1,10 @@
 package com.extendedae_plus.compat.emi;
 
+import appeng.api.integrations.emi.EmiStackConverter;
+import appeng.api.integrations.emi.EmiStackConverters;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
-import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.util.RecipeInfo;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
@@ -140,7 +141,8 @@ public final class EmiRecipeCompat {
 	/**
 	 * EmiStack → GenericStack，支持物品、流体与 Mekanism 化学品。
 	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
-	 * 化学品经 Applied Mekanistics 的 MekanismKey 转换，两侧都是 mB，数量 1:1。
+	 * 化学品交由 AE2 官方 EMI 转换器注册表处理：AppMek 已注册化学品转换器，
+	 * 由它按 EMI 栈的实际内部形态取值，本类不假定 {@code EmiStack#getKey} 的具体类型。
 	 *
 	 * <p>包内私有：入参声明为 {@link Object} 以避免方法签名直接引用 EMI 类型，
 	 * 外部（如 EMI 中键下单）一律经 {@link EmiHelper#getSidebarGenericStackUnderMouse} 调用，
@@ -162,12 +164,13 @@ public final class EmiRecipeCompat {
 				long mb = Math.max(1, amount / 81);
 				return new GenericStack(AEFluidKey.of(fluid), mb);
 			}
-			// 化学品（Mek 氧化机、溶解室、注入室等一整批配方的输入/产物）需要 AppMek 提供的 AE2 键类型。
-			// 判定使用运行期 ModList：桥接类直接引用 mekanism 与 appmek 的类型，任一缺失时触碰即抛错。
-			if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
-				GenericStack chemical = AppliedMekanisticsCompat.toGenericStack(key, emiStack.getAmount());
-				if (chemical != null) {
-					return chemical;
+			// 其余类型（Mekanism 化学品等）交由 AE2 官方的 EMI 转换器注册表处理。
+			// AppMek 的 AMEmiPlugin 已向该注册表登记化学品转换器，由转换器自身解析
+			// EMI 栈的内部形态；此处不得假定 EmiStack#getKey 的具体类型。
+			for (EmiStackConverter converter : EmiStackConverters.getConverters()) {
+				GenericStack converted = converter.toGenericStack(emiStack);
+				if (converted != null) {
+					return converted;
 				}
 			}
 		} catch (Throwable ignored) {
