@@ -2,8 +2,6 @@ package com.extendedae_plus.compat.emi;
 
 import appeng.api.integrations.emi.EmiStackConverter;
 import appeng.api.integrations.emi.EmiStackConverters;
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.util.RecipeInfo;
 import dev.emi.emi.api.EmiApi;
@@ -14,9 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipe;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.Fluids;
-import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -139,10 +134,13 @@ public final class EmiRecipeCompat {
 	}
 
 	/**
-	 * EmiStack → GenericStack，支持物品、流体与 Mekanism 化学品。
-	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
-	 * 化学品交由 AE2 官方 EMI 转换器注册表处理：AppMek 已注册化学品转换器，
-	 * 由它按 EMI 栈的实际内部形态取值，本类不假定 {@code EmiStack#getKey} 的具体类型。
+	 * EmiStack → GenericStack，物品、流体与 Mekanism 化学品统一交由 AE2 官方的
+	 * EMI 转换器注册表解析：AE2 自身登记了物品与流体转换器，AppMek 登记了化学品转换器。
+	 *
+	 * <p>各转换器按 EMI 栈的内部形态取值，本类不假定 {@code EmiStack#getKey} 的具体类型，
+	 * 也不自行做量纲换算——EMI 在 Forge / NeoForge 上以 mB 计量
+	 * （{@code FluidUnit.literDivisor()} 返回 1），与 AE2 一致，无需按 Fabric 的
+	 * droplets 口径（81000/桶）除以 81；该换算会使流体量缩小 81 倍。</p>
 	 *
 	 * <p>包内私有：入参声明为 {@link Object} 以避免方法签名直接引用 EMI 类型，
 	 * 外部（如 EMI 中键下单）一律经 {@link EmiHelper#getSidebarGenericStackUnderMouse} 调用，
@@ -153,27 +151,11 @@ public final class EmiRecipeCompat {
 		if (!(stack instanceof EmiStack emiStack)) {
 			return null;
 		}
-		try {
-			ItemStack item = emiStack.getItemStack();
-			if (item != null && !item.isEmpty()) {
-				return new GenericStack(AEItemKey.of(item), Math.max(1, emiStack.getAmount()));
+		for (EmiStackConverter converter : EmiStackConverters.getConverters()) {
+			GenericStack converted = converter.toGenericStack(emiStack);
+			if (converted != null) {
+				return converted;
 			}
-			Object key = emiStack.getKey();
-			if (key instanceof Fluid fluid && fluid != Fluids.EMPTY) {
-				long amount = emiStack.getAmount();
-				long mb = Math.max(1, amount / 81);
-				return new GenericStack(AEFluidKey.of(fluid), mb);
-			}
-			// 其余类型（Mekanism 化学品等）交由 AE2 官方的 EMI 转换器注册表处理。
-			// AppMek 的 AMEmiPlugin 已向该注册表登记化学品转换器，由转换器自身解析
-			// EMI 栈的内部形态；此处不得假定 EmiStack#getKey 的具体类型。
-			for (EmiStackConverter converter : EmiStackConverters.getConverters()) {
-				GenericStack converted = converter.toGenericStack(emiStack);
-				if (converted != null) {
-					return converted;
-				}
-			}
-		} catch (Throwable ignored) {
 		}
 		return null;
 	}
