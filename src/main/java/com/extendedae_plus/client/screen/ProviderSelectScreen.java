@@ -157,7 +157,8 @@ public class ProviderSelectScreen extends Screen {
         if (idx < 0 || idx >= this.fIds.size()) return;
         long providerId = this.fIds.get(idx);
         String providerName = this.fNames.get(idx);
-        PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(providerId, showStatusMessage, providerName));
+        PacketDistributor.sendToServer(new UploadEncodedPatternToProviderC2SPacket(
+                providerId, showStatusMessage, providerName));
         this.onClose();
     }
 

@@ -5,6 +5,7 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil.UploadOutcome;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,14 +49,25 @@ public final class CtrlQPendingUploadUtil {
 		return !getPendingCtrlQPattern(player).isEmpty();
 	}
 
-	public static boolean uploadPendingCtrlQPattern(ServerPlayer player, long providerId) {
-		if (player == null) return false;
+	/**
+	 * 将 Ctrl+Q 缓存样板写入指定供应器。
+	 *
+	 * <p>若 index 指定的目标供应器已含「除编码作者以外完全相同」的样板，
+	 * 直接返回 {@link UploadOutcome#DUPLICATE}，不写入任何槽位（样板由调用方退回背包）。
+	 * 检测只针对 index 指定的那一个供应器。</p>
+	 */
+	public static UploadOutcome uploadPendingCtrlQPattern(ServerPlayer player, long providerId) {
+		if (player == null) return UploadOutcome.FAILED;
 		ItemStack pending = getPendingCtrlQPattern(player);
-		if (pending.isEmpty()) return false;
+		if (pending.isEmpty()) return UploadOutcome.FAILED;
+
+		if (pendingTargetContainsPattern(player, providerId, pending)) {
+			return UploadOutcome.DUPLICATE;
+		}
 
 		ItemStack remain = insertPatternIntoProviderFromPlayerNetwork(player, pending, providerId);
 		if (remain.getCount() >= pending.getCount()) {
-			return false;
+			return UploadOutcome.FAILED;
 		}
 
 		if (remain.isEmpty()) {
@@ -63,7 +75,20 @@ public final class CtrlQPendingUploadUtil {
 		} else {
 			player.getPersistentData().put(PENDING_STACK_KEY, remain.saveOptional(player.registryAccess()));
 		}
-		return true;
+		return UploadOutcome.SUCCESS;
+	}
+
+	/**
+	 * 判定 index 指定的目标供应器是否已存在同一缓存样板（剔除编码作者后完全相同）。
+	 */
+	private static boolean pendingTargetContainsPattern(ServerPlayer player, long providerId, ItemStack pattern) {
+		int index = decodeProviderIndex(providerId);
+		if (index < 0) return false;
+		List<PatternContainer> providers = listAvailableProvidersFromPlayerNetwork(player);
+		if (index >= providers.size()) return false;
+		PatternContainer target = providers.get(index);
+		if (target == null) return false;
+		return ExtendedAEPatternUploadUtil.providerContainsPattern(target, pattern);
 	}
 
 	public static boolean returnPendingCtrlQPatternToInventory(ServerPlayer player){

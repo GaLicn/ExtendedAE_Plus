@@ -298,6 +298,7 @@
   "extendedae_plus.message.upload.no_pattern": "No encoded pattern found.",
   "extendedae_plus.message.network.invalid": "Unable to access AE network.",
   "extendedae_plus.message.matrix.duplicate": "Assembly matrix already contains this pattern.",
+  "extendedae_plus.message.provider.duplicate": "Pattern provider %s already contains this pattern.",
   "extendedae_plus.message.open_terminal_first": "Please open a pattern terminal first.",
   "extendedae_plus.message.inventory_slot_empty": "The selected inventory slot is empty.",
   "extendedae_plus.message.invalid_pattern_item": "Item is not an encoded pattern.",

@@ -297,6 +297,7 @@
   "extendedae_plus.message.upload.no_pattern": "未找到已编码样板。",
   "extendedae_plus.message.network.invalid": "无法访问 AE 网络。",
   "extendedae_plus.message.matrix.duplicate": "装配矩阵已存在该样板。",
+  "extendedae_plus.message.provider.duplicate": "样板供应器 %s 已存在该样板。",
   "extendedae_plus.message.open_terminal_first": "请先打开样板终端。",
   "extendedae_plus.message.inventory_slot_empty": "选中的物品栏槽位为空。",
   "extendedae_plus.message.invalid_pattern_item": "该物品不是编码样板。",

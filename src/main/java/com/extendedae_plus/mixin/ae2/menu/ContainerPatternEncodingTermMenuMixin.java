@@ -9,6 +9,7 @@ import com.extendedae_plus.api.upload.IPatternEncodeRequestSync;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.api.upload.UploadPreferences;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil.UploadOutcome;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import net.minecraft.core.component.DataComponents;
@@ -124,9 +125,13 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             // 为避免与 AE2 后续同步竞争，切到下一 tick 执行
             sp.server.execute(() -> {
                 try {
-                    if (provider != null
-                            && ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToNamedProvider(sp, this, provider)) {
-                        return;
+                    if (provider != null) {
+                        UploadOutcome outcome = ExtendedAEPatternUploadUtil
+                                .uploadFromEncodingMenuToNamedProvider(sp, this, provider);
+                        // 成功或命中重复（已提示并回收）都终止，不再回退到矩阵/ECO
+                        if (outcome != UploadOutcome.FAILED) {
+                            return;
+                        }
                     }
                     if (processing) {
                         return;
