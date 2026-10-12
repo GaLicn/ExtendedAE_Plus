@@ -68,9 +68,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     @Unique
     private ChannelCardConnectionController eap$channelController;
 
-    @Unique
-    private boolean eap$compatVirtualCraftingEnabled = false;
-
     // 旧倍率页升级后，保留前四页的可用状态，并将超额样板安全暂存到独立 NBT。
     @Unique
     private boolean eap$legacyPatternMigrationComplete;
@@ -144,7 +141,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             if ((Object) this instanceof PatternProviderLogicSyncBridge bridge) {
                 bridge.eap$markPatternSyncDirty();
             }
-            this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 兼容升级变更处理失败", t);
         }
@@ -186,7 +182,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
             }
             // NBT 加载后由统一控制器恢复连接
             this.eap$getChannelCardController().onLoaded();
-            this.eap$compatSyncVirtualCraftingState();
         } catch (Throwable t) {
             ExtendedAELogger.LOGGER.error("[样板供应器] 读取兼容升级失败", t);
         }
@@ -354,7 +349,10 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Override
     public boolean eap$compatIsVirtualCraftingEnabled() {
-        return this.eap$compatVirtualCraftingEnabled;
+        // 实时读取升级槽：NBT 加载顺序可能使 appflux 的升级槽晚于本回调恢复，
+        // 缓存布尔值会导致重进世界后虚拟合成卡不生效（只能破坏重放才恢复）。
+        return this.eap$compatInventoryContains(
+                this.eap$compatGetEffectiveUpgrades(), ModItems.VIRTUAL_CRAFTING_CARD.get());
     }
 
     @Override
@@ -471,16 +469,6 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
 
     @Unique
     private record LegacyPatternStack(int originalSlot, ItemStack stack) {
-    }
-
-    @Unique
-    private void eap$compatSyncVirtualCraftingState() {
-        try {
-            IUpgradeInventory upgrades = this.eap$compatGetEffectiveUpgrades();
-            this.eap$compatVirtualCraftingEnabled = this.eap$compatInventoryContains(upgrades, ModItems.VIRTUAL_CRAFTING_CARD.get());
-        } catch (Throwable t) {
-            ExtendedAELogger.LOGGER.error("[样板供应器] 同步虚拟合成卡状态失败", t);
-        }
     }
 
     @Unique
