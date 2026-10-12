@@ -84,6 +84,7 @@
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在當前網路中找到已成型的裝配矩陣",
   "extendedae_plus.upload_to_matrix.fail_full": "裝配矩陣的樣板倉已滿或無法插入",
   "extendedae_plus.upload_to_matrix.repetition": "裝配矩陣已存在相同樣板，已跳過上傳並返還空白樣板",
+  "extendedae_plus.message.provider.duplicate": "樣板供應器「%s」已存在相同樣板，已跳過上傳並返還空白樣板",
 
   "chat.extendedae_plus.terminal.pos": "合成計劃對應供應器現在突出顯示在：%s，維度：%s (%s個方塊外)",
 

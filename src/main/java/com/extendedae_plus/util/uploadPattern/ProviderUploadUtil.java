@@ -2,6 +2,7 @@ package com.extendedae_plus.util.uploadPattern;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.inventories.InternalInventory;
+import appeng.core.definitions.AEItems;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
@@ -63,6 +64,91 @@ public final class ProviderUploadUtil {
     }
 
     private record HostLocator(long pos, String side, String dimension) {}
+
+    /**
+     * 上传结果三态。
+     *
+     * <p>「重复」必须与「失败」区分：前者是用户应当知晓的正常结果（样板已在目标处，
+     * 本次不上传），后者才是异常；混为一谈会让玩家误以为链路出错。</p>
+     */
+    public enum UploadOutcome {
+        SUCCESS,
+        DUPLICATE,
+        FAILED
+    }
+
+    /**
+     * 复制样板并剔除编码作者标记（{@code encodePlayer}）。
+     *
+     * <p>「除编码作者以外完全相同」的比对语义统一以此为准：不同玩家编码的同一配方样板
+     * 剔除作者后应当视为相同。</p>
+     */
+    private static ItemStack stripEncodePlayer(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack copy = stack.copy();
+        if (copy.getTag() != null) {
+            copy.getTag().remove("encodePlayer");
+        }
+        return copy;
+    }
+
+    /**
+     * 目标供应器的样板库存中是否已存在与给定样板「除编码作者以外完全相同」的样板。
+     *
+     * <p>仅检查传入容器本身，不扩展到同名组或整个网络（issue #140 的检测范围约定）。</p>
+     */
+    public static boolean providerContainsPattern(PatternContainer container, ItemStack pattern) {
+        if (container == null || pattern == null || pattern.isEmpty()) {
+            return false;
+        }
+        InternalInventory inv = container.getTerminalPatternInventory();
+        if (inv == null) {
+            return false;
+        }
+        ItemStack target = stripEncodePlayer(pattern);
+        for (int i = 0; i < inv.size(); i++) {
+            ItemStack s = inv.getStackInSlot(i);
+            if (s.isEmpty()) {
+                continue;
+            }
+            if (ItemStack.isSameItemSameTags(stripEncodePlayer(s), target)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 把编码槽内的样板回收为等量空白样板并清空编码槽。
+     *
+     * <p>优先放回空白样板槽，放不下则退回玩家背包。</p>
+     */
+    public static void recycleEncodedPatternAsBlanks(ServerPlayer player, Object menu, ItemStack pattern) {
+        int count = pattern == null ? 0 : pattern.getCount();
+        if (count > 0) {
+            ItemStack blanks = AEItems.BLANK_PATTERN.stack(count);
+            boolean placed = false;
+            if (menu instanceof PatternEncodingTermMenu encMenu) {
+                var blankSlot = ((PatternEncodingTermMenuAccessor) encMenu).eap$getBlankPatternSlot();
+                if (blankSlot != null && blankSlot.mayPlace(blanks)) {
+                    ItemStack remain = blankSlot.safeInsert(blanks);
+                    if (!remain.isEmpty() && player != null) {
+                        player.getInventory().placeItemBackInInventory(remain, false);
+                    }
+                    placed = true;
+                }
+            }
+            if (!placed && player != null) {
+                player.getInventory().placeItemBackInInventory(blanks, false);
+            }
+        }
+        Slot slot = getEncodedPatternSlot(menu);
+        if (slot != null) {
+            slot.set(ItemStack.EMPTY);
+        }
+    }
 
     /**
      * 发送消息给玩家
@@ -152,25 +238,35 @@ public final class ProviderUploadUtil {
     /**
      * 将图样编码终端的“已编码图样”上传到指定的样板供应器（通过 providerId 定位）。
      */
-    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
+    public static UploadOutcome uploadFromEncodingMenuToProvider(ServerPlayer player, PatternEncodingTermMenu menu, long providerId) {
         return uploadFromEncodingMenuToProvider(player, (IPatternUploadMenu) menu, providerId);
     }
 
-    /** 通过通用菜单契约上传，兼容第三方编码终端。 */
-    public static boolean uploadFromEncodingMenuToProvider(ServerPlayer player, IPatternUploadMenu menu, long providerId) {
+    /**
+     * 通过通用菜单契约上传，兼容第三方编码终端。
+     *
+     * <p>若用户选定的目标供应器已含「除编码作者以外完全相同」的样板，直接返回
+     * {@link UploadOutcome#DUPLICATE}，不写入任何槽位（样板留在终端，由调用方回收为空白样板）。
+     * 检测只针对用户选定的那一个供应器，不扩展到同名回退项。</p>
+     */
+    public static UploadOutcome uploadFromEncodingMenuToProvider(ServerPlayer player, IPatternUploadMenu menu, long providerId) {
         if (player == null || menu == null) {
-            return false;
+            return UploadOutcome.FAILED;
         }
         var encodedSlot = getEncodedPatternSlot(menu);
-        if (encodedSlot == null) return false;
+        if (encodedSlot == null) return UploadOutcome.FAILED;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            return false;
+            return UploadOutcome.FAILED;
         }
 
         PatternAccessTermMenu accessMenu = PatternTerminalUtil.getPatternAccessMenu(player);
         if (accessMenu == null) {
-            return false;
+            return UploadOutcome.FAILED;
+        }
+        PatternContainer target = PatternTerminalUtil.getPatternContainerById(accessMenu, providerId);
+        if (target != null && providerContainsPattern(target, stack)) {
+            return UploadOutcome.DUPLICATE;
         }
         // 先确定目标容器名称，用于同名回退
         String targetName = PatternProviderDataUtil.getProviderDisplayName(providerId, accessMenu);
@@ -207,33 +303,41 @@ public final class ProviderUploadUtil {
                     encodedSlot.set(stack);
                 }
                 recordProviderUpload(player, id, c, findLastChangedSlot(inv, before));
-                return true;
+                return UploadOutcome.SUCCESS;
             }
         }
-        return false;
+        return UploadOutcome.FAILED;
     }
 
     /**
      * 基于“索引”的定向上传：使用 listAvailableProvidersFromGrid(menu) 的顺序，
      * 将编码槽样板插入到第 index 个供应器。
      */
-    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
+    public static UploadOutcome uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, PatternEncodingTermMenu menu, int index) {
         return uploadFromEncodingMenuToProviderByIndex(player, (IPatternUploadMenu) menu, index);
     }
 
-    /** 通过通用菜单契约按网络顺序上传。 */
-    public static boolean uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
-        if (player == null || menu == null || index < 0) return false;
+    /**
+     * 通过通用菜单契约按网络顺序上传。
+     *
+     * <p>index 指定的目标供应器已含「除编码作者以外完全相同」的样板时返回
+     * {@link UploadOutcome#DUPLICATE}，不写入也不做同名回退（由调用方回收为空白样板）。</p>
+     */
+    public static UploadOutcome uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
+        if (player == null || menu == null || index < 0) return UploadOutcome.FAILED;
         List<PatternContainer> list = listAvailableProvidersFromGrid(menu);
-        if (index >= list.size()) return false;
+        if (index >= list.size()) return UploadOutcome.FAILED;
         var container = list.get(index);
-        if (container == null) return false;
+        if (container == null) return UploadOutcome.FAILED;
 
         var encodedSlot = getEncodedPatternSlot(menu);
-        if (encodedSlot == null) return false;
+        if (encodedSlot == null) return UploadOutcome.FAILED;
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            return false;
+            return UploadOutcome.FAILED;
+        }
+        if (providerContainsPattern(container, stack)) {
+            return UploadOutcome.DUPLICATE;
         }
 
         // 以名称为键，同名供应器依次尝试：先 index 指定的，再同名的其他
@@ -267,10 +371,10 @@ public final class ProviderUploadUtil {
                 int trueIndex = list.indexOf(c);
                 long storedProviderId = trueIndex >= 0 ? -1L - trueIndex : Long.MIN_VALUE;
                 recordProviderUpload(player, storedProviderId, c, findLastChangedSlot(inv, before));
-                return true;
+                return UploadOutcome.SUCCESS;
             }
         }
-        return false;
+        return UploadOutcome.FAILED;
     }
 
     /** 从通用菜单契约获取编码槽。 */
@@ -310,20 +414,22 @@ public final class ProviderUploadUtil {
      * 原始名称（Component JSON，保留翻译键），比较与语言无关；同名供应器按空位从多到少依次尝试。
      * 按当前网络实时定位而不是沿用客户端缓存的下标，供应器被填满导致列表变化时也不会传错目标。</p>
      *
+     * <p>同名候选供应器中若已含「除编码作者以外完全相同」的样板，命中即提示并回收为空白样板，
+     * 返回 {@link UploadOutcome#DUPLICATE}，不再回退到矩阵。</p>
+     *
      * @param providerName 客户端判定唯一匹配的供应器原始名称
-     * @return 是否写入成功
      */
-    public static boolean uploadFromEncodingMenuToNamedProvider(ServerPlayer player, IPatternUploadMenu menu, String providerName) {
+    public static UploadOutcome uploadFromEncodingMenuToNamedProvider(ServerPlayer player, IPatternUploadMenu menu, String providerName) {
         if (player == null || menu == null || providerName == null) {
-            return false;
+            return UploadOutcome.FAILED;
         }
         Slot encodedSlot = getEncodedPatternSlot(menu);
         if (encodedSlot == null) {
-            return false;
+            return UploadOutcome.FAILED;
         }
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            return false;
+            return UploadOutcome.FAILED;
         }
 
         List<PatternContainer> candidates = new ArrayList<>();
@@ -335,6 +441,14 @@ public final class ProviderUploadUtil {
         candidates.sort(Comparator.<PatternContainer>comparingInt(ProviderUploadUtil::getAvailableSlots).reversed());
 
         for (PatternContainer c : candidates) {
+            // 与手动上传一致：目标供应器已含「除编码作者以外完全相同」的样板时不再重复写入。
+            // 自动上传没有屏蔽入口，命中即提示并回收为空白样板，不再回退到矩阵/ECO。
+            if (providerContainsPattern(c, stack)) {
+                player.sendSystemMessage(Component.translatable(
+                        "extendedae_plus.message.provider.duplicate", toDisplayComponent(providerName)));
+                recycleEncodedPatternAsBlanks(player, menu, stack);
+                return UploadOutcome.DUPLICATE;
+            }
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
             ItemStack[] before = snapshotInventory(inv);
@@ -347,10 +461,10 @@ public final class ProviderUploadUtil {
                 recordProviderUpload(player, Long.MIN_VALUE, c, findLastChangedSlot(inv, before));
                 player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_provider.success",
                         toDisplayComponent(providerName)));
-                return true;
+                return UploadOutcome.SUCCESS;
             }
         }
-        return false;
+        return UploadOutcome.FAILED;
     }
 
     /** 将原始名称还原为 Component，保留翻译键，由玩家客户端按客户端语言渲染。 */
@@ -396,16 +510,23 @@ public final class ProviderUploadUtil {
 
     /**
      * 将 pending Ctrl+Q 样板上传到玩家网络中的目标 provider（负数索引 ID）。
+     *
+     * <p>目标 provider 已含「除编码作者以外完全相同」的样板时返回
+     * {@link UploadOutcome#DUPLICATE}，不写入也不做同名回退（样板由调用方退回背包）。</p>
      */
-    public static boolean uploadPendingCtrlQPattern(ServerPlayer player, long providerId) {
-        if (player == null) return false;
+    public static UploadOutcome uploadPendingCtrlQPattern(ServerPlayer player, long providerId) {
+        if (player == null) return UploadOutcome.FAILED;
         ItemStack pending = getPendingCtrlQPattern(player);
-        if (pending.isEmpty()) return false;
+        if (pending.isEmpty()) return UploadOutcome.FAILED;
+
+        if (pendingTargetContainsPattern(player, providerId, pending)) {
+            return UploadOutcome.DUPLICATE;
+        }
 
         UploadResult result = insertPatternIntoProviderFromPlayerNetwork(player, pending, providerId);
         ItemStack remain = result.remaining();
         if (remain.getCount() >= pending.getCount()) {
-            return false;
+            return UploadOutcome.FAILED;
         }
 
         if (remain.isEmpty()) {
@@ -417,7 +538,20 @@ public final class ProviderUploadUtil {
         if (result.target() != null) {
             recordProviderUpload(player, providerId, result.target(), result.slot());
         }
-        return true;
+        return UploadOutcome.SUCCESS;
+    }
+
+    /**
+     * 判定 providerId 指定的目标 provider 是否已存在同一 pending 样板（剔除编码作者后完全相同）。
+     */
+    private static boolean pendingTargetContainsPattern(ServerPlayer player, long providerId, ItemStack pattern) {
+        int index = decodeProviderIndex(providerId);
+        if (index < 0) return false;
+        List<PatternContainer> providers = listAvailableProvidersFromPlayerNetwork(player);
+        if (index >= providers.size()) return false;
+        PatternContainer target = providers.get(index);
+        if (target == null) return false;
+        return providerContainsPattern(target, pattern);
     }
 
     /**

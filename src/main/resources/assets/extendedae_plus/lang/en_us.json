@@ -105,6 +105,7 @@
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "No formed assembly matrix found in the current network",
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
   "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
+  "extendedae_plus.message.provider.duplicate": "The pattern provider \"%s\" already contains the same pattern. Upload skipped and blank pattern returned.",
 
   "chat.extendedae_plus.terminal.pos": "The crafting plan's corresponding provider is now highlighted at: %s, Dimension: %s (%s blocks away)",
 
