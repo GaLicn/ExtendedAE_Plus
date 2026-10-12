@@ -5,6 +5,7 @@ import appeng.api.inventories.InternalInventory;
 import appeng.core.definitions.AEItems;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.security.IActionHost;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.implementations.PatternAccessTermMenu;
@@ -19,6 +20,7 @@ import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -271,18 +273,16 @@ public final class ProviderUploadUtil {
         // 先确定目标容器名称，用于同名回退
         String targetName = PatternProviderDataUtil.getProviderDisplayName(providerId, accessMenu);
         // 构建尝试顺序：先指定ID，其次同名的其他ID
-        java.util.List<Long> tryIds = new java.util.ArrayList<>();
+        List<Long> tryIds = new ArrayList<>();
         tryIds.add(providerId);
-        try {
-            java.util.List<Long> all = PatternTerminalUtil.getAllProviderIds(accessMenu);
-            for (Long id : all) {
-                if (id == null || id == providerId) continue;
-                String name = PatternProviderDataUtil.getProviderDisplayName(id, accessMenu);
-                if (name != null && name.equals(targetName)) {
-                    tryIds.add(id);
-                }
+        List<Long> all = PatternTerminalUtil.getAllProviderIds(accessMenu);
+        for (Long id : all) {
+            if (id == null || id == providerId) continue;
+            String name = PatternProviderDataUtil.getProviderDisplayName(id, accessMenu);
+            if (name != null && name.equals(targetName)) {
+                tryIds.add(id);
             }
-        } catch (Throwable ignored) {}
+        }
 
         // 按顺序逐个尝试插入
         for (Long id : tryIds) {
@@ -342,17 +342,15 @@ public final class ProviderUploadUtil {
 
         // 以名称为键，同名供应器依次尝试：先 index 指定的，再同名的其他
         String targetName = PatternProviderDataUtil.getProviderDisplayName(container);
-        java.util.List<PatternContainer> tryList = new java.util.ArrayList<>();
+        List<PatternContainer> tryList = new ArrayList<>();
         tryList.add(container);
-        try {
-            for (PatternContainer c : list) {
-                if (c == null || c == container) continue;
-                String name = PatternProviderDataUtil.getProviderDisplayName(c);
-                if (name != null && name.equals(targetName)) {
-                    tryList.add(c);
-                }
+        for (PatternContainer c : list) {
+            if (c == null || c == container) continue;
+            String name = PatternProviderDataUtil.getProviderDisplayName(c);
+            if (name != null && name.equals(targetName)) {
+                tryList.add(c);
             }
-        } catch (Throwable ignored) {}
+        }
 
         for (PatternContainer c : tryList) {
             InternalInventory inv = c.getTerminalPatternInventory();
@@ -391,13 +389,9 @@ public final class ProviderUploadUtil {
     /** 从编码菜单目标解析 AE 网络。 */
     public static IGrid resolveGrid(Object menu) {
         if (!(menu instanceof AEBaseMenu aeMenu)) return null;
-        try {
-            Object target = aeMenu.getTarget();
-            if (target instanceof appeng.api.networking.security.IActionHost host
-                    && host.getActionableNode() != null) {
-                return host.getActionableNode().getGrid();
-            }
-        } catch (Throwable ignored) {
+        Object target = aeMenu.getTarget();
+        if (target instanceof IActionHost host && host.getActionableNode() != null) {
+            return host.getActionableNode().getGrid();
         }
         return null;
     }
@@ -639,7 +633,7 @@ public final class ProviderUploadUtil {
 
     private static List<PatternContainer> buildSameNameTryList(List<PatternContainer> all, PatternContainer target) {
         String targetName = PatternProviderDataUtil.getProviderDisplayName(target);
-        List<PatternContainer> tryList = new java.util.ArrayList<>();
+        List<PatternContainer> tryList = new ArrayList<>();
         tryList.add(target);
         for (PatternContainer container : all) {
             if (container == null || container == target) continue;
@@ -768,26 +762,22 @@ public final class ProviderUploadUtil {
             return null;
         }
 
-        try {
-            for (var machineClass : grid.getMachineClasses()) {
-                if (!PatternContainer.class.isAssignableFrom(machineClass)) {
-                    continue;
-                }
-                @SuppressWarnings("unchecked")
-                Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                for (PatternContainer container : grid.getMachines(containerClass)) {
-                    if (container != null && matchesContainer(container, pos, side, dimension)) {
-                        return container;
-                    }
-                }
-                for (PatternContainer container : grid.getActiveMachines(containerClass)) {
-                    if (container != null && matchesContainer(container, pos, side, dimension)) {
-                        return container;
-                    }
+        for (var machineClass : grid.getMachineClasses()) {
+            if (!PatternContainer.class.isAssignableFrom(machineClass)) {
+                continue;
+            }
+            @SuppressWarnings("unchecked")
+            Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+            for (PatternContainer container : grid.getMachines(containerClass)) {
+                if (container != null && matchesContainer(container, pos, side, dimension)) {
+                    return container;
                 }
             }
-        } catch (Throwable ignored) {
-            return null;
+            for (PatternContainer container : grid.getActiveMachines(containerClass)) {
+                if (container != null && matchesContainer(container, pos, side, dimension)) {
+                    return container;
+                }
+            }
         }
         return null;
     }
@@ -836,7 +826,7 @@ public final class ProviderUploadUtil {
         if (id == null || player.server == null) {
             return null;
         }
-        return player.server.getLevel(ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, id));
+        return player.server.getLevel(ResourceKey.create(Registries.DIMENSION, id));
     }
 
     private static boolean dimensionMatches(Level level, String dimension) {
