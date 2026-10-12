@@ -99,6 +99,7 @@
 
   "extendedae_plus.upload_to_matrix": "上传到装配矩阵",
   "extendedae_plus.upload_to_matrix.success": "样板已上传到装配矩阵",
+  "extendedae_plus.upload_to_provider.success": "样板已上传到供应器：%s",
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "仅支持上传合成样板，处理样板将被忽略",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "未在当前网络中找到已成型的装配矩阵",
   "extendedae_plus.upload_to_matrix.fail_full": "装配矩阵的样板仓已满或无法插入",
@@ -190,6 +191,7 @@
   "config.extendedae_plus.option.showEncoderPatternPlayer": "显示样板编码玩家",
   "config.extendedae_plus.option.patternTerminalShowSlotsDefault": "样板终端默认显示槽位",
   "config.extendedae_plus.option.extendedPatternProviderShowScalingControls": "扩展样板供应器显示倍率按钮",
+  "config.extendedae_plus.option.uniqueProviderAutoUploadEnable": "编码后供应器唯一匹配时直接上传",
   "config.extendedae_plus.option.smartScalingMaxMultiplier": "智能倍增最大倍数",
   "config.extendedae_plus.option.smartScalingMaxMultiplier_with_range": "智能倍增最大倍数",
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "智能倍增最小收益因子",

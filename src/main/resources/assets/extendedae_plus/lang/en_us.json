@@ -100,6 +100,7 @@
 
   "extendedae_plus.upload_to_matrix": "Upload to Assembly Matrix",
   "extendedae_plus.upload_to_matrix.success": "Pattern uploaded to the assembly matrix",
+  "extendedae_plus.upload_to_provider.success": "Pattern Uploaded to Provider: %s",
   "extendedae_plus.upload_to_matrix.fail_not_crafting": "Only crafting patterns are supported; processing patterns will be ignored",
   "extendedae_plus.upload_to_matrix.fail_no_matrix": "No formed assembly matrix found in the current network",
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
@@ -191,6 +192,7 @@
   "config.extendedae_plus.option.showEncoderPatternPlayer": "Show Encoded Pattern Player",
   "config.extendedae_plus.option.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots By Default",
   "config.extendedae_plus.option.extendedPatternProviderShowScalingControls": "Show Pattern Scaling Controls in Extended Pattern Provider",
+  "config.extendedae_plus.option.uniqueProviderAutoUploadEnable": "Upload Directly on Unique Provider Match After Encoding",
   "config.extendedae_plus.option.smartScalingMaxMultiplier": "Smart Scaling Max Multiplier",
   "config.extendedae_plus.option.smartScalingMaxMultiplier_with_range": "Smart Scaling Max Multiplier",
   "config.extendedae_plus.option.smartScalingMinBenefitFactor": "Smart Scaling Min Benefit Factor",

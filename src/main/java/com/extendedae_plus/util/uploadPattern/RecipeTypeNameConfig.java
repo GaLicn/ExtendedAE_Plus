@@ -9,6 +9,7 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.fml.loading.FMLPaths;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,6 +74,53 @@ public final class RecipeTypeNameConfig {
         String searchKey = lastProviderSearchKey;
         lastProviderSearchKey = null;
         return searchKey;
+    }
+
+    /**
+     * 读取但不消费最近一次的供应器搜索词，供编码按钮做唯一匹配判定；
+     * 命中后由调用方再调用 {@link #consumeLastProviderSearchKey()} 清除。
+     */
+    public static String peekLastProviderSearchKey() {
+        return lastProviderSearchKey;
+    }
+
+    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
+    private static Boolean JEC_AVAILABLE = null;
+    private static Method JEC_CONTAINS = null;
+
+    /**
+     * 供应器名称与搜索词的匹配判定，供应器选择弹窗与编码时唯一匹配判定共用，保证两处语义一致。
+     *
+     * @param name 供应器显示名
+     * @param key  搜索关键字；为空表示不过滤，视为匹配
+     */
+    public static boolean matchesProviderName(String name, String key) {
+        if (name == null) return false;
+        if (key == null || key.isEmpty()) return true;
+        String keyLower = key.toLowerCase(Locale.ROOT);
+        try {
+            if (JEC_AVAILABLE == null) {
+                try {
+                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
+                    // 使用 contains(CharSequence, CharSequence)
+                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
+                    JEC_AVAILABLE = true;
+                } catch (Throwable t) {
+                    JEC_AVAILABLE = false;
+                }
+            }
+            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
+                Object r = JEC_CONTAINS.invoke(null, name, key);
+                if (r instanceof Boolean && (Boolean) r) return true;
+                // 再尝试大小写不敏感：双方转为小写重新匹配
+                Object r2 = JEC_CONTAINS.invoke(null, name.toLowerCase(Locale.ROOT), keyLower);
+                if (r2 instanceof Boolean && (Boolean) r2) return true;
+            }
+        } catch (Throwable ignored) {
+            // 回退
+        }
+        // 默认大小写不敏感子串
+        return name.toLowerCase(Locale.ROOT).contains(keyLower);
     }
 
     /**

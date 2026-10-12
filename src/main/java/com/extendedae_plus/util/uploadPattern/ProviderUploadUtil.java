@@ -19,6 +19,7 @@ import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -27,6 +28,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -298,6 +301,70 @@ public final class ProviderUploadUtil {
     /** 基于通用菜单契约枚举可用供应器。 */
     public static List<PatternContainer> listAvailableProvidersFromGrid(IPatternUploadMenu menu) {
         return PatternTerminalUtil.listAvailableProvidersFromGrid(resolveGrid(menu));
+    }
+
+    /**
+     * 编码后供应器唯一匹配直传：在编码终端所在网络中按名称定位供应器并写入，成功后发送带名提示。
+     *
+     * <p>唯一匹配由客户端判定（名称与搜索词同处客户端语言环境），这里只按名称定位。名称是服务端下发的
+     * 原始名称（Component JSON，保留翻译键），比较与语言无关；同名供应器按空位从多到少依次尝试。
+     * 按当前网络实时定位而不是沿用客户端缓存的下标，供应器被填满导致列表变化时也不会传错目标。</p>
+     *
+     * @param providerName 客户端判定唯一匹配的供应器原始名称
+     * @return 是否写入成功
+     */
+    public static boolean uploadFromEncodingMenuToNamedProvider(ServerPlayer player, IPatternUploadMenu menu, String providerName) {
+        if (player == null || menu == null || providerName == null) {
+            return false;
+        }
+        Slot encodedSlot = getEncodedPatternSlot(menu);
+        if (encodedSlot == null) {
+            return false;
+        }
+        ItemStack stack = encodedSlot.getItem();
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            return false;
+        }
+
+        List<PatternContainer> candidates = new ArrayList<>();
+        for (PatternContainer c : listAvailableProvidersFromGrid(menu)) {
+            if (providerName.equals(PatternProviderDataUtil.getProviderDisplayName(c))) {
+                candidates.add(c);
+            }
+        }
+        candidates.sort(Comparator.<PatternContainer>comparingInt(ProviderUploadUtil::getAvailableSlots).reversed());
+
+        for (PatternContainer c : candidates) {
+            InternalInventory inv = c.getTerminalPatternInventory();
+            if (inv == null || inv.size() <= 0) continue;
+            ItemStack[] before = snapshotInventory(inv);
+            ItemStack toInsert = stack.copy();
+            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
+            int inserted = toInsert.getCount() - remain.getCount();
+            if (inserted > 0) {
+                stack.shrink(inserted);
+                encodedSlot.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+                recordProviderUpload(player, Long.MIN_VALUE, c, findLastChangedSlot(inv, before));
+                player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_provider.success",
+                        toDisplayComponent(providerName)));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 将原始名称还原为 Component，保留翻译键，由玩家客户端按客户端语言渲染。 */
+    private static Component toDisplayComponent(String rawName) {
+        try {
+            if (rawName.startsWith("{") || rawName.startsWith("\"")) {
+                Component component = Component.Serializer.fromJson(rawName);
+                if (component != null) {
+                    return component;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return Component.literal(rawName);
     }
 
     /**

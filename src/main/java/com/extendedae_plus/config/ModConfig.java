@@ -128,4 +128,12 @@ public final class ModConfig {
     })
     public boolean extendedPatternProviderShowScalingControls = true;
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "编码后若供应器按搜索词唯一匹配，是否直接上传到该供应器",
+            "优先于装配矩阵自动上传；处理样板只可能走供应器直传",
+            "客户端偏好：在客户端判定，多人游戏中每个玩家各自生效"
+    })
+    public boolean uniqueProviderAutoUploadEnable = true;
+
     }

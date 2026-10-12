@@ -20,11 +20,24 @@ import java.util.function.Supplier;
  * C2S: 请求当前终端可见的样板供应器列表（用于弹窗选择）。
  */
 public class RequestProvidersListC2SPacket {
-    public RequestProvidersListC2SPacket() {}
+    /** 静默模式：只回填客户端缓存用于本地唯一匹配判定，不打开弹窗。 */
+    private final boolean silent;
 
-    public static void encode(RequestProvidersListC2SPacket msg, FriendlyByteBuf buf) {}
+    public RequestProvidersListC2SPacket() {
+        this(false);
+    }
 
-    public static RequestProvidersListC2SPacket decode(FriendlyByteBuf buf) { return new RequestProvidersListC2SPacket(); }
+    public RequestProvidersListC2SPacket(boolean silent) {
+        this.silent = silent;
+    }
+
+    public static void encode(RequestProvidersListC2SPacket msg, FriendlyByteBuf buf) {
+        buf.writeBoolean(msg.silent);
+    }
+
+    public static RequestProvidersListC2SPacket decode(FriendlyByteBuf buf) {
+        return new RequestProvidersListC2SPacket(buf.readBoolean());
+    }
 
     public static void handle(RequestProvidersListC2SPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
         var ctx = ctxSupplier.get();
@@ -48,7 +61,7 @@ public class RequestProvidersListC2SPacket {
                     names.add(PatternProviderDataUtil.getProviderDisplayName(c));
                     slots.add(empty);
                 }
-                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
 
@@ -73,7 +86,7 @@ public class RequestProvidersListC2SPacket {
                     slots.add(empty);
                 }
 
-                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(filteredIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(filteredIds, names, slots, msg.silent), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
                 return;
             }
 
@@ -92,7 +105,7 @@ public class RequestProvidersListC2SPacket {
                 names.add(PatternProviderDataUtil.getProviderDisplayName(c));
                 slots.add(empty);
             }
-            ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots), player.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+            ModNetwork.CHANNEL.sendTo(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent), player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
         });
         ctx.setPacketHandled(true);
     }

@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -61,10 +60,8 @@ public class ProviderSelectScreen extends Screen {
     // 置顶的供应器名称集合（静态变量，持久化到配置文件）
     private static final Set<String> pinnedProviders = new HashSet<>();
     private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
-    private static final String AUTO_UPLOAD_UNIQUE_MATCH_KEY = "auto_upload_unique_match";
     private static final String SHOW_PROCESSING_BUTTONS_KEY = "show_processing_buttons";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    private static boolean autoUploadUniqueMatchEnabled = true;
     private static boolean showProcessingButtonsEnabled = true;
 
     // 静态初始化块：加载置顶配置
@@ -81,7 +78,6 @@ public class ProviderSelectScreen extends Screen {
     // 中文名输入框（用于添加映射）
     private EditBox cnInput;
     private Button processingButtonsToggleButton;
-    private Button autoUploadToggleButton;
     private String query = "";
     // 翻页按钮
     private Button prevButton;
@@ -99,10 +95,6 @@ public class ProviderSelectScreen extends Screen {
     // 缓存 Component JSON 解析
     private static final Map<String, String> componentCache = new HashMap<>();
     private String lastLanguage = ""; // 当前语言版本
-    private boolean autoUploadRequestedFromPresetSearch = false;
-    private boolean autoUploadAttempted = false;
-    private int lastExactMatchCount = 0;
-    private boolean lastFilterUsedFallback = false;
 
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<String> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
@@ -116,7 +108,6 @@ public class ProviderSelectScreen extends Screen {
             if (recent != null && !recent.isBlank()) {
                 // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
                 this.query = RecipeTypeNameConfig.resolveProviderSearchKey(recent);
-                this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
         buildGroups();
@@ -197,21 +188,14 @@ public class ProviderSelectScreen extends Screen {
         // 将映射输入、增加映射、映射管理和取消按钮放在同一行。
         int controlsWidth = Math.min(500, Math.max(240, this.width - 20));
         int controlsX = centerX - controlsWidth / 2;
-        int toggleGap = 5;
-        int toggleWidth = (controlsWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
+        // 唯一匹配自动上传已迁移到编码动作时触发（客户端配置控制），弹窗内不再提供开关。
         this.processingButtonsToggleButton = Button.builder(buildProcessingButtonsToggleLabel(), b -> toggleProcessingButtons())
-                .bounds(controlsX, toggleY, toggleWidth, 20)
+                .bounds(controlsX, toggleY, controlsWidth, 20)
                 .build();
         this.processingButtonsToggleButton.setTooltip(buildProcessingButtonsTooltip());
         this.addRenderableWidget(this.processingButtonsToggleButton);
-
-        this.autoUploadToggleButton = Button.builder(buildAutoUploadToggleLabel(), b -> toggleAutoUploadUniqueMatch())
-                .bounds(controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20)
-                .build();
-        this.autoUploadToggleButton.setTooltip(buildAutoUploadTooltip());
-        this.addRenderableWidget(this.autoUploadToggleButton);
 
         int quickMappingY = navY + 55;
         int quickInputWidth = 150;
@@ -243,7 +227,6 @@ public class ProviderSelectScreen extends Screen {
         this.addRenderableWidget(close);
 
         refreshButtons(); // 初始化完成后刷新按钮状态
-        tryAutoUploadIfUniqueMatch();
     }
 
     private void changePage(int delta) {
@@ -274,14 +257,6 @@ public class ProviderSelectScreen extends Screen {
         if (nextButton != null) nextButton.active = fIds.size() > (page + 1) * pageSize;
     }
 
-    private Component buildAutoUploadToggleLabel() {
-        String stateKey = autoUploadUniqueMatchEnabled
-                ? "config.extendedae_plus.option.state_on"
-                : "config.extendedae_plus.option.state_off";
-        return Component.translatable("extendedae_plus.screen.auto_upload_unique_match",
-                Component.translatable(stateKey));
-    }
-
     private Component buildProcessingButtonsToggleLabel() {
         String stateKey = showProcessingButtonsEnabled
                 ? "config.extendedae_plus.option.state_on"
@@ -298,14 +273,6 @@ public class ProviderSelectScreen extends Screen {
                 Component.translatable(stateKey)));
     }
 
-    private Tooltip buildAutoUploadTooltip() {
-        String stateKey = autoUploadUniqueMatchEnabled
-                ? "config.extendedae_plus.option.state_on"
-                : "config.extendedae_plus.option.state_off";
-        return Tooltip.create(Component.translatable("extendedae_plus.screen.auto_upload_unique_match.tooltip",
-                Component.translatable(stateKey)));
-    }
-
     public static boolean isProcessingButtonsEnabled() {
         return showProcessingButtonsEnabled;
     }
@@ -316,15 +283,6 @@ public class ProviderSelectScreen extends Screen {
         if (this.processingButtonsToggleButton != null) {
             this.processingButtonsToggleButton.setMessage(buildProcessingButtonsToggleLabel());
             this.processingButtonsToggleButton.setTooltip(buildProcessingButtonsTooltip());
-        }
-    }
-
-    private void toggleAutoUploadUniqueMatch() {
-        autoUploadUniqueMatchEnabled = !autoUploadUniqueMatchEnabled;
-        savePinnedProviders();
-        if (this.autoUploadToggleButton != null) {
-            this.autoUploadToggleButton.setMessage(buildAutoUploadToggleLabel());
-            this.autoUploadToggleButton.setTooltip(buildAutoUploadTooltip());
         }
     }
 
@@ -416,25 +374,20 @@ public class ProviderSelectScreen extends Screen {
         fNames.clear();
         fTotalSlots.clear();
         fCount.clear();
-        lastExactMatchCount = 0;
-        lastFilterUsedFallback = false;
         String q = query == null ? "" : query.trim();
         String searchKey = RecipeTypeNameConfig.resolveProviderSearchKey(q);
-        String qLower = searchKey.toLowerCase(Locale.ROOT);
 
         for (int i = 0; i < gIds.size(); i++) {
             String name = gNames.get(i);
-            if (searchKey.isEmpty() || nameMatches(name, searchKey, qLower)) {
+            if (searchKey.isEmpty() || nameMatches(name, searchKey)) {
                 fIds.add(gIds.get(i));
                 fNames.add(name);
                 fTotalSlots.add(gTotalSlots.get(i));
                 fCount.add(gCount.get(i));
-                lastExactMatchCount++;
             }
         }
         // 若查询不为空但没有任何匹配，则回退为显示全部，避免“空列表”误导用户
         if (!q.isEmpty() && fIds.isEmpty()) {
-            lastFilterUsedFallback = true;
             for (int i = 0; i < gIds.size(); i++) {
                 fIds.add(gIds.get(i));
                 fNames.add(gNames.get(i));
@@ -483,48 +436,9 @@ public class ProviderSelectScreen extends Screen {
         fCount.addAll(sortedCount);
     }
 
-    private void tryAutoUploadIfUniqueMatch() {
-        if (!autoUploadUniqueMatchEnabled || !autoUploadRequestedFromPresetSearch || autoUploadAttempted) {
-            return;
-        }
-        autoUploadAttempted = true;
-        if (query == null || query.isBlank() || lastFilterUsedFallback || lastExactMatchCount != 1 || fIds.size() != 1) {
-            return;
-        }
-        onChoose(0, true);
-    }
-
-    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
-    private static Boolean JEC_AVAILABLE = null;
-    private static java.lang.reflect.Method JEC_CONTAINS = null;
-
-    private static boolean nameMatches(String name, String key, String keyLower) {
-        if (name == null) return false;
-        if (key == null || key.isEmpty()) return true;
-
-        try {
-            if (JEC_AVAILABLE == null) {
-                try {
-                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-                    // 使用 contains(CharSequence, CharSequence)
-                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-                    JEC_AVAILABLE = true;
-                } catch (Throwable t) {
-                    JEC_AVAILABLE = false;
-                }
-            }
-            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-                Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean && (Boolean) r) return true;
-                // 再尝试大小写不敏感：双方转为小写重新匹配
-                Object r2 = JEC_CONTAINS.invoke(null, name.toLowerCase(Locale.ROOT), keyLower);
-                if (r2 instanceof Boolean && (Boolean) r2) return true;
-            }
-        } catch (Throwable ignored) {
-            // 回退
-        }
-        // 默认大小写不敏感子串
-        return name.toLowerCase(Locale.ROOT).contains(keyLower);
+    private static boolean nameMatches(String name, String key) {
+        // 匹配语义与编码时的唯一匹配判定共用，保证两处一致。
+        return RecipeTypeNameConfig.matchesProviderName(name, key);
     }
 
     // 自然排序比较方法
@@ -704,11 +618,6 @@ public class ProviderSelectScreen extends Screen {
                 }
             }
 
-            JsonElement autoUploadElement = obj.get(AUTO_UPLOAD_UNIQUE_MATCH_KEY);
-            if (autoUploadElement != null && autoUploadElement.isJsonPrimitive()) {
-                autoUploadUniqueMatchEnabled = autoUploadElement.getAsBoolean();
-            }
-
             JsonElement showProcessingButtonsElement = obj.get(SHOW_PROCESSING_BUTTONS_KEY);
             if (showProcessingButtonsElement != null && showProcessingButtonsElement.isJsonPrimitive()) {
                 showProcessingButtonsEnabled = showProcessingButtonsElement.getAsBoolean();
@@ -732,7 +641,6 @@ public class ProviderSelectScreen extends Screen {
                 arr.add(name);
             }
             obj.add("pinned", arr);
-            obj.addProperty(AUTO_UPLOAD_UNIQUE_MATCH_KEY, autoUploadUniqueMatchEnabled);
             obj.addProperty(SHOW_PROCESSING_BUTTONS_KEY, showProcessingButtonsEnabled);
 
             Files.writeString(cfgPath, GSON.toJson(obj));
