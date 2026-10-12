@@ -10,6 +10,7 @@ import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
+import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.implementations.PatternAccessTermMenu;
@@ -17,10 +18,11 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
+import com.extendedae_plus.api.upload.UploadPreferences;
 import com.extendedae_plus.compat.NeoECOAECompat;
-import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.config.PatternUploadPriority;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
@@ -39,6 +41,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Recipe;
@@ -49,9 +52,20 @@ import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.extendedae_plus.util.ExtendedAELogger.LOGGER;
@@ -71,6 +85,9 @@ public class ExtendedAEPatternUploadUtil {
     // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
     public static final String DEFAULT_CRAFTING_SEARCH_KEY = "crafting";
     private static volatile String lastProviderSearchKey = null;
+    // 供应器名称匹配：优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配。
+    private static Boolean JEC_AVAILABLE = null;
+    private static Method JEC_CONTAINS = null;
     private static final String LAST_UPLOADED_PROVIDER_KEY = "eap_last_uploaded_provider_id";
     private static final String LAST_UPLOAD_KIND_KEY = "eap_last_upload_kind";
     private static final String LAST_UPLOAD_SLOT_KEY = "eap_last_upload_slot";
@@ -177,6 +194,55 @@ public class ExtendedAEPatternUploadUtil {
         String searchKey = lastProviderSearchKey;
         lastProviderSearchKey = null;
         return searchKey;
+    }
+
+    /**
+     * 读取但不消费最近一次的供应器搜索词。
+     *
+     * <p>编码按钮点击时需要把搜索词随包上传给服务端做「唯一匹配」判定，而弹窗打开时仍需要
+     * 消费同一个搜索词。两者互不影响：本方法只读不清，{@link #consumeLastProviderSearchKey()}
+     * 保留原有清空语义。</p>
+     */
+    public static String peekLastProviderSearchKey() {
+        return lastProviderSearchKey;
+    }
+
+    /**
+     * 供应器名称与搜索词的匹配判定（唯一匹配语义的公共实现）。
+     *
+     * <p>逻辑从 {@code ProviderSelectScreen.nameMatches} 原样迁移：优先使用 JEC 的拼音
+     * {@code contains}（含大小写不敏感二次尝试），失败时回退到大小写不敏感子串匹配。
+     * 客户端弹窗与服务端自动直传共用此方法，保证「唯一」判定两端一致。</p>
+     *
+     * @param name 供应器显示名
+     * @param key  搜索关键字；为空表示不过滤，视为匹配
+     * @return 是否匹配
+     */
+    public static boolean matchesProviderName(String name, String key) {
+        if (name == null) return false;
+        if (key == null || key.isEmpty()) return true;
+        try {
+            if (JEC_AVAILABLE == null) {
+                try {
+                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
+                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
+                    JEC_AVAILABLE = true;
+                } catch (Throwable t) {
+                    JEC_AVAILABLE = false;
+                }
+            }
+            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
+                Object r = JEC_CONTAINS.invoke(null, name, key);
+                if (r instanceof Boolean && (Boolean) r) return true;
+                String nL = name.toLowerCase();
+                String kL = key.toLowerCase();
+                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
+                if (r2 instanceof Boolean && (Boolean) r2) return true;
+            }
+        } catch (Throwable ignored) {
+            // 回退到子串匹配
+        }
+        return name.toLowerCase().contains(key.toLowerCase());
     }
 
     public static void recordProviderUpload(ServerPlayer player, long providerId, PatternContainer container, int slot) {
@@ -380,8 +446,8 @@ public class ExtendedAEPatternUploadUtil {
             JsonObject obj = GSON.fromJson(json, JsonObject.class);
             if (obj == null) return 0;
 
-            java.util.List<String> toRemove = new java.util.ArrayList<>();
-            for (java.util.Map.Entry<String, JsonElement> e : obj.entrySet()) {
+            List<String> toRemove = new ArrayList<>();
+            for (Map.Entry<String, JsonElement> e : obj.entrySet()) {
                 JsonElement v = e.getValue();
                 if (v != null && v.isJsonPrimitive()) {
                     String name = v.getAsString();
@@ -612,7 +678,7 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 通过上传菜单接口获取编码槽。
      */
-    public static net.minecraft.world.inventory.Slot getEncodedPatternSlot(Object menu) {
+    public static Slot getEncodedPatternSlot(Object menu) {
         if (menu instanceof IPatternUploadMenu uploadMenu) {
             return uploadMenu.getEncodedPatternSlot();
         }
@@ -645,17 +711,22 @@ public class ExtendedAEPatternUploadUtil {
      * 单独提示，避免玩家误以为写入失败。提示仅在编排层发送，优先目标被拒时不产生中间提示，
      * 因此回退流程不会出现「先失败后成功」的连续消息。</p>
      *
+     * <p>ECO 开关与优先级均为<b>客户端配置</b>，专用服务器不加载，只能由客户端在编码动作时随包上报
+     * （见 {@code EncodeWithShiftFlagC2SPacket}）。供应器唯一直传不在此处理，由编码菜单先行尝试。</p>
+     *
      * @param player 服务器玩家
      * @param menu   图样编码终端菜单
+     * @param prefs  客户端上报的自动上传偏好，可为 null（缺失时回退默认值）
      * @return 是否有目标接受了该样板
      */
-    public static boolean uploadFromEncodingMenuByPriority(ServerPlayer player, PatternEncodingTermMenu menu) {
+    public static boolean uploadFromEncodingMenuByPriority(ServerPlayer player, PatternEncodingTermMenu menu, UploadPreferences prefs) {
         if (player == null || menu == null) {
             return false;
         }
+        UploadPreferences p = prefs != null ? prefs : UploadPreferences.defaults();
 
-        boolean ecoEnabled = isEcoAutoUploadEnabled();
-        if (resolveUploadPriority() == PatternUploadPriority.ECO && ecoEnabled) {
+        boolean ecoEnabled = p.ecoAutoUploadEnabled() && NeoECOAECompat.isAvailable();
+        if (p.uploadPriority() == PatternUploadPriority.ECO && ecoEnabled) {
             NeoECOAECompat.UploadOutcome ecoOutcome = NeoECOAECompat.tryUploadFromEncodingMenu(player, menu);
             if (NeoECOAECompat.isAccepted(ecoOutcome)) {
                 notifyEcoUpload(player, ecoOutcome);
@@ -682,6 +753,7 @@ public class ExtendedAEPatternUploadUtil {
         return false;
     }
 
+    
     /**
      * 发送装配矩阵上传成功提示。
      *
@@ -711,29 +783,52 @@ public class ExtendedAEPatternUploadUtil {
     }
 
     /**
-     * 读取上传优先级配置。
+     * 编码后供应器唯一匹配直传：在编码终端所在网络中按名称定位供应器并写入，成功后发送带名提示。
      *
-     * <p>服务端配置在专用服务器启动阶段即完成加载；此处仍做兜底，避免配置尚未就绪时
-     * 中断自动上传流程。</p>
+     * <p>唯一匹配由客户端判定（名称与搜索词同处客户端语言环境），这里只按名称定位。名称按
+     * {@link Component} 结构比较（翻译键或字面量），与语言无关；同名供应器按空位从多到少依次尝试。
+     * 按当前网络实时定位而不是沿用客户端缓存的下标，供应器被填满导致列表变化时也不会传错目标。</p>
+     *
+     * @param providerName 客户端判定唯一匹配的供应器名称
+     * @return 是否写入成功
      */
-    private static PatternUploadPriority resolveUploadPriority() {
-        try {
-            return ModConfigs.PATTERN_AUTO_UPLOAD_PRIORITY.get();
-        } catch (Throwable ignored) {
-            return PatternUploadPriority.MATRIX;
+    public static boolean uploadFromEncodingMenuToNamedProvider(ServerPlayer player, IPatternUploadMenu menu, Component providerName) {
+        if (player == null || menu == null || providerName == null) {
+            return false;
         }
-    }
+        Slot encodedSlot = menu.getEncodedPatternSlot();
+        if (encodedSlot == null) {
+            return false;
+        }
+        ItemStack stack = encodedSlot.getItem();
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+            return false;
+        }
 
-    /** 判断 ECO 自动上传是否同时满足「模组已加载」与「配置已启用」两个条件。 */
-    private static boolean isEcoAutoUploadEnabled() {
-        if (!NeoECOAECompat.isAvailable()) {
-            return false;
+        List<PatternContainer> candidates = new ArrayList<>();
+        for (PatternContainer c : listAvailableProvidersFromGrid(menu)) {
+            if (providerName.equals(getProviderDisplayNameComponent(c))) {
+                candidates.add(c);
+            }
         }
-        try {
-            return ModConfigs.ECO_AUTO_UPLOAD_ENABLE.get();
-        } catch (Throwable ignored) {
-            return false;
+        candidates.sort(Comparator.<PatternContainer>comparingInt(ExtendedAEPatternUploadUtil::getAvailableSlots).reversed());
+
+        for (PatternContainer c : candidates) {
+            InternalInventory inv = c.getTerminalPatternInventory();
+            int slotLimit = getAccessiblePatternSlotCount(c, inv);
+            ItemStack[] before = snapshotInventory(inv, slotLimit);
+            ItemStack toInsert = stack.copy();
+            ItemStack remain = insertIntoAccessiblePatternSlots(inv, slotLimit, toInsert, new ExtendedAEPatternFilter());
+            int inserted = toInsert.getCount() - remain.getCount();
+            if (inserted > 0) {
+                stack.shrink(inserted);
+                encodedSlot.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
+                recordProviderUpload(player, Long.MIN_VALUE, c, findLastChangedSlot(inv, before, slotLimit));
+                player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_provider.success", providerName));
+                return true;
+            }
         }
+        return false;
     }
 
     /**
@@ -996,12 +1091,12 @@ public class ExtendedAEPatternUploadUtil {
                     String className = machineClass.getName();
                     if (className != null && className.contains("MeteoritePatternProvider")) {
                         @SuppressWarnings("unchecked")
-                        java.util.Set<?> hosts = grid.getMachines((Class) machineClass);
+                        Set<?> hosts = grid.getMachines((Class) machineClass);
                         for (Object host : hosts) {
-                            if (host instanceof appeng.helpers.patternprovider.PatternProviderLogicHost logicHost) {
-                                appeng.helpers.patternprovider.PatternProviderLogic logic = logicHost.getLogic();
+                            if (host instanceof PatternProviderLogicHost logicHost) {
+                                PatternProviderLogic logic = logicHost.getLogic();
                                 if (logic != null) {
-                                    appeng.api.inventories.InternalInventory inv = logic.getPatternInv();
+                                    InternalInventory inv = logic.getPatternInv();
                                     if (inv != null) {
                                         result.add(new MatrixInventoryTarget(inv, inv, null, false));
                                     }
@@ -1044,7 +1139,7 @@ public class ExtendedAEPatternUploadUtil {
      */
     private static List<?> findAllMatrixPatternHandlers(IGrid grid) {
         // NeoForge 1.21 能力系统与 API 变更，此处先返回空列表，避免编译期依赖旧能力系统
-        return java.util.Collections.emptyList();
+        return Collections.emptyList();
     }
 
     private static boolean matrixContainsPattern(IGrid grid, ItemStack pattern) {
@@ -1666,10 +1761,10 @@ public class ExtendedAEPatternUploadUtil {
         // 先确定目标容器名称，用于同名回退
         String targetName = getProviderDisplayName(providerId, accessMenu);
         // 构建尝试顺序：先指定ID，其次同名的其他ID
-        java.util.List<Long> tryIds = new java.util.ArrayList<>();
+        List<Long> tryIds = new ArrayList<>();
         tryIds.add(providerId);
         try {
-            java.util.List<Long> all = getAllProviderIds(accessMenu);
+            List<Long> all = getAllProviderIds(accessMenu);
             for (Long id : all) {
                 if (id == null || id.longValue() == providerId) continue;
                 String name = getProviderDisplayName(id, accessMenu);
@@ -1709,15 +1804,15 @@ public class ExtendedAEPatternUploadUtil {
     /**
      * 列出当前菜单中所有供应器的服务器ID（原样返回 byId 的 key 集合）。
      */
-    public static java.util.List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
-        java.util.List<Long> result = new java.util.ArrayList<>();
+    public static List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
+        List<Long> result = new ArrayList<>();
         if (menu == null) return result;
         try {
-            java.lang.reflect.Field byIdField = findByIdField(menu.getClass());
+            Field byIdField = findByIdField(menu.getClass());
             if (byIdField == null) return result;
             byIdField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            java.util.Map<Long, Object> byId = (java.util.Map<Long, Object>) byIdField.get(menu);
+            Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
             if (byId != null) {
                 result.addAll(byId.keySet());
             }
@@ -1843,6 +1938,7 @@ public class ExtendedAEPatternUploadUtil {
         return remain;
     }
 
+
     /**
      * 基于“索引”的定向上传：使用 listAvailableProvidersFromGrid(menu) 的顺序，
      * 将编码槽样板插入到第 index 个供应器。
@@ -1870,7 +1966,7 @@ public class ExtendedAEPatternUploadUtil {
 
         // 以名称为键，同名供应器依次尝试：先 index 指定的，再同名的其他
         String targetName = getProviderDisplayName(container);
-        java.util.List<PatternContainer> tryList = new java.util.ArrayList<>();
+        List<PatternContainer> tryList = new ArrayList<>();
         tryList.add(container);
         try {
             for (PatternContainer c : list) {
@@ -1917,7 +2013,7 @@ public class ExtendedAEPatternUploadUtil {
             var it = any.getBlockEntities();
             while (it.hasNext()) {
                 var te = it.next();
-                if (te instanceof com.extendedae_plus.content.matrix.UploadCoreBlockEntity) {
+                if (te instanceof UploadCoreBlockEntity) {
                     cores++;
                 }
             }

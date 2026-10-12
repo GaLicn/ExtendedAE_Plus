@@ -7,6 +7,7 @@ import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -23,12 +24,20 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
     public static final Type<RequestProvidersListC2SPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "request_providers_list"));
 
-    public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket();
+    public static final RequestProvidersListC2SPacket INSTANCE = new RequestProvidersListC2SPacket(false);
+    /** 静默模式：只回填客户端缓存用于本地唯一匹配判定，不打开弹窗。 */
+    public static final RequestProvidersListC2SPacket SILENT = new RequestProvidersListC2SPacket(true);
 
-    public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC =
-            StreamCodec.unit(INSTANCE);
+    public static final StreamCodec<FriendlyByteBuf, RequestProvidersListC2SPacket> STREAM_CODEC = StreamCodec.of(
+            (buf, pkt) -> buf.writeBoolean(pkt.silent),
+            buf -> new RequestProvidersListC2SPacket(buf.readBoolean())
+    );
 
-    private RequestProvidersListC2SPacket() {}
+    private final boolean silent;
+
+    private RequestProvidersListC2SPacket(boolean silent) {
+        this.silent = silent;
+    }
 
     public static void handle(final RequestProvidersListC2SPacket msg, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
@@ -38,7 +47,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (CtrlQPendingUploadUtil.hasPendingCtrlQPattern(player)) {
                 List<PatternContainer> containers = CtrlQPendingUploadUtil.listAvailableProvidersFromPlayerNetwork(player);
                 List<Long> idxIds = new ArrayList<>();
-                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
                 for (int i = 0; i < containers.size(); i++) {
                     var c = containers.get(i);
@@ -50,7 +59,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
                     slots.add(empty);
                 }
-                player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
+                player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent));
                 return;
             }
 
@@ -61,7 +70,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (accessMenu != null) {
                 List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
                 List<Long> filteredIds = new ArrayList<>();
-                List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+                List<Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
 
                 for (Long id : ids) {
@@ -74,14 +83,14 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     slots.add(empty);
                 }
 
-                player.connection.send(new ProvidersListS2CPacket(filteredIds, names, slots));
+                player.connection.send(new ProvidersListS2CPacket(filteredIds, names, slots, msg.silent));
                 return;
             }
 
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
             List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
-            List<net.minecraft.network.chat.Component> names = new ArrayList<>();
+            List<Component> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);
@@ -93,7 +102,7 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                 names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
                 slots.add(empty);
             }
-            player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots));
+            player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent));
         });
     }
 

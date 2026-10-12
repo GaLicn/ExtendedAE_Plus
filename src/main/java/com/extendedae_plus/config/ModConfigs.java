@@ -14,6 +14,10 @@ public final class ModConfigs {
     public static final ModConfigSpec.BooleanValue PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT;
     public static final ModConfigSpec.BooleanValue JEI_NETWORK_OVERLAY_ENABLED;
     public static final ModConfigSpec.BooleanValue EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS;
+    // 样板自动上传属客户端偏好：由客户端决定并在编码动作时随包上报，服务端据此执行。
+    public static final ModConfigSpec.BooleanValue ECO_AUTO_UPLOAD_ENABLE;
+    public static final ModConfigSpec.EnumValue<PatternUploadPriority> PATTERN_AUTO_UPLOAD_PRIORITY;
+    public static final ModConfigSpec.BooleanValue UNIQUE_PROVIDER_AUTO_UPLOAD_ENABLE;
 
     // Server 配置
     public static final ModConfigSpec SERVER_SPEC;
@@ -23,8 +27,6 @@ public final class ModConfigs {
     public static final ModConfigSpec.DoubleValue WIRELESS_MAX_RANGE;
     public static final ModConfigSpec.BooleanValue WIRELESS_CROSS_DIM_ENABLE;
     public static final ModConfigSpec.DoubleValue WIRELESS_IDLE_POWER;
-    public static final ModConfigSpec.BooleanValue ECO_AUTO_UPLOAD_ENABLE;
-    public static final ModConfigSpec.EnumValue<PatternUploadPriority> PATTERN_AUTO_UPLOAD_PRIORITY;
 
     static {
         // Common 配置
@@ -58,6 +60,37 @@ public final class ModConfigs {
                         "可通过扩展样板供应器左侧工具栏即时切换"
                 )
                 .define("extendedPatternProviderShowScalingControls", true);
+        clientBuilder.pop();
+
+        // 样板自动上传：客户端偏好，随编码动作上报给服务端执行。
+        clientBuilder.push("patternAutoUpload");
+        ECO_AUTO_UPLOAD_ENABLE = clientBuilder
+                .comment(
+                        "是否允许编码后自动上传样板到 ECO 合成系统（仅当 NeoECOAE 模组存在时生效）",
+                        "关闭后自动上传只会写入装配矩阵，ECO 合成系统不再参与",
+                        "客户端偏好：随编码动作上报，多人游戏中每个玩家各自生效",
+                        "默认: true"
+                )
+                .define("ecoAutoUploadEnable", true);
+        PATTERN_AUTO_UPLOAD_PRIORITY = clientBuilder
+                .comment(
+                        "编码后自动上传的目标优先级",
+                        "MATRIX：优先写入装配矩阵，矩阵不可用时回退到 ECO 合成系统",
+                        "ECO：优先写入 ECO 合成系统，ECO 不可用时回退到装配矩阵",
+                        "自动上传每次只向一个目标写入样板，优先目标接受后即结束",
+                        "客户端偏好：随编码动作上报，多人游戏中每个玩家各自生效",
+                        "默认: MATRIX"
+                )
+                .defineEnum("uploadPriority", PatternUploadPriority.MATRIX);
+        UNIQUE_PROVIDER_AUTO_UPLOAD_ENABLE = clientBuilder
+                .comment(
+                        "编码后若供应器按搜索词唯一匹配，是否直接上传到该供应器",
+                        "优先于矩阵/ECO 自动上传；未命中唯一匹配时按 uploadPriority 回退",
+                        "处理样板只可能走供应器直传，不受 uploadPriority 影响",
+                        "客户端偏好：在客户端判定，多人游戏中每个玩家各自生效",
+                        "默认: true"
+                )
+                .define("uniqueProviderAutoUploadEnable", true);
         clientBuilder.pop();
         CLIENT_SPEC = clientBuilder.build();
 
@@ -106,24 +139,6 @@ public final class ModConfigs {
                 .defineInRange("wirelessIdlePower", 100.0D, 0.0D, Double.MAX_VALUE);
         serverBuilder.pop();
 
-        serverBuilder.push("patternAutoUpload");
-        ECO_AUTO_UPLOAD_ENABLE = serverBuilder
-                .comment(
-                        "是否允许编码后自动上传样板到 ECO 合成系统（仅当 NeoECOAE 模组存在时生效）",
-                        "关闭后自动上传只会写入装配矩阵，ECO 合成系统不再参与",
-                        "默认: true"
-                )
-                .define("ecoAutoUploadEnable", true);
-        PATTERN_AUTO_UPLOAD_PRIORITY = serverBuilder
-                .comment(
-                        "编码后自动上传的目标优先级",
-                        "MATRIX：优先写入装配矩阵，矩阵不可用时回退到 ECO 合成系统",
-                        "ECO：优先写入 ECO 合成系统，ECO 不可用时回退到装配矩阵",
-                        "自动上传每次只向一个目标写入样板，优先目标接受后即结束",
-                        "默认: MATRIX"
-                )
-                .defineEnum("uploadPriority", PatternUploadPriority.MATRIX);
-        serverBuilder.pop();
         SERVER_SPEC = serverBuilder.build();
     }
 

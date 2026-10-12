@@ -33,17 +33,11 @@ public class ProviderSelectScreen extends Screen {
     private static final int AE_TEXT_FIELD_WIDTH = 128;
     private static final int AE_SEARCH_FIELD_HEIGHT = 20;
     private int pageSize = 6;
-    // 优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配
-    private static Boolean JEC_AVAILABLE = null;
-    private static java.lang.reflect.Method JEC_CONTAINS = null;
-
     // 置顶的供应器名称集合（静态变量，持久化到配置文件）
     private static final Set<String> pinnedProviders = new HashSet<>();
     private static final String PINNED_CONFIG_PATH = "extendedae_plus/pinned_providers.json";
-    private static final String AUTO_UPLOAD_UNIQUE_MATCH_KEY = "auto_upload_unique_match";
     private static final String SHOW_PROCESSING_BUTTONS_KEY = "show_processing_buttons";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-    private static boolean autoUploadUniqueMatchEnabled = true;
     private static boolean showProcessingButtonsEnabled = true;
 
     // 静态初始化块：加载置顶配置
@@ -77,12 +71,9 @@ public class ProviderSelectScreen extends Screen {
     // 快捷映射值输入框，映射键使用当前供应器搜索词。
     private ResizableAETextField cnInput;
     private Button processingButtonsToggleButton;
-    private Button autoUploadToggleButton;
     private String query = "";
     private boolean needsRefresh = false;
     private int page = 0;
-    private boolean autoUploadRequestedFromPresetSearch = false;
-    private boolean autoUploadAttempted = false;
     private int lastExactMatchCount = 0;
     public ProviderSelectScreen(Screen parent, List<Long> ids, List<Component> names, List<Integer> emptySlots) {
         super(Component.translatable("extendedae_plus.screen.choose_provider.title"));
@@ -97,7 +88,6 @@ public class ProviderSelectScreen extends Screen {
             if (recent != null && !recent.isBlank()) {
                 // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
                 this.query = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(recent);
-                this.autoUploadRequestedFromPresetSearch = true;
             }
         } catch (Throwable ignored) {}
         this.buildGroups();
@@ -105,33 +95,8 @@ public class ProviderSelectScreen extends Screen {
     }
 
     private static boolean nameMatches(String name, String key) {
-        if (name == null) return false;
-        if (key == null || key.isEmpty()) return true;
-        try {
-            if (JEC_AVAILABLE == null) {
-                try {
-                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-                    // 使用 contains(CharSequence, CharSequence)
-                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-                    JEC_AVAILABLE = true;
-                } catch (Throwable t) {
-                    JEC_AVAILABLE = false;
-                }
-            }
-            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-                Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean && (Boolean) r) return true;
-                // 再尝试大小写不敏感：双方转为小写重新匹配
-                String nL = name.toLowerCase();
-                String kL = key.toLowerCase();
-                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
-                if (r2 instanceof Boolean && (Boolean) r2) return true;
-            }
-        } catch (Throwable ignored) {
-            // 回退
-        }
-        // 默认大小写不敏感子串
-        return name.toLowerCase().contains(key.toLowerCase());
+        // 匹配语义已抽到工具类，客户端弹窗与服务端唯一匹配直传共用，保证两端判定一致。
+        return ExtendedAEPatternUploadUtil.matchesProviderName(name, key);
     }
 
     private void changePage(int delta) {
@@ -141,14 +106,6 @@ public class ProviderSelectScreen extends Screen {
         this.page = newPage;
         // 避免在回调中直接重建 UI，改为下帧刷新
         this.needsRefresh = true;
-    }
-
-    private Component buildAutoUploadToggleLabel() {
-        String stateKey = autoUploadUniqueMatchEnabled
-                ? "extendedae_plus.configuration.state_on"
-                : "extendedae_plus.configuration.state_off";
-        return Component.translatable("extendedae_plus.screen.auto_upload_unique_match",
-                Component.translatable(stateKey));
     }
 
     private Component buildProcessingButtonsToggleLabel() {
@@ -167,14 +124,6 @@ public class ProviderSelectScreen extends Screen {
                 Component.translatable(stateKey)));
     }
 
-    private Tooltip buildAutoUploadTooltip() {
-        String stateKey = autoUploadUniqueMatchEnabled
-                ? "extendedae_plus.configuration.state_on"
-                : "extendedae_plus.configuration.state_off";
-        return Tooltip.create(Component.translatable("extendedae_plus.screen.auto_upload_unique_match.tooltip",
-                Component.translatable(stateKey)));
-    }
-
     public static boolean isProcessingButtonsEnabled() {
         return showProcessingButtonsEnabled;
     }
@@ -185,15 +134,6 @@ public class ProviderSelectScreen extends Screen {
         if (this.processingButtonsToggleButton != null) {
             this.processingButtonsToggleButton.setMessage(this.buildProcessingButtonsToggleLabel());
             this.processingButtonsToggleButton.setTooltip(this.buildProcessingButtonsTooltip());
-        }
-    }
-
-    private void toggleAutoUploadUniqueMatch() {
-        autoUploadUniqueMatchEnabled = !autoUploadUniqueMatchEnabled;
-        savePinnedProviders();
-        if (this.autoUploadToggleButton != null) {
-            this.autoUploadToggleButton.setMessage(this.buildAutoUploadToggleLabel());
-            this.autoUploadToggleButton.setTooltip(this.buildAutoUploadTooltip());
         }
     }
 
@@ -306,17 +246,6 @@ public class ProviderSelectScreen extends Screen {
         this.fCount.addAll(sortedCount);
     }
 
-    private void tryAutoUploadIfUniqueMatch() {
-        if (!autoUploadUniqueMatchEnabled || !this.autoUploadRequestedFromPresetSearch || this.autoUploadAttempted) {
-            return;
-        }
-        this.autoUploadAttempted = true;
-        if (this.query == null || this.query.isBlank() || this.lastExactMatchCount != 1 || this.fIds.size() != 1) {
-            return;
-        }
-        this.onChoose(0, true);
-    }
-
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.searchBox != null && this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
@@ -398,21 +327,14 @@ public class ProviderSelectScreen extends Screen {
         // 底部第二排依次放置中文名、增加映射、映射管理和取消按钮。
         int controlsWidth = Math.min(480, Math.max(240, this.width - 20));
         int controlsX = centerX - controlsWidth / 2;
-        int toggleGap = 5;
-        int toggleWidth = (controlsWidth - toggleGap) / 2;
         int toggleY = navY + 30;
 
+        // 自动上传唯一匹配已迁移到编码动作时触发（服务端配置控制），弹窗内不再提供开关。
         this.processingButtonsToggleButton = new AE2Button(
-                controlsX, toggleY, toggleWidth, 20,
+                controlsX, toggleY, controlsWidth, 20,
                 this.buildProcessingButtonsToggleLabel(), b -> this.toggleProcessingButtons());
         this.processingButtonsToggleButton.setTooltip(this.buildProcessingButtonsTooltip());
         this.addRenderableWidget(this.processingButtonsToggleButton);
-
-        this.autoUploadToggleButton = new AE2Button(
-                controlsX + toggleWidth + toggleGap, toggleY, toggleWidth, 20,
-                this.buildAutoUploadToggleLabel(), b -> this.toggleAutoUploadUniqueMatch());
-        this.autoUploadToggleButton.setTooltip(this.buildAutoUploadTooltip());
-        this.addRenderableWidget(this.autoUploadToggleButton);
 
         int quickMappingY = navY + 55;
         int quickInputWidth = AE_TEXT_FIELD_WIDTH;
@@ -439,8 +361,6 @@ public class ProviderSelectScreen extends Screen {
                 controlsX + quickInputWidth + 5 + 85 + 5 + 155 + 5, quickMappingY, 80, 20,
                 Component.translatable("gui.cancel"), b -> this.onClose());
         this.addRenderableWidget(close);
-
-        this.tryAutoUploadIfUniqueMatch();
     }
 
     @Override
@@ -591,11 +511,6 @@ public class ProviderSelectScreen extends Screen {
                 }
             }
 
-            JsonElement autoUploadElement = obj.get(AUTO_UPLOAD_UNIQUE_MATCH_KEY);
-            if (autoUploadElement != null && autoUploadElement.isJsonPrimitive()) {
-                autoUploadUniqueMatchEnabled = autoUploadElement.getAsBoolean();
-            }
-
             JsonElement showProcessingButtonsElement = obj.get(SHOW_PROCESSING_BUTTONS_KEY);
             if (showProcessingButtonsElement != null && showProcessingButtonsElement.isJsonPrimitive()) {
                 showProcessingButtonsEnabled = showProcessingButtonsElement.getAsBoolean();
@@ -619,7 +534,6 @@ public class ProviderSelectScreen extends Screen {
                 arr.add(name);
             }
             obj.add("pinned", arr);
-            obj.addProperty(AUTO_UPLOAD_UNIQUE_MATCH_KEY, autoUploadUniqueMatchEnabled);
             obj.addProperty(SHOW_PROCESSING_BUTTONS_KEY, showProcessingButtonsEnabled);
 
             Files.writeString(cfgPath, GSON.toJson(obj));

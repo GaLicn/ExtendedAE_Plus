@@ -12,6 +12,8 @@ import com.extendedae_plus.mixin.accessor.ScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.ReturnLastPatternC2SPacket;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Tooltip;
@@ -46,6 +48,8 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
         if (!(((Object) this) instanceof IPatternUploadTerminal terminal)) {
             return;
         }
+        // 预取供应器列表：编码时本地唯一匹配判定需要（静默，不打开弹窗）。
+        PacketDistributor.sendToServer(RequestProvidersListC2SPacket.SILENT);
         this.eap$btnScale = terminal.getUploadScale() > 0 ? terminal.getUploadScale() : 0.75f;
         final float scale = this.eap$btnScale;
         if (eap$uploadBtn == null) {
@@ -73,8 +77,8 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         this.width = Math.round(16 * scale);
                         this.height = Math.round(16 * scale);
 
-                        com.mojang.blaze3d.systems.RenderSystem.disableDepthTest();
-                        com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+                        RenderSystem.disableDepthTest();
+                        RenderSystem.enableBlend();
 
                         if (isFocused()) {
                             guiGraphics.fill(getX() - 1, getY() - 1, getX() + width + 1, getY(), 0xFFFFFFFF);
@@ -92,12 +96,12 @@ public abstract class PatternEncodingTermScreenMixin<T extends AEBaseMenu> {
                         }
                         if (Screen.hasShiftDown()) {
                             pose.translate(16.0F, 16.0F, 0.0F);
-                            pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180.0F));
+                            pose.mulPose(Axis.ZP.rotationDegrees(180.0F));
                         }
                         blitter.dest(0, 0).blit(guiGraphics);
                         pose.popPose();
 
-                        com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
+                        RenderSystem.enableDepthTest();
                     }
                 }
 

@@ -1,17 +1,22 @@
 package com.extendedae_plus.mixin.ae2.menu;
 
 import appeng.api.crafting.PatternDetailsHelper;
+import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.menu.slot.RestrictedInputSlot;
 import appeng.parts.encoding.EncodingMode;
-import com.extendedae_plus.api.upload.IPatternEncodingShiftUploadSync;
+import com.extendedae_plus.api.upload.IPatternEncodeRequestSync;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
+import com.extendedae_plus.api.upload.UploadPreferences;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.glodium.network.packet.sync.ActionMap;
 import com.glodblock.github.glodium.network.packet.sync.IActionHolder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -26,10 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * 给 AE2 的 PatternEncodingTermMenu 增加一个通用动作持有者，实现接收 EPP 的 CGenericPacket 动作。
- * 注册动作 "upload_to_matrix"：仅上传“合成图样”到 ExtendedAE 装配矩阵。
  */
 @Mixin(PatternEncodingTermMenu.class)
-public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodingShiftUploadSync, IPatternUploadMenu {
+public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHolder, IPatternEncodeRequestSync, IPatternUploadMenu {
 
     @Unique
     private final ActionMap eap$actions = ActionMap.create();
@@ -37,57 +41,37 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
     @Unique
     private Player epp$player;
 
+    // 客户端随「编码」按钮上报的请求（Shift、唯一匹配判定、自动上传偏好），encode() 之后消费。
     @Unique
-    private boolean eap$pendingShiftUpload;
+    private EncodeRequest eap$pendingEncodeRequest;
 
     @Shadow(remap = false)
     private RestrictedInputSlot encodedPatternSlot;
 
     @Unique
     @Override
-    public void eap$clientSetShiftUpload(boolean shiftDown) {
-        this.eap$pendingShiftUpload = shiftDown;
+    public void eap$clientSetEncodeRequest(EncodeRequest request) {
+        this.eap$pendingEncodeRequest = request;
     }
 
     @Unique
     @Override
-    public boolean eap$consumeShiftUploadFlag() {
-        boolean flag = this.eap$pendingShiftUpload;
-        this.eap$pendingShiftUpload = false;
-        return flag;
-    }
-
-    @Unique
-    private void eap$scheduleUploadWithRetry(ServerPlayer sp, PatternEncodingTermMenu menu, int attemptsLeft) {
-        sp.server.execute(() -> {
-            try {
-                if (attemptsLeft < 0) {
-                    return;
-                }
-                var stack = this.encodedPatternSlot != null ? this.encodedPatternSlot.getItem() : net.minecraft.world.item.ItemStack.EMPTY;
-                if (stack != null && !stack.isEmpty() && PatternDetailsHelper.isEncodedPattern(stack)) {
-                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuByPriority(sp, menu);
-                } else {
-                    // 槽位可能尚未同步到位，继续下一 tick 重试
-                    if (attemptsLeft > 0) {
-                        this.eap$scheduleUploadWithRetry(sp, menu, attemptsLeft - 1);
-                    }
-                }
-            } catch (Throwable ignored) {
-            }
-        });
+    public EncodeRequest eap$consumeEncodeRequest() {
+        EncodeRequest request = this.eap$pendingEncodeRequest;
+        this.eap$pendingEncodeRequest = null;
+        return request;
     }
 
     // AE2 终端主构造：PatternEncodingTermMenu(int id, Inventory ip, IPatternTerminalMenuHost host)
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;)V", at = @At("TAIL"), remap = false)
-    private void eap$ctorA(int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, CallbackInfo ci) {
+    private void eap$ctorA(int id, Inventory ip, IPatternTerminalMenuHost host, CallbackInfo ci) {
         this.epp$player = ip.player;
         // 不再注册任何上传相关动作
     }
 
     // AE2 另一个构造：PatternEncodingTermMenu(MenuType, int, Inventory, IPatternTerminalMenuHost, boolean)
     @Inject(method = "<init>(Lnet/minecraft/world/inventory/MenuType;ILnet/minecraft/world/entity/player/Inventory;Lappeng/helpers/IPatternTerminalMenuHost;Z)V", at = @At("TAIL"), remap = false)
-    private void eap$ctorB(net.minecraft.world.inventory.MenuType<?> menuType, int id, net.minecraft.world.entity.player.Inventory ip, appeng.helpers.IPatternTerminalMenuHost host, boolean bindInventory, CallbackInfo ci) {
+    private void eap$ctorB(MenuType<?> menuType, int id, Inventory ip, IPatternTerminalMenuHost host, boolean bindInventory, CallbackInfo ci) {
         this.epp$player = ip.player;
         // 不再注册任何上传相关动作
     }
@@ -104,21 +88,26 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
         return this.encodedPatternSlot;
     }
 
-    // 服务器端：在 encode() 执行完毕后，如果已编码槽位存在样板且当前为“合成模式”，则上传到装配矩阵
+    // 服务器端：在 encode() 执行完毕后自动上传编码槽内的样板。
+    // 先尝试客户端判定的供应器唯一直传（命中即结束），未命中再走矩阵/ECO 优先级链；
+    // 处理样板矩阵不支持，只可能走供应器直传。
     @Inject(method = "encode", at = @At("TAIL"), remap = false)
     private void eap$serverUploadAfterEncode(CallbackInfo ci) {
         try {
             if (!(this.epp$player instanceof ServerPlayer sp)) {
                 return; // 仅服务器执行
             }
-            if (this.eap$consumeShiftUploadFlag()) {
+            EncodeRequest request = this.eap$consumeEncodeRequest();
+            if (request != null && request.shiftDown()) {
                 return; // 按下 Shift，不自动上传
             }
             var menu = (PatternEncodingTermMenu) (Object) this;
-            if (menu.getMode() != EncodingMode.CRAFTING
-                    && menu.getMode() != EncodingMode.SMITHING_TABLE
-                    && menu.getMode() != EncodingMode.STONECUTTING) {
-                return; // 只处理合成/锻造台/切石机样板
+            boolean craftingLike = menu.getMode() == EncodingMode.CRAFTING
+                    || menu.getMode() == EncodingMode.SMITHING_TABLE
+                    || menu.getMode() == EncodingMode.STONECUTTING;
+            boolean processing = menu.getMode() == EncodingMode.PROCESSING;
+            if (!craftingLike && !processing) {
+                return; // 只自动上传合成类与处理样板
             }
             if (this.encodedPatternSlot == null) {
                 return;
@@ -130,10 +119,19 @@ public abstract class ContainerPatternEncodingTermMenuMixin implements IActionHo
             if (!PatternDetailsHelper.isEncodedPattern(stack)) {
                 return; // 不是编码样板
             }
+            final Component provider = request == null ? null : request.uniqueProvider();
+            final UploadPreferences prefs = request == null ? UploadPreferences.defaults() : request.prefs();
             // 为避免与 AE2 后续同步竞争，切到下一 tick 执行
             sp.server.execute(() -> {
                 try {
-                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuByPriority(sp, menu);
+                    if (provider != null
+                            && ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToNamedProvider(sp, this, provider)) {
+                        return;
+                    }
+                    if (processing) {
+                        return;
+                    }
+                    ExtendedAEPatternUploadUtil.uploadFromEncodingMenuByPriority(sp, menu, prefs);
                 } catch (Throwable ignored) {
                 }
             });

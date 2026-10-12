@@ -1,6 +1,7 @@
 package com.extendedae_plus.network;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.client.ProviderListCache;
 import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -25,6 +26,7 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ProvidersListS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
+                buf.writeBoolean(pkt.silent);
                 buf.writeVarInt(pkt.ids.size());
                 for (int i = 0; i < pkt.ids.size(); i++) {
                     buf.writeLong(pkt.ids.get(i));
@@ -33,6 +35,7 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
                 }
             },
             buf -> {
+                boolean silent = buf.readBoolean();
                 int size = buf.readVarInt();
                 List<Long> ids = new ArrayList<>(size);
                 List<Component> names = new ArrayList<>(size);
@@ -42,18 +45,21 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
                     names.add(ComponentSerialization.TRUSTED_STREAM_CODEC.decode(buf)); // 使用 Component 反序列化
                     slots.add(buf.readVarInt());
                 }
-                return new ProvidersListS2CPacket(ids, names, slots);
+                return new ProvidersListS2CPacket(ids, names, slots, silent);
             }
     );
 
     private final List<Long> ids;
     private final List<Component> names; // 改为 Component
     private final List<Integer> emptySlots;
+    /** 静默模式：仅回填客户端缓存，不打开选择弹窗。 */
+    private final boolean silent;
 
-    ProvidersListS2CPacket(List<Long> ids, List<Component> names, List<Integer> emptySlots) {
+    ProvidersListS2CPacket(List<Long> ids, List<Component> names, List<Integer> emptySlots, boolean silent) {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
+        this.silent = silent;
     }
 
     public static void handle(final ProvidersListS2CPacket msg, final IPayloadContext ctx) {
@@ -64,6 +70,11 @@ public class ProvidersListS2CPacket implements CustomPacketPayload {
     private static void handleClient(ProvidersListS2CPacket msg) {
         var mc = Minecraft.getInstance();
         if (mc == null) return;
+        if (msg.silent) {
+            // 静默回填：供客户端在编码时做「唯一匹配」本地判定使用。
+            ProviderListCache.update(msg.names, msg.emptySlots);
+            return;
+        }
         var current = mc.screen;
         mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots));
     }
