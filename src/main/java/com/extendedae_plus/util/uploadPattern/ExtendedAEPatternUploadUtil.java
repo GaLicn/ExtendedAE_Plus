@@ -10,7 +10,6 @@ import appeng.crafting.pattern.AECraftingPattern;
 import appeng.crafting.pattern.AESmithingTablePattern;
 import appeng.crafting.pattern.AEStonecuttingPattern;
 import appeng.helpers.patternprovider.PatternContainer;
-import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.implementations.PatternAccessTermMenu;
@@ -1077,29 +1076,6 @@ public class ExtendedAEPatternUploadUtil {
                         result.add(new MatrixInventoryTarget(insertInv, patternInv, myTile.getBlockPos(), true));
                     }
                 }
-            }
-
-            // 【新增部分】：适配 ae2cs 自装配式样板供应器 (Meteorite Pattern Provider)
-            try {
-                for (Class<?> machineClass : grid.getMachineClasses()) {
-                    String className = machineClass.getName();
-                    if (className != null && className.contains("MeteoritePatternProvider")) {
-                        @SuppressWarnings("unchecked")
-                        Set<?> hosts = grid.getMachines((Class) machineClass);
-                        for (Object host : hosts) {
-                            if (host instanceof PatternProviderLogicHost logicHost) {
-                                PatternProviderLogic logic = logicHost.getLogic();
-                                if (logic != null) {
-                                    InternalInventory inv = logic.getPatternInv();
-                                    if (inv != null) {
-                                        result.add(new MatrixInventoryTarget(inv, inv, null, false));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (Throwable ignored) {
             }
         } catch (Throwable t) {
         }
