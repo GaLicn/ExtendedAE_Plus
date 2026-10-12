@@ -5,6 +5,7 @@ import appeng.api.inventories.InternalInventory;
 import appeng.helpers.patternprovider.PatternContainer;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
 import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import net.minecraft.core.BlockPos;
@@ -72,6 +73,12 @@ public class ReturnLastPatternC2SPacket implements CustomPacketPayload {
         if (record.matrixPlus()) {
             if (blockEntity instanceof PatternCorePlusBlockEntity plus && plus.isFormed() && plus.getMainNode().isActive()) {
                 return plus.getTerminalPatternInventory();
+            }
+            // 超级矩阵：上传时记录的是主控坐标（findAllMatrixPatternInventories），但其方块实体是
+            // SuperAssemblerMatrixBlockEntity，并非 PatternCorePlusBlockEntity。漏判会让上传到超级
+            // 矩阵的样板无法撤回。
+            if (blockEntity instanceof SuperAssemblerMatrixBlockEntity superMatrix && superMatrix.isVisibleInTerminal()) {
+                return superMatrix.getTerminalPatternInventory();
             }
             return null;
         }
