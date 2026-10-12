@@ -4,13 +4,14 @@ import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
 import appeng.integration.modules.jei.GenericEntryStackHelper;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
-import com.extendedae_plus.compat.EmiHelper;
+import com.extendedae_plus.compat.emi.EmiHelper;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageScreenAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
@@ -35,11 +36,11 @@ public final class InputEvents {
     public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
         // 按查看器来源分派：对应模组的代码只在已安装该模组时执行，
         // 避免另一模组的类在缺失时被加载/校验而触发 NoClassDefFoundError。
-        if (EmiHelper.isLoaded()) {
+        if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
             onMouseEmi(event);
             return;
         }
-        if (!ModList.get().isLoaded("jei")) {
+        if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
             return;
         }
         onMouseJei(event);
@@ -47,7 +48,7 @@ public final class InputEvents {
 
     @SubscribeEvent
     public static void onMouseButtonReleasedPre(ScreenEvent.MouseButtonReleased.Pre event) {
-        if (!EmiHelper.isLoaded()) {
+        if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
             return;
         }
 
@@ -61,10 +62,7 @@ public final class InputEvents {
             emiActionPressHandled = false;
             return;
         }
-        ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-        if (hovered.isEmpty()) return;
-
-        GenericStack stack = GenericStack.fromItemStack(hovered);
+        GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
         if (stack == null) return;
         sendViewerAction(isMiddle, stack);
         event.setCanceled(true);
@@ -79,9 +77,9 @@ public final class InputEvents {
         if (!(screen instanceof MEStorageScreen<?> || screen instanceof GuiExPatternTerminal<?>)) {
             return;
         }
-        if (EmiHelper.isLoaded()) {
+        if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
             onKeyEmi(event, screen);
-        } else if (ModList.get().isLoaded("jei")) {
+        } else if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
             onKeyJei(event, screen);
         }
     }
@@ -92,25 +90,21 @@ public final class InputEvents {
         // Shift + 左键：拉取或下单。严格查找（仅 EMI 侧边栏/provider 区域），
         // 避免劫持背包等普通槽位的点击；侧边栏栈上该操作由 EMI 原生占用（craftAll），自动让位。
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-            ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-            if (!hovered.isEmpty()) {
-                GenericStack stack = GenericStack.fromItemStack(hovered);
-                if (stack != null) {
-                    emiActionPressHandled = true;
-                    ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
-                    event.setCanceled(true);
-                    return;
-                }
+            GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
+            if (stack != null) {
+                emiActionPressHandled = true;
+                ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
+                event.setCanceled(true);
+                return;
             }
         }
 
         // 中键：打开 AE 下单界面。EMI 源码中不存在中键绑定，接管零冲突；
         // 默认 cheatMode=CREATIVE 不做检查，避免创造模式误判跳过。
+        // 经 EmiStack 转换而非物品栈：Mekanism 化学品等自定义键无法表示为物品，
+        // 物品路径会在 GenericStack.fromItemStack 处整体丢弃。
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
-            ItemStack hovered = EmiHelper.getSidebarIngredientUnderMouse(event.getMouseX(), event.getMouseY());
-            if (hovered.isEmpty()) return;
-
-            GenericStack stack = GenericStack.fromItemStack(hovered);
+            GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
             if (stack == null) return;
             emiActionPressHandled = true;
             sendViewerAction(true, stack);

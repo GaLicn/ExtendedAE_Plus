@@ -5,7 +5,7 @@ import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
 import com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
-import com.extendedae_plus.network.provider.RequestProvidersListC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
@@ -52,7 +52,7 @@ public class CtrlQPatternKeyHandler {
         }
 
         // 双查看器仲裁：EMI 在场时由 EmiCtrlQHandler 接管（与 InputEvents 的分派优先级一致）。
-        if (com.extendedae_plus.compat.EmiHelper.isLoaded()) {
+        if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
             return;
         }
 

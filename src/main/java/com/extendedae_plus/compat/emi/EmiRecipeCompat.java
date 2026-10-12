@@ -1,7 +1,5 @@
-package com.extendedae_plus.compat;
+package com.extendedae_plus.compat.emi;
 
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.util.RecipeInfo;
 import dev.emi.emi.api.EmiApi;
@@ -11,8 +9,6 @@ import dev.emi.emi.api.stack.EmiStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingRecipe;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraft.world.level.material.Fluids;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +47,8 @@ public final class EmiRecipeCompat {
 	/**
 	 * EmiRecipe → RecipeInfo。
 	 * 合成配方：材料布局取自客户端同步的原版注册表（行主序、含空槽），保证 3x3 槽位保真；
-	 * 处理配方：材料/产物取自 EMI 栈（支持物品与流体）。
+	 * 处理配方：材料/产物取自 EMI 栈，键类型覆盖由 {@link EmiStackCompat} 决定，
+	 * 因此物品、流体与已注册转换器的自定义键（如 Mekanism 化学品）均可参与。
 	 */
 	public static RecipeInfo fromEmiRecipe(EmiRecipe recipe) {
 		if (recipe == null || recipe.getId() == null || recipe.getOutputs().isEmpty()) {
@@ -117,7 +114,7 @@ public final class EmiRecipeCompat {
 			for (EmiIngredient slot : recipe.getInputs()) {
 				List<GenericStack> candidates = new ArrayList<>();
 				for (EmiStack option : slot.getEmiStacks()) {
-					GenericStack gs = toGenericStack(option);
+					GenericStack gs = EmiStackCompat.toGenericStack(option);
 					if (gs != null) {
 						candidates.add(gs);
 					}
@@ -131,30 +128,10 @@ public final class EmiRecipeCompat {
 
 	private static GenericStack firstOutput(EmiRecipe recipe) {
 		for (EmiStack out : recipe.getOutputs()) {
-			GenericStack gs = toGenericStack(out);
+			GenericStack gs = EmiStackCompat.toGenericStack(out);
 			if (gs != null) {
 				return gs;
 			}
-		}
-		return null;
-	}
-
-	/**
-	 * EmiStack → GenericStack，支持物品与流体。
-	 * 流体量纲换算：EMI 使用原版 droplets（81000/桶），AE2 使用 mB（1000/桶）。
-	 */
-	private static GenericStack toGenericStack(EmiStack stack) {
-		try {
-			ItemStack item = stack.getItemStack();
-			if (item != null && !item.isEmpty()) {
-				return new GenericStack(AEItemKey.of(item), Math.max(1, stack.getAmount()));
-			}
-			if (stack.getKey() instanceof Fluid fluid && fluid != Fluids.EMPTY) {
-				long amount = stack.getAmount();
-				long mb = Math.max(1, amount / 81);
-				return new GenericStack(AEFluidKey.of(fluid), mb);
-			}
-		} catch (Throwable ignored) {
 		}
 		return null;
 	}

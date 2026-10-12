@@ -3,11 +3,12 @@ package com.extendedae_plus.client.event;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
-import com.extendedae_plus.compat.EmiHelper;
-import com.extendedae_plus.compat.EmiRecipeCompat;
+import com.extendedae_plus.compat.emi.EmiHelper;
+import com.extendedae_plus.compat.emi.EmiRecipeCompat;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.network.pattern.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.pattern.CreateCtrlQPatternC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import net.minecraft.ChatFormatting;
@@ -18,7 +19,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -47,7 +47,7 @@ public final class EmiCtrlQHandler {
 			return;
 		}
 		// 双查看器仲裁：EMI 在场时本类接管，JEI 分支让位（与 InputEvents 的分派优先级一致）。
-		if (!EmiHelper.isLoaded()) {
+		if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
 			return;
 		}
 
