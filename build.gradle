@@ -151,8 +151,8 @@ dependencies {
     modRuntimeOnly "dev.architectury:architectury-forge:9.2.14"
     modRuntimeOnly "curse.maven:cloth-config-348521:5729105"
 
-    //jec
-    modCompileClasspath "curse.maven:just-enough-characters-250702:6680042"
+    //jec：编译期仅需 API，运行期可选加载（代码侧以 ModList 守卫 + compat 层直连）
+    modCompileOnly "curse.maven:just-enough-characters-250702:6680042"
     modRuntimeOnly "curse.maven:just-enough-characters-250702:6680042"
 
     //geckolib
