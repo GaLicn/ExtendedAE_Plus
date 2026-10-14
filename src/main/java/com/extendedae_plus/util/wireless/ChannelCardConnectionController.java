@@ -3,11 +3,8 @@ package com.extendedae_plus.util.wireless;
 import appeng.api.upgrades.IUpgradeInventory;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
+import com.extendedae_plus.api.bridge.InterfaceChannelCardOwner;
 import java.util.UUID;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.jetbrains.annotations.Nullable;
@@ -18,8 +15,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  * 宿主只需提供升级槽、无线端点和节点唤醒回调，连接状态不再散落在各个 Mixin 中。
  */
 public final class ChannelCardConnectionController {
-    private static final Map<BlockEntity, Set<ChannelCardConnectionController>> REGISTRY =
-            Collections.synchronizedMap(new java.util.WeakHashMap<>());
     private final Supplier<IUpgradeInventory> upgrades;
     private final Supplier<UUID> fallbackOwner;
     private final Supplier<IWirelessEndpoint> endpoint;
@@ -81,21 +76,27 @@ public final class ChannelCardConnectionController {
 
     /** 将逻辑控制器绑定到实际方块实体，供 AE2 统一卸载回调清理。 */
     public static void register(BlockEntity owner, ChannelCardConnectionController controller) {
-        synchronized (REGISTRY) {
-            REGISTRY.computeIfAbsent(owner, ignored ->
-                    Collections.newSetFromMap(new IdentityHashMap<>())).add(controller);
+        if (owner instanceof InterfaceChannelCardOwner holder) {
+            var controllers = holder.eap$getChannelCardControllers();
+            synchronized (controllers) {
+                controllers.add(controller);
+            }
         }
     }
 
     /** 方块实体卸载时一次性关闭该实体创建的全部无线连接。 */
     public static void unloadFor(BlockEntity owner) {
-        Set<ChannelCardConnectionController> controllers;
-        synchronized (REGISTRY) {
-            controllers = REGISTRY.remove(owner);
+        if (owner instanceof InterfaceChannelCardOwner holder) {
+            holder.eap$unloadChannelCardControllers();
         }
-        if (controllers != null) {
-            for (var controller : controllers) {
-                controller.onUnloaded();
+    }
+
+    /** 单个部件离开世界时摘掉它自己的控制器，避免长期存活的宿主累积已失效条目。 */
+    public static void unregister(BlockEntity owner, ChannelCardConnectionController controller) {
+        if (owner instanceof InterfaceChannelCardOwner holder) {
+            var controllers = holder.eap$getChannelCardControllers();
+            synchronized (controllers) {
+                controllers.remove(controller);
             }
         }
     }

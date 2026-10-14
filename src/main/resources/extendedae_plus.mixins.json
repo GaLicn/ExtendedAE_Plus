@@ -27,6 +27,7 @@
     "advancedae.menu.CraftingCPUMenuManualStatusAdvancedMixin",
     "ae2.AEProcessingPatternMixin",
     "ae2.AENetworkedBlockEntitySuperMatrixMixin",
+    "ae2.BlockEntityChannelCardOwnerMixin",
     "ae2.ChannelCardNetworkedBlockEntityLifecycleMixin",
     "ae2.CraftingCalculationMixin",
     "ae2.CraftingCPUClusterMixin",
