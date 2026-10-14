@@ -556,6 +556,12 @@ public class ProviderSelectScreen extends Screen {
 
         boolean ok = RecipeTypeNameConfig.addOrUpdateRecipeTypeMapping(key, val);
         if (ok) {
+            // 纯 path 且被多个模组共用时，提示改用完整 ID，避免跨模组配方类型塌缩成同一关键字。
+            if (key.indexOf(':') < 0 && RecipeTypeNameConfig.isAmbiguousPath(key)) {
+                String namespaces = String.join("、", RecipeTypeNameConfig.namespacesForPath(key));
+                sendPlayerMessage(Component.translatable(
+                        "extendedae_plus.screen.upload.mapping_ambiguous_path", key, namespaces));
+            }
             sendPlayerMessage(Component.translatable("extendedae_plus.screen.upload.mapping_added", key, val));
             // 将刚添加的中文名写入搜索框，作为当前查询
             this.query = val;

@@ -20,10 +20,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.extendedae_plus.util.GlobalSendMessage.sendPlayerMessage;
@@ -39,6 +41,10 @@ public final class RecipeTypeNameConfig {
     // 允许使用最终搜索关键字（通常为 path 或自定义短语）作为键，例如："assembler": "组装机"
     private static final Map<String, String> CUSTOM_ALIASES = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    // path -> 使用该 path 的 namespace 集合，用于识别跨模组的配方类型重名（如 mekanism:reaction 与 advanced_ae:reaction）。
+    // 惰性构建并缓存，避免在类加载期访问尚未就绪的注册表。
+    private static volatile Map<String, Set<String>> PATH_NAMESPACES = null;
 
     public record RecipeTypeMapping(String key, String value) {}
 
@@ -327,6 +333,10 @@ public final class RecipeTypeNameConfig {
         if (rawKey == null) return null;
         String normalized = rawKey.trim();
         if (normalized.isEmpty()) return null;
+        // 纯 path 且该 path 被多个模组共用时不套用别名，强制用户改用完整 ID。
+        if (normalized.indexOf(':') < 0 && isAmbiguousPath(normalized)) {
+            return normalized;
+        }
         String alias = CUSTOM_ALIASES.get(normalized.toLowerCase());
         return alias != null && !alias.isBlank() ? alias : normalized;
     }
@@ -343,11 +353,15 @@ public final class RecipeTypeNameConfig {
             return alias;
         }
 
-        ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
-        if (recipeType != null) {
-            String mapped = resolveRecipeTypeSearchKey(recipeType, null);
-            if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
-                return mapped;
+        // 仅完整 ID（含冒号）才解析配方类型映射；纯 path 一律交由别名解析，
+        // 避免 ResourceLocation.tryParse("reaction") 被错误补成 minecraft:reaction。
+        if (normalized.indexOf(':') >= 0) {
+            ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
+            if (recipeType != null) {
+                String mapped = resolveRecipeTypeSearchKey(recipeType, null);
+                if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
+                    return mapped;
+                }
             }
         }
         return normalized;
@@ -367,12 +381,54 @@ public final class RecipeTypeNameConfig {
             return custom;
         }
 
+        // 该 path 被多个模组共用时，纯 path 别名不生效，直接回落到完整 ID，避免跨模组串味。
+        if (isAmbiguousPath(key.getPath())) {
+            return key.toString();
+        }
+
         String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase(Locale.ROOT));
         if (alias != null && !alias.isBlank()) {
             return alias;
         }
 
         return displayName != null && !displayName.isBlank() ? displayName : key.getPath();
+    }
+
+    /** 惰性获取 path -> namespaces 索引，首次访问时构建。 */
+    private static Map<String, Set<String>> pathNamespaces() {
+        Map<String, Set<String>> idx = PATH_NAMESPACES;
+        if (idx == null) {
+            idx = buildPathNamespaces();
+            PATH_NAMESPACES = idx;
+        }
+        return idx;
+    }
+
+    /** 遍历配方类型注册表统计每个 path 对应的 namespace；注册表不可用时退化为空索引（等同无冲突）。 */
+    private static Map<String, Set<String>> buildPathNamespaces() {
+        Map<String, Set<String>> idx = new HashMap<>();
+        try {
+            for (ResourceLocation id : BuiltInRegistries.RECIPE_TYPE.keySet()) {
+                idx.computeIfAbsent(id.getPath(), k -> new HashSet<>()).add(id.getNamespace());
+            }
+        } catch (Throwable ignored) {
+            // 注册表不可用时保持空索引，解析逻辑回退到旧行为。
+        }
+        return idx;
+    }
+
+    /** 该 path 是否被多个 namespace 共用（跨模组重名）。 */
+    public static boolean isAmbiguousPath(String path) {
+        if (path == null) return false;
+        Set<String> namespaces = pathNamespaces().get(path);
+        return namespaces != null && namespaces.size() > 1;
+    }
+
+    /** 返回与该 path 冲突的 namespace 集合，供界面提示使用；无冲突时返回空集。 */
+    public static Set<String> namespacesForPath(String path) {
+        if (path == null) return Set.of();
+        Set<String> namespaces = pathNamespaces().get(path);
+        return namespaces == null ? Set.of() : Set.copyOf(namespaces);
     }
 
     /** 注册表反查失败时，RecipeType.simple 创建的类型仍会通过 toString 暴露其 ID。 */
