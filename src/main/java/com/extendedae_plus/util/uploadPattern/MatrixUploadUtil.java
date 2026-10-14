@@ -166,7 +166,7 @@ public final class MatrixUploadUtil {
 
 
 
-    private static void eap$notify(ServerPlayer player, net.minecraft.network.chat.Component msg, boolean quiet) {
+    private static void eap$notify(ServerPlayer player, Component msg, boolean quiet) {
         if (player == null) return;
         if (quiet) player.displayClientMessage(msg, true);
         else sendPlayerMessage(player, msg);

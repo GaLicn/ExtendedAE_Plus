@@ -8,6 +8,7 @@ import appeng.util.ConfigInventory;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -186,7 +187,7 @@ public class ScaleEncodingPatternC2SPacket {
             return;
         }
 
-        var newOutputs = new net.minecraft.world.item.ItemStack[outputSlots.length];
+        var newOutputs = new ItemStack[outputSlots.length];
         for (int i = 0; i < outputSlots.length; i++) {
             newOutputs[i] = outputSlots[i].getItem().copy();
         }

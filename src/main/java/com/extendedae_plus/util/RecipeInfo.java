@@ -3,11 +3,13 @@ package com.extendedae_plus.util;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 配方完整信息
@@ -70,7 +72,7 @@ public class RecipeInfo {
      * @param bookmarkPriorities 书签优先级映射（物品 -> 优先级，数值越小优先级越高）
      * @return 选择的材料列表（每个槽位一个材料，转换为 ItemStack 用于网络传输）
      */
-    public List<ItemStack> selectBestInputs(java.util.Map<net.minecraft.world.item.Item, Integer> bookmarkPriorities) {
+    public List<ItemStack> selectBestInputs(Map<Item, Integer> bookmarkPriorities) {
         List<ItemStack> selected = new ArrayList<>();
         
         for (List<GenericStack> slotOptions : inputs) {
@@ -102,7 +104,7 @@ public class RecipeInfo {
     /**
      * 获取材料的优先级
      */
-    private int getPriority(GenericStack stack, java.util.Map<net.minecraft.world.item.Item, Integer> priorities) {
+    private int getPriority(GenericStack stack, Map<Item, Integer> priorities) {
         if (stack.what() instanceof AEItemKey itemKey) {
             return priorities.getOrDefault(itemKey.getItem(), Integer.MAX_VALUE);
         }
