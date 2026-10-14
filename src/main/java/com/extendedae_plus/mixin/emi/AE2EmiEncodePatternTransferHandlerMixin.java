@@ -48,7 +48,10 @@ public abstract class AE2EmiEncodePatternTransferHandlerMixin {
                 && emiRecipe.getCategory().getId() != null) {
             // 无原版 Recipe<?> 的自定义配方显示：以 EMI 分类 id 的 path 作为搜索关键字
             ResourceLocation categoryId = emiRecipe.getCategory().getId();
-            name = ExtendedAEPatternUploadUtil.resolveSearchKeyAlias(categoryId.getPath());
+            // 分类 path 被多个模组共用时改用完整 ID 消歧，否则维持按 path 走别名映射。
+            name = ExtendedAEPatternUploadUtil.isAmbiguousPath(categoryId.getPath())
+                    ? categoryId.toString()
+                    : ExtendedAEPatternUploadUtil.resolveSearchKeyAlias(categoryId.getPath());
         }
         if (name != null && !name.isBlank()) {
             ExtendedAEPatternUploadUtil.setLastProcessingName(name);

@@ -97,6 +97,10 @@ public class ExtendedAEPatternUploadUtil {
     private static final String LAST_UPLOAD_KIND_PROVIDER = "provider";
     private static final String LAST_UPLOAD_KIND_MATRIX = "matrix";
 
+    // path -> 使用该 path 的 namespace 集合，用于识别跨模组的配方类型重名（如 mekanism:reaction 与 advanced_ae:reaction）。
+    // 惰性构建并缓存，避免在类加载期访问尚未就绪的注册表。
+    private static volatile Map<String, Set<String>> PATH_NAMESPACES = null;
+
     public record LastUploadRecord(String kind, long providerId, int slot, long pos, String side, String dimension, boolean matrixPlus) {
         public boolean isMatrix() {
             return LAST_UPLOAD_KIND_MATRIX.equals(this.kind);
@@ -504,6 +508,10 @@ public class ExtendedAEPatternUploadUtil {
         if (normalized.isEmpty()) {
             return null;
         }
+        // 纯 path 且该 path 被多个模组共用时不套用别名，强制用户改用完整 ID。
+        if (normalized.indexOf(':') < 0 && isAmbiguousPath(normalized)) {
+            return normalized;
+        }
         String alias = CUSTOM_ALIASES.get(normalized.toLowerCase());
         if (alias != null && !alias.isBlank()) {
             return alias;
@@ -523,11 +531,15 @@ public class ExtendedAEPatternUploadUtil {
             return alias;
         }
 
-        ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
-        if (recipeType != null) {
-            String mapped = resolveRecipeTypeSearchKey(recipeType, null);
-            if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
-                return mapped;
+        // 仅完整 ID（含冒号）才解析配方类型映射；纯 path 一律交由别名解析，
+        // 避免 ResourceLocation.tryParse("reaction") 被错误补成 minecraft:reaction。
+        if (normalized.indexOf(':') >= 0) {
+            ResourceLocation recipeType = ResourceLocation.tryParse(normalized);
+            if (recipeType != null) {
+                String mapped = resolveRecipeTypeSearchKey(recipeType, null);
+                if (mapped != null && !mapped.isBlank() && !mapped.equals(recipeType.getPath())) {
+                    return mapped;
+                }
             }
         }
         return normalized;
@@ -547,12 +559,50 @@ public class ExtendedAEPatternUploadUtil {
             return custom;
         }
 
+        // 该 path 被多个模组共用时，纯 path 别名不生效，直接回落到完整 ID，避免跨模组串味。
+        if (isAmbiguousPath(key.getPath())) {
+            return key.toString();
+        }
+
         String alias = CUSTOM_ALIASES.get(key.getPath().toLowerCase(Locale.ROOT));
         if (alias != null && !alias.isBlank()) {
             return alias;
         }
 
         return displayName != null && !displayName.isBlank() ? displayName : key.getPath();
+    }
+
+    /** 惰性获取 path -> namespaces 索引，首次访问时构建。 */
+    private static Map<String, Set<String>> pathNamespaces() {
+        Map<String, Set<String>> idx = PATH_NAMESPACES;
+        if (idx == null) {
+            idx = buildPathNamespaces();
+            PATH_NAMESPACES = idx;
+        }
+        return idx;
+    }
+
+    /** 遍历配方类型注册表统计每个 path 对应的 namespace；键统一小写，避免大小写差异绕过消歧判定。 */
+    private static Map<String, Set<String>> buildPathNamespaces() {
+        Map<String, Set<String>> idx = new HashMap<>();
+        for (ResourceLocation id : BuiltInRegistries.RECIPE_TYPE.keySet()) {
+            idx.computeIfAbsent(id.getPath().toLowerCase(Locale.ROOT), k -> new HashSet<>()).add(id.getNamespace());
+        }
+        return idx;
+    }
+
+    /** 该 path 是否被多个 namespace 共用（跨模组重名）。查询前统一小写，与索引键保持一致。 */
+    public static boolean isAmbiguousPath(String path) {
+        if (path == null) return false;
+        Set<String> namespaces = pathNamespaces().get(path.toLowerCase(Locale.ROOT));
+        return namespaces != null && namespaces.size() > 1;
+    }
+
+    /** 返回与该 path 冲突的 namespace 集合，供界面提示使用；无冲突时返回空集。 */
+    public static Set<String> namespacesForPath(String path) {
+        if (path == null) return Set.of();
+        Set<String> namespaces = pathNamespaces().get(path.toLowerCase(Locale.ROOT));
+        return namespaces == null ? Set.of() : Set.copyOf(namespaces);
     }
 
     /** 注册表反查失败时，RecipeType.simple 创建的类型仍会通过 toString 暴露其 ID。 */

@@ -288,6 +288,8 @@
   "extendedae_plus.message.mapping.cn_required": "请输入中文名称。",
   "extendedae_plus.message.mapping.add_success": "已添加映射：%s -> %s。",
   "extendedae_plus.message.mapping.add_fail": "添加映射失败。",
+  "extendedae_plus.message.mapping.ambiguous_path": "“%s”是多个模组共用的配方类型名（%s），请改用完整 ID 配置映射。",
+  "extendedae_plus.screen.mapping_management.conflict": " [冲突]",
   "extendedae_plus.message.mapping.delete_cn_required": "请输入要删除的中文名称。",
   "extendedae_plus.message.mapping.delete_success": "已删除 \"%s\" 的映射，共 %d 条。",
   "extendedae_plus.message.mapping.delete_not_found": "未找到 \"%s\" 的映射。",

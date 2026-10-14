@@ -456,6 +456,12 @@ public class ProviderSelectScreen extends Screen {
         }
 
         if (player != null) {
+            // 纯 path 且被多个模组共用时，提示改用完整 ID，避免跨模组配方类型塌缩成同一关键字。
+            if (key.indexOf(':') < 0 && ExtendedAEPatternUploadUtil.isAmbiguousPath(key)) {
+                String namespaces = String.join("、", ExtendedAEPatternUploadUtil.namespacesForPath(key));
+                player.sendSystemMessage(Component.translatable(
+                        "extendedae_plus.message.mapping.ambiguous_path", key, namespaces));
+            }
             player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_success", key, value));
         }
         this.query = value;
