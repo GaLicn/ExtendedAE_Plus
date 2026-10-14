@@ -99,7 +99,7 @@ dependencies {
     //extendedae
     modImplementation "curse.maven:glodium-957920:${glodium_version}"
     //extendedAE
-    modImplementation "curse.maven:ex-pattern-provider-892005:7005572"
+    modImplementation "curse.maven:ex-pattern-provider-892005:8615273"
 
     //ae2
     modImplementation "appeng:appliedenergistics2-forge:${ae2_version}"
@@ -161,8 +161,8 @@ dependencies {
     forgeRuntimeLibrary "com.eliotlash.mclib:mclib:20"
 
     // compileOnly 供代码编译
-    include "curse.maven:configuration-444699:4710266"
-    modImplementation "curse.maven:configuration-444699:4710266"
+    include "curse.maven:configuration-444699:5840405"
+    modImplementation "curse.maven:configuration-444699:5840405"
 
     //ftbteams
     modCompileOnly "curse.maven:ftb-teams-forge-404468:6130786"

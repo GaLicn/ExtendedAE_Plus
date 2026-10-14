@@ -9,7 +9,6 @@ import dev.toma.configuration.config.format.ConfigFormats;
 import dev.toma.configuration.config.io.ConfigIO;
 import dev.toma.configuration.config.value.ConfigValue;
 
-
 @Config(id = ExtendedAEPlus.MODID)
 public final class ModConfig {
 
@@ -27,15 +26,20 @@ public final class ModConfig {
     }
 
     /** Updates and immediately saves a client-only UI preference. */
-    @SuppressWarnings("unchecked")
     public static void setExtendedPatternProviderShowScalingControls(boolean visible) {
         synchronized (lock) {
             if (INSTANCE == null || configHolder == null) {
                 return;
             }
+            // 立即反映到内存实例，避免反射失败时字段与 UI 状态不一致。
+            INSTANCE.extendedPatternProviderShowScalingControls = visible;
+
+            @SuppressWarnings("unchecked")
             ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
                     .get("extendedPatternProviderShowScalingControls");
-            value.set(visible);
+            if (value != null) {
+                value.setValue(visible);
+            }
             ConfigIO.saveClientValues(configHolder);
         }
     }
