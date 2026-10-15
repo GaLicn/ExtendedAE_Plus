@@ -30,6 +30,8 @@ public class ScaledProcessingPattern implements IPatternDetails {
 
     public @NotNull IPatternDetails getOriginal() {return this.original;}
 
+    public long getMultiplier() {return this.multiplier;}
+
     @Override
     public AEItemKey getDefinition() {
         return this.original.getDefinition();

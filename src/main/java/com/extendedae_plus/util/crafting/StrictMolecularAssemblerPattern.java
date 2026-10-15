@@ -30,6 +30,8 @@ public final class StrictMolecularAssemblerPattern implements IMolecularAssemble
     private final IMolecularAssemblerSupportedPattern delegate;
     private final IInput[] strictInputs;
     private final Map<Integer, AEItemKey> strictSlotInputs;
+    /** 首次查询时才计算：供应者补查每次都会临时包装样板，不必为它跑配方返还计算。 */
+    private @Nullable Boolean sequentialCrafting;
     private boolean allowScaling = true;
     private int multiplierLimit = DEFAULT_SUPER_MATRIX_BATCH_SIZE;
 
@@ -101,7 +103,10 @@ public final class StrictMolecularAssemblerPattern implements IMolecularAssemble
 
     @Override
     public boolean eap$allowScaling() {
-        return this.allowScaling;
+        if (this.sequentialCrafting == null) {
+            this.sequentialCrafting = this.detectSequentialCrafting();
+        }
+        return this.allowScaling && !this.sequentialCrafting;
     }
 
     @Override
@@ -171,6 +176,29 @@ public final class StrictMolecularAssemblerPattern implements IMolecularAssemble
             }
         });
         return slots;
+    }
+
+    /**
+     * 与 AE2 CraftingTreeProcess.updateLimitQty 同一口径：输入带返还物或输出即输入时，
+     * 计划逐次模拟并复用同一份材料，批量发配会一次要求多份而永远凑不齐。
+     */
+    private boolean detectSequentialCrafting() {
+        for (var input : this.strictInputs) {
+            var possibleInputs = input.getPossibleInputs();
+            if (possibleInputs.length == 0) {
+                continue;
+            }
+            var primaryInput = possibleInputs[0];
+            if (input.getRemainingKey(primaryInput.what()) != null) {
+                return true;
+            }
+            for (var output : this.delegate.getOutputs()) {
+                if (output != null && output.what().matches(primaryInput)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static final class StrictInput implements IInput {
