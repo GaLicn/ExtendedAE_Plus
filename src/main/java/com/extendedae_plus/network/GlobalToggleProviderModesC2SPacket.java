@@ -115,9 +115,12 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
         collectLogicsFromMachineSet(grid.getMachines(PatternProviderLogicHost.class), uniqueLogics);
         collectLogicsFromMachineSet(grid.getActiveMachines(PatternProviderLogicHost.class), uniqueLogics);
 
-        // 4. 兼容 ExtendedAE（glodblock）自己的 ExPatternProvider（因为 AE2 的 getMachines 只按精确类匹配接口会漏）
-        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.parts.PartExPatternProvider");
-        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider");
+        // 4. ExtendedAE 的 ExPatternProvider（方块与零件）
+        //    注意 AE2 的 getMachines 按 owner 的精确类匹配，用接口查询查不到，故直接按 EAE 类型收集
+        collectLogicsFromMachineSet(grid.getMachines(PartExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(PartExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getMachines(TileExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(TileExPatternProvider.class), uniqueLogics);
 
         // 真正执行切换
         for (PatternProviderLogic logic : uniqueLogics) {
@@ -129,45 +132,16 @@ public class GlobalToggleProviderModesC2SPacket implements CustomPacketPayload {
     }
 
     /**
-     * 工具方法：把一个 Set<? extends SomeMachine> 中的 Logic 加入去重集合
+     * 工具方法：把一个 Set<? extends PatternProviderLogicHost> 中的 Logic 加入去重集合
      */
-    private static void collectLogicsFromMachineSet(Set<?> machineSet, Set<PatternProviderLogic> target) {
+    private static void collectLogicsFromMachineSet(Set<? extends PatternProviderLogicHost> machineSet,
+                                                    Set<PatternProviderLogic> target) {
         if (machineSet == null) return;
-        for (Object obj : machineSet) {
-            addLogicIfPresent(target, obj);
-        }
-    }
-
-    /**
-     * 通过反射兼容第三方精确类（防止接口匹配漏掉）
-     */
-    private static void collectByReflection(IGrid grid, Set<PatternProviderLogic> target, String className) {
-        try {
-            Class<?> clazz = Class.forName(className);
-            collectLogicsFromMachineSet(grid.getMachines(clazz), target);
-            collectLogicsFromMachineSet(grid.getActiveMachines(clazz), target);
-        } catch (Throwable ignored) {
-            // 如果类不存在（比如玩家没装 ExtendedAE）直接忽略
-        }
-    }
-
-    /**
-     * 从任意对象里尝试取出 PatternProviderLogic（兼容多种实现）
-     */
-    private static void addLogicIfPresent(Set<PatternProviderLogic> target, Object obj) {
-        if (obj == null) return;
-        try {
-            if (obj instanceof PatternProviderLogicHost host && host.getLogic() != null) {
-                target.add(host.getLogic());
-                return;
-            }
-            // 兜底反射调用 getLogic()
-            var method = obj.getClass().getMethod("getLogic");
-            Object result = method.invoke(obj);
-            if (result instanceof PatternProviderLogic logic) {
+        for (PatternProviderLogicHost host : machineSet) {
+            var logic = host.getLogic();
+            if (logic != null) {
                 target.add(logic);
             }
-        } catch (Throwable ignored) {
         }
     }
 
