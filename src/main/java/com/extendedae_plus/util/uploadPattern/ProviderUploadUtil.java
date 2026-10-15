@@ -16,6 +16,8 @@ import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.api.upload.UploadPreferences;
 import com.extendedae_plus.compat.NeoECOAECompat;
 import com.extendedae_plus.config.PatternUploadPriority;
+import com.extendedae_plus.mixin.ae2.accessor.PatternAccessTermContainerTrackerAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.PatternAccessTermMenuAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import net.minecraft.core.BlockPos;
@@ -32,12 +34,10 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 样板供应器侧的上传工具，并承载「最近一次上传目标」的记录与回查。
@@ -243,88 +243,33 @@ public final class ProviderUploadUtil {
      * @return PatternContainer实例，如果不存在则返回null
      */
     private static PatternContainer getPatternContainerById(PatternAccessTermMenu menu, long providerId) {
-        try {
-            // 通过反射访问byId字段（ExtendedAE继承了这个字段）
-            Field byIdField = findByIdField(menu.getClass());
-            if (byIdField == null) {
-                System.err.println("ExtendedAE Plus: Unable to find byId field");
-                return null;
-            }
-
-            byIdField.setAccessible(true);
-
-            @SuppressWarnings("unchecked")
-            Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
-
-            Object containerTracker = byId.get(providerId);
-            if (containerTracker == null) {
-                return null;
-            }
-
-            // 从ContainerTracker中获取PatternContainer
-            Field containerField = findContainerField(containerTracker.getClass());
-            if (containerField == null) {
-                System.err.println("ExtendedAE Plus: Unable to find container field");
-                return null;
-            }
-
-            containerField.setAccessible(true);
-            return (PatternContainer) containerField.get(containerTracker);
-
-        } catch (Exception e) {
-            System.err.println("ExtendedAE Plus: Failed to get PatternContainer, error: " + e.getMessage());
+        if (menu == null) {
             return null;
         }
-    }
-
-    /**
-     * 在类层次结构中查找byId字段
-     */
-    private static Field findByIdField(Class<?> clazz) {
-        Class<?> currentClass = clazz;
-        while (currentClass != null) {
-            try {
-                return currentClass.getDeclaredField("byId");
-            } catch (NoSuchFieldException e) {
-                currentClass = currentClass.getSuperclass();
-            }
+        // byId 字段与 ContainerTracker 均为 AE2 私有成员，通过 accessor 直接引用。
+        var byId = ((PatternAccessTermMenuAccessor) menu).eap$getById();
+        if (byId == null) {
+            return null;
         }
-        return null;
-    }
-
-    /**
-     * 在类层次结构中查找container字段
-     */
-    private static Field findContainerField(Class<?> clazz) {
-        Class<?> currentClass = clazz;
-        while (currentClass != null) {
-            try {
-                return currentClass.getDeclaredField("container");
-            } catch (NoSuchFieldException e) {
-                currentClass = currentClass.getSuperclass();
-            }
+        Object tracker = byId.get(providerId);
+        if (!(tracker instanceof PatternAccessTermContainerTrackerAccessor accessor)) {
+            return null;
         }
-        return null;
+        return accessor.eap$getContainer();
     }
 
     /**
      * 列出当前菜单中所有供应器的服务器ID（原样返回 byId 的 key 集合）。
      */
     public static List<Long> getAllProviderIds(PatternAccessTermMenu menu) {
-        List<Long> result = new ArrayList<>();
-        if (menu == null) return result;
-        try {
-            Field byIdField = findByIdField(menu.getClass());
-            if (byIdField == null) return result;
-            byIdField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            Map<Long, Object> byId = (Map<Long, Object>) byIdField.get(menu);
-            if (byId != null) {
-                result.addAll(byId.keySet());
-            }
-        } catch (Throwable ignored) {
+        if (menu == null) {
+            return new ArrayList<>();
         }
-        return result;
+        var byId = ((PatternAccessTermMenuAccessor) menu).eap$getById();
+        if (byId == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(byId.keySet());
     }
 
     // ------------------------------------------------------------------

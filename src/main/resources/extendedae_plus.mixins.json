@@ -39,6 +39,8 @@
     "ae2.accessor.ExecutingCraftingJobAccessor",
     "ae2.accessor.ExecutingCraftingJobTaskProgressAccessor",
     "ae2.accessor.MEStorageMenuAccessor",
+    "ae2.accessor.PatternAccessTermContainerTrackerAccessor",
+    "ae2.accessor.PatternAccessTermMenuAccessor",
     "ae2.accessor.PatternEncodingTermMenuAccessor",
     "ae2.accessor.PatternProviderLogicAccessor",
     "ae2.accessor.PatternProviderLogicPatternInputsAccessor",

@@ -10,6 +10,8 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.config.EAPSettings;
+import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
+import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;

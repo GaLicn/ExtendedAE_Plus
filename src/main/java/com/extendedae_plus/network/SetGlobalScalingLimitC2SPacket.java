@@ -8,6 +8,8 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.parts.crafting.PatternProviderPart;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.smartDoubling.ISmartDoublingHolder;
+import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
+import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -84,9 +86,12 @@ public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
         collectLogicsFromMachineSet(grid.getMachines(PatternProviderLogicHost.class), uniqueLogics);
         collectLogicsFromMachineSet(grid.getActiveMachines(PatternProviderLogicHost.class), uniqueLogics);
 
-        // 4. 兼容 ExtendedAE
-        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.parts.PartExPatternProvider");
-        collectByReflection(grid, uniqueLogics, "com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider");
+        // 4. ExtendedAE 的 ExPatternProvider（方块与零件）
+        //    注意 AE2 的 getMachines 按 owner 的精确类匹配，用接口查询查不到，故直接按 EAE 类型收集
+        collectLogicsFromMachineSet(grid.getMachines(PartExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(PartExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getMachines(TileExPatternProvider.class), uniqueLogics);
+        collectLogicsFromMachineSet(grid.getActiveMachines(TileExPatternProvider.class), uniqueLogics);
 
         for (PatternProviderLogic logic : uniqueLogics) {
             if (applyToLogic(logic, limit)) {
@@ -96,34 +101,15 @@ public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
         return affectedCount;
     }
 
-    private static void collectLogicsFromMachineSet(Set<?> machineSet, Set<PatternProviderLogic> target) {
+    private static void collectLogicsFromMachineSet(Set<? extends PatternProviderLogicHost> machineSet,
+                                                    Set<PatternProviderLogic> target) {
         if (machineSet == null) return;
-        for (Object obj : machineSet) {
-            addLogicIfPresent(target, obj);
-        }
-    }
-
-    private static void collectByReflection(IGrid grid, Set<PatternProviderLogic> target, String className) {
-        try {
-            Class<?> clazz = Class.forName(className);
-            collectLogicsFromMachineSet(grid.getMachines(clazz), target);
-            collectLogicsFromMachineSet(grid.getActiveMachines(clazz), target);
-        } catch (Throwable ignored) {}
-    }
-
-    private static void addLogicIfPresent(Set<PatternProviderLogic> target, Object obj) {
-        if (obj == null) return;
-        try {
-            if (obj instanceof PatternProviderLogicHost host && host.getLogic() != null) {
-                target.add(host.getLogic());
-                return;
-            }
-            var method = obj.getClass().getMethod("getLogic");
-            Object result = method.invoke(obj);
-            if (result instanceof PatternProviderLogic logic) {
+        for (PatternProviderLogicHost host : machineSet) {
+            var logic = host.getLogic();
+            if (logic != null) {
                 target.add(logic);
             }
-        } catch (Throwable ignored) {}
+        }
     }
 
     private static boolean applyToLogic(PatternProviderLogic logic, int limit) {
