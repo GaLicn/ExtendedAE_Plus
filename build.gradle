@@ -191,6 +191,10 @@ dependencies {
     runtimeOnly "curse.maven:ftb-library-forge-404465:7029003"
     runtimeOnly "curse.maven:architectury-api-419699:5786327"
 
+    //jecharacters（拼音搜索）：compat 层直接引用 me.towdium.jecharacters.utils.Match，编译期需要 JEC
+    //最低版本 4.5.24（1.21.1 线首版）由 src/main/templates/META-INF/neoforge.mods.toml 的 versionRange 声明，不在此重复
+    compileOnly fileTree(dir: 'libs', includes: ['jecharacters-*.jar'])
+
     //biggerae2
    // runtimeOnly "curse.maven:bigger-ae2-1013772:6587078"
 

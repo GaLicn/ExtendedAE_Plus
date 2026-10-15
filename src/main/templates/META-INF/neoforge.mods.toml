@@ -120,6 +120,17 @@ versionRange = "[2101.1.0,)"
 ordering = "AFTER"
 side = "BOTH"
 
+# Just Enough Characters is optional; when present, provider search uses its pinyin matching.
+# The compat bridge calls Match#contains(CharSequence, CharSequence), present since the 4.5.24
+# build, the first 4.5.x release on the MC 1.21.1 line (earlier 4.5.x target MC 1.21 and expose
+# the same method signature, but pinning the 1.21.1 first build keeps the bound unambiguous).
+[[dependencies.${ mod_id }]]
+modId = "jecharacters"
+type = "optional"
+versionRange = "[4.5.24,)"
+ordering = "AFTER"
+side = "CLIENT"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

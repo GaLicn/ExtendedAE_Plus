@@ -27,7 +27,8 @@ public class ModCheckUtils {
             MODID_MEKANISM = "mekanism",
             MODID_APPMEK = "appmek",
             MODID_EPA = "expandedae",
-            MODID_ECO = "neoecoae";
+            MODID_ECO = "neoecoae",
+            MODID_JEC = "jecharacters";
 
     /**
      * 检查指定模组是否存在
@@ -105,5 +106,18 @@ public class ModCheckUtils {
 
     public static boolean isECOLoading() {
         return ModCheckUtils.isLoaded(ModCheckUtils.MODID_ECO);
+    }
+
+    /**
+     * Just Enough Characters 是否可用。
+     * 拼音匹配桥接类（{@code JecharactersCompat}）直接引用 {@code me.towdium.jecharacters.utils.Match}，
+     * 只应在该守卫通过后调用。
+     *
+     * <p>最低版本要求（4.5.24，1.21.1 线首个版本）由 {@code neoforge.mods.toml} 中
+     * {@code jecharacters} 依赖的 {@code versionRange} 声明，版本不足时由 FML 在加载阶段直接拒绝，
+     * 此处无需重复比较。</p>
+     */
+    public static boolean isJecharactersLoading() {
+        return ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEC);
     }
 }

@@ -1,5 +1,7 @@
 package com.extendedae_plus.util.uploadPattern;
 
+import com.extendedae_plus.compat.jecharacters.JecharactersCompat;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -11,7 +13,6 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,9 +49,6 @@ public final class RecipeTypeNameConfig {
     // 处理样板会写入映射后的配方类型关键字，合成样板固定使用 crafting（可通过映射改名）。
     public static final String DEFAULT_CRAFTING_SEARCH_KEY = "crafting";
     private static volatile String lastProviderSearchKey = null;
-    // 供应器名称匹配：优先使用 JEC 的拼音匹配，否则回退到大小写不敏感子串匹配。
-    private static Boolean JEC_AVAILABLE = null;
-    private static Method JEC_CONTAINS = null;
 
     // path -> 使用该 path 的 namespace 集合，用于识别跨模组的配方类型重名（如 mekanism:reaction 与 advanced_ae:reaction）。
     // 惰性构建并缓存，避免在类加载期访问尚未就绪的注册表。
@@ -169,26 +167,8 @@ public final class RecipeTypeNameConfig {
     public static boolean matchesProviderName(String name, String key) {
         if (name == null) return false;
         if (key == null || key.isEmpty()) return true;
-        try {
-            if (JEC_AVAILABLE == null) {
-                try {
-                    Class<?> cls = Class.forName("me.towdium.jecharacters.utils.Match");
-                    JEC_CONTAINS = cls.getMethod("contains", CharSequence.class, CharSequence.class);
-                    JEC_AVAILABLE = true;
-                } catch (Throwable t) {
-                    JEC_AVAILABLE = false;
-                }
-            }
-            if (Boolean.TRUE.equals(JEC_AVAILABLE) && JEC_CONTAINS != null) {
-                Object r = JEC_CONTAINS.invoke(null, name, key);
-                if (r instanceof Boolean && (Boolean) r) return true;
-                String nL = name.toLowerCase();
-                String kL = key.toLowerCase();
-                Object r2 = JEC_CONTAINS.invoke(null, nL, kL);
-                if (r2 instanceof Boolean && (Boolean) r2) return true;
-            }
-        } catch (Throwable ignored) {
-            // 回退到子串匹配
+        if (ModCheckUtils.isJecharactersLoading() && JecharactersCompat.contains(name, key)) {
+            return true;
         }
         return name.toLowerCase().contains(key.toLowerCase());
     }
