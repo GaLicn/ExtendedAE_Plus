@@ -235,21 +235,6 @@ public final class ProviderUploadUtil {
     }
 
     /**
-     * 检查当前菜单是否为ExtendedAE的扩展样板管理终端
-     *
-     * @param player 玩家
-     * @return 是否为ExtendedAE扩展终端
-     */
-    private static boolean isExtendedAETerminal(ServerPlayer player) {
-        if (player == null || player.containerMenu == null) {
-            return false;
-        }
-
-        String containerClassName = player.containerMenu.getClass().getName();
-        return containerClassName.equals("com.glodblock.github.extendedae.container.ContainerExPatternTerminal");
-    }
-
-    /**
      * 通过服务器ID获取PatternContainer
      * 兼容ExtendedAE的ContainerExPatternTerminal和原版PatternAccessTermMenu
      *
@@ -738,9 +723,6 @@ public final class ProviderUploadUtil {
 
     /**
      * 发送装配矩阵上传成功提示。
-     *
-     * <p>不复用 {@link #sendMessage}：该方法是刻意保留的空实现，恢复其实现会同时激活回退流程中
-     * 被拒目标的失败文案。此处只负责已确认成功的提示。</p>
      */
     private static void notifyMatrixUpload(ServerPlayer player) {
         if (player != null) {
@@ -1064,34 +1046,29 @@ public final class ProviderUploadUtil {
         // 1. 验证玩家是否打开了样板访问终端
         PatternAccessTermMenu menu = getPatternAccessMenu(player);
         if (menu == null) {
-            sendMessage(player, "extendedae_plus.message.open_terminal_first");
             return false;
         }
 
         // 2. 获取玩家背包中的物品
         ItemStack playerItem = player.getInventory().getItem(playerSlotIndex);
         if (playerItem.isEmpty()) {
-            sendMessage(player, "extendedae_plus.message.inventory_slot_empty");
             return false;
         }
 
         // 3. 验证是否是编码样板
         if (!PatternDetailsHelper.isEncodedPattern(playerItem)) {
-            sendMessage(player, "extendedae_plus.message.invalid_pattern_item");
             return false;
         }
 
         // 4. 获取目标样板供应器
         PatternContainer patternContainer = getPatternContainerById(menu, providerId);
         if (patternContainer == null) {
-            sendMessage(player, "extendedae_plus.message.provider.not_found", providerId);
             return false;
         }
 
         // 5. 获取样板供应器的库存
         InternalInventory patternInventory = patternContainer.getTerminalPatternInventory();
         if (patternInventory == null) {
-            sendMessage(player, "extendedae_plus.message.provider.inventory_unavailable");
             return false;
         }
 
@@ -1111,16 +1088,9 @@ public final class ProviderUploadUtil {
             } else {
                 player.getInventory().setItem(playerSlotIndex, playerItem);
             }
-
-            String terminalTypeKey = isExtendedAETerminal(player)
-                    ? "extendedae_plus.terminal.expattern"
-                    : "extendedae_plus.terminal.pattern_access";
-            sendMessage(player, "extendedae_plus.message.upload.success_single",
-                    Component.translatable(terminalTypeKey), insertedCount);
             recordProviderUpload(player, providerId, patternContainer, findLastChangedSlot(patternInventory, before, slotLimit));
             return true;
         } else {
-            sendMessage(player, "extendedae_plus.message.upload.fail");
             return false;
         }
     }
@@ -1213,15 +1183,6 @@ public final class ProviderUploadUtil {
 
         // 检查是否连接到网络
         return container.getGrid() != null;
-    }
-
-    /**
-     * 发送消息给玩家
-     *
-     * <p>与原实现一致，刻意保留为空实现：恢复其实现会激活回退流程中被拒目标的失败文案，
-     * 已确认成功的提示由各自上传入口单独发送。</p>
-     */
-    private static void sendMessage(ServerPlayer player, String key, Object... args) {
     }
 
     /**

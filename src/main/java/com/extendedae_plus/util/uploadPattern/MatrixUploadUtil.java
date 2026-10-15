@@ -60,7 +60,6 @@ public final class MatrixUploadUtil {
                 .eap$getEncodedPatternSlot();
         ItemStack stack = encodedSlot.getItem();
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
-            sendMessage(player, "extendedae_plus.message.upload.no_pattern");
             return false;
         }
 
@@ -69,14 +68,12 @@ public final class MatrixUploadUtil {
         if (!(details instanceof AECraftingPattern
                 || details instanceof AESmithingTablePattern
                 || details instanceof AEStonecuttingPattern)) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
             return false;
         }
 
         // 获取 AE 网络
         IGrid grid = ProviderUploadUtil.resolveGrid(menu);
         if (grid == null) {
-            sendMessage(player, "extendedae_plus.message.network.invalid");
             return false;
         }
 
@@ -112,7 +109,6 @@ public final class MatrixUploadUtil {
                             target.plus(),
                             ProviderUploadUtil.findLastChangedSlot(target.patternInventory(), before, target.patternInventory().size())
                     );
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
                     return true;
                 }
             }
@@ -132,18 +128,12 @@ public final class MatrixUploadUtil {
                     if (stack.isEmpty()) {
                         encodedSlot.set(ItemStack.EMPTY);
                     }
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
                     return true;
                 }
             }
         }
 
         // 未找到可用矩阵或全部拒收
-        if (inventories.isEmpty() && handlers.isEmpty()) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
-        } else {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
-        }
         return false;
     }
 
@@ -164,7 +154,6 @@ public final class MatrixUploadUtil {
         if (!(details instanceof AECraftingPattern
                 || details instanceof AESmithingTablePattern
                 || details instanceof AEStonecuttingPattern)) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail");
             return false;
         }
 
@@ -190,7 +179,6 @@ public final class MatrixUploadUtil {
                             target.plus(),
                             ProviderUploadUtil.findLastChangedSlot(target.patternInventory(), before, target.patternInventory().size())
                     );
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
                     return true;
                 }
             }
@@ -202,17 +190,11 @@ public final class MatrixUploadUtil {
                 ItemStack toInsert = pattern.copy();
                 ItemStack remain = insertIntoAnySlot(cap, toInsert);
                 if (remain.getCount() < toInsert.getCount()) {
-                    sendMessage(player, "extendedae_plus.upload_to_matrix.success");
                     return true;
                 }
             }
         }
 
-        if (inventories.isEmpty() && handlers.isEmpty()) {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_no_matrix");
-        } else {
-            sendMessage(player, "extendedae_plus.upload_to_matrix.fail_full");
-        }
         return false;
     }
 
@@ -357,14 +339,5 @@ public final class MatrixUploadUtil {
         } catch (Throwable t) {
             return false;
         }
-    }
-
-    /**
-     * 发送消息给玩家
-     *
-     * <p>与原实现一致，刻意保留为空实现：矩阵上传过程中的失败文案不应激活，
-     * 已确认成功的提示由 {@link ProviderUploadUtil#uploadFromEncodingMenuByPriority} 负责。</p>
-     */
-    private static void sendMessage(ServerPlayer player, String key, Object... args) {
     }
 }
