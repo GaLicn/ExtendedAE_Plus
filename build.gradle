@@ -183,7 +183,10 @@ dependencies {
     implementation "curse.maven:neo-eco-ae-extension-1460639:8881114"
     implementation "maven.modrinth:ldlib:mc1.21.1-2.2.40-neoforge"
 
-    //ftbteams
+    //ftbteams：compat 层直接引用 FTB Teams API，编译期需要 ftbteams + ftb-library + architectury（最低 2101.1.0）
+    compileOnly "curse.maven:ftb-teams-forge-404468:6930910"
+    compileOnly "curse.maven:ftb-library-forge-404465:7029003"
+    compileOnly "curse.maven:architectury-api-419699:5786327"
     runtimeOnly "curse.maven:ftb-teams-forge-404468:6930910"
     runtimeOnly "curse.maven:ftb-library-forge-404465:7029003"
     runtimeOnly "curse.maven:architectury-api-419699:5786327"

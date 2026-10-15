@@ -109,6 +109,17 @@ versionRange = "[21.2.0-beta1,)"
 ordering = "AFTER"
 side = "BOTH"
 
+# FTB Teams is optional; when present, wireless networks are shared per team instead of per player.
+# The compat bridge calls FTBTeamsAPI#api()/isManagerLoaded()/getManager() and
+# TeamManager#getTeamForPlayerID(UUID), whose API is present from the 2101.1.0 (MC 1.21.1) line.
+# Older 2100.x builds target MC 1.21 and are not compatible with this mod anyway.
+[[dependencies.${ mod_id }]]
+modId = "ftbteams"
+type = "optional"
+versionRange = "[2101.1.0,)"
+ordering = "AFTER"
+side = "BOTH"
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.
