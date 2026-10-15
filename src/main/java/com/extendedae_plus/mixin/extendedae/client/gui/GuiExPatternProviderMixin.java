@@ -197,6 +197,11 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
     }
 
     @Override
+    public int eap$getMaxPage() {
+        return Math.max(1, this.eap$maxPageLocal);
+    }
+
+    @Override
     public void eap$setCurrentPage(int page) {
         this.eap$currentPage = Math.max(0, Math.min(page, Math.max(1, this.eap$maxPageLocal) - 1));
         if (this.getMenu() instanceof ExPatternProviderMenuPageBridge bridge) {

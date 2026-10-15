@@ -7,7 +7,7 @@ import appeng.helpers.InterfaceLogic;
 import appeng.helpers.InterfaceLogicHost;
 import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
-import com.extendedae_plus.util.ExtendedAELogger;
+import com.extendedae_plus.mixin.ae2.accessor.InterfaceLogicInvoker;
 import net.minecraft.world.item.Item;
 import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.*;
@@ -53,25 +53,13 @@ public abstract class InterfaceLogicUpgradesMixin implements CompatUpgradeProvid
         
         // 只有当当前槽数小于目标槽数时才需要扩展
         if (currentSlots < targetSlots) {
-            this.upgrades = UpgradeInventories.forMachine(is, targetSlots, this::eap$onUpgradesChanged);
+            this.upgrades = UpgradeInventories.forMachine(is, targetSlots,
+                    () -> ((InterfaceLogicInvoker) (Object) this).eap$onUpgradesChanged());
             
             // 设置兼容升级槽
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades = this.upgrades;
             }
-        }
-    }
-    
-    @Unique
-    private void eap$onUpgradesChanged() {
-        // 调用原始的onUpgradesChanged方法
-        try {
-            // 通过反射调用原始方法，因为它是protected的
-            var method = InterfaceLogic.class.getDeclaredMethod("onUpgradesChanged");
-            method.setAccessible(true);
-            method.invoke(this);
-        } catch (Exception e) {
-            ExtendedAELogger.LOGGER.error("[ME接口] 调用onUpgradesChanged失败", e);
         }
     }
 

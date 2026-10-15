@@ -168,17 +168,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             if (hovered != null) {
                 for (var s : configSlots) {
                     if (s == hovered) {
-                        try {
-                            var f = s.getClass().getDeclaredField("slot");
-                            f.setAccessible(true);
-                            Object v = f.get(s);
-                            if (v instanceof Integer i) {
-                                slotFieldObj = i;
-                            }
-                        } catch (Throwable ignored) {}
-                        if (slotFieldObj == null) {
-                            slotFieldObj = configSlots.indexOf(s);
-                        }
+                        slotFieldObj = s.getSlotIndex();
                         break;
                     }
                 }
@@ -281,17 +271,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             Integer idx = null;
             for (var s : configSlots) {
                 if (s == hovered) {
-                    try {
-                        var f = s.getClass().getDeclaredField("slot");
-                        f.setAccessible(true);
-                        Object v = f.get(s);
-                        if (v instanceof Integer i) {
-                            idx = i;
-                        }
-                    } catch (Throwable ignored) {}
-                    if (idx == null) {
-                        idx = configSlots.indexOf(s);
-                    }
+                    idx = s.getSlotIndex();
                     break;
                 }
             }

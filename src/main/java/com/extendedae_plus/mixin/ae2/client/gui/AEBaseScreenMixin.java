@@ -16,6 +16,9 @@ import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.content.ClientPatternHighlightStore;
+import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
+import com.extendedae_plus.mixin.accessor.ScreenAccessor;
+import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.network.CraftingMonitorJumpC2SPacket;
 import com.extendedae_plus.network.CraftingMonitorOpenProviderC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
@@ -40,47 +43,6 @@ import javax.annotation.Nullable;
 
 @Mixin(value = AEBaseScreen.class, remap = false)
 public abstract class AEBaseScreenMixin {
-
-    @Unique
-    private static int eap$getIntField(Object self, String name, int def) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField(name);
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Integer i) return i;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return def;
-    }
-
-    @Unique
-    private static Font eap$getFont(Object self) {
-        Class<?> c = self.getClass();
-        while (c != null && c != Object.class) {
-            try {
-                var f = c.getDeclaredField("font");
-                f.setAccessible(true);
-                Object v = f.get(self);
-                if (v instanceof Font font) return font;
-            } catch (Throwable ignored) {}
-            c = c.getSuperclass();
-        }
-        return net.minecraft.client.Minecraft.getInstance().font;
-    }
-
-    @Unique
-    private ScreenStyle eap$getStyle(Object self) {
-        try {
-            var f = self.getClass().getDeclaredField("style");
-            f.setAccessible(true);
-            Object v = f.get(self);
-            if (v instanceof ScreenStyle s) return s;
-        } catch (Throwable ignored) {}
-        return null;
-    }
 
     /**
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+左键，
@@ -172,7 +134,7 @@ public abstract class AEBaseScreenMixin {
         }
 
         // 在槽位右下角绘制数量文本（字号随 AE2 的 useTerminalUseLargeFont 配置）
-        Font font = eap$getFont(self);
+        Font font = ((ScreenAccessor) (Object) this).eap$getFont();
         GuiUtil.drawAmountText(guiGraphics, font, amountText, appEngSlot.x, appEngSlot.y);
 
         try {
@@ -209,14 +171,14 @@ public abstract class AEBaseScreenMixin {
             }
 
             // 计算“样板”文本起点与宽度，按对齐方式与缩放修正 x/y
-            int imageWidth = eap$getIntField(self, "imageWidth", 0);
-            int imageHeight = eap$getIntField(self, "imageHeight", 0);
+            int imageWidth = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageWidth();
+            int imageHeight = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getImageHeight();
             Rect2i bounds = new Rect2i(0, 0, imageWidth, imageHeight);
             Point pos = text.getPosition().resolve(bounds);
 
             float scale = text.getScale();
 
-            Font font = eap$getFont(self);
+            Font font = ((ScreenAccessor) (Object) this).eap$getFont();
             // 只关心第一行（标题类文本无换行或 maxWidth<=0）
             var contentLine = (text.getMaxWidth() <= 0)
                     ? content.getVisualOrderText()
@@ -267,22 +229,14 @@ public abstract class AEBaseScreenMixin {
 
             int cur = 1;
             int max = 1;
-            if (self instanceof IExPatternPage accessor) {
-                cur = Math.max(0, accessor.eap$getCurrentPage()) + 1;
-            }
-            try {
-                var fMax = self.getClass().getDeclaredField("eap$maxPageLocal");
-                fMax.setAccessible(true);
-                Object v = fMax.get(self);
-                if (v instanceof Integer i) {
-                    max = Math.max(1, i);
-                }
-            } catch (Throwable ignored) {
+            if (self instanceof IExPatternPage pageAccessor) {
+                cur = Math.max(0, pageAccessor.eap$getCurrentPage()) + 1;
+                max = pageAccessor.eap$getMaxPage();
             }
 
             String pageText = "第" + cur + "页" + "/" + max + "页";
 
-            ScreenStyle style = this.eap$getStyle(self);
+            ScreenStyle style = ((AEBaseScreenAccessor<?>) (Object) this).eap$getStyle();
             int color = 0xFFFFFFFF;
             if (style != null) {
                 try {

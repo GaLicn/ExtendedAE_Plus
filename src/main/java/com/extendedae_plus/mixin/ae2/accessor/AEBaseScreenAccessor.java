@@ -12,6 +12,6 @@ public interface AEBaseScreenAccessor<T extends AEBaseMenu> {
     @Accessor(value = "style", remap = false)
     ScreenStyle eap$getStyle();
 
-    @Accessor("widgets")
+    @Accessor(value = "widgets", remap = false)
     WidgetContainer eap$getWidgets();
 }

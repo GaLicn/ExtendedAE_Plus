@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.accessor;
 
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,4 +16,7 @@ public interface ScreenAccessor {
 
     @Accessor("children")
     List<GuiEventListener> eap$getChildren();
+
+    @Accessor("font")
+    Font eap$getFont();
 }
