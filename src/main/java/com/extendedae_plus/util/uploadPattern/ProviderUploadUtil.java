@@ -212,14 +212,6 @@ public final class ProviderUploadUtil {
     }
 
     /**
-     * 通过上传菜单接口读取编码槽物品。
-     */
-    public static ItemStack getEncodedPatternFromMenu(Object menu) {
-        var slot = getEncodedPatternSlot(menu);
-        return slot != null ? slot.getItem() : ItemStack.EMPTY;
-    }
-
-    /**
      * 通过上传菜单接口获取编码槽。
      */
     public static Slot getEncodedPatternSlot(Object menu) {
@@ -858,7 +850,8 @@ public final class ProviderUploadUtil {
             return false;
         }
         // 读取已编码槽位的物品（优先走上传菜单契约）
-        ItemStack stack = getEncodedPatternFromMenu(menu);
+        var encodedSlot = getEncodedPatternSlot(menu);
+        ItemStack stack = encodedSlot != null ? encodedSlot.getItem() : ItemStack.EMPTY;
         if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
             return false;
         }
@@ -1132,67 +1125,9 @@ public final class ProviderUploadUtil {
         }
     }
 
-    /**
-     * 批量上传样板到指定供应器（支持ExtendedAE和原版AE2）
-     *
-     * @param player 玩家
-     * @param playerSlotIndices 玩家背包槽位索引数组
-     * @param providerId 目标样板供应器ID
-     * @return 成功上传的样板数量
-     */
-    public static int uploadMultiplePatterns(ServerPlayer player, int[] playerSlotIndices, long providerId) {
-        int successCount = 0;
-
-        for (int slotIndex : playerSlotIndices) {
-            if (uploadPatternToProvider(player, slotIndex, providerId)) {
-                successCount++;
-            }
-        }
-
-        String terminalTypeKey = isExtendedAETerminal(player)
-                ? "extendedae_plus.terminal.expattern"
-                : "extendedae_plus.terminal.pattern_access";
-        sendMessage(player, "extendedae_plus.message.upload.success_batch",
-                Component.translatable(terminalTypeKey), successCount);
-        return successCount;
-    }
-
     // ------------------------------------------------------------------
     // 兼容旧 ID 入口
     // ------------------------------------------------------------------
-
-    /**
-     * 检查样板供应器是否有足够的空槽位
-     *
-     * @param providerId 供应器ID
-     * @param menu 样板访问终端菜单（支持ExtendedAE）
-     * @param requiredSlots 需要的槽位数
-     * @return 是否有足够的空槽位
-     */
-    public static boolean hasEnoughSlots(long providerId, PatternAccessTermMenu menu, int requiredSlots) {
-        PatternContainer container = getPatternContainerById(menu, providerId);
-        if (container == null) {
-            return false;
-        }
-
-        InternalInventory inventory = container.getTerminalPatternInventory();
-        if (inventory == null) {
-            return false;
-        }
-
-        int availableSlots = 0;
-        int slotLimit = getAccessiblePatternSlotCount(container, inventory);
-        for (int i = 0; i < slotLimit; i++) {
-            if (inventory.getStackInSlot(i).isEmpty()) {
-                availableSlots++;
-                if (availableSlots >= requiredSlots) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
 
     /**
      * 获取样板供应器中的空槽位数量
@@ -1278,22 +1213,6 @@ public final class ProviderUploadUtil {
 
         // 检查是否连接到网络
         return container.getGrid() != null;
-    }
-
-    /**
-     * 获取当前终端类型的描述
-     *
-     * @param player 玩家
-     * @return 终端类型描述
-     */
-    public static String getTerminalTypeDescription(ServerPlayer player) {
-        if (isExtendedAETerminal(player)) {
-            return Component.translatable("extendedae_plus.terminal.expattern").getString();
-        } else if (getPatternAccessMenu(player) != null) {
-            return Component.translatable("extendedae_plus.terminal.pattern_access").getString();
-        } else {
-            return Component.translatable("extendedae_plus.terminal.unknown").getString();
-        }
     }
 
     /**
