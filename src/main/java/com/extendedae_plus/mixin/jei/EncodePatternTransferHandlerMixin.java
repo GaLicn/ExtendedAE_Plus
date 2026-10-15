@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.jei;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.integration.modules.rei.transfer.EncodePatternTransferHandler;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,20 +29,20 @@ public abstract class EncodePatternTransferHandlerMixin {
         Recipe<?> recipe = holder != null ? holder.value() : null;
         if (recipe != null) {
             if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
-                ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+                RecipeTypeNameConfig.presetCraftingProviderSearchKey();
                 return;
             }
-            name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+            name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
             if (name == null || name.isBlank()) {
                 // 注册表反查失败时仍按配方类名生成搜索词，避免搜索框完全为空。
-                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+                name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipe);
             }
         } else {
             // 非原版 Recipe<?> 的显示，尝试从 display 类名/包名推导关键词
-            name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(display);
+            name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(display);
         }
         if (name != null && !name.isBlank()) {
-            ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+            RecipeTypeNameConfig.setLastProcessingName(name);
         }
     }
 }

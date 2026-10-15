@@ -2,7 +2,7 @@ package com.extendedae_plus.compat.jei;
 
 import com.extendedae_plus.mixin.jei.accessor.BookmarkListAccessor;
 import com.extendedae_plus.mixin.jei.accessor.BookmarkOverlayAccessor;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredientHelper;
 import mezz.jei.api.ingredients.IIngredientType;
@@ -63,7 +63,7 @@ public final class JeiRuntimeCompat {
 			}
 
 			String title = getCategoryTitle(recipeManager, matched);
-			return ExtendedAEPatternUploadUtil.resolveRecipeTypeSearchKey(matched.getUid(), title);
+			return RecipeTypeNameConfig.resolveRecipeTypeSearchKey(matched.getUid(), title);
 		} catch (Throwable ignored) {
 			return null;
 		}

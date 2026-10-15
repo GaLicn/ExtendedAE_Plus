@@ -1,6 +1,6 @@
 package com.extendedae_plus.client;
 
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public final class ProviderListCache {
      * @return 唯一命中组的供应器名称；搜索词为空或未唯一命中时返回 {@code null}
      */
     public static Component findUniqueMatch(String rawSearchKey) {
-        String searchKey = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(rawSearchKey);
+        String searchKey = RecipeTypeNameConfig.resolveProviderSearchKey(rawSearchKey);
         if (searchKey.isBlank()) {
             return null;
         }
@@ -55,7 +55,7 @@ public final class ProviderListCache {
 
         Provider hit = null;
         for (Map.Entry<String, Provider> e : bestByName.entrySet()) {
-            if (!ExtendedAEPatternUploadUtil.matchesProviderName(e.getKey(), searchKey)) {
+            if (!RecipeTypeNameConfig.matchesProviderName(e.getKey(), searchKey)) {
                 continue;
             }
             if (hit != null) {

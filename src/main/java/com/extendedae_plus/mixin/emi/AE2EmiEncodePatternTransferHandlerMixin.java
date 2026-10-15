@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.emi;
 import appeng.integration.modules.emi.EmiEncodePatternHandler;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import dev.emi.emi.api.recipe.EmiRecipe;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.crafting.Recipe;
@@ -35,13 +35,13 @@ public abstract class AE2EmiEncodePatternTransferHandlerMixin {
         if (recipe != null) {
             // 合成样板固定使用 "crafting" 关键字（可被用户别名覆盖）
             if (EncodingHelper.isSupportedCraftingRecipe(recipe)) {
-                ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+                RecipeTypeNameConfig.presetCraftingProviderSearchKey();
                 return;
             }
-            name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+            name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
             if (name == null || name.isBlank()) {
                 // 注册表反查失败时仍按配方类名生成搜索词，避免搜索框完全为空。
-                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+                name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipe);
             }
         } else if (emiRecipe != null
                 && emiRecipe.getCategory() != null
@@ -49,12 +49,12 @@ public abstract class AE2EmiEncodePatternTransferHandlerMixin {
             // 无原版 Recipe<?> 的自定义配方显示：以 EMI 分类 id 的 path 作为搜索关键字
             ResourceLocation categoryId = emiRecipe.getCategory().getId();
             // 分类 path 被多个模组共用时改用完整 ID 消歧，否则维持按 path 走别名映射。
-            name = ExtendedAEPatternUploadUtil.isAmbiguousPath(categoryId.getPath())
+            name = RecipeTypeNameConfig.isAmbiguousPath(categoryId.getPath())
                     ? categoryId.toString()
-                    : ExtendedAEPatternUploadUtil.resolveSearchKeyAlias(categoryId.getPath());
+                    : RecipeTypeNameConfig.resolveSearchKeyAlias(categoryId.getPath());
         }
         if (name != null && !name.isBlank()) {
-            ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+            RecipeTypeNameConfig.setLastProcessingName(name);
         }
     }
 }

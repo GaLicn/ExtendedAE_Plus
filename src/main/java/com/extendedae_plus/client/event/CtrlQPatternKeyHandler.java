@@ -10,7 +10,7 @@ import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.mojang.blaze3d.platform.InputConstants;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
@@ -168,7 +168,7 @@ public final class CtrlQPatternKeyHandler {
 			RecipeInfo matching = matchById(recipeInfos, recipeId);
 			List<ItemStack> selectedIngredients = selectIngredientsWithJeiPriority(matching);
 			List<ItemStack> selectedOutputs = convertOutputsToItemStacks(matching);
-			ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+			RecipeTypeNameConfig.presetCraftingProviderSearchKey();
 
 			PacketDistributor.sendToServer(new CreateAndUploadPatternC2SPacket(
 				recipeId,
@@ -362,18 +362,18 @@ public final class CtrlQPatternKeyHandler {
 		}
 		
 		if (recipeBase instanceof Recipe<?> recipe) {
-			name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+			name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
 			if (name == null || name.isBlank()) {
 				// 注册表反查失败时按配方类名保底，保证供应器搜索词不会为空。
-				name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+				name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipe);
 			}
 		}
 
 		if (name == null || name.isBlank()) {
-			name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+			name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipeBase);
 		}
 		if (name != null && !name.isBlank()) {
-			ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+			RecipeTypeNameConfig.setLastProcessingName(name);
 		}
 	}
 

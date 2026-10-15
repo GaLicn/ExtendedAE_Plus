@@ -3,7 +3,7 @@ package com.extendedae_plus.client.screen;
 import com.extendedae_plus.network.CancelPendingPatternC2SPacket;
 import com.extendedae_plus.network.UploadEncodedPatternToProviderC2SPacket;
 import com.extendedae_plus.client.widget.ResizableAETextField;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.google.gson.*;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
@@ -84,10 +84,10 @@ public class ProviderSelectScreen extends Screen {
         this.emptySlots = emptySlots;
         // 如果有来自最近一次写样板流程的预设搜索词，则作为初始查询
         try {
-            String recent = ExtendedAEPatternUploadUtil.consumeLastProviderSearchKey();
+            String recent = RecipeTypeNameConfig.consumeLastProviderSearchKey();
             if (recent != null && !recent.isBlank()) {
                 // 兼容旧流程中已经缓存的原始关键字，打开界面时再次应用映射。
-                this.query = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(recent);
+                this.query = RecipeTypeNameConfig.resolveProviderSearchKey(recent);
             }
         } catch (Throwable ignored) {}
         this.buildGroups();
@@ -96,7 +96,7 @@ public class ProviderSelectScreen extends Screen {
 
     private static boolean nameMatches(String name, String key) {
         // 匹配语义已抽到工具类，客户端弹窗与服务端唯一匹配直传共用，保证两端判定一致。
-        return ExtendedAEPatternUploadUtil.matchesProviderName(name, key);
+        return RecipeTypeNameConfig.matchesProviderName(name, key);
     }
 
     private void changePage(int delta) {
@@ -196,7 +196,7 @@ public class ProviderSelectScreen extends Screen {
         this.lastExactMatchCount = 0;
         String q = this.query == null ? "" : this.query.trim();
         // 输入内容命中配方类型映射时，供应器名称按映射值进行过滤。
-        String searchKey = ExtendedAEPatternUploadUtil.resolveProviderSearchKey(q);
+        String searchKey = RecipeTypeNameConfig.resolveProviderSearchKey(q);
         for (int i = 0; i < this.gIds.size(); i++) {
             String name = this.gNames.get(i);
             if (searchKey.isEmpty() || nameMatches(name, searchKey)) {
@@ -448,7 +448,7 @@ public class ProviderSelectScreen extends Screen {
             return;
         }
 
-        if (!ExtendedAEPatternUploadUtil.addOrUpdateRecipeTypeMapping(key, value)) {
+        if (!RecipeTypeNameConfig.addOrUpdateRecipeTypeMapping(key, value)) {
             if (player != null) {
                 player.sendSystemMessage(Component.translatable("extendedae_plus.message.mapping.add_fail"));
             }
@@ -457,8 +457,8 @@ public class ProviderSelectScreen extends Screen {
 
         if (player != null) {
             // 纯 path 且被多个模组共用时，提示改用完整 ID，避免跨模组配方类型塌缩成同一关键字。
-            if (key.indexOf(':') < 0 && ExtendedAEPatternUploadUtil.isAmbiguousPath(key)) {
-                String namespaces = String.join("、", ExtendedAEPatternUploadUtil.namespacesForPath(key));
+            if (key.indexOf(':') < 0 && RecipeTypeNameConfig.isAmbiguousPath(key)) {
+                String namespaces = String.join("、", RecipeTypeNameConfig.namespacesForPath(key));
                 player.sendSystemMessage(Component.translatable(
                         "extendedae_plus.message.mapping.ambiguous_path", key, namespaces));
             }

@@ -5,7 +5,7 @@ import appeng.menu.implementations.PatternAccessTermMenu;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -52,11 +52,11 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                 for (int i = 0; i < containers.size(); i++) {
                     var c = containers.get(i);
                     if (c == null) continue;
-                    int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(c);
+                    int empty = ProviderUploadUtil.getAvailableSlots(c);
                     if (empty <= 0) continue;
                     long encodedId = -1L - i;
                     idxIds.add(encodedId);
-                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
+                    names.add(ProviderUploadUtil.getProviderDisplayNameComponent(c));
                     slots.add(empty);
                 }
                 player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent));
@@ -66,20 +66,20 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             if (!(player.containerMenu instanceof IPatternUploadMenu encMenu)) return;
 
             // 优先：若玩家也打开了样板访问终端，则用 byId 方式（精确服务器ID）
-            PatternAccessTermMenu accessMenu = ExtendedAEPatternUploadUtil.getPatternAccessMenu(player);
+            PatternAccessTermMenu accessMenu = ProviderUploadUtil.getPatternAccessMenu(player);
             if (accessMenu != null) {
-                List<Long> ids = ExtendedAEPatternUploadUtil.getAllProviderIds(accessMenu);
+                List<Long> ids = ProviderUploadUtil.getAllProviderIds(accessMenu);
                 List<Long> filteredIds = new ArrayList<>();
                 List<Component> names = new ArrayList<>();
                 List<Integer> slots = new ArrayList<>();
 
                 for (Long id : ids) {
                     if (id == null) continue;
-                    if (!ExtendedAEPatternUploadUtil.isProviderAvailable(id, accessMenu)) continue;
-                    int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(id, accessMenu);
+                    if (!ProviderUploadUtil.isProviderAvailable(id, accessMenu)) continue;
+                    int empty = ProviderUploadUtil.getAvailableSlots(id, accessMenu);
                     if (empty <= 0) continue; // 只列出有空位的
                     filteredIds.add(id);
-                    names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(id, accessMenu));
+                    names.add(ProviderUploadUtil.getProviderDisplayNameComponent(id, accessMenu));
                     slots.add(empty);
                 }
 
@@ -88,18 +88,18 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
             }
 
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
-            List<PatternContainer> containers = ExtendedAEPatternUploadUtil.listAvailableProvidersFromGrid(encMenu);
+            List<PatternContainer> containers = ProviderUploadUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
             List<Component> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
             for (int i = 0; i < containers.size(); i++) {
                 var c = containers.get(i);
                 if (c == null) continue;
-                int empty = ExtendedAEPatternUploadUtil.getAvailableSlots(c);
+                int empty = ProviderUploadUtil.getAvailableSlots(c);
                 if (empty <= 0) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
-                names.add(ExtendedAEPatternUploadUtil.getProviderDisplayNameComponent(c));
+                names.add(ProviderUploadUtil.getProviderDisplayNameComponent(c));
                 slots.add(empty);
             }
             player.connection.send(new ProvidersListS2CPacket(idxIds, names, slots, msg.silent));

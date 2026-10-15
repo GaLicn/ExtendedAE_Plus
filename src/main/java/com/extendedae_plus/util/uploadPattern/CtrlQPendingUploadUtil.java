@@ -5,7 +5,7 @@ import appeng.api.inventories.InternalInventory;
 import appeng.api.networking.IGrid;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.util.inv.filter.IAEItemFilter;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil.UploadOutcome;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil.UploadOutcome;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,7 +88,7 @@ public final class CtrlQPendingUploadUtil {
 		if (index >= providers.size()) return false;
 		PatternContainer target = providers.get(index);
 		if (target == null) return false;
-		return ExtendedAEPatternUploadUtil.providerContainsPattern(target, pattern);
+		return ProviderUploadUtil.providerContainsPattern(target, pattern);
 	}
 
 	public static boolean returnPendingCtrlQPatternToInventory(ServerPlayer player){
@@ -124,7 +124,7 @@ public final class CtrlQPendingUploadUtil {
 						if (container == null || !container.isVisibleInTerminal()) continue;
 						InternalInventory inv = container.getTerminalPatternInventory();
 						if (inv == null || inv.size() <= 0) continue;
-						if (ExtendedAEPatternUploadUtil.getAvailableSlots(container) > 0) {
+						if (ProviderUploadUtil.getAvailableSlots(container) > 0) {
 							list.add(container);
 						}
 					}
@@ -170,7 +170,7 @@ public final class CtrlQPendingUploadUtil {
 			InternalInventory inv = container.getTerminalPatternInventory();
 			if (inv == null || inv.size() <= 0) continue;
 
-			ItemStack nextRemain = ExtendedAEPatternUploadUtil.insertIntoAccessiblePatternSlots(
+			ItemStack nextRemain = ProviderUploadUtil.insertIntoAccessiblePatternSlots(
 					container, remain.copy(), new CtrlQPatternFilter());
 			if (nextRemain.getCount() < remain.getCount()) {
 				remain = nextRemain;
@@ -190,12 +190,12 @@ public final class CtrlQPendingUploadUtil {
 	}
 
 	private static List<PatternContainer> buildSameNameTryList(List<PatternContainer> all, PatternContainer target) {
-		String targetName = ExtendedAEPatternUploadUtil.getProviderDisplayName(target);
+		String targetName = ProviderUploadUtil.getProviderDisplayName(target);
 		List<PatternContainer> tryList = new ArrayList<>();
 		tryList.add(target);
 		for (PatternContainer container : all) {
 			if (container == null || container == target) continue;
-			String name = ExtendedAEPatternUploadUtil.getProviderDisplayName(container);
+			String name = ProviderUploadUtil.getProviderDisplayName(container);
 			if (name != null && name.equals(targetName)) {
 				tryList.add(container);
 			}

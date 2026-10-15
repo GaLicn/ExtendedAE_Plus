@@ -11,7 +11,7 @@ import appeng.core.definitions.AEItems;
 import appeng.me.helpers.PlayerSource;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.MatrixUploadUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -133,7 +133,7 @@ public class CreateAndUploadPatternC2SPacket implements CustomPacketPayload {
 				return;
 			}
 
-			boolean uploaded = ExtendedAEPatternUploadUtil.uploadPatternToMatrix(player, pattern, grid);
+			boolean uploaded = MatrixUploadUtil.uploadPatternToMatrix(player, pattern, grid);
 			if (!uploaded) {
 				if(!player.getInventory().add(pattern)){
 					player.drop(pattern.copy(),false);

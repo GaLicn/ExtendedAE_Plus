@@ -1,6 +1,6 @@
 package com.extendedae_plus.client.screen;
 
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.extendedae_plus.client.widget.ResizableAETextField;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.StyleManager;
@@ -24,8 +24,8 @@ public class RecipeTypeMappingScreen extends Screen {
 
     private final Screen parent;
     private final ScreenStyle aeStyle;
-    private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> mappings = new ArrayList<>();
-    private final List<ExtendedAEPatternUploadUtil.RecipeTypeMapping> filteredMappings = new ArrayList<>();
+    private final List<RecipeTypeNameConfig.RecipeTypeMapping> mappings = new ArrayList<>();
+    private final List<RecipeTypeNameConfig.RecipeTypeMapping> filteredMappings = new ArrayList<>();
 
     private ResizableAETextField filterInput;
     private ResizableAETextField keyInput;
@@ -103,11 +103,11 @@ public class RecipeTypeMappingScreen extends Screen {
         int start = this.page * this.pageSize;
         int end = Math.min(start + this.pageSize, this.filteredMappings.size());
         for (int index = start; index < end; index++) {
-            ExtendedAEPatternUploadUtil.RecipeTypeMapping mapping = this.filteredMappings.get(index);
+            RecipeTypeNameConfig.RecipeTypeMapping mapping = this.filteredMappings.get(index);
             String prefix = mapping.key().equals(this.selectedKey) ? "▶ " : "";
             // 纯 path 且被多个模组共用时追加冲突标记，提示该别名不会生效、需改用完整 ID。
             String conflict = mapping.key().indexOf(':') < 0
-                    && ExtendedAEPatternUploadUtil.isAmbiguousPath(mapping.key())
+                    && RecipeTypeNameConfig.isAmbiguousPath(mapping.key())
                     ? Component.translatable("extendedae_plus.screen.mapping_management.conflict").getString()
                     : "";
             String label = prefix + mapping.key() + "  →  " + mapping.value() + conflict;
@@ -164,9 +164,9 @@ public class RecipeTypeMappingScreen extends Screen {
     }
 
     private void reloadMappings(boolean showStatus) {
-        ExtendedAEPatternUploadUtil.loadRecipeTypeNames();
+        RecipeTypeNameConfig.loadRecipeTypeNames();
         this.mappings.clear();
-        this.mappings.addAll(ExtendedAEPatternUploadUtil.getRecipeTypeMappings());
+        this.mappings.addAll(RecipeTypeNameConfig.getRecipeTypeMappings());
         this.applyFilter();
         this.needsRefresh = true;
         if (showStatus) {
@@ -177,7 +177,7 @@ public class RecipeTypeMappingScreen extends Screen {
     private void applyFilter() {
         String query = this.filterInput == null ? "" : this.filterInput.getValue().trim().toLowerCase(Locale.ROOT);
         this.filteredMappings.clear();
-        for (ExtendedAEPatternUploadUtil.RecipeTypeMapping mapping : this.mappings) {
+        for (RecipeTypeNameConfig.RecipeTypeMapping mapping : this.mappings) {
             if (query.isEmpty()
                     || mapping.key().toLowerCase(Locale.ROOT).contains(query)
                     || mapping.value().toLowerCase(Locale.ROOT).contains(query)) {
@@ -186,7 +186,7 @@ public class RecipeTypeMappingScreen extends Screen {
         }
     }
 
-    private void selectMapping(ExtendedAEPatternUploadUtil.RecipeTypeMapping mapping) {
+    private void selectMapping(RecipeTypeNameConfig.RecipeTypeMapping mapping) {
         this.selectedKey = mapping.key();
         this.keyInput.setValue(mapping.key());
         this.valueInput.setValue(mapping.value());
@@ -210,18 +210,18 @@ public class RecipeTypeMappingScreen extends Screen {
         }
 
         String previousKey = this.selectedKey;
-        if (!ExtendedAEPatternUploadUtil.addOrUpdateRecipeTypeMapping(key, value)) {
+        if (!RecipeTypeNameConfig.addOrUpdateRecipeTypeMapping(key, value)) {
             this.setStatus("extendedae_plus.screen.mapping_management.save_failed", 0xFFFF5555);
             return;
         }
         if (previousKey != null && !previousKey.equalsIgnoreCase(key)) {
-            ExtendedAEPatternUploadUtil.removeRecipeTypeMapping(previousKey);
+            RecipeTypeNameConfig.removeRecipeTypeMapping(previousKey);
         }
 
         this.selectedKey = key;
         this.reloadMappings(false);
         this.selectedKey = this.mappings.stream()
-                .map(ExtendedAEPatternUploadUtil.RecipeTypeMapping::key)
+                .map(RecipeTypeNameConfig.RecipeTypeMapping::key)
                 .filter(savedKey -> savedKey.equalsIgnoreCase(key))
                 .findFirst()
                 .orElse(key);
@@ -232,7 +232,7 @@ public class RecipeTypeMappingScreen extends Screen {
         if (this.selectedKey == null) {
             return;
         }
-        if (!ExtendedAEPatternUploadUtil.removeRecipeTypeMapping(this.selectedKey)) {
+        if (!RecipeTypeNameConfig.removeRecipeTypeMapping(this.selectedKey)) {
             this.setStatus("extendedae_plus.screen.mapping_management.delete_failed", 0xFFFF5555);
             return;
         }

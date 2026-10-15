@@ -9,7 +9,7 @@ import com.extendedae_plus.client.ProviderListCache;
 import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.network.RequestProvidersListC2SPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -47,9 +47,9 @@ public class PatternEncodingTermUploadMixin {
             if (!ModConfigs.UNIQUE_PROVIDER_AUTO_UPLOAD_ENABLE.get()) {
                 return null;
             }
-            Component provider = ProviderListCache.findUniqueMatch(ExtendedAEPatternUploadUtil.peekLastProviderSearchKey());
+            Component provider = ProviderListCache.findUniqueMatch(RecipeTypeNameConfig.peekLastProviderSearchKey());
             if (provider != null) {
-                ExtendedAEPatternUploadUtil.consumeLastProviderSearchKey();
+                RecipeTypeNameConfig.consumeLastProviderSearchKey();
             }
             return provider;
         } catch (Throwable ignored) {

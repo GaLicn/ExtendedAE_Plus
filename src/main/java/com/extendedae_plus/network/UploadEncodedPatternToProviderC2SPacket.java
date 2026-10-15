@@ -2,8 +2,8 @@ package com.extendedae_plus.network;
 
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil.UploadOutcome;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil.UploadOutcome;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.chat.Component;
@@ -67,11 +67,11 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
                 // 1) providerId >= 0: 访问终端 byId 模式
                 // 2) providerId < 0:   索引模式（由列表回退路径生成），index = -1 - providerId
                 if (msg.providerId >= 0) {
-                    outcome = ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProvider(
+                    outcome = ProviderUploadUtil.uploadFromEncodingMenuToProvider(
                             player, menu, msg.providerId);
                 } else {
                     int index = (int) (-1L - msg.providerId);
-                    outcome = ExtendedAEPatternUploadUtil.uploadFromEncodingMenuToProviderByIndex(
+                    outcome = ProviderUploadUtil.uploadFromEncodingMenuToProviderByIndex(
                             player, menu, index);
                 }
             }
@@ -79,7 +79,7 @@ public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayl
                 // 重复命中：编码槽样板未写入，回收为等量空白样板
                 var slot = menu.getEncodedPatternSlot();
                 if (slot != null) {
-                    ExtendedAEPatternUploadUtil.recycleEncodedPatternAsBlanks(player, menu, slot.getItem());
+                    ProviderUploadUtil.recycleEncodedPatternAsBlanks(player, menu, slot.getItem());
                 }
             }
             sendStatus(player, msg, outcome);

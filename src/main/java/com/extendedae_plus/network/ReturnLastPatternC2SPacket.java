@@ -6,7 +6,7 @@ import appeng.helpers.patternprovider.PatternContainer;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixBlockEntity;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
 import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerMatrixPattern;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -36,7 +36,7 @@ public class ReturnLastPatternC2SPacket implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
 
-            ExtendedAEPatternUploadUtil.LastUploadRecord record = ExtendedAEPatternUploadUtil.getLastUploadRecord(player);
+            ProviderUploadUtil.LastUploadRecord record = ProviderUploadUtil.getLastUploadRecord(player);
             if (record == null || record.slot() < 0) {
                 return;
             }
@@ -49,27 +49,27 @@ public class ReturnLastPatternC2SPacket implements CustomPacketPayload {
                 return;
             }
 
-            PatternContainer targetContainer = ExtendedAEPatternUploadUtil.findProviderContainer(player, record);
+            PatternContainer targetContainer = ProviderUploadUtil.findProviderContainer(player, record);
             if (targetContainer == null || !targetContainer.isVisibleInTerminal()) {
                 return;
             }
 
             InternalInventory inv = targetContainer.getTerminalPatternInventory();
-            if (inv != null && ExtendedAEPatternUploadUtil.isAccessiblePatternSlot(targetContainer, record.slot())) {
+            if (inv != null && ProviderUploadUtil.isAccessiblePatternSlot(targetContainer, record.slot())) {
                 returnPatternFromSlot(player, inv, record.slot());
             }
         });
     }
 
-    private static InternalInventory findMatrixInventory(ServerPlayer player, ExtendedAEPatternUploadUtil.LastUploadRecord record) {
-        var level = ExtendedAEPatternUploadUtil.findLevel(player, record.dimension());
+    private static InternalInventory findMatrixInventory(ServerPlayer player, ProviderUploadUtil.LastUploadRecord record) {
+        var level = ProviderUploadUtil.findLevel(player, record.dimension());
         if (level == null) {
             return null;
         }
         return findMatrixInventory(level.getBlockEntity(BlockPos.of(record.pos())), record);
     }
 
-    private static InternalInventory findMatrixInventory(BlockEntity blockEntity, ExtendedAEPatternUploadUtil.LastUploadRecord record) {
+    private static InternalInventory findMatrixInventory(BlockEntity blockEntity, ProviderUploadUtil.LastUploadRecord record) {
         if (record.matrixPlus()) {
             if (blockEntity instanceof PatternCorePlusBlockEntity plus && plus.isFormed() && plus.getMainNode().isActive()) {
                 return plus.getTerminalPatternInventory();

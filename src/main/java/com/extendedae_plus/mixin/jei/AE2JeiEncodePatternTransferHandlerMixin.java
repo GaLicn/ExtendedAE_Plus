@@ -3,7 +3,7 @@ package com.extendedae_plus.mixin.jei;
 import appeng.integration.modules.itemlists.EncodingHelper;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
-import com.extendedae_plus.util.uploadPattern.ExtendedAEPatternUploadUtil;
+import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.Recipe;
@@ -39,7 +39,7 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternE
             recipe = r;
         }
         if (recipe != null && EncodingHelper.isSupportedCraftingRecipe(recipe)) {
-            ExtendedAEPatternUploadUtil.presetCraftingProviderSearchKey();
+            RecipeTypeNameConfig.presetCraftingProviderSearchKey();
             return;
         }
 
@@ -47,17 +47,17 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternE
         name = JeiRuntimeCompat.getRecipeCategorySearchKey(recipeBase);
         if (name == null || name.isBlank()) {
             if (recipe != null) {
-                name = ExtendedAEPatternUploadUtil.mapRecipeTypeToSearchKey(recipe);
+                name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
                 if (name == null || name.isBlank()) {
                     // 类型 ID 无法解析时再按通用对象信息生成搜索词。
-                    name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipe);
+                    name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipe);
                 }
             } else {
-                name = ExtendedAEPatternUploadUtil.deriveSearchKeyFromUnknownRecipe(recipeBase);
+                name = RecipeTypeNameConfig.deriveSearchKeyFromUnknownRecipe(recipeBase);
             }
         }
         if (name != null && !name.isBlank()) {
-            ExtendedAEPatternUploadUtil.setLastProcessingName(name);
+            RecipeTypeNameConfig.setLastProcessingName(name);
         }
     }
 }
