@@ -4,6 +4,7 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.EnergyStorageCoreItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.QuantumStorageCoreItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
@@ -218,6 +219,10 @@ public final class ModItems {
     public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_3;
     public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_4;
     public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
+    public static final DeferredItem<QuantumStorageCoreItem> QUANTUM_STORAGE_CORE_1;
+    public static final DeferredItem<QuantumStorageCoreItem> QUANTUM_STORAGE_CORE_2;
+    public static final DeferredItem<QuantumStorageCoreItem> QUANTUM_STORAGE_CORE_3;
+    public static final DeferredItem<QuantumStorageCoreItem> QUANTUM_STORAGE_CORE_4;
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
 
     static {
@@ -246,11 +251,24 @@ public final class ModItems {
 
         // 量子存储核心 - 需要AdvancedAE模组
         if (ModCheckUtils.isAAELoading()) {
+            // 中间阶段使用独立物品，配方不再依赖基础核心的组件数据。
+            QUANTUM_STORAGE_CORE_1 = ITEMS.register("quantum_storage_core_1",
+                    () -> new QuantumStorageCoreItem(new Item.Properties().rarity(Rarity.COMMON), 1));
+            QUANTUM_STORAGE_CORE_2 = ITEMS.register("quantum_storage_core_2",
+                    () -> new QuantumStorageCoreItem(new Item.Properties().rarity(Rarity.UNCOMMON), 2));
+            QUANTUM_STORAGE_CORE_3 = ITEMS.register("quantum_storage_core_3",
+                    () -> new QuantumStorageCoreItem(new Item.Properties().rarity(Rarity.RARE), 3));
+            QUANTUM_STORAGE_CORE_4 = ITEMS.register("quantum_storage_core_4",
+                    () -> new QuantumStorageCoreItem(new Item.Properties().rarity(Rarity.EPIC), 4));
             QUANTUM_STORAGE_CORE = ITEMS.register(
                     "quantum_storage_core",
                     () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
             );
         } else {
+            QUANTUM_STORAGE_CORE_1 = null;
+            QUANTUM_STORAGE_CORE_2 = null;
+            QUANTUM_STORAGE_CORE_3 = null;
+            QUANTUM_STORAGE_CORE_4 = null;
             QUANTUM_STORAGE_CORE = null;
         }
     }

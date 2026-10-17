@@ -71,6 +71,10 @@ public final class ModCreativeTabs {
                             output.accept(ModItems.ENERGY_STORAGE_CORE.get());
                         }
                         if (ModItems.QUANTUM_STORAGE_CORE != null) {
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE_1.get());
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE_2.get());
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE_3.get());
+                            output.accept(ModItems.QUANTUM_STORAGE_CORE_4.get());
                             output.accept(ModItems.QUANTUM_STORAGE_CORE.get());
                         }
                     })

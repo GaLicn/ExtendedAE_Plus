@@ -11,10 +11,6 @@
     {
       "predicate": { "extendedae_plus:core_type": 2 },
       "model": "extendedae_plus:item/core/basic_core_spatial"
-    },
-    {
-      "predicate": { "extendedae_plus:core_type": 4 },
-      "model": "extendedae_plus:item/core/basic_core_quantum"
     }
   ]
 }

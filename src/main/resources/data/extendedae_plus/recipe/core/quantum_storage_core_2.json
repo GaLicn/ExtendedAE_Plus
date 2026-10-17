@@ -9,12 +9,7 @@
   "category": "misc",
   "key": {
     "B": {
-      "type": "neoforge:components",
-      "items": "extendedae_plus:basic_core",
-      "components": {
-        "extendedae_plus:core_type": "QUANTUM",
-        "extendedae_plus:core_stage": 1
-      }
+      "item": "extendedae_plus:quantum_storage_core_1"
     },
     "C": {
       "item": "advanced_ae:quantum_storage_component"
@@ -33,12 +28,7 @@
   ],
   "result": {
     "count": 1,
-    "id": "extendedae_plus:basic_core",
-    "components": {
-      "extendedae_plus:core_type": "QUANTUM",
-      "extendedae_plus:core_stage": 2,
-      "minecraft:rarity": "uncommon"
-    }
+    "id": "extendedae_plus:quantum_storage_core_2"
   },
   "show_notification": true
 }
