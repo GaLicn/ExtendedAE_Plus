@@ -5,25 +5,19 @@ import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
 import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
-import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
 import mezz.jei.api.gui.handlers.IGuiContainerHandler;
-import mezz.jei.api.ingredients.subtypes.ISubtypeInterpreter;
-import mezz.jei.api.ingredients.subtypes.UidContext;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -41,47 +35,6 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
     @Override
     public void onRuntimeAvailable(@NotNull IJeiRuntime jeiRuntime) {
         JeiRuntimeCompat.setRuntime(jeiRuntime);
-    }
-
-    @Override
-    public void registerItemSubtypes(ISubtypeRegistration registration) {
-        // Basic Core - 基础核心的NBT变体支持
-        registration.registerSubtypeInterpreter(
-                VanillaTypes.ITEM_STACK,
-                ModItems.BASIC_CORE.get(),
-                new ISubtypeInterpreter<>() {
-                    @Override
-                    public @NotNull Object getSubtypeData(@NotNull ItemStack stack, @NotNull UidContext context) {
-                        if (!BasicCoreItem.isTyped(stack)) {
-                            return "untyped";
-                        }
-
-                        BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
-                        if (type == null) {
-                            return "untyped";
-                        }
-
-                        int stage = BasicCoreItem.getStage(stack);
-                        return type.id + "_" + stage;  // 如 "1_1", "2_3"
-                    }
-
-                    @Override
-                    public @NotNull String getLegacyStringSubtypeInfo(@NotNull ItemStack stack,
-                                                                      @NotNull UidContext context) {
-                        if (!BasicCoreItem.isTyped(stack)) {
-                            return "untyped";
-                        }
-
-                        BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
-                        if (type == null) {
-                            return "untyped";
-                        }
-
-                        int stage = BasicCoreItem.getStage(stack);
-                        return type.id + "_" + stage;
-                    }
-                }
-        );
     }
 
     @Override

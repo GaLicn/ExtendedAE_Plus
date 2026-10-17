@@ -10,14 +10,11 @@ import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
-import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
-import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
 import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
-import net.minecraft.client.renderer.item.ItemProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -35,13 +32,6 @@ public final class ClientProxy {
     public static void init() {
         if (REGISTERED) return;
         REGISTERED = true;
-
-        // 注册 BasicCore 的 core_type 属性用于模型切换
-        ItemProperties.register(ModItems.BASIC_CORE.get(), ExtendedAEPlus.id("core_type"),
-                (stack, world, entity, seed) -> {
-                    BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
-                    return type != null ? (float) type.id : 0.0f;
-                });
 
         // 注册五种形成态模型为内置模型
         BuiltInModelHooks.addBuiltInModel(

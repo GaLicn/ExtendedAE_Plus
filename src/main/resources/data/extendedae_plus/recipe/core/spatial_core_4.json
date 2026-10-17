@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:spatial_core_3"
+    },
+    "C": {
+      "item": "ae2:spatial_cell_component_128"
+    },
+    "P": {
+      "item": "ae2:calculation_processor"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "COC",
+    "PBP",
+    "COC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:spatial_core_4"
+  },
+  "show_notification": true
+}

@@ -5,6 +5,7 @@ import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.EnergyStorageCoreItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.QuantumStorageCoreItem;
+import com.extendedae_plus.items.SpatialCoreItem;
 import com.extendedae_plus.items.StorageCoreItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
@@ -145,7 +146,7 @@ public final class ModItems {
     );
 
     // ==================== 基础核心及相关物品 ====================
-    // 基础核心 - 用于合成各种高级核心，稀有度由DataComponent动态设置
+    // 基础核心 - 各类独立阶段核心的起始材料。
     public static final DeferredItem<BasicCoreItem> BASIC_CORE = ITEMS.register(
             "basic_core",
             () -> new BasicCoreItem(new Item.Properties())
@@ -164,7 +165,16 @@ public final class ModItems {
             "storage_core",
             () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
     );
-    // 空间核心
+    // 空间核心阶段独立注册，配方不再依赖组件数据。
+    public static final DeferredItem<SpatialCoreItem> SPATIAL_CORE_1 = ITEMS.register("spatial_core_1",
+            () -> new SpatialCoreItem(new Item.Properties().rarity(Rarity.COMMON), 1));
+    public static final DeferredItem<SpatialCoreItem> SPATIAL_CORE_2 = ITEMS.register("spatial_core_2",
+            () -> new SpatialCoreItem(new Item.Properties().rarity(Rarity.UNCOMMON), 2));
+    public static final DeferredItem<SpatialCoreItem> SPATIAL_CORE_3 = ITEMS.register("spatial_core_3",
+            () -> new SpatialCoreItem(new Item.Properties().rarity(Rarity.RARE), 3));
+    public static final DeferredItem<SpatialCoreItem> SPATIAL_CORE_4 = ITEMS.register("spatial_core_4",
+            () -> new SpatialCoreItem(new Item.Properties().rarity(Rarity.EPIC), 4));
+    // 完整空间核心
     public static final DeferredItem<Item> SPATIAL_CORE = ITEMS.register(
             "spatial_core",
             () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))

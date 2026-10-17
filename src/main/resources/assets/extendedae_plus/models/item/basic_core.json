@@ -2,11 +2,5 @@
   "parent": "item/generated",
   "textures": {
     "layer0": "extendedae_plus:item/core/basic_core"
-  },
-  "overrides": [
-    {
-      "predicate": { "extendedae_plus:core_type": 2 },
-      "model": "extendedae_plus:item/core/basic_core_spatial"
-    }
-  ]
+  }
 }
