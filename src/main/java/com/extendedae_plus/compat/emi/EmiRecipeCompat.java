@@ -142,12 +142,11 @@ public final class EmiRecipeCompat {
 	 * （{@code FluidUnit.literDivisor()} 返回 1），与 AE2 一致，无需按 Fabric 的
 	 * droplets 口径（81000/桶）除以 81；该换算会使流体量缩小 81 倍。</p>
 	 *
-	 * <p>包内私有：入参声明为 {@link Object} 以避免方法签名直接引用 EMI 类型，
-	 * 外部（如 EMI 中键下单）一律经 {@link EmiHelper#getSidebarGenericStackUnderMouse} 调用，
-	 * 不直接接触本方法。入参不是 EmiStack 时返回 null。</p>
+	 * <p>入参声明为 {@link Object} 以避免方法签名直接引用 EMI 类型，外部调用方
+	 * （EMI 中键下单、侧边栏库存叠加）都不直接接触 EmiStack 类型。入参不是 EmiStack 时返回 null。</p>
 	 */
 	@Nullable
-	static GenericStack toGenericStack(@Nullable Object stack) {
+	public static GenericStack toGenericStack(@Nullable Object stack) {
 		if (!(stack instanceof EmiStack emiStack)) {
 			return null;
 		}

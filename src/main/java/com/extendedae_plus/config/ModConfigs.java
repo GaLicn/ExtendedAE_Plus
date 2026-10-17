@@ -50,8 +50,8 @@ public final class ModConfigs {
                 .define("patternTerminalShowSlotsDefault", true);
         JEI_NETWORK_OVERLAY_ENABLED = clientBuilder
                 .comment(
-                        "JEI 中是否显示 AE2 网络库存与可合成状态",
-                        "可通过 JEI 左下角按钮即时切换"
+                        "JEI / EMI 中是否显示 AE2 网络库存与可合成状态",
+                        "JEI 可通过左下角按钮即时切换；EMI 侧修改本配置"
                 )
                 .define("jeiNetworkOverlayEnabled", true);
         EXTENDED_PATTERN_PROVIDER_SHOW_SCALING_CONTROLS = clientBuilder

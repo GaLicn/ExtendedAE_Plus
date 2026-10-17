@@ -130,6 +130,8 @@
     "ae2.client.gui.SlotGridLayoutMixin",
     "ae2.menu.CraftConfirmMenuGoBackMixin",
     "emi.AE2EmiEncodePatternTransferHandlerMixin",
+    "emi.EmiScreenManagerScreenSpaceMixin",
+    "emi.EmiHeaderButtonMixin",
     "emi.BoMScreenMixin",
     "extendedae.accessor.GuiExPatternTerminalAccessor",
     "extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor",

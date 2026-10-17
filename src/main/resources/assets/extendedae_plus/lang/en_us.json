@@ -210,7 +210,7 @@
   "extendedae_plus.configuration.showEncoderPatternPlayer": "Show Pattern Encoder Player",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "Pattern Terminal Show Slots by Default",
   "extendedae_plus.configuration.extendedPatternProviderShowScalingControls": "Show Pattern Scaling Controls in Extended Pattern Provider",
-  "extendedae_plus.configuration.jeiNetworkOverlayEnabled": "Show AE2 Network Inventory and Craftability in JEI",
+  "extendedae_plus.configuration.jeiNetworkOverlayEnabled": "Show AE2 Network Inventory and Craftability in JEI / EMI",
 
   "extendedae_plus.configuration.ae": "AE2 Configuration",
   "extendedae_plus.configuration.craftingPauseThreshold": "AE Crafting Pause Threshold",
@@ -377,5 +377,5 @@
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "Search Super Assembler Matrix patterns",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 network inventory display: Enabled",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 network inventory display: Disabled",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in the JEI / EMI ingredient list"
 }

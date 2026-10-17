@@ -206,7 +206,7 @@
   "extendedae_plus.configuration.showEncoderPatternPlayer": "显示样板编码玩家",
   "extendedae_plus.configuration.patternTerminalShowSlotsDefault": "样板终端默认显示槽位",
   "extendedae_plus.configuration.extendedPatternProviderShowScalingControls": "扩展样板供应器显示倍率按钮",
-  "extendedae_plus.configuration.jeiNetworkOverlayEnabled": "JEI 中显示 AE2 网络库存与可合成状态",
+  "extendedae_plus.configuration.jeiNetworkOverlayEnabled": "JEI / EMI 中显示 AE2 网络库存与可合成状态",
 
   "extendedae_plus.configuration.ae": "AE2配置",
   "extendedae_plus.configuration.craftingPauseThreshold": "AE合成计算暂停检查阈值",
@@ -372,5 +372,5 @@
   "gui.extendedae_plus.super_assembler_matrix.tooltip": "搜索超级装配矩阵样板",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 网络库存显示：开启",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 网络库存显示：关闭",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在 JEI / EMI 物品列表中显示当前 AE2 中该物品库存"
 }
