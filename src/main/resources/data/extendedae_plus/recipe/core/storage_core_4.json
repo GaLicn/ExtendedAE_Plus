@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:storage_core_3"
+    },
+    "C": {
+      "item": "ae2:cell_component_256k"
+    },
+    "E": {
+      "item": "ae2:engineering_processor"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "COC",
+    "EBE",
+    "COC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:storage_core_4"
+  },
+  "show_notification": true
+}

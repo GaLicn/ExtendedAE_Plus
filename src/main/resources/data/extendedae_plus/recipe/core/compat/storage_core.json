@@ -9,12 +9,7 @@
   "category": "misc",
   "key": {
     "B": {
-      "type": "neoforge:components",
-      "items": "extendedae_plus:basic_core",
-      "components": {
-        "extendedae_plus:core_type": "STORAGE",
-        "extendedae_plus:core_stage": 3
-      }
+      "item": "extendedae_plus:storage_core_4"
     },
     "C": {
       "item": "megacells:cell_component_256m"

@@ -5,6 +5,7 @@ import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.EnergyStorageCoreItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.QuantumStorageCoreItem;
+import com.extendedae_plus.items.StorageCoreItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
@@ -149,7 +150,16 @@ public final class ModItems {
             "basic_core",
             () -> new BasicCoreItem(new Item.Properties())
     );
-    // 存储核心
+    // 存储核心阶段独立注册，配方直接通过物品区分。
+    public static final DeferredItem<StorageCoreItem> STORAGE_CORE_1 = ITEMS.register("storage_core_1",
+            () -> new StorageCoreItem(new Item.Properties().rarity(Rarity.COMMON), 1));
+    public static final DeferredItem<StorageCoreItem> STORAGE_CORE_2 = ITEMS.register("storage_core_2",
+            () -> new StorageCoreItem(new Item.Properties().rarity(Rarity.UNCOMMON), 2));
+    public static final DeferredItem<StorageCoreItem> STORAGE_CORE_3 = ITEMS.register("storage_core_3",
+            () -> new StorageCoreItem(new Item.Properties().rarity(Rarity.RARE), 3));
+    public static final DeferredItem<StorageCoreItem> STORAGE_CORE_4 = ITEMS.register("storage_core_4",
+            () -> new StorageCoreItem(new Item.Properties().rarity(Rarity.EPIC), 4));
+    // 完整存储核心
     public static final DeferredItem<Item> STORAGE_CORE = ITEMS.register(
             "storage_core",
             () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))

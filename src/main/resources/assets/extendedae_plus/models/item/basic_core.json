@@ -5,10 +5,6 @@
   },
   "overrides": [
     {
-      "predicate": { "extendedae_plus:core_type": 1 },
-      "model": "extendedae_plus:item/core/basic_core_storage"
-    },
-    {
       "predicate": { "extendedae_plus:core_type": 2 },
       "model": "extendedae_plus:item/core/basic_core_spatial"
     }

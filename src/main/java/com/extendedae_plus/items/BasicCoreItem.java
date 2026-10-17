@@ -26,7 +26,18 @@ public class BasicCoreItem extends Item {
 
     // ==================== 工厂方法 ====================
     public static ItemStack of(CoreType type, int stage) {
-        // 保留原工厂入口，能源和量子分支返回独立阶段物品。
+        // 保留原工厂入口，已拆分的核心返回独立阶段物品。
+        if (type == CoreType.STORAGE) {
+            if (stage < 1 || stage > StorageCoreItem.STAGE_COUNT) {
+                return new ItemStack(ModItems.BASIC_CORE.get());
+            }
+            return new ItemStack(switch (stage) {
+                case 1 -> ModItems.STORAGE_CORE_1.get();
+                case 2 -> ModItems.STORAGE_CORE_2.get();
+                case 3 -> ModItems.STORAGE_CORE_3.get();
+                default -> ModItems.STORAGE_CORE_4.get();
+            });
+        }
         if (type == CoreType.ENERGY) {
             if (stage < 1 || stage > EnergyStorageCoreItem.STAGE_COUNT) {
                 return new ItemStack(ModItems.BASIC_CORE.get());
@@ -67,14 +78,16 @@ public class BasicCoreItem extends Item {
 
     // ==================== DataComponents 查询 ====================
     public static Optional<CoreType> getType(ItemStack stack) {
+        if (stack.getItem() instanceof StorageCoreItem) return Optional.of(CoreType.STORAGE);
         if (stack.getItem() instanceof EnergyStorageCoreItem) return Optional.of(CoreType.ENERGY);
         if (stack.getItem() instanceof QuantumStorageCoreItem) return Optional.of(CoreType.QUANTUM);
-        // 旧能源、量子组件只保留存档解码，不再启用旧阶段外观和进度条。
+        // 旧阶段组件只保留存档解码，仅空间核心继续使用组件外观。
         return Optional.ofNullable(stack.get(EAPComponents.CORE_TYPE.get()))
-                .filter(type -> type != CoreType.ENERGY && type != CoreType.QUANTUM);
+                .filter(type -> type == CoreType.SPATIAL);
     }
 
     public static int getStage(ItemStack stack) {
+        if (stack.getItem() instanceof StorageCoreItem core) return core.getStage();
         if (stack.getItem() instanceof EnergyStorageCoreItem core) return core.getStage();
         if (stack.getItem() instanceof QuantumStorageCoreItem core) return core.getStage();
         Integer stage = stack.get(EAPComponents.CORE_STAGE.get());
@@ -84,6 +97,9 @@ public class BasicCoreItem extends Item {
     public static boolean isTyped(ItemStack stack) { return getType(stack).isPresent(); }
 
     public static boolean isFinalStage(ItemStack stack) {
+        if (stack.getItem() instanceof StorageCoreItem core) {
+            return core.getStage() >= StorageCoreItem.STAGE_COUNT;
+        }
         if (stack.getItem() instanceof QuantumStorageCoreItem core) {
             return core.getStage() >= QuantumStorageCoreItem.STAGE_COUNT;
         }

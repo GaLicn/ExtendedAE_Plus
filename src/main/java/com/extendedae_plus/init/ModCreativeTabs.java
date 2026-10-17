@@ -51,6 +51,10 @@ public final class ModCreativeTabs {
                                 // 基础核心相关物品
                                 ModItems.OBLIVION_SINGULARITY.get().getDefaultInstance(),
                                 ModItems.BASIC_CORE.get().getDefaultInstance(),
+                                ModItems.STORAGE_CORE_1.get().getDefaultInstance(),
+                                ModItems.STORAGE_CORE_2.get().getDefaultInstance(),
+                                ModItems.STORAGE_CORE_3.get().getDefaultInstance(),
+                                ModItems.STORAGE_CORE_4.get().getDefaultInstance(),
                                 ModItems.STORAGE_CORE.get().getDefaultInstance(),
                                 ModItems.SPATIAL_CORE.get().getDefaultInstance(),
                                 ModItems.INFINITY_CORE.get().getDefaultInstance(),
