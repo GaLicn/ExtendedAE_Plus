@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:64x_crafting_accelerator"
+    },
+    "Q": {
+      "item": "ae2:spatial_cell_component_2"
+    },
+    "S": {
+      "item": "ae2:speed_card"
+    },
+    "X": {
+      "item": "ae2:cell_component_256k"
+    }
+  },
+  "pattern": [
+    "SBS",
+    "QXQ",
+    "SBS"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:entity_speed_card",
+    "nbt": {
+      "EAS:mult": 2
+    }
+  },
+  "show_notification": true
+}

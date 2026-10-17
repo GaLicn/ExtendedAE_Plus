@@ -1,13 +1,21 @@
 package com.extendedae_plus.config;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
+import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import dev.toma.configuration.Configuration;
+import dev.toma.configuration.client.IValidationHandler;
 import dev.toma.configuration.config.Config;
 import dev.toma.configuration.config.ConfigHolder;
 import dev.toma.configuration.config.Configurable;
 import dev.toma.configuration.config.format.ConfigFormats;
 import dev.toma.configuration.config.io.ConfigIO;
 import dev.toma.configuration.config.value.ConfigValue;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Config(id = ExtendedAEPlus.MODID)
 public final class ModConfig {
@@ -26,6 +34,7 @@ public final class ModConfig {
     }
 
     /** Updates and immediately saves a client-only UI preference. */
+    @SuppressWarnings("unchecked")
     public static void setExtendedPatternProviderShowScalingControls(boolean visible) {
         synchronized (lock) {
             if (INSTANCE == null || configHolder == null) {
@@ -34,7 +43,6 @@ public final class ModConfig {
             // 立即反映到内存实例，避免反射失败时字段与 UI 状态不一致。
             INSTANCE.extendedPatternProviderShowScalingControls = visible;
 
-            @SuppressWarnings("unchecked")
             ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
                     .get("extendedPatternProviderShowScalingControls");
             if (value != null) {
@@ -140,4 +148,69 @@ public final class ModConfig {
     })
     public boolean uniqueProviderAutoUploadEnable = true;
 
+    @Configurable
+    @Configurable.Comment(value = {
+            "实体加速器能量消耗基础值"
+    })
+    @Configurable.Range(min = 0, max = Integer.MAX_VALUE)
+    @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerCostUpdate")
+    public int entityTickerCost = 512;
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+            "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
+    })
+    @Configurable.Synchronized
+    public boolean prioritizeDiskEnergy = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "实体加速器黑名单：匹配的方块将不会被加速。支持通配符/正则（例如：minecraft:*）",
+            "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
+    })
+    @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerBlackListUpdate")
+    public String[] entityTickerBlackList = {};
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "额外消耗倍率配置：为某些方块设置额外能量倍率，格式 'modid:blockid multiplier'，例如 'minecraft:chest 2x'",
+            "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
+    })
+    @Configurable.Synchronized
+    @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
+    public String[] entityTickerMultipliers = {};
+
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static ScheduledFuture<?> pendingPowerTask;
+    private static final Object POWER_LOCK = new Object();
+    private static final long DEBOUNCE_INTERVAL = 1000; // 防抖间隔，单位：毫秒
+
+    private void onEntityTickerCostUpdate(int newValue, IValidationHandler handler) {
+        synchronized (POWER_LOCK) {
+            if (pendingPowerTask != null) {
+                pendingPowerTask.cancel(false);
+            }
+            pendingPowerTask = EXECUTOR.schedule(() -> {
+                synchronized (PowerUtils.class) {
+                    PowerUtils.initializeCaches();
+                }
+            }, DEBOUNCE_INTERVAL, TimeUnit.MILLISECONDS); // 1000ms 防抖
+        }
     }
+
+
+    private void onEntityTickerBlackListUpdate(String[] newValue, IValidationHandler handler) {
+        synchronized (ConfigParsingUtils.class) {
+            ConfigParsingUtils.reload();
+        }
+    }
+
+    private void onEntityTickerMultipliersUpdate(String[] newValue, IValidationHandler handler) {
+        synchronized (ConfigParsingUtils.class) {
+            ConfigParsingUtils.reload();
+        }
+    }
+}

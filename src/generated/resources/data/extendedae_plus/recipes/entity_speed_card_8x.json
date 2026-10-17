@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:1024x_crafting_accelerator"
+    },
+    "Q": {
+      "item": "ae2:spatial_cell_component_128"
+    },
+    "S": {
+      "type": "forge:nbt",
+      "item": "extendedae_plus:entity_speed_card",
+      "nbt": {
+        "EAS:mult": 4
+      }
+    },
+    "X": {
+      "item": "minecraft:nether_star"
+    }
+  },
+  "pattern": [
+    "SBS",
+    "QXQ",
+    "SBS"
+  ],
+  "result": {
+    "type": "forge:partial_nbt",
+    "item": "extendedae_plus:entity_speed_card",
+    "nbt": {
+      "EAS:mult": 8
+    }
+  },
+  "show_notification": true
+}
