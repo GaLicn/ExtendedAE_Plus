@@ -3,7 +3,6 @@ package com.extendedae_plus.client;
 import appeng.client.render.crafting.CraftingCubeModel;
 import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
 import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
@@ -40,7 +39,7 @@ public final class ClientProxy {
         // 注册 BasicCore 的 core_type 属性用于模型切换
         ItemProperties.register(ModItems.BASIC_CORE.get(), ExtendedAEPlus.id("core_type"),
                 (stack, world, entity, seed) -> {
-                    BasicCoreItem.CoreType type = stack.get(EAPComponents.CORE_TYPE.get());
+                    BasicCoreItem.CoreType type = BasicCoreItem.getType(stack).orElse(null);
                     return type != null ? (float) type.id : 0.0f;
                 });
 

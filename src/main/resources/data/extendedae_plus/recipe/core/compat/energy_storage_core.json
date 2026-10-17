@@ -13,12 +13,7 @@
   "category": "misc",
   "key": {
     "B": {
-      "type": "neoforge:components",
-      "items": "extendedae_plus:basic_core",
-      "components": {
-        "extendedae_plus:core_type": "ENERGY",
-        "extendedae_plus:core_stage": 3
-      }
+      "item": "extendedae_plus:energy_storage_core_4"
     },
     "C": {
       "item": "appflux:core_256m"

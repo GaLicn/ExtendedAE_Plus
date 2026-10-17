@@ -26,6 +26,19 @@ public class BasicCoreItem extends Item {
 
     // ==================== 工厂方法 ====================
     public static ItemStack of(CoreType type, int stage) {
+        // 保留原工厂入口，能源分支改为返回独立阶段物品。
+        if (type == CoreType.ENERGY) {
+            if (stage < 1 || stage > EnergyStorageCoreItem.STAGE_COUNT) {
+                return new ItemStack(ModItems.BASIC_CORE.get());
+            }
+            if (ModItems.ENERGY_STORAGE_CORE == null) return ItemStack.EMPTY;
+            return new ItemStack(switch (stage) {
+                case 1 -> ModItems.ENERGY_STORAGE_CORE_1.get();
+                case 2 -> ModItems.ENERGY_STORAGE_CORE_2.get();
+                case 3 -> ModItems.ENERGY_STORAGE_CORE_3.get();
+                default -> ModItems.ENERGY_STORAGE_CORE_4.get();
+            });
+        }
         ItemStack stack = new ItemStack(ModItems.BASIC_CORE.get());
         if (type != null && stage >= 0 && stage <= MAX_STAGE) {
             stack.set(EAPComponents.CORE_TYPE.get(), type);
@@ -42,17 +55,24 @@ public class BasicCoreItem extends Item {
 
     // ==================== DataComponents 查询 ====================
     public static Optional<CoreType> getType(ItemStack stack) {
-        return Optional.ofNullable(stack.get(EAPComponents.CORE_TYPE.get()));
+        if (stack.getItem() instanceof EnergyStorageCoreItem) return Optional.of(CoreType.ENERGY);
+        // 旧能源组件只保留存档解码，不再启用旧阶段外观和进度条。
+        return Optional.ofNullable(stack.get(EAPComponents.CORE_TYPE.get()))
+                .filter(type -> type != CoreType.ENERGY);
     }
 
     public static int getStage(ItemStack stack) {
+        if (stack.getItem() instanceof EnergyStorageCoreItem core) return core.getStage();
         Integer stage = stack.get(EAPComponents.CORE_STAGE.get());
         return stage != null ? Math.min(stage, MAX_STAGE) : 0;
     }
 
     public static boolean isTyped(ItemStack stack) { return getType(stack).isPresent(); }
 
-    public static boolean isFinalStage(ItemStack stack) { return getStage(stack) >= MAX_STAGE; }
+    public static boolean isFinalStage(ItemStack stack) {
+        int maxStage = stack.getItem() instanceof EnergyStorageCoreItem ? EnergyStorageCoreItem.STAGE_COUNT : MAX_STAGE;
+        return getStage(stack) >= maxStage;
+    }
 
     // ==================== 耐久条 ====================
     @Override

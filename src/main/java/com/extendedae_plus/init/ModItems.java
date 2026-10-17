@@ -2,6 +2,7 @@ package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.items.BasicCoreItem;
+import com.extendedae_plus.items.EnergyStorageCoreItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
@@ -212,17 +213,34 @@ public final class ModItems {
             "lattra_crystal_cluster",
             () -> new BlockItem(ModBlocks.LATTRA_CRYSTAL_CLUSTER.get(), new Item.Properties())
     );
+    public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_1;
+    public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_2;
+    public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_3;
+    public static final DeferredItem<EnergyStorageCoreItem> ENERGY_STORAGE_CORE_4;
     public static final DeferredItem<Item> ENERGY_STORAGE_CORE;
     public static final DeferredItem<Item> QUANTUM_STORAGE_CORE;
 
     static {
         // 能源存储核心 - 需要AppFlux模组
         if (ModCheckUtils.isAppfluxLoading()) {
+            // 中间阶段使用独立注册项，便于配方查询和自动合成区分。
+            ENERGY_STORAGE_CORE_1 = ITEMS.register("energy_storage_core_1",
+                    () -> new EnergyStorageCoreItem(new Item.Properties().rarity(Rarity.COMMON), 1));
+            ENERGY_STORAGE_CORE_2 = ITEMS.register("energy_storage_core_2",
+                    () -> new EnergyStorageCoreItem(new Item.Properties().rarity(Rarity.UNCOMMON), 2));
+            ENERGY_STORAGE_CORE_3 = ITEMS.register("energy_storage_core_3",
+                    () -> new EnergyStorageCoreItem(new Item.Properties().rarity(Rarity.RARE), 3));
+            ENERGY_STORAGE_CORE_4 = ITEMS.register("energy_storage_core_4",
+                    () -> new EnergyStorageCoreItem(new Item.Properties().rarity(Rarity.EPIC), 4));
             ENERGY_STORAGE_CORE = ITEMS.register(
                     "energy_storage_core",
                     () -> new Item(new Item.Properties().fireResistant().rarity(Rarity.EPIC))
             );
         } else {
+            ENERGY_STORAGE_CORE_1 = null;
+            ENERGY_STORAGE_CORE_2 = null;
+            ENERGY_STORAGE_CORE_3 = null;
+            ENERGY_STORAGE_CORE_4 = null;
             ENERGY_STORAGE_CORE = null;
         }
 

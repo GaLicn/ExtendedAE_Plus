@@ -1,0 +1,34 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "appflux"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "extendedae_plus:energy_storage_core_3"
+    },
+    "C": {
+      "item": "ae2:dense_energy_cell"
+    },
+    "E": {
+      "item": "appflux:energy_processor"
+    },
+    "O": {
+      "item": "extendedae_plus:oblivion_singularity"
+    }
+  },
+  "pattern": [
+    "COC",
+    "EBE",
+    "COC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "extendedae_plus:energy_storage_core_4"
+  },
+  "show_notification": true
+}
