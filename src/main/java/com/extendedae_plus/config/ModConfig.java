@@ -125,8 +125,8 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
-            "JEI 中是否显示 AE2 网络库存与可合成状态",
-            "可通过 JEI 左下角按钮即时切换"
+            "JEI / EMI 中是否显示 AE2 网络库存与可合成状态",
+            "可通过 JEI / EMI 左下角按钮即时切换"
     })
     public boolean jeiNetworkOverlayEnabled = true;
 
