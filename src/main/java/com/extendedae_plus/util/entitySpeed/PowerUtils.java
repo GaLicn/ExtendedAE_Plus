@@ -18,6 +18,7 @@ public final class PowerUtils {
     private static final int[] VALID_ENERGY_CARD_COUNTS = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     private static volatile Map<Integer, Map<Integer, Double>> powerCache = new HashMap<>();
     private static volatile Map<Integer, Double> ratioCache = new HashMap<>();
+    private static volatile int cachedEntityTickerCost = Integer.MIN_VALUE;
 
     // 静态初始化块，预计算缓存
     static {
@@ -31,32 +32,41 @@ public final class PowerUtils {
      */
     public static void initializeCaches() {
         synchronized (PowerUtils.class) {
-            powerCache.clear();
-            ratioCache.clear();
+            int baseCost = currentEntityTickerCost();
+            Map<Integer, Map<Integer, Double>> newPowerCache = new HashMap<>();
+            Map<Integer, Double> newRatioCache = new HashMap<>();
             for (int energyCardCount : VALID_ENERGY_CARD_COUNTS) {
                 double ratio =
                         energyCardCount == 0 ? 1.0 :
                         energyCardCount == 1 ? 0.9 :
                         energyCardCount == 8 ? 0.5 :
                         1.0 - 0.5 * (1.0 - Math.pow(0.7, energyCardCount));
-                ratioCache.put(energyCardCount, ratio);
+                newRatioCache.put(energyCardCount, ratio);
             }
             for (int product : VALID_MULTIPLIERS) {
                 Map<Integer, Double> energyCardMap = new HashMap<>();
                 for (int energyCardCount : VALID_ENERGY_CARD_COUNTS) {
-                    double power = computePowerForProduct(product, energyCardCount);
+                    double power = computePowerForProduct(product, energyCardCount, baseCost);
                     energyCardMap.put(energyCardCount, power);
                 }
-                powerCache.put(product, energyCardMap);
+                newPowerCache.put(product, energyCardMap);
             }
+            // 完整构建后再替换，避免配置刷新时读取到半成品缓存。
+            powerCache = newPowerCache;
+            ratioCache = newRatioCache;
+            cachedEntityTickerCost = baseCost;
         }
+    }
+
+    private static int currentEntityTickerCost() {
+        return ModConfig.INSTANCE == null ? 512 : ModConfig.INSTANCE.entityTickerCost;
     }
 
     /**
      * 计算指定倍率和能源卡数量的能耗
      */
-    private static double computePowerForProduct(int product, int energyCardCount) {
-        double base = ModConfig.INSTANCE.entityTickerCost;
+    private static double computePowerForProduct(int product, int energyCardCount, int baseCost) {
+        double base = baseCost;
         int log2 = Integer.numberOfTrailingZeros(product);
         double raw;
         if (product == 2) {
@@ -125,6 +135,10 @@ public final class PowerUtils {
      */
     public static double getCachedPower(int product, int energyCardCount) {
         if (product <= 1) return 0.0;
+        // Configuration 3.1.0 没有旧版回调，按需检测参数变化并刷新缓存。
+        if (cachedEntityTickerCost != currentEntityTickerCost()) {
+            initializeCaches();
+        }
         Map<Integer, Double> energyCardMap = powerCache.get(product);
         if (energyCardMap == null) return 0.0;
         Double cachedPower = energyCardMap.get(energyCardCount);

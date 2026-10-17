@@ -115,30 +115,37 @@ public final class ConfigParsingUtils {
      * 检查方块是否在黑名单中。
      */
     public static boolean isBlockBlacklisted(String blockId) {
-        if (blockId == null || BLACKLIST_SUPPLIER.get() == null || BLACKLIST_SUPPLIER.get().length == 0) {
-            return false;
+        synchronized (CACHE_LOCK) {
+            // 先检查配置快照，避免已缓存的结果绕过配置更新。
+            Map<String, Pattern> blacklist = getCachedBlacklist();
+            if (blockId == null || blacklist.isEmpty()) {
+                return false;
+            }
+            return blacklistResultCache.computeIfAbsent(blockId, id ->
+                    blacklist.values().stream().anyMatch(pattern -> pattern.matcher(id).matches())
+            );
         }
-        return blacklistResultCache.computeIfAbsent(blockId, id ->
-                getCachedBlacklist().values().stream().anyMatch(p -> p.matcher(id).matches())
-        );
     }
 
     /**
      * 获取方块的倍率。
      */
     public static double getMultiplierForBlock(String blockId) {
-        if (blockId == null || MULTIPLIERS_SUPPLIER.get() == null || MULTIPLIERS_SUPPLIER.get().length == 0) {
-            return 1.0;
-        }
-        return multiplierResultCache.computeIfAbsent(blockId, id -> {
-            double maxMultiplier = 1.0;
-            for (MultiplierEntry me : getCachedMultiplierEntries().values()) {
-                if (me.pattern.matcher(id).matches()) {
-                    maxMultiplier = Math.max(maxMultiplier, me.multiplier);
-                }
+        synchronized (CACHE_LOCK) {
+            Map<String, MultiplierEntry> entries = getCachedMultiplierEntries();
+            if (blockId == null || entries.isEmpty()) {
+                return 1.0;
             }
-            return maxMultiplier;
-        });
+            return multiplierResultCache.computeIfAbsent(blockId, id -> {
+                double maxMultiplier = 1.0;
+                for (MultiplierEntry entry : entries.values()) {
+                    if (entry.pattern.matcher(id).matches()) {
+                        maxMultiplier = Math.max(maxMultiplier, entry.multiplier);
+                    }
+                }
+                return maxMultiplier;
+            });
+        }
     }
 
     /**
@@ -186,6 +193,7 @@ public final class ConfigParsingUtils {
             if (cachedBlacklist == null || !Arrays.equals(cachedBlacklistSourceSnapshot, source)) {
                 cachedBlacklist = compilePatterns(source);
                 cachedBlacklistSourceSnapshot = source == null ? new String[0] : source.clone();
+                blacklistResultCache.clear();
             }
             return Collections.unmodifiableMap(cachedBlacklist);
         }
@@ -203,6 +211,7 @@ public final class ConfigParsingUtils {
             if (cachedMultiplierEntries == null || !Arrays.equals(cachedMultiplierSourceSnapshot, source)) {
                 cachedMultiplierEntries = parseMultiplierList(source);
                 cachedMultiplierSourceSnapshot = source == null ? new String[0] : source.clone();
+                multiplierResultCache.clear();
             }
             return Collections.unmodifiableMap(cachedMultiplierEntries);
         }

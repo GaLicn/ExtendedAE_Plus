@@ -4,18 +4,12 @@ import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
 import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import dev.toma.configuration.Configuration;
-import dev.toma.configuration.client.IValidationHandler;
 import dev.toma.configuration.config.Config;
 import dev.toma.configuration.config.ConfigHolder;
 import dev.toma.configuration.config.Configurable;
 import dev.toma.configuration.config.format.ConfigFormats;
 import dev.toma.configuration.config.io.ConfigIO;
 import dev.toma.configuration.config.value.ConfigValue;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 @Config(id = ExtendedAEPlus.MODID)
 public final class ModConfig {
@@ -29,6 +23,9 @@ public final class ModConfig {
             if (INSTANCE == null) {
                 configHolder = Configuration.registerConfig(ModConfig.class, ConfigFormats.yaml());
                 INSTANCE = configHolder.getConfigInstance();
+                // 配置文件加载完成后建立与当前参数一致的实体加速缓存。
+                ConfigParsingUtils.reload();
+                PowerUtils.initializeCaches();
             }
         }
     }
@@ -154,7 +151,6 @@ public final class ModConfig {
     })
     @Configurable.Range(min = 0, max = Integer.MAX_VALUE)
     @Configurable.Synchronized
-    @Configurable.ValueUpdateCallback(method = "onEntityTickerCostUpdate")
     public int entityTickerCost = 512;
 
     @Configurable
@@ -171,7 +167,6 @@ public final class ModConfig {
             "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
     })
     @Configurable.Synchronized
-    @Configurable.ValueUpdateCallback(method = "onEntityTickerBlackListUpdate")
     public String[] entityTickerBlackList = {};
 
     @Configurable
@@ -180,37 +175,5 @@ public final class ModConfig {
             "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
     })
     @Configurable.Synchronized
-    @Configurable.ValueUpdateCallback(method = "onEntityTickerMultipliersUpdate")
     public String[] entityTickerMultipliers = {};
-
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
-    private static ScheduledFuture<?> pendingPowerTask;
-    private static final Object POWER_LOCK = new Object();
-    private static final long DEBOUNCE_INTERVAL = 1000; // 防抖间隔，单位：毫秒
-
-    private void onEntityTickerCostUpdate(int newValue, IValidationHandler handler) {
-        synchronized (POWER_LOCK) {
-            if (pendingPowerTask != null) {
-                pendingPowerTask.cancel(false);
-            }
-            pendingPowerTask = EXECUTOR.schedule(() -> {
-                synchronized (PowerUtils.class) {
-                    PowerUtils.initializeCaches();
-                }
-            }, DEBOUNCE_INTERVAL, TimeUnit.MILLISECONDS); // 1000ms 防抖
-        }
-    }
-
-
-    private void onEntityTickerBlackListUpdate(String[] newValue, IValidationHandler handler) {
-        synchronized (ConfigParsingUtils.class) {
-            ConfigParsingUtils.reload();
-        }
-    }
-
-    private void onEntityTickerMultipliersUpdate(String[] newValue, IValidationHandler handler) {
-        synchronized (ConfigParsingUtils.class) {
-            ConfigParsingUtils.reload();
-        }
-    }
 }
