@@ -59,7 +59,8 @@ public final class EmiCtrlQHandler {
 			return;
 		}
 
-		ItemStack hovered = EmiHelper.getIngredientUnderMouse();
+		// 严格模式：仅 EMI 自有区域，避免对背包等标准槽位的物品也触发全局快捷键
+		ItemStack hovered = EmiHelper.getSidebarItemStackUnderMouse();
 		if (hovered.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
