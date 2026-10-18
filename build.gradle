@@ -138,58 +138,58 @@ configurations {
 
 dependencies {
     // --- Added dependencies for target mods ---
-    implementation "curse.maven:glodium-957920:5821676"
-    implementation "org.appliedenergistics:appliedenergistics2:19.2.17"
-    implementation "org.appliedenergistics:guideme:2.5.1"
-    implementation "curse.maven:curios-309927:6529130"
+    implementation "curse.maven:glodium-957920:${glodium_version_id}"
+    implementation "org.appliedenergistics:appliedenergistics2:${ae2_version}"
+    implementation "org.appliedenergistics:guideme:${guideme_version}"
+    implementation "curse.maven:curios-309927:${curios_version_id}"
 
-    compileOnly "curse.maven:applied-flux-965012:8204513"
-    compileOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
-    compileOnly "curse.maven:mega-cells-622112:7952621"
-    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
-    compileOnly "mekanism:Mekanism:1.21.1-10.7.0.55"
-    compileOnly "curse.maven:applied-mekanistics-574300:5978711"
-    compileOnly "dev.latvian.mods:kubejs-neoforge:2101.7.1-build.188"
-    compileOnly "dev.latvian.mods:rhino:2101.2.5-build.54"
-    compileOnly "curse.maven:framedblocks-441647:6127891"
-    compileOnly "curse.maven:advancedae-1084104:6225993"
-    compileOnly "curse.maven:functional-storage-556861:6467726"
-    compileOnly "mezz.jei:jei-1.21.1-neoforge:19.56.0.438"
-    compileOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+    compileOnly "curse.maven:applied-flux-965012:${applied_flux_version_id}"
+    compileOnly "dev.emi:emi-neoforge:${emi_version}"
+    compileOnly "curse.maven:mega-cells-622112:${mega_cells_version_id}"
+    compileOnly "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
+    compileOnly "mekanism:Mekanism:${mekanism_api_version}"
+    compileOnly "curse.maven:applied-mekanistics-574300:${applied_mekanistics_version_id}"
+    compileOnly "dev.latvian.mods:kubejs-neoforge:${kubejs_version}"
+    compileOnly "dev.latvian.mods:rhino:${rhino_version}"
+    compileOnly "curse.maven:framedblocks-441647:${framedblocks_version_id}"
+    compileOnly "curse.maven:advancedae-1084104:${advancedae_compile_version_id}"
+    compileOnly "curse.maven:functional-storage-556861:${functional_storage_version_id}"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+    compileOnly "curse.maven:ae2-jei-integration-1074338:${ae2_jei_integration_version_id}"
 
     // runtime test
-    runtimeOnly "curse.maven:applied-flux-965012:8204513"
-    compileOnly "de.mari_023:ae2wtlib_api:19.2.0"
-    runtimeOnly "de.mari_023:ae2wtlib:19.2.1"
-    runtimeOnly "curse.maven:mega-cells-622112:7952621"
+    runtimeOnly "curse.maven:applied-flux-965012:${applied_flux_version_id}"
+    compileOnly "de.mari_023:ae2wtlib_api:${ae2wtlib_api_version}"
+    runtimeOnly "de.mari_023:ae2wtlib:${ae2wtlib_version}"
+    runtimeOnly "curse.maven:mega-cells-622112:${mega_cells_version_id}"
 
-    runtimeOnly "curse.maven:mekanism-268560:6895130"
-    runtimeOnly "curse.maven:applied-mekanistics-574300:5978711"
+    runtimeOnly "curse.maven:mekanism-268560:${mekanism_version_id}"
+    runtimeOnly "curse.maven:applied-mekanistics-574300:${applied_mekanistics_version_id}"
 
 
-    implementation "curse.maven:jade-324717:8591319"
+    implementation "curse.maven:jade-324717:${jade_version_id}"
 
     //eae
-    implementation "curse.maven:ex-pattern-provider-892005:8511901"
+    implementation "curse.maven:ex-pattern-provider-892005:${ex_pattern_provider_version_id}"
 
     //aea
-//    compileOnly "curse.maven:advancedae-1084104:6932981"
-    implementation "curse.maven:advancedae-1084104:6932981"
+//    compileOnly "curse.maven:advancedae-1084104:${advancedae_version_id}"
+    implementation "curse.maven:advancedae-1084104:${advancedae_version_id}"
 
     //geckolib
-    runtimeOnly "curse.maven:geckolib-388172:7009924"
+    runtimeOnly "curse.maven:geckolib-388172:${geckolib_version_id}"
 
     // eco
-    implementation "curse.maven:neo-eco-ae-extension-1460639:8881114"
-    implementation "maven.modrinth:ldlib:mc1.21.1-2.2.40-neoforge"
+    implementation "curse.maven:neo-eco-ae-extension-1460639:${neo_eco_ae_extension_version_id}"
+    implementation "maven.modrinth:ldlib:${ldlib_version}"
 
     //ftbteams：compat 层直接引用 FTB Teams API，编译期需要 ftbteams + ftb-library + architectury（最低 2101.1.0）
-    compileOnly "curse.maven:ftb-teams-forge-404468:6930910"
-    compileOnly "curse.maven:ftb-library-forge-404465:7029003"
-    compileOnly "curse.maven:architectury-api-419699:5786327"
-    runtimeOnly "curse.maven:ftb-teams-forge-404468:6930910"
-    runtimeOnly "curse.maven:ftb-library-forge-404465:7029003"
-    runtimeOnly "curse.maven:architectury-api-419699:5786327"
+    compileOnly "curse.maven:ftb-teams-forge-404468:${ftb_teams_version_id}"
+    compileOnly "curse.maven:ftb-library-forge-404465:${ftb_library_version_id}"
+    compileOnly "curse.maven:architectury-api-419699:${architectury_api_version_id}"
+    runtimeOnly "curse.maven:ftb-teams-forge-404468:${ftb_teams_version_id}"
+    runtimeOnly "curse.maven:ftb-library-forge-404465:${ftb_library_version_id}"
+    runtimeOnly "curse.maven:architectury-api-419699:${architectury_api_version_id}"
 
     //jecharacters（拼音搜索）：compat 层直接引用 me.towdium.jecharacters.utils.Match，编译期需要 JEC
     //最低版本 4.5.24（1.21.1 线首版）由 src/main/templates/META-INF/neoforge.mods.toml 的 versionRange 声明，不在此重复
@@ -199,33 +199,33 @@ dependencies {
    // runtimeOnly "curse.maven:bigger-ae2-1013772:6587078"
 
     //obs性能监测
-    implementation "curse.maven:observable-509575:6697124"
-    implementation "curse.maven:kotlin-for-forge-351264:7471280"
+    implementation "curse.maven:observable-509575:${observable_version_id}"
+    implementation "curse.maven:kotlin-for-forge-351264:${kotlin_for_forge_version_id}"
 
     //建筑棒
-    implementation "curse.maven:construction-sticks-1156098:8287281"
+    implementation "curse.maven:construction-sticks-1156098:${construction_sticks_version_id}"
 
     runtimeOnly fileTree(dir: 'libs', includes: ['*.jar'])
 
     // setup Xei (EMI/REI/JEI) using project property 'use_Xei'
     switch (project.findProperty('use_Xei') ?: 'emi') {
         case 'emi':
-            runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
+            runtimeOnly "dev.emi:emi-neoforge:${emi_version}"
             break
         case 'emi_jei':
             // EMI + JEI 同时加载：EAEP 两套集成并行（输入交互走 EMI 路径，JEI 分类/书签照常）
-            runtimeOnly "dev.emi:emi-neoforge:1.1.23+1.21.1"
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.56.0.438"
-            runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+            runtimeOnly "dev.emi:emi-neoforge:${emi_version}"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+            runtimeOnly "curse.maven:ae2-jei-integration-1074338:${ae2_jei_integration_version_id}"
             break
         case 'rei':
-            runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:16.0.729"
-            runtimeOnly "dev.architectury:architectury-neoforge:13.0.1"
-            runtimeOnly "curse.maven:cloth-config-348521:5424576"
+            runtimeOnly "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
+            runtimeOnly "dev.architectury:architectury-neoforge:${architectury_neoforge_version}"
+            runtimeOnly "curse.maven:cloth-config-348521:${cloth_config_version_id}"
             break
         case 'jei':
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.56.0.438"
-            runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:${jei_version}"
+            runtimeOnly "curse.maven:ae2-jei-integration-1074338:${ae2_jei_integration_version_id}"
             break
     }
 }

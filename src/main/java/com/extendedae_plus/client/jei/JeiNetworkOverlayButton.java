@@ -5,8 +5,11 @@ import com.extendedae_plus.config.ModConfigs;
 import com.mojang.blaze3d.platform.InputConstants;
 import mezz.jei.common.input.IInternalKeyMappings;
 import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.common.input.IUserInputHandler;
+import mezz.jei.common.input.IInputTarget;
 import mezz.jei.common.input.UserInput;
+import mezz.jei.common.input.interaction.IInputInteraction;
+import mezz.jei.common.input.interaction.InputAction;
+import mezz.jei.common.input.interaction.ReleaseInsideBounds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,7 +22,7 @@ import net.minecraft.sounds.SoundEvents;
 import java.util.Optional;
 import java.util.List;
 
-public final class JeiNetworkOverlayButton implements IUserInputHandler {
+public final class JeiNetworkOverlayButton implements IInputTarget {
     private static final int BUTTON_SIZE = 20;
     private static final ResourceLocation ENABLED_TEXTURE =
             ExtendedAEPlus.id("textures/gui/show_ae2_inventory_on.png");
@@ -69,7 +72,7 @@ public final class JeiNetworkOverlayButton implements IUserInputHandler {
     }
 
     @Override
-    public Optional<IUserInputHandler> handleUserInput(
+    public Optional<IInputInteraction> beginInput(
             Screen screen,
             UserInput input,
             IInternalKeyMappings keyBindings
@@ -80,12 +83,14 @@ public final class JeiNetworkOverlayButton implements IUserInputHandler {
                 || !this.area.contains(input.getMouseX(), input.getMouseY())) {
             return Optional.empty();
         }
-        if (!input.isSimulate()) {
-            // JEI 会先模拟输入，只有实际点击阶段才切换并播放声音。
-            ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.set(!ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.get());
-            Minecraft minecraft = Minecraft.getInstance();
-            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-        }
-        return Optional.of(this);
+        // 新版 JEI 在按下时开始交互，仅当鼠标在按钮范围内松开时才切换并播放声音。
+        return Optional.of(new ReleaseInsideBounds(
+                InputAction.run(() -> {
+                    ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.set(!ModConfigs.JEI_NETWORK_OVERLAY_ENABLED.get());
+                    Minecraft minecraft = Minecraft.getInstance();
+                    minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                }),
+                this.area::contains
+        ));
     }
 }

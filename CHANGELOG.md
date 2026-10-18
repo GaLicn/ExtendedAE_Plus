@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.6.4]
+
+### Changed / 变更
+- 适配 JEI 19.64.0.455，并将 JEI 最低版本要求调整为 19.64.0
+  - Updated to JEI 19.64.0.455 and raised the minimum required JEI version to 19.64.0.
+- 依赖版本统一在 `gradle.properties` 中声明
+  - Moved dependency versions into `gradle.properties`.
+
+### Fixed / 修复
+- 修复 JEI 书签栏 AE2 网络库存开关按钮在新版 JEI 输入系统下无法编译和使用的问题
+  - Fixed the JEI bookmark AE2 network inventory toggle button for JEI's reworked input system.
+
 ## [1.6.3]
 
 ### Added / 新增
