@@ -2,6 +2,7 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
+import com.extendedae_plus.client.jei.JeiNetworkOverlayButton;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.emi.EmiHelper;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
@@ -33,6 +34,14 @@ public final class InputEvents {
 
 	@SubscribeEvent
 	public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
+		// 书签栏上的网络库存开关按钮与查看器来源无关：EMI + JEI 共存时 JEI 书签照常显示，
+		// 所以先于分派处理。类加载守卫：未安装 JEI 时不能触碰 JeiNetworkOverlayButton（它引用 JEI 的类）。
+		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)
+				&& JeiNetworkOverlayButton.handleClick(event.getMouseX(), event.getMouseY(), event.getButton())) {
+			event.setCanceled(true);
+			return;
+		}
+
 		// 按查看器来源分派：对应模组的代码只在已安装该模组时执行，
 		// 避免另一模组的类在缺失时被加载/校验而触发 NoClassDefFoundError。
 		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
