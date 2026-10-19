@@ -36,7 +36,7 @@ public final class InputEvents {
 	public static void onMouseButtonPre(ScreenEvent.MouseButtonPressed.Pre event) {
 		// 书签栏上的网络库存开关按钮与查看器来源无关：EMI + JEI 共存时 JEI 书签照常显示，
 		// 所以先于分派处理。类加载守卫：未安装 JEI 时不能触碰 JeiNetworkOverlayButton（它引用 JEI 的类）。
-		if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)
+		if (ModCheckUtils.isRealJeiLoaded()
 				&& JeiNetworkOverlayButton.handleClick(event.getMouseX(), event.getMouseY(), event.getButton())) {
 			event.setCanceled(true);
 			return;

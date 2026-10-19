@@ -7,6 +7,7 @@ import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,6 +37,11 @@ public class CraftConfirmMenuGoBackMixin {
                 shiftDown = Screen.hasShiftDown();
             } catch (Throwable ignored) {}
             if (!shiftDown) return;
+
+            // 下面的 addBookmark 会触碰 JEI 实现类（BookmarkOverlay 等）。
+            // TMRV 会注册一个冒充的 jei stub，且其 JEI 插件会被加载使 runtime 非 null，
+            // 但类路径上没有 mezz.jei.gui.*，直接调用会抛 NoClassDefFoundError。
+            if (!ModCheckUtils.isRealJeiLoaded()) return;
 
             // 获取合成计划摘要与条目
             CraftingPlanSummary plan = self.getPlan();
