@@ -24,7 +24,8 @@ public class ModCheckUtils {
             MODID_MAE2 = "mae2",
             MODID_MEGA = "megacells",
             MODID_EPA = "expandedae",
-            MODID_JEC = "jecharacters";
+            MODID_JEC = "jecharacters",
+            MODID_CURIOS = "curios";
 
     /**
      * 检查指定模组是否存在

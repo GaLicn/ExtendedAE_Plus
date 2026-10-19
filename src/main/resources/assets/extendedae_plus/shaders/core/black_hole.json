@@ -1,0 +1,31 @@
+{
+  "vertex": "extendedae_plus:black_hole",
+  "fragment": "extendedae_plus:black_hole",
+  "attributes": ["Position", "UV0"],
+  "samplers": [],
+  "uniforms": [
+    {
+      "name": "ModelViewMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    },
+    {
+      "name": "ProjMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    },
+    {"name": "uTime", "type": "float", "count": 1, "values": [0.0]},
+    {"name": "uVisibility", "type": "float", "count": 1, "values": [1.0]},
+    {"name": "uHorizon", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0]},
+    {"name": "uHorizonClip", "type": "float", "count": 1, "values": [-10000.0]},
+    {"name": "uViewDirection", "type": "float", "count": 3, "values": [0.0, 0.2419219, 0.97029573]},
+    {"name": "uViewDistance", "type": "float", "count": 1, "values": [0.0]},
+    {"name": "uViewRight", "type": "float", "count": 3, "values": [1.0, 0.0, 0.0]},
+    {"name": "uViewUp", "type": "float", "count": 3, "values": [0.0, 0.97029573, -0.2419219]},
+    {"name": "uGlitch", "type": "float", "count": 1, "values": [0.0]},
+    {"name": "uSmoothShare", "type": "float", "count": 1, "values": [1.0]},
+    {"name": "uGlitchTexel", "type": "float", "count": 1, "values": [0.1]}
+  ]
+}

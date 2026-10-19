@@ -3,6 +3,7 @@ package com.extendedae_plus.init;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.items.BasicCoreItem;
 import com.extendedae_plus.items.InfinityBigIntegerCellItem;
+import com.extendedae_plus.items.InfinityCoreItem;
 import com.extendedae_plus.items.materials.ChannelCardItem;
 import com.extendedae_plus.items.materials.ExtendedPatternProviderExpansionCardItem;
 import com.extendedae_plus.items.materials.VirtualCraftingCardItem;
@@ -174,9 +175,10 @@ public final class ModItems {
             "spatial_core",
             () -> new Item(new Item.Properties())
     );
-    public static final RegistryObject<Item> INFINITY_CORE = ITEMS.register(
+    // 吞噬核心。实现 Equipable 以支持右键装备到头部槽位，装备后由客户端渲染器绘制黑洞。
+    public static final RegistryObject<InfinityCoreItem> INFINITY_CORE = ITEMS.register(
             "infinity_core",
-            () -> new Item(new Item.Properties())
+            () -> new InfinityCoreItem(new Item.Properties())
     );
     public static final RegistryObject<Item> OBLIVION_SINGULARITY = ITEMS.register(
             "oblivion_singularity",
