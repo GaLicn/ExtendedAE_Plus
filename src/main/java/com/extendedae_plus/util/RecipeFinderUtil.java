@@ -60,53 +60,57 @@ public final class RecipeFinderUtil {
 
 		// 1) Crafting recipes
 		try {
-			IRecipeCategory<RecipeHolder<CraftingRecipe>> category = recipeManager.getRecipeCategory(RecipeTypes.CRAFTING);
-			recipeManager.createRecipeLookup(RecipeTypes.CRAFTING)
-				.limitFocus(List.of(outputFocus))
-				.get()
-				.forEach(recipeHolder -> {
-					Optional<IRecipeLayoutDrawable<Object>> layoutOpt = createLayout(recipeManager, category, recipeHolder, focusFactory);
-					layoutOpt.ifPresent(layout -> {
-						RecipeInfo info = extractRecipeInfo(recipeHolder, layout, true);
-						if (info != null) {
-							results.add(info);
-						}
-					});
-				});
-		} catch (Throwable t) {
-			LOGGER.warn("[RecipeFinder] Error searching crafting recipes: {}", t.toString());
+			collectRecipes(recipeManager, RecipeTypes.CRAFTING, outputFocus, focusFactory, true, results);
+		} catch (RuntimeException e) {
+			LOGGER.warn("[RecipeFinder] Error searching crafting recipes", e);
 		}
 
 		// 2) Other recipe types
 		try {
-			jeiHelpers.getAllRecipeTypes().forEach(recipeType -> {
-				if (recipeType.equals(RecipeTypes.CRAFTING)) {
-					return;
+			for (RecipeType<?> recipeType : jeiHelpers.getAllRecipeTypes().toList()) {
+				if (RecipeTypes.CRAFTING.equals(recipeType)) {
+					continue;
 				}
 				try {
-					IRecipeCategory<?> category = recipeManager.getRecipeCategory(recipeType);
-					@SuppressWarnings({ "rawtypes", "unchecked" })
-					IRecipeLookup<Object> lookup = (IRecipeLookup) recipeManager.createRecipeLookup((RecipeType) recipeType);
-
-					lookup.limitFocus(List.of(outputFocus))
-						.get()
-						.forEach(recipeObj -> {
-							Optional<IRecipeLayoutDrawable<Object>> layoutOpt = createLayout(recipeManager, category, recipeObj, focusFactory);
-							layoutOpt.ifPresent(layout -> {
-								RecipeInfo info = extractRecipeInfo(recipeObj, layout, false);
-								if (info != null) {
-									results.add(info);
-								}
-							});
-						});
-				} catch (Throwable ignored) {
+					// JEI 的 getAllRecipeTypes 只暴露通配符类型，这里统一抹成 Object 交给泛型辅助方法处理。
+					@SuppressWarnings("unchecked")
+					RecipeType<Object> typedType = (RecipeType<Object>) recipeType;
+					collectRecipes(recipeManager, typedType, outputFocus, focusFactory, false, results);
+				} catch (RuntimeException e) {
+					// 单个分类失败不影响其余配方类型的检索，但留日志便于定位具体分类。
+					LOGGER.debug("[RecipeFinder] Skipped recipe type {}", recipeType, e);
 				}
-			});
-		} catch (Throwable t) {
-			LOGGER.warn("[RecipeFinder] Error searching other recipes: {}", t.toString());
+			}
+		} catch (RuntimeException e) {
+			LOGGER.warn("[RecipeFinder] Error searching other recipes", e);
 		}
 
 		return results;
+	}
+
+	/**
+	 * 在保持配方对象静态类型的前提下遍历某个配方类型，避免退化成 Object 后只能靠反射取值。
+	 */
+	private static <T> void collectRecipes(
+		IRecipeManager recipeManager,
+		RecipeType<T> recipeType,
+		IFocus<?> outputFocus,
+		IFocusFactory focusFactory,
+		boolean isCrafting,
+		List<RecipeInfo> results
+	) {
+		IRecipeCategory<T> category = recipeManager.getRecipeCategory(recipeType);
+		recipeManager.createRecipeLookup(recipeType)
+			.limitFocus(List.of(outputFocus))
+			.get()
+			.forEach(recipeObj -> recipeManager
+				.createRecipeLayoutDrawable(category, recipeObj, focusFactory.getEmptyFocusGroup())
+				.ifPresent(layout -> {
+					RecipeInfo info = extractRecipeInfo(category, recipeObj, layout, isCrafting);
+					if (info != null) {
+						results.add(info);
+					}
+				}));
 	}
 
 	public static RecipeInfo selectBestRecipe(List<RecipeInfo> recipes) {
@@ -121,23 +125,16 @@ public final class RecipeFinderUtil {
 		return recipes.get(0);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Optional<IRecipeLayoutDrawable<Object>> createLayout(
-		IRecipeManager recipeManager,
-		IRecipeCategory<?> category,
-		Object recipeObj,
-		IFocusFactory focusFactory
+	private static <T> RecipeInfo extractRecipeInfo(
+		IRecipeCategory<T> category,
+		T recipeObj,
+		IRecipeLayoutDrawable<T> layout,
+		boolean isCrafting
 	) {
-		return (Optional) recipeManager.createRecipeLayoutDrawable(
-			(IRecipeCategory) category,
-			recipeObj,
-			focusFactory.getEmptyFocusGroup()
-		);
-	}
-
-	private static RecipeInfo extractRecipeInfo(Object recipeObj, IRecipeLayoutDrawable<Object> layout, boolean isCrafting) {
 		try {
-			ResourceLocation recipeId = extractRecipeId(recipeObj);
+			// JEI 默认实现从 RecipeHolder.id() 取 ID，非原版配方可在自己的分类里覆写，
+			// 直接走接口即可，不需要反射推断实现类的字段名。
+			ResourceLocation recipeId = category.getRegistryName(recipeObj);
 			if (recipeId == null) {
 				return null;
 			}
@@ -178,32 +175,7 @@ public final class RecipeFinderUtil {
 		}
 	}
 
-	private static ResourceLocation extractRecipeId(Object recipeObj) {
-		if (recipeObj == null) {
-			return null;
-		}
-		if (recipeObj instanceof RecipeHolder<?> holder) {
-			return holder.id();
-		}
-		try {
-			var m = recipeObj.getClass().getMethod("getId");
-			Object id = m.invoke(recipeObj);
-			if (id instanceof ResourceLocation rl) {
-				return rl;
-			}
-		} catch (Throwable ignored) {
-		}
-		try {
-			var m = recipeObj.getClass().getMethod("getRecipeUid");
-			Object id = m.invoke(recipeObj);
-			if (id instanceof ResourceLocation rl) {
-				return rl;
-			}
-		} catch (Throwable ignored) {
-		}
-		return null;
-	}
-
+	
 	private static GenericStack convertToGenericStack(ITypedIngredient<?> typedIngredient) {
 		if (typedIngredient.getType() == VanillaTypes.ITEM_STACK) {
 			ItemStack itemStack = (ItemStack) typedIngredient.getIngredient();

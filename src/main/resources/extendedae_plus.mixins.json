@@ -150,6 +150,7 @@
     "jei.ModernIngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor",
     "jei.accessor.BookmarkListAccessor",
+    "jei.accessor.RecipeBookmarkAccessor",
     "jei.accessor.LegacyIngredientListSlotMixin",
     "jei.accessor.ModernIngredientListSlotMixin"
   ],

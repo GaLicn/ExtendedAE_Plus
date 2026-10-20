@@ -3,8 +3,8 @@ package com.extendedae_plus.client.event;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.client.ModKeybindings;
-
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
+import com.extendedae_plus.mixin.jei.accessor.RecipeBookmarkAccessor;
 import com.extendedae_plus.network.CreateAndUploadPatternC2SPacket;
 import com.extendedae_plus.network.CreateCtrlQPatternC2SPacket;
 import com.extendedae_plus.util.ModCheckUtils;
@@ -15,6 +15,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.gui.bookmarks.RecipeBookmark;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -22,6 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -49,7 +51,6 @@ public final class CtrlQPatternKeyHandler {
 		}
 
 		int keyCode = event.getKeyCode();
-		int scanCode = event.getScanCode();
 		boolean isAllowSubstitutes = Screen.hasShiftDown();
 		boolean isFluidSubstitutes = Screen.hasAltDown();
 		// isActiveAndMatches 才会校验修饰键（Ctrl）与冲突上下文；KeyMapping.matches 对裸键也会命中
@@ -67,7 +68,7 @@ public final class CtrlQPatternKeyHandler {
 			return;
 		}
 
-		Optional<?> recipeBookmark = JeiRuntimeCompat.getRecipeBookmarkUnderMouse();
+		Optional<RecipeBookmark<?, ?>> recipeBookmark = JeiRuntimeCompat.getRecipeBookmarkUnderMouse();
 		if (recipeBookmark.isPresent()) {
 			handleRecipeBookmark(recipeBookmark.get(), isAllowSubstitutes, isFluidSubstitutes);
 			event.setCanceled(true);
@@ -111,7 +112,7 @@ public final class CtrlQPatternKeyHandler {
 		event.setCanceled(true);
 	}
 
-	private static void handleRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+	private static void handleRecipeBookmark(RecipeBookmark<?, ?> recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		if (isCraftingRecipe(recipeBookmark)) {
 			handleCraftingRecipeBookmark(recipeBookmark, isAllowSubstitutes, isFluidSubstitutes);
 		} else {
@@ -119,22 +120,14 @@ public final class CtrlQPatternKeyHandler {
 		}
 	}
 
-	private static boolean isCraftingRecipe(Object recipeBookmark) {
-		try {
-			var getRecipeCategoryMethod = recipeBookmark.getClass().getMethod("getRecipeCategory");
-			Object recipeCategory = getRecipeCategoryMethod.invoke(recipeBookmark);
-
-			var getRecipeTypeMethod = recipeCategory.getClass().getMethod("getRecipeType");
-			Object recipeType = getRecipeTypeMethod.invoke(recipeCategory);
-			return RecipeTypes.CRAFTING.equals(recipeType)
-				|| RecipeTypes.STONECUTTING.equals(recipeType)
-				|| RecipeTypes.SMITHING.equals(recipeType);
-		} catch (Throwable ignored) {
-			return false;
-		}
+	private static boolean isCraftingRecipe(RecipeBookmark<?, ?> recipeBookmark) {
+		Object recipeType = recipeBookmark.getRecipeCategory().getRecipeType();
+		return RecipeTypes.CRAFTING.equals(recipeType)
+			|| RecipeTypes.STONECUTTING.equals(recipeType)
+			|| RecipeTypes.SMITHING.equals(recipeType);
 	}
 
-	private static void handleCraftingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+	private static void handleCraftingRecipeBookmark(RecipeBookmark<?, ?> recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
@@ -178,11 +171,12 @@ public final class CtrlQPatternKeyHandler {
 				isAllowSubstitutes,
 				isFluidSubstitutes
 			));
-		} catch (Throwable ignored) {
+		} catch (RuntimeException e) {
+			LOGGER.warn("[CtrlQ] 处理合成书签失败", e);
 		}
 	}
 
-	private static void handleProcessingRecipeBookmark(Object recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
+	private static void handleProcessingRecipeBookmark(RecipeBookmark<?, ?> recipeBookmark, boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		try {
 			ResourceLocation recipeId = getRecipeId(recipeBookmark);
 			if (recipeId == null) {
@@ -205,13 +199,7 @@ public final class CtrlQPatternKeyHandler {
 				return;
 			}
 
-			Object recipeBase = null;
-			try {
-				var getRecipeMethod = recipeBookmark.getClass().getMethod("getRecipe");
-				recipeBase = getRecipeMethod.invoke(recipeBookmark);
-			} catch (Throwable ignored) {
-			}
-			setLastProcessingNameFromRecipe(recipeBase != null ? recipeBase : recipeOpt.get());
+			setLastProcessingNameFromRecipe(recipeBookmark.getRecipe());
 
 			List<RecipeInfo> recipeInfos = findRecipeInfosForBookmark(recipeBookmark);
 			if (recipeInfos.isEmpty()) {
@@ -234,11 +222,12 @@ public final class CtrlQPatternKeyHandler {
 				isAllowSubstitutes,
 				isFluidSubstitutes
 			));
-		} catch (Throwable ignored) {
+		} catch (RuntimeException e) {
+			LOGGER.warn("[CtrlQ] 处理加工书签失败", e);
 		}
 	}
 
-	private static List<RecipeInfo> findRecipeInfosForBookmark(Object recipeBookmark) {
+	private static List<RecipeInfo> findRecipeInfosForBookmark(RecipeBookmark<?, ?> recipeBookmark) {
 		Optional<ITypedIngredient<?>> hovered = castTypedIngredient(JeiRuntimeCompat.getIngredientUnderMouse());
 		if (hovered.isPresent()) {
 			List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(hovered.get());
@@ -247,25 +236,10 @@ public final class CtrlQPatternKeyHandler {
 			}
 		}
 
-		try {
-			var getDisplayIngredientMethod = recipeBookmark.getClass().getMethod("getDisplayIngredient");
-			Object displayIngredient = getDisplayIngredientMethod.invoke(recipeBookmark);
-			if (displayIngredient instanceof ITypedIngredient<?> typed) {
-				List<RecipeInfo> infos = RecipeFinderUtil.findRecipesByIngredient(typed);
-				if (!infos.isEmpty()) {
-					return infos;
-				}
-			}
-		} catch (Throwable ignored) {
-		}
-
-		try {
-			var getRecipeOutputMethod = recipeBookmark.getClass().getMethod("getRecipeOutput");
-			Object recipeOutput = getRecipeOutputMethod.invoke(recipeBookmark);
-			if (recipeOutput instanceof ITypedIngredient<?> typed) {
-				return RecipeFinderUtil.findRecipesByIngredient(typed);
-			}
-		} catch (Throwable ignored) {
+		// 书签创建时已确定展示用材料（优先产出槽，其次输入槽），直接用它反查配方。
+		ITypedIngredient<?> displayIngredient = recipeBookmark.getDisplayIngredient();
+		if (displayIngredient != null) {
+			return RecipeFinderUtil.findRecipesByIngredient(displayIngredient);
 		}
 		return List.of();
 	}
@@ -279,58 +253,8 @@ public final class CtrlQPatternKeyHandler {
 		return recipeInfos.get(0);
 	}
 
-	private static ResourceLocation getRecipeId(Object recipeBookmark) {
-		if (recipeBookmark == null) {
-			return null;
-		}
-
-		// JEI 1.20 兼容分支
-		try {
-			var getRecipeUidMethod = recipeBookmark.getClass().getMethod("getRecipeUid");
-			Object recipeId = getRecipeUidMethod.invoke(recipeBookmark);
-			if (recipeId instanceof ResourceLocation rl) {
-				return rl;
-			}
-		} catch (Throwable ignored) {
-		}
-
-		// JEI 1.21+：从 recipeCategory.getRegistryName(recipe) 获取
-		try {
-			Object recipe = recipeBookmark.getClass().getMethod("getRecipe").invoke(recipeBookmark);
-			Object recipeCategory = recipeBookmark.getClass().getMethod("getRecipeCategory").invoke(recipeBookmark);
-			if (recipe != null && recipeCategory != null) {
-				try {
-					Object recipeId = recipeCategory.getClass().getMethod("getRegistryName", Object.class).invoke(recipeCategory, recipe);
-					if (recipeId instanceof ResourceLocation rl) {
-						return rl;
-					}
-				} catch (Throwable ignored) {
-					for (var m : recipeCategory.getClass().getMethods()) {
-						if (!"getRegistryName".equals(m.getName()) || m.getParameterCount() != 1) {
-							continue;
-						}
-						Object recipeId = m.invoke(recipeCategory, recipe);
-						if (recipeId instanceof ResourceLocation rl) {
-							return rl;
-						}
-					}
-				}
-			}
-		} catch (Throwable ignored) {
-		}
-
-		// 反射字段兜底（JEI 内部 RecipeBookmark 存在 recipeUid 字段）
-		try {
-			var f = recipeBookmark.getClass().getDeclaredField("recipeUid");
-			f.setAccessible(true);
-			Object recipeId = f.get(recipeBookmark);
-			if (recipeId instanceof ResourceLocation rl) {
-				return rl;
-			}
-		} catch (Throwable ignored) {
-		}
-
-		return null;
+	private static ResourceLocation getRecipeId(RecipeBookmark<?, ?> recipeBookmark) {
+		return ((RecipeBookmarkAccessor) recipeBookmark).eap$getRecipeUid();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -347,20 +271,11 @@ public final class CtrlQPatternKeyHandler {
 
 	private static void setLastProcessingNameFromRecipe(Object recipeBase) {
 		String name = null;
-		
-		// 处理 RecipeHolder
-		if (recipeBase != null && "net.minecraft.world.item.crafting.RecipeHolder".equals(recipeBase.getClass().getName())) {
-			try {
-				var valueMethod = recipeBase.getClass().getMethod("value");
-				Object actualRecipe = valueMethod.invoke(recipeBase);
-				if (actualRecipe != null) {
-					recipeBase = actualRecipe;
-				}
-			} catch (ReflectiveOperationException e) {
-				LOGGER.debug("无法解包配方记录，使用原始配方对象", e);
-			}
+
+		if (recipeBase instanceof RecipeHolder<?> holder) {
+			recipeBase = holder.value();
 		}
-		
+
 		if (recipeBase instanceof Recipe<?> recipe) {
 			name = RecipeTypeNameConfig.mapRecipeTypeToSearchKey(recipe);
 			if (name == null || name.isBlank()) {

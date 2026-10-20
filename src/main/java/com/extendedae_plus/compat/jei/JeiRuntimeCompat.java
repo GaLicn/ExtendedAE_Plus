@@ -173,8 +173,11 @@ public final class JeiRuntimeCompat {
 			.findFirst();
 	}
 
-	public static Optional<?> getRecipeBookmarkUnderMouse() {
-		return getBookmarkUnderMouse().filter(RecipeBookmark.class::isInstance);
+	@SuppressWarnings("unchecked")
+	public static Optional<RecipeBookmark<?, ?>> getRecipeBookmarkUnderMouse() {
+		return getBookmarkUnderMouse()
+			.filter(RecipeBookmark.class::isInstance)
+			.map(bookmark -> (RecipeBookmark<?, ?>) bookmark);
 	}
 
 	public static void addBookmark(ItemStack stack) {
