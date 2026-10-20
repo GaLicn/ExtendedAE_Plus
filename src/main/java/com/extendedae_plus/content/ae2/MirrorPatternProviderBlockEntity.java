@@ -22,6 +22,7 @@ import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.api.config.EAPSettings;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModBlockEntities;
+import java.util.EnumSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
@@ -714,7 +715,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         @Override
-        public appeng.api.util.IConfigManager eap$getMirrorConfigManager() {
+        public IConfigManager eap$getMirrorConfigManager() {
             return host.getConfigManager();
         }
 
@@ -724,7 +725,7 @@ public class MirrorPatternProviderBlockEntity extends PatternProviderBlockEntity
         }
 
         @Override
-        public java.util.EnumSet<Direction> eap$getMirrorTargets() {
+        public EnumSet<Direction> eap$getMirrorTargets() {
             return host.getTargets();
         }
 

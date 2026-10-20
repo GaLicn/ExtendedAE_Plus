@@ -6,6 +6,7 @@ import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
 import com.extendedae_plus.network.LabelNetworkActionC2SPacket;
 import com.extendedae_plus.network.LabelNetworkListC2SPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -488,7 +489,7 @@ public class LabeledWirelessTransceiverScreen extends AbstractContainerScreen<La
         }
 
         @Override
-        protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput narration) {
+        protected void updateWidgetNarration(NarrationElementOutput narration) {
             defaultButtonNarrationText(narration);
         }
     }

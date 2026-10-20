@@ -1,5 +1,6 @@
 package com.extendedae_plus.integration.jade;
 
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -79,7 +80,7 @@ public enum WirelessTransceiverJadePluginComponents implements IBlockComponentPr
                 tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", ownerName));
             } else if (data.hasUUID("placerId")) {
                 // 有placerId但没有名称，显示UUID
-                java.util.UUID placerId = data.getUUID("placerId");
+                UUID placerId = data.getUUID("placerId");
                 tooltip.add(Component.translatable("extendedae_plus.tooltip.owner", placerId.toString().substring(0, 8) + "..."));
             } else {
                 // 没有所有者信息（公共收发器）

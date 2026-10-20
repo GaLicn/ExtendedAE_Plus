@@ -1,5 +1,6 @@
 package com.extendedae_plus.client;
 
+import com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.extendedae_plus.ExtendedAEPlus;
@@ -11,7 +12,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -34,14 +38,14 @@ public final class UltimateSuperAssemblerMatrixPreviewRenderer {
         var minecraft = Minecraft.getInstance();
         var player = minecraft.player;
         if (player == null || minecraft.level == null
-                || !(minecraft.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)
+                || !(minecraft.hitResult instanceof BlockHitResult hit)
                 || !isHoldingBuilder(player)) {
             return;
         }
 
         var builderStack = player.getMainHandItem().is(ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get())
                 ? player.getMainHandItem() : player.getOffhandItem();
-        var selectedOrigin = com.extendedae_plus.items.tools.UltimateSuperAssemblerMatrixBuilderItem
+        var selectedOrigin = UltimateSuperAssemblerMatrixBuilderItem
                 .getSelectedOrigin(builderStack);
         var origin = selectedOrigin != null && selectedOrigin.dimension().equals(minecraft.level.dimension())
                 ? selectedOrigin.pos() : hit.getBlockPos().relative(hit.getDirection());
@@ -76,12 +80,12 @@ public final class UltimateSuperAssemblerMatrixPreviewRenderer {
         bufferSource.endBatch(RenderType.lines());
     }
 
-    private static boolean isHoldingBuilder(net.minecraft.world.entity.player.Player player) {
+    private static boolean isHoldingBuilder(Player player) {
         var builder = ModItems.ULTIMATE_SUPER_ASSEMBLER_MATRIX_BUILDER.get();
         return player.getMainHandItem().is(builder) || player.getOffhandItem().is(builder);
     }
 
-    private static float[] colorFor(net.minecraft.world.level.block.Block block) {
+    private static float[] colorFor(Block block) {
         if (block == ModBlocks.SUPER_ASSEMBLER_MATRIX_FRAME.get()) {
             return new float[] {0.95F, 0.72F, 0.18F};
         }

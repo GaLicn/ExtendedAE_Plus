@@ -2,6 +2,8 @@ package com.extendedae_plus.network;
 
 import appeng.menu.implementations.InterfaceMenu;
 import appeng.api.stacks.GenericStack;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.glodblock.github.extendedae.container.ContainerExInterface;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -15,7 +17,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class InterfaceAdjustConfigAmountC2SPacket implements CustomPacketPayload {
     public static final Type<InterfaceAdjustConfigAmountC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "interface_adjust_config_amount"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "interface_adjust_config_amount"));
 
     public static final StreamCodec<FriendlyByteBuf, InterfaceAdjustConfigAmountC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
@@ -47,10 +49,10 @@ public class InterfaceAdjustConfigAmountC2SPacket implements CustomPacketPayload
 
             // 支持 AE2 原版接口和 ExtendedAE 扩展接口（若存在）
             InterfaceMenu menu = null;
-            com.glodblock.github.extendedae.container.ContainerExInterface exMenu = null;
+            ContainerExInterface exMenu = null;
             if (player.containerMenu instanceof InterfaceMenu im) {
                 menu = im;
-            } else if (player.containerMenu instanceof com.glodblock.github.extendedae.container.ContainerExInterface cem) {
+            } else if (player.containerMenu instanceof ContainerExInterface cem) {
                 exMenu = cem;
             } else {
                 return;

@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.util.uploadPattern.CtrlQPendingUploadUtil;
 import com.extendedae_plus.util.uploadPattern.ProviderUploadUtil;
@@ -19,7 +20,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class UploadEncodedPatternToProviderC2SPacket implements CustomPacketPayload {
     public static final Type<UploadEncodedPatternToProviderC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "upload_pattern_to_provider"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "upload_pattern_to_provider"));
 
     public static final StreamCodec<FriendlyByteBuf, UploadEncodedPatternToProviderC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

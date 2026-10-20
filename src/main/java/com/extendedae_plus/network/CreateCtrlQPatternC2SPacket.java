@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.energy.IEnergyService;
+import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
@@ -208,7 +209,7 @@ public class CreateCtrlQPatternC2SPacket implements CustomPacketPayload {
 		long extracted = StorageHelper.poweredExtraction(
 			energy,
 			storage,
-			appeng.api.stacks.AEItemKey.of(AEItems.BLANK_PATTERN.stack()),
+			AEItemKey.of(AEItems.BLANK_PATTERN.stack()),
 			1,
 			new PlayerSource(player)
 		);

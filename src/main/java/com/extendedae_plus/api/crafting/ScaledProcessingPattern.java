@@ -6,6 +6,7 @@ import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.crafting.pattern.AEProcessingPattern;
+import java.util.Arrays;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -143,7 +144,7 @@ public class ScaledProcessingPattern implements IPatternDetails {
 
         sb.append("Inputs: [");
         sb.append(String.join(", ",
-                java.util.Arrays.stream(this.original.getInputs())
+                Arrays.stream(this.original.getInputs())
                         .filter(i -> i.getPossibleInputs() != null && i.getPossibleInputs().length > 0)
                         .map(i -> {
                             GenericStack stack = i.getPossibleInputs()[0];

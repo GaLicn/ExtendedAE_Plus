@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -18,7 +19,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
     public static final Type<OpenCraftFromJeiC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "open_craft_from_jei"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "open_craft_from_jei"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenCraftFromJeiC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> GenericStack.writeBuffer(pkt.stack, buf),

@@ -11,6 +11,8 @@ import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
+import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -61,7 +63,7 @@ public abstract class AdvPatternProviderLogicChannelCardMixin
     }
 
     @Inject(method = "addDrops", at = @At("TAIL"))
-    private void eap$dropChannelCardUpgrades(java.util.List<ItemStack> drops, CallbackInfo ci) {
+    private void eap$dropChannelCardUpgrades(List<ItemStack> drops, CallbackInfo ci) {
         if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
             for (var stack : this.eap$channelCardUpgrades) {
                 if (!stack.isEmpty()) drops.add(stack.copy());
@@ -121,7 +123,7 @@ public abstract class AdvPatternProviderLogicChannelCardMixin
 
     @Unique
     @Nullable
-    private java.util.UUID eap$getFallbackOwner() {
+    private UUID eap$getFallbackOwner() {
         var node = this.mainNode != null ? this.mainNode.getNode() : null;
         return node != null ? node.getOwningPlayerProfileId() : null;
     }

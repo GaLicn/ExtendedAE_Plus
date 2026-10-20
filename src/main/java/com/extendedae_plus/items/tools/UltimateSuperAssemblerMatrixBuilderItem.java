@@ -9,9 +9,12 @@ import com.extendedae_plus.content.matrix.supermatrix.UltimateSuperAssemblerMatr
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -185,9 +188,9 @@ public class UltimateSuperAssemblerMatrixBuilderItem extends Item {
         if (!originTag.contains(TAG_DIMENSION, Tag.TAG_STRING) || !originTag.contains(TAG_POS, Tag.TAG_LONG)) {
             return null;
         }
-        return GlobalPos.of(net.minecraft.resources.ResourceKey.create(
-                net.minecraft.core.registries.Registries.DIMENSION,
-                net.minecraft.resources.ResourceLocation.parse(originTag.getString(TAG_DIMENSION))),
+        return GlobalPos.of(ResourceKey.create(
+                Registries.DIMENSION,
+                ResourceLocation.parse(originTag.getString(TAG_DIMENSION))),
                 BlockPos.of(originTag.getLong(TAG_POS)));
     }
 

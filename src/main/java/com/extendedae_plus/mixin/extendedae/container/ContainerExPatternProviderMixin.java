@@ -12,6 +12,7 @@ import appeng.menu.slot.AppEngSlot;
 import com.extendedae_plus.api.bridge.ExPatternProviderMenuPageBridge;
 import com.glodblock.github.extendedae.container.ContainerExPatternProvider;
 import it.unimi.dsi.fastutil.shorts.ShortSet;
+import java.util.ArrayList;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
@@ -138,7 +139,7 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private boolean eap$checkModify(java.util.List<GenericStack> stacks, int scale, boolean div) {
+    private boolean eap$checkModify(List<GenericStack> stacks, int scale, boolean div) {
         if (stacks == null) return false;
         if (div) {
             for (var stack : stacks) {
@@ -163,8 +164,8 @@ public abstract class ContainerExPatternProviderMixin extends PatternProviderMen
     }
 
     @Unique
-    private java.util.List<GenericStack> eap$modifyStacks(java.util.List<GenericStack> src, int scale, boolean div) {
-        var dst = new java.util.ArrayList<GenericStack>(src.size());
+    private List<GenericStack> eap$modifyStacks(List<GenericStack> src, int scale, boolean div) {
+        var dst = new ArrayList<GenericStack>(src.size());
         for (var stack : src) {
             if (stack != null) {
                 long amt = stack.amount();

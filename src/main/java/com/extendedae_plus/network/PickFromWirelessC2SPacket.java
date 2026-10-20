@@ -6,6 +6,7 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.core.BlockPos;
@@ -23,7 +24,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class PickFromWirelessC2SPacket implements CustomPacketPayload {
     public static final Type<PickFromWirelessC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "pick_from_wireless"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "pick_from_wireless"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PickFromWirelessC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

@@ -9,6 +9,7 @@ import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
@@ -22,7 +23,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class PullFromJeiOrCraftC2SPacket implements CustomPacketPayload {
     public static final Type<PullFromJeiOrCraftC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "pull_from_jei_or_craft"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "pull_from_jei_or_craft"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PullFromJeiOrCraftC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> GenericStack.writeBuffer(pkt.stack, buf),

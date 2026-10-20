@@ -11,6 +11,7 @@ import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
 import appeng.menu.implementations.PatternProviderMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.util.ExtendedAELogger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,7 +43,7 @@ public abstract class PatternProviderScreenUpgradesMixin<C extends PatternProvid
         try {
             this.widgets.add("upgrades", new UpgradesPanel(menu.getSlots(SlotSemantics.UPGRADE), this::eap$getCompatibleUpgrades));
         } catch (IllegalStateException e) {
-            com.extendedae_plus.util.ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 升级面板已存在，跳过添加: {}", e.getMessage());
+            ExtendedAELogger.LOGGER.warn("[样板供应器][界面] 升级面板已存在，跳过添加: {}", e.getMessage());
             return;
         }
 

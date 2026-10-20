@@ -4,6 +4,7 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.implementations.InterfaceScreen;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
+import appeng.menu.implementations.InterfaceMenu;
 import com.extendedae_plus.client.gui.NewIcon;
 import com.extendedae_plus.mixin.accessor.AbstractContainerScreenAccessor;
 import com.extendedae_plus.mixin.accessor.ScreenAccessor;
@@ -156,7 +157,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             Slot hovered = ((AbstractContainerScreenAccessor<?>) (Object) this).eap$getHoveredSlot();
             var screen = (AEBaseScreen<?>) (Object) this;
             var menu = screen.getMenu();
-            if (!(menu instanceof appeng.menu.implementations.InterfaceMenu interfaceMenu)) {
+            if (!(menu instanceof InterfaceMenu interfaceMenu)) {
                 return;
             }
             var configSlots = interfaceMenu.getSlots(SlotSemantics.CONFIG);
@@ -261,7 +262,7 @@ public abstract class InterfaceScreenMixin<T extends AEBaseMenu> {
             }
             var screen = (AEBaseScreen<?>) (Object) this;
             var menu = screen.getMenu();
-            if (!(menu instanceof appeng.menu.implementations.InterfaceMenu interfaceMenu)) {
+            if (!(menu instanceof InterfaceMenu interfaceMenu)) {
                 return;
             }
             var configSlots = interfaceMenu.getSlots(SlotSemantics.CONFIG);

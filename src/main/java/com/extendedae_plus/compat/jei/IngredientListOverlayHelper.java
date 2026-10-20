@@ -7,6 +7,7 @@ import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.NetworkStockOverlay;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.IIngredientType;
+import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.client.Minecraft;
@@ -48,7 +49,7 @@ public final class IngredientListOverlayHelper {
         }
     }
 
-    private static AEKey toKey(mezz.jei.api.ingredients.ITypedIngredient<?> typedIngredient,
+    private static AEKey toKey(ITypedIngredient<?> typedIngredient,
             IIngredientType<?> chemicalIngredientType) {
         if (typedIngredient.getType() == VanillaTypes.ITEM_STACK) {
             ItemStack stack = (ItemStack) typedIngredient.getIngredient();

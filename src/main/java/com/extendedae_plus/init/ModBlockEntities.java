@@ -16,6 +16,7 @@ import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.crystal.SuperCrystalAssemblerBlockEntity;
 import com.extendedae_plus.content.cutter.SuperCircuitCutterBlockEntity;
 import appeng.blockentity.crafting.CraftingBlockEntity;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.core.registries.Registries;
@@ -47,7 +48,7 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CraftingBlockEntity>> EPLUS_CRAFTING_UNIT_BE =
             BLOCK_ENTITY_TYPES.register("eplus_crafting_unit",
                     () -> {
-                        java.util.concurrent.atomic.AtomicReference<BlockEntityType<CraftingBlockEntity>> ref = new java.util.concurrent.atomic.AtomicReference<>();
+                        AtomicReference<BlockEntityType<CraftingBlockEntity>> ref = new AtomicReference<>();
                         BlockEntityType.BlockEntitySupplier<CraftingBlockEntity> supplier = (pos, state) -> new CraftingBlockEntity(ref.get(), pos, state);
                         BlockEntityType<CraftingBlockEntity> type = BlockEntityType.Builder.of(
                                 supplier,

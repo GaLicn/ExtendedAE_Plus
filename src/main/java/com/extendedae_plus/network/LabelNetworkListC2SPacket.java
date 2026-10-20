@@ -2,6 +2,7 @@ package com.extendedae_plus.network;
 
 import appeng.api.networking.pathing.ChannelMode;
 import appeng.me.GridNode;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
@@ -10,6 +11,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -17,7 +19,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public record LabelNetworkListC2SPacket(BlockPos pos) implements CustomPacketPayload {
     public static final Type<LabelNetworkListC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "label_network_list"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "label_network_list"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LabelNetworkListC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> buf.writeBlockPos(pkt.pos),
@@ -31,7 +33,7 @@ public record LabelNetworkListC2SPacket(BlockPos pos) implements CustomPacketPay
 
     public static void handle(LabelNetworkListC2SPacket pkt, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
             var level = player.serverLevel();
             if (!level.hasChunkAt(pkt.pos)) return;
             var be = level.getBlockEntity(pkt.pos);

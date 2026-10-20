@@ -4,6 +4,7 @@ import appeng.helpers.WirelessTerminalMenuHost;
 import appeng.menu.ISubMenu;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.ItemMenuHostLocator;
+import java.util.function.BiConsumer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
@@ -23,7 +24,7 @@ public class CuriosWirelessTerminalMenuHost extends WirelessTerminalMenuHost<Wir
                                           ItemStack itemStack,
                                           ICurioStacksHandler curiosHandler,
                                           int curiosIndex,
-                                          java.util.function.BiConsumer<Player, ISubMenu> returnToMainMenu) {
+                                          BiConsumer<Player, ISubMenu> returnToMainMenu) {
         super((WirelessTerminalItem) itemStack.getItem(), player,
                 (ItemMenuHostLocator) new CuriosItemLocator(curiosSlotId, curiosIndex),
                 returnToMainMenu);

@@ -9,6 +9,7 @@ import appeng.menu.locator.ItemMenuHostLocator;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.compat.ae2wtlib.AE2WTLibCompat;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
@@ -35,11 +36,11 @@ public final class WirelessTerminalLocator {
         // 1) 先检查主手/副手
         var main = player.getMainHandItem();
         if (isWirelessTerminal(main)) {
-            return new LocatedTerminal(main, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ns), -1, net.minecraft.world.InteractionHand.MAIN_HAND);
+            return new LocatedTerminal(main, (ns) -> player.setItemInHand(InteractionHand.MAIN_HAND, ns), -1, InteractionHand.MAIN_HAND);
         }
         var off = player.getOffhandItem();
         if (isWirelessTerminal(off)) {
-            return new LocatedTerminal(off, (ns) -> player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, ns), -1, net.minecraft.world.InteractionHand.OFF_HAND);
+            return new LocatedTerminal(off, (ns) -> player.setItemInHand(InteractionHand.OFF_HAND, ns), -1, InteractionHand.OFF_HAND);
         }
 
         // 2) 原版槽位
@@ -68,7 +69,7 @@ public final class WirelessTerminalLocator {
                             ItemStack st = stacks.getStackInSlot(i);
                             if (isWirelessTerminal(st)) {
                                 final int slot = i;
-                                java.util.function.Consumer<ItemStack> setter = (ns) -> stacks.setStackInSlot(slot, ns);
+                                Consumer<ItemStack> setter = (ns) -> stacks.setStackInSlot(slot, ns);
                                 return new LocatedTerminal(st, setter, -1, null, slotId, slot);
                             }
                         }
@@ -146,7 +147,7 @@ public final class WirelessTerminalLocator {
         // 在玩家 Inventory 中的槽位索引（0..size-1）。若未知则为 -1。
         private final int slotIndex;
         // 若终端在玩家手上，则记录手别；否则为 null。
-        private final net.minecraft.world.InteractionHand hand;
+        private final InteractionHand hand;
         // 若终端位于 Curios，则记录其槽位组 ID 与组内索引；否则 slotId 为 null，index 为 -1。
         private final String curiosSlotId;
         private final int curiosIndex;
@@ -159,11 +160,11 @@ public final class WirelessTerminalLocator {
             this(stack, setter, slotIndex, null, null, -1);
         }
 
-        LocatedTerminal(ItemStack stack, Consumer<ItemStack> setter, int slotIndex, net.minecraft.world.InteractionHand hand) {
+        LocatedTerminal(ItemStack stack, Consumer<ItemStack> setter, int slotIndex, InteractionHand hand) {
             this(stack, setter, slotIndex, hand, null, -1);
         }
 
-        LocatedTerminal(ItemStack stack, Consumer<ItemStack> setter, int slotIndex, net.minecraft.world.InteractionHand hand, String curiosSlotId, int curiosIndex) {
+        LocatedTerminal(ItemStack stack, Consumer<ItemStack> setter, int slotIndex, InteractionHand hand, String curiosSlotId, int curiosIndex) {
             this.stack = stack;
             this.setter = setter;
             this.slotIndex = slotIndex;
@@ -178,7 +179,7 @@ public final class WirelessTerminalLocator {
         /** 若返回 -1，说明不是从原版 Inventory 槽位中找到（比如 Curios）。 */
         public int getSlotIndex() { return this.slotIndex; }
         /** 若不为 null，说明终端在玩家手上。 */
-        public net.minecraft.world.InteractionHand getHand() { return this.hand; }
+        public InteractionHand getHand() { return this.hand; }
         /** 若不为 null，说明终端位于 Curios 指定槽位组。 */
         public String getCuriosSlotId() { return this.curiosSlotId; }
         /** Curios 组内索引，未知时为 -1。 */

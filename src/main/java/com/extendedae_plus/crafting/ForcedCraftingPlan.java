@@ -2,6 +2,7 @@ package com.extendedae_plus.crafting;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.crafting.ICraftingPlan;
+import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import com.extendedae_plus.api.crafting.IForcedCraftingPlan;
@@ -24,8 +25,8 @@ public class ForcedCraftingPlan implements ICraftingPlan, IForcedCraftingPlan {
         return copy(this.manualMissingItems);
     }
 
-    public Map<appeng.api.stacks.AEKey, Long> eap$getManualMissingSnapshot() {
-        var snapshot = new LinkedHashMap<appeng.api.stacks.AEKey, Long>();
+    public Map<AEKey, Long> eap$getManualMissingSnapshot() {
+        var snapshot = new LinkedHashMap<AEKey, Long>();
         for (var entry : this.manualMissingItems) {
             snapshot.put(entry.getKey(), entry.getLongValue());
         }

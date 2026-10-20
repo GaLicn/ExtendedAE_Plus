@@ -5,6 +5,7 @@ import appeng.core.definitions.AEBlocks;
 import appeng.core.definitions.AEItems;
 import appeng.core.definitions.AEParts;
 import appeng.core.localization.GuiText;
+import com.glodblock.github.extendedae.common.EAESingletons;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
@@ -44,37 +45,37 @@ public class UpgradeCards {
 
             // 
             // 
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_INTERFACE, 1, interfaceGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_INTERFACE_PART, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_INTERFACE_PART, 1, interfaceGroup);
             
             // 
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
-            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
-            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
-            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER, 3, patternProviderGroup);
-            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_PATTERN_PROVIDER_PART, 3, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER, 1, patternProviderGroup);
+            Upgrades.add(ModItems.VIRTUAL_CRAFTING_CARD.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 1, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), EAESingletons.EX_PATTERN_PROVIDER, 3, patternProviderGroup);
+            Upgrades.add(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get(), EAESingletons.EX_PATTERN_PROVIDER_PART, 3, patternProviderGroup);
             
             // 
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_IMPORT_BUS, 1, ioBusGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.EX_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_IMPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.EX_EXPORT_BUS, 1, ioBusGroup);
             
             // 
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.TAG_STORAGE_BUS, 1, storageGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.TAG_EXPORT_BUS, 1, ioBusGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.MOD_STORAGE_BUS, 1, storageGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.MOD_EXPORT_BUS, 1, ioBusGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.PRECISE_STORAGE_BUS, 1, storageGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.PRECISE_EXPORT_BUS, 1, ioBusGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.THRESHOLD_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.TAG_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.TAG_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.MOD_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.MOD_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.PRECISE_STORAGE_BUS, 1, storageGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.PRECISE_EXPORT_BUS, 1, ioBusGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.THRESHOLD_EXPORT_BUS, 1, ioBusGroup);
 
             String storageCellGroup = GuiText.StorageCells.getTranslationKey();
             Upgrades.add(AEItems.FUZZY_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
             Upgrades.add(AEItems.INVERTER_CARD, ModItems.INFINITY_BIGINTEGER_CELL_ITEM.get(), 1, storageCellGroup);
             
             // 超大接口
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.OVERSIZE_INTERFACE, 1, interfaceGroup);
-            Upgrades.add(ModItems.CHANNEL_CARD.get(), com.glodblock.github.extendedae.common.EAESingletons.OVERSIZE_INTERFACE_PART, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.OVERSIZE_INTERFACE, 1, interfaceGroup);
+            Upgrades.add(ModItems.CHANNEL_CARD.get(), EAESingletons.OVERSIZE_INTERFACE_PART, 1, interfaceGroup);
 
             registerAdvancedAePatternProviderChannelCards(patternProviderGroup);
         });

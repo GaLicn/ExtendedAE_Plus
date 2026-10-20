@@ -7,6 +7,7 @@ import com.extendedae_plus.mixin.ae2.accessor.PatternProviderMenuAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -78,7 +79,7 @@ public class ScalePatternsC2SPacket implements CustomPacketPayload {
                 // 回显结果到玩家
                 String summary = String.format("样板缩放(%s x%.0f): 共%d, 成功%d, 失败%d", multiply ? "倍增" : "除法",
                         factor, result.getTotalPatterns(), result.getScaledPatterns(), result.getFailedPatterns());
-                player.displayClientMessage(net.minecraft.network.chat.Component.literal("[EAP] " + summary), true);
+                player.displayClientMessage(Component.literal("[EAP] " + summary), true);
 
             } catch (Throwable t) {
                 ExtendedAELogger.LOGGER.error("[EAP] Handle ScalePatternsC2SPacket failed", t);

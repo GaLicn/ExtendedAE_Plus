@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import net.minecraft.client.Minecraft;
@@ -26,7 +27,7 @@ public record LabelNetworkListS2CPacket(BlockPos pos,
                                         int maxChannels,
                                         int onlineCount) implements CustomPacketPayload {
     public static final Type<LabelNetworkListS2CPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "label_network_list_s2c"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "label_network_list_s2c"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LabelNetworkListS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

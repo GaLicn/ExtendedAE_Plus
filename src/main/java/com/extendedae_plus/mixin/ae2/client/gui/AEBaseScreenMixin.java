@@ -26,6 +26,7 @@ import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -56,7 +57,7 @@ public abstract class AEBaseScreenMixin {
             return;
         }
         // 仅在 Shift + 左键 时触发
-        if (button != 0 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (button != 0 || !Screen.hasShiftDown()) {
             return;
         }
         try {
@@ -86,7 +87,7 @@ public abstract class AEBaseScreenMixin {
             return;
         }
         // 仅在 Shift + 右键 时触发
-        if (button != 1 || !net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (button != 1 || !Screen.hasShiftDown()) {
             return;
         }
         try {

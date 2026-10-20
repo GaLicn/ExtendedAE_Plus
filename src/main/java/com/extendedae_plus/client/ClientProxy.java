@@ -5,19 +5,17 @@ import appeng.init.client.InitScreens;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.api.ids.EAPComponents;
 import com.extendedae_plus.client.render.crafting.EPlusCraftingCubeModelProvider;
+import com.extendedae_plus.client.screen.GlobalProviderModesScreen;
+import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
 import com.extendedae_plus.client.screen.SuperAssemblerMatrixScreen;
-import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
-import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.client.screen.SuperCircuitCutterScreen;
+import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
+import com.extendedae_plus.client.screen.TagInventoryMEInterfaceScreen;
 import com.extendedae_plus.content.crafting.EPlusCraftingUnitType;
 import com.extendedae_plus.hooks.BuiltInModelHooks;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.items.BasicCoreItem;
-import com.extendedae_plus.client.screen.LabeledWirelessTransceiverScreen;
-import com.extendedae_plus.menu.LabeledWirelessTransceiverMenu;
-import com.extendedae_plus.menu.TagInventoryMEInterfaceMenu;
-import com.extendedae_plus.menu.SuperCrystalAssemblerMenu;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -71,47 +69,21 @@ public final class ClientProxy {
         // 菜单 -> 屏幕 绑定（显式 ScreenConstructor，避免泛型推断问题）
         event.register(
                 ModMenuTypes.NETWORK_PATTERN_CONTROLLER.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
-                        com.extendedae_plus.menu.NetworkPatternControllerMenu,
-                        com.extendedae_plus.client.screen.GlobalProviderModesScreen>() {
-                    @Override
-                    public com.extendedae_plus.client.screen.GlobalProviderModesScreen create(
-                            com.extendedae_plus.menu.NetworkPatternControllerMenu menu,
-                            net.minecraft.world.entity.player.Inventory inv,
-                            net.minecraft.network.chat.Component title) {
-                        return new com.extendedae_plus.client.screen.GlobalProviderModesScreen(menu, inv, title);
-                    }
-                }
+                GlobalProviderModesScreen::new
         );
 
         event.register(
                 ModMenuTypes.LABELED_WIRELESS_TRANSCEIVER.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
-                        LabeledWirelessTransceiverMenu,
-                        LabeledWirelessTransceiverScreen>() {
-                    @Override
-                    public LabeledWirelessTransceiverScreen create(LabeledWirelessTransceiverMenu menu, net.minecraft.world.entity.player.Inventory inv, net.minecraft.network.chat.Component title) {
-                        return new LabeledWirelessTransceiverScreen(menu, inv, title);
-                    }
-                }
+                LabeledWirelessTransceiverScreen::new
         );
 
         event.register(
                 ModMenuTypes.TAG_INVENTORY_ME_INTERFACE.get(),
-                new net.minecraft.client.gui.screens.MenuScreens.ScreenConstructor<
-                        TagInventoryMEInterfaceMenu,
-                        TagInventoryMEInterfaceScreen>() {
-                    @Override
-                    public TagInventoryMEInterfaceScreen create(TagInventoryMEInterfaceMenu menu,
-                            net.minecraft.world.entity.player.Inventory inv,
-                            net.minecraft.network.chat.Component title) {
-                        return new TagInventoryMEInterfaceScreen(menu, inv, title);
-                    }
-                }
+                TagInventoryMEInterfaceScreen::new
         );
 
-        /**
-         * 注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
+        /*
+          注册由 AE2 InitScreens 所需的屏幕资源映射（用于内置 JSON 屏幕注册）
          */
         InitScreens.register(event, ModMenuTypes.SUPER_ASSEMBLER_MATRIX.get(), SuperAssemblerMatrixScreen::new,
                 "/screens/super_assembler_matrix.json");

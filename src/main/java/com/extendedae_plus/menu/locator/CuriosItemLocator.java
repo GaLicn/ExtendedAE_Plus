@@ -7,6 +7,8 @@ import appeng.items.tools.powered.WirelessCraftingTerminalItem;
 import appeng.items.tools.powered.WirelessTerminalItem;
 import appeng.menu.locator.ItemMenuHostLocator;
 import com.extendedae_plus.compat.ae2wtlib.AE2WTLibCompat;
+import com.extendedae_plus.menu.host.CuriosWTSubMenuHost2;
+import com.extendedae_plus.menu.host.CuriosWirelessCraftingTerminalMenuHost;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -34,7 +36,7 @@ public record CuriosItemLocator(String slotId, int index) implements ItemMenuHos
             if (hostInterface == ISubMenuHost.class
                     && stack.getItem() instanceof WirelessCraftingTerminalItem craftingTerminal) {
                 // 与背包槽位保持同一 AE2 宿主类型，只增加 Curios 槽位定位能力。
-                var subHost = new com.extendedae_plus.menu.host.CuriosWirelessCraftingTerminalMenuHost(
+                var subHost = new CuriosWirelessCraftingTerminalMenuHost(
                         craftingTerminal, player, this,
                         (p, sub) -> craftingTerminal.openFromInventory(p, this));
                 return hostInterface.cast(subHost);
@@ -48,7 +50,7 @@ public record CuriosItemLocator(String slotId, int index) implements ItemMenuHos
                 if (hostInterface == ISubMenuHost.class
                         && (!ModList.get().isLoaded("ae2wtlib") || !AE2WTLibCompat.isWirelessTerminal(stack))) {
                     // WTLib 终端必须继续走下面的 WTLib 宿主，不能被 AE2 基础宿主提前截断。
-                    var subHost = new com.extendedae_plus.menu.host.CuriosWTSubMenuHost2(wirelessTerminal, player, this,
+                    var subHost = new CuriosWTSubMenuHost2(wirelessTerminal, player, this,
                             (p, sub) -> wirelessTerminal.openFromInventory(p, this));
                     return hostInterface.cast(subHost);
                 }

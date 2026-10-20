@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.core.BlockPos;
@@ -31,7 +32,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class ForceCraftFromWorldC2SPacket implements CustomPacketPayload {
     public static final Type<ForceCraftFromWorldC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "force_craft_from_world"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "force_craft_from_world"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ForceCraftFromWorldC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
