@@ -3,6 +3,7 @@ package com.extendedae_plus.network;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -43,15 +44,15 @@ public class OpenCraftFromJeiC2SPacket implements CustomPacketPayload {
             if (grid == null) {
                 return;
             }
-            var craftingService = grid.getCraftingService();
-            if (!craftingService.isCraftable(what)) {
+            // JEI 条目转出的 key 与样板输出的 key 可能只差数据组件，按主键回退解析。
+            AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), what);
+            if (craftable == null) {
                 return;
             }
 
             var locator = located.createMenuLocator(player);
             if (locator != null) {
-                CraftAmountMenu.open(player, locator, what, 1);
-            } else {
+                CraftAmountMenu.open(player, locator, craftable, 1);
             }
         });
     }
