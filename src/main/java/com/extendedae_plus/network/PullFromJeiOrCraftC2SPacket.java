@@ -9,6 +9,7 @@ import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.network.FriendlyByteBuf;
@@ -62,9 +63,17 @@ public class PullFromJeiOrCraftC2SPacket {
                 IEnergyService energy = grid.getEnergyService();
                 MEStorage storage = grid.getStorageService().getInventory();
 
+                AEItemKey extractedKey = itemKey;
                 long extracted = StorageHelper.poweredExtraction(energy, storage, itemKey, targetMax, new PlayerSource(player));
+                if (extracted <= 0) {
+                    // 精确键无库存时按主键回退：JEI 条目与网络内变体可能只差数据组件。
+                    extractedKey = findVariantByPrimaryKey(storage, itemKey);
+                    if (extractedKey != null) {
+                        extracted = StorageHelper.poweredExtraction(energy, storage, extractedKey, targetMax, new PlayerSource(player));
+                    }
+                }
                 if (extracted > 0) {
-                    inv.setItem(free, itemKey.toStack((int) extracted));
+                    inv.setItem(free, extractedKey.toStack((int) extracted));
                     WirelessTerminalLocator.useTerminalPower(player, located, Math.max(0.5, extracted * 0.05));
                     located.commit();
                     player.containerMenu.broadcastChanges();
@@ -72,15 +81,35 @@ public class PullFromJeiOrCraftC2SPacket {
                 }
             }
 
-            // 无库存（或该键不可提取）时：若可合成则打开下单界面
-            var craftingService = grid.getCraftingService();
-            if (!craftingService.isCraftable(what)) return;
+            // 无库存（或该键不可提取）时：若可合成则打开下单界面。
+            // JEI 条目转出的 key 与样板输出的 key 可能只差数据组件，按主键回退解析。
+            AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), what);
+            if (craftable == null) return;
 
             var locator = located.createMenuLocator(player);
             if (locator != null) {
-                CraftAmountMenu.open(player, locator, what, 1);
+                CraftAmountMenu.open(player, locator, craftable, 1);
             }
         });
         context.setPacketHandled(true);
+    }
+
+    /**
+     * 精确键无库存时，按主键在网络中找同类变体（数据组件不同的同种物品），优先取存量最多的一格。
+     */
+    private static AEItemKey findVariantByPrimaryKey(MEStorage storage, AEItemKey what) {
+        Object primaryKey = what.getPrimaryKey();
+        AEItemKey best = null;
+        long bestAmount = 0;
+        for (var entry : storage.getAvailableStacks()) {
+            if (!(entry.getKey() instanceof AEItemKey candidate) || candidate.equals(what)) continue;
+            if (!primaryKey.equals(candidate.getPrimaryKey())) continue;
+            long amount = entry.getLongValue();
+            if (amount > bestAmount) {
+                bestAmount = amount;
+                best = candidate;
+            }
+        }
+        return best;
     }
 }

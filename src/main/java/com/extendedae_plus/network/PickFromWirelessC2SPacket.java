@@ -3,6 +3,8 @@ package com.extendedae_plus.network;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
+import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
@@ -98,15 +100,16 @@ public class PickFromWirelessC2SPacket {
                 if (forcedKey == null) {
                     return;
                 }
-                var craftingService = grid.getCraftingService();
-                if (!craftingService.isCraftable(forcedKey)) {
+                // 方块物品的组件未必与样板输出一致（如拆装过的方块），按主键回退解析。
+                AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), forcedKey);
+                if (craftable == null) {
                     player.displayClientMessage(
                             Component.translatable("message.extendedae_plus.force_craft.not_craftable"), true);
                     return;
                 }
                 var locator = located.createMenuLocator(player);
                 if (locator != null) {
-                    CraftAmountMenu.open(player, locator, forcedKey, 64);
+                    CraftAmountMenu.open(player, locator, craftable, 64);
                 }
                 return;
             }
@@ -152,12 +155,12 @@ public class PickFromWirelessC2SPacket {
                 boolean handIsDifferentItem = !handIsEmpty && !AEItemKey.of(mainHandItem).equals(targetKey);
 
                 if (handIsEmpty || handIsDifferentItem) {
-                    var craftingService = grid.getCraftingService();
-                    if (craftingService.isCraftable(targetKey)) {
+                    AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), targetKey);
+                    if (craftable != null) {
                         // 主手为空一组
                         var locator = located.createMenuLocator(player);
                         if (locator != null) {
-                            CraftAmountMenu.open(player, locator, targetKey, 64);
+                            CraftAmountMenu.open(player, locator, craftable, 64);
                         }
                         return; // 打开界面后直接结束，不执行后面的放物品逻辑
                     }
