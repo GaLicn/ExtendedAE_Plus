@@ -1,10 +1,10 @@
 package com.extendedae_plus.compat;
 
 import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.extendedae.common.parts.PartExPatternProvider;
 import com.glodblock.github.extendedae.common.tileentities.TileExPatternProvider;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.fml.ModList;
 
 /**
  * 升级卡槽兼容性管理类
@@ -13,15 +13,10 @@ import net.neoforged.fml.ModList;
  * 2. appflux存在时是否复用其升级槽
  */
 public final class UpgradeSlotCompat {
-    private static final String APPFLUX_MOD_ID = "appflux";
-    private static final String APPFLUX_SCREEN_MIXIN = "com.glodblock.github.appflux.mixins.MixinPatternProviderScreen";
     private static final int BASE_PATTERN_PROVIDER_UPGRADE_SLOTS = 2;
     private static final int EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS = 3;
     private static final int EXTENDED_PATTERN_PROVIDER_BASE_PAGES = 1;
     private static final int EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE = 36;
-
-    private static Boolean appfluxLoaded;
-    private static Boolean appfluxPatternProviderMixinActive;
 
     private UpgradeSlotCompat() {
     }
@@ -30,14 +25,7 @@ public final class UpgradeSlotCompat {
      * 检测 Applied Flux 模组是否存在
      */
     public static boolean isAppfluxPresent() {
-        if (appfluxLoaded == null) {
-            try {
-                appfluxLoaded = ModList.get().isLoaded(APPFLUX_MOD_ID);
-            } catch (Throwable t) {
-                appfluxLoaded = false;
-            }
-        }
-        return appfluxLoaded;
+        return ModCheckUtils.isAppfluxLoading();
     }
 
     /**
@@ -145,35 +133,5 @@ public final class UpgradeSlotCompat {
         return stack != null
                 && !stack.isEmpty()
                 && stack.getItem() == ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get();
-    }
-
-    /**
-     * 兼容主工程现有调用：当 appflux 的 PatternProvider Screen mixin 会接管 UI 时，返回低优先级模式。
-     */
-    public static boolean shouldUseLowPriorityMode() {
-        return isAppfluxPatternProviderMixinActive();
-    }
-
-    /**
-     * 兼容主工程现有调用：保留旧的优先级推荐接口。
-     */
-    public static int getRecommendedMixinPriority() {
-        return shouldUseLowPriorityMode() ? 1500 : 2000;
-    }
-
-    private static boolean isAppfluxPatternProviderMixinActive() {
-        if (appfluxPatternProviderMixinActive == null) {
-            try {
-                if (!isAppfluxPresent()) {
-                    appfluxPatternProviderMixinActive = false;
-                } else {
-                    Class.forName(APPFLUX_SCREEN_MIXIN);
-                    appfluxPatternProviderMixinActive = true;
-                }
-            } catch (Throwable t) {
-                appfluxPatternProviderMixinActive = false;
-            }
-        }
-        return appfluxPatternProviderMixinActive;
     }
 }
