@@ -35,15 +35,20 @@ public abstract class EmiHeaderButtonMixin {
     /** 上一帧是否绘制了按钮；未绘制时不应响应点击。 */
     @Unique private static boolean eap$buttonVisible;
 
+    @Inject(method = "render", at = @At("HEAD"), remap = false)
+    private static void eap$beginHeaderButtonFrame(EmiDrawContext context, int mouseX, int mouseY, float delta,
+            CallbackInfo ci) {
+        // RETURN 在 emi 内部的每个提前返回处都会触发，入口处先把上一帧的状态清掉，
+        // 只有本帧真正画出按钮的路径才会重新置为可见。
+        eap$buttonVisible = false;
+    }
+
     @Inject(method = "render", at = @At("RETURN"), remap = false)
     private static void eap$drawHeaderButton(EmiDrawContext context, int mouseX, int mouseY, float delta,
             CallbackInfo ci) {
-        // RETURN 在 emi 内部的每个提前返回处都会触发，必须自行确认「有可用界面且 EMI 未禁用」。
-        eap$buttonVisible = false;
         if (EmiScreenManager.isDisabled() || EmiScreenBase.getCurrent().isEmpty()) {
             return;
         }
-        eap$buttonVisible = true;
         GuiGraphics guiGraphics = context.raw();
         if (guiGraphics == null) {
             return;
@@ -55,6 +60,7 @@ public abstract class EmiHeaderButtonMixin {
         pose.translate(EAP_BUTTON_X, y, 100);
         EmiNetworkOverlayButton.draw(guiGraphics, 0, 0);
         pose.popPose();
+        eap$buttonVisible = true;
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), remap = false, cancellable = true)
