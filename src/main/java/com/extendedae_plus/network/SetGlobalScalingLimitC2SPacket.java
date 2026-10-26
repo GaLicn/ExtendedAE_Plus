@@ -115,9 +115,7 @@ public class SetGlobalScalingLimitC2SPacket implements CustomPacketPayload {
     private static boolean applyToLogic(PatternProviderLogic logic, int limit) {
         if (logic instanceof ISmartDoublingHolder holder) {
             holder.eap$setProviderSmartDoublingLimit(limit);
-            try {
-                logic.saveChanges();
-            } catch (Throwable ignored) {}
+            logic.saveChanges();
             return true;
         }
         return false;
