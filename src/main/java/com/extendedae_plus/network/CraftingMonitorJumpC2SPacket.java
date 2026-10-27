@@ -2,14 +2,14 @@ package com.extendedae_plus.network;
 
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.stacks.AEKey;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.service.CraftingService;
+import appeng.menu.me.crafting.CraftingCPUMenu;
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
-import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -18,12 +18,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Collection;
@@ -35,7 +30,7 @@ import java.util.Collection;
  */
 public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
     public static final Type<CraftingMonitorJumpC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "crafting_monitor_jump"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "crafting_monitor_jump"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, CraftingMonitorJumpC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> AEKey.writeKey(buf, pkt.what),
@@ -57,13 +52,13 @@ public class CraftingMonitorJumpC2SPacket implements CustomPacketPayload {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
 
             // 必须在 CraftingCPU 界面内
-            if (!(player.containerMenu instanceof appeng.menu.me.crafting.CraftingCPUMenu menu)) {
+            if (!(player.containerMenu instanceof CraftingCPUMenu menu)) {
                 return;
             }
 
             // 通过菜单 target（可能是 BlockEntity/Part/ItemHost）按 IActionHost 获取 Grid
             IGrid grid = null;
-            Object target = ((appeng.menu.AEBaseMenu) menu).getTarget();
+            Object target = menu.getTarget();
             if (target instanceof IActionHost host && host.getActionableNode() != null) {
                 grid = host.getActionableNode().getGrid();
             }

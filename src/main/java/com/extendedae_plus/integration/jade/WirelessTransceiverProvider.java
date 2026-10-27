@@ -2,6 +2,8 @@ package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.pathing.ChannelMode;
+import appeng.me.GridNode;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessMasterRegistry;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
@@ -65,9 +67,9 @@ public enum WirelessTransceiverProvider implements IServerDataProvider<BlockAcce
                     usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
                 }
                 // 获取节点的最大频道容量（致密线缆为32）
-                if (node instanceof appeng.me.GridNode gridNode) {
+                if (node instanceof GridNode gridNode) {
                     var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
-                    if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                    if (channelMode == ChannelMode.INFINITE) {
                         maxChannels = -1; // 无限频道
                     } else {
                         maxChannels = gridNode.getMaxChannels();

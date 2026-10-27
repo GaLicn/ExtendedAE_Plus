@@ -88,7 +88,7 @@ public class LabeledWirelessTransceiverBlock extends Block implements EntityBloc
     }
 
     @Override
-    protected ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack heldItem, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    protected ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         // 委托空手交互逻辑（统一入口）
         InteractionResult r = this.useWithoutItem(state, level, pos, player, hit);
         return r.consumesAction() ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;

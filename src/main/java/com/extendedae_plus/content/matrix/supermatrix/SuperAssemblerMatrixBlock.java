@@ -8,6 +8,7 @@ import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrix
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -90,7 +91,7 @@ public abstract class SuperAssemblerMatrixBlock<T extends SuperAssemblerMatrixBl
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos,
-            Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
+            Player player, InteractionHand hand, BlockHitResult hitResult) {
         var parent = super.useItemOn(heldItem, state, level, pos, player, hand, hitResult);
         if (parent.result() != InteractionResult.PASS) {
             return parent;

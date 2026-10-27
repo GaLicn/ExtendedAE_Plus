@@ -2,6 +2,8 @@ package com.extendedae_plus.integration.jade;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.pathing.ChannelMode;
+import appeng.me.GridNode;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.nbt.CompoundTag;
@@ -45,9 +47,9 @@ public enum LabeledWirelessTransceiverProvider implements IServerDataProvider<Bl
             for (var connection : node.getConnections()) {
                 usedChannels = Math.max(connection.getUsedChannels(), usedChannels);
             }
-            if (node instanceof appeng.me.GridNode gridNode) {
+            if (node instanceof GridNode gridNode) {
                 var channelMode = gridNode.getGrid().getPathingService().getChannelMode();
-                if (channelMode == appeng.api.networking.pathing.ChannelMode.INFINITE) {
+                if (channelMode == ChannelMode.INFINITE) {
                     maxChannels = -1;
                 } else {
                     maxChannels = gridNode.getMaxChannels();

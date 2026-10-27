@@ -5,6 +5,7 @@ import appeng.menu.me.items.PatternEncodingTermMenu;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
+import mezz.jei.api.recipe.transfer.IRecipeTransferError;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -28,7 +29,7 @@ public abstract class AE2JeiEncodePatternTransferHandlerMixin<T extends PatternE
                                                        Player player,
                                                        boolean maxTransfer,
                                                        boolean doTransfer,
-                                                       CallbackInfoReturnable<mezz.jei.api.recipe.transfer.IRecipeTransferError> cir) {
+                                                       CallbackInfoReturnable<IRecipeTransferError> cir) {
         if (!doTransfer) return;
         String name = null;
         Recipe<?> recipe = null;

@@ -1,7 +1,10 @@
 package com.extendedae_plus.network;
 
 import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,7 +32,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public class ForceCraftFromWorldC2SPacket implements CustomPacketPayload {
     public static final Type<ForceCraftFromWorldC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "force_craft_from_world"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "force_craft_from_world"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ForceCraftFromWorldC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
@@ -84,8 +87,9 @@ public class ForceCraftFromWorldC2SPacket implements CustomPacketPayload {
             AEItemKey key = AEItemKey.of(picked);
             if (key == null) return;
 
-            var craftingService = grid.getCraftingService();
-            if (!craftingService.isCraftable(key)) {
+            // 方块物品的组件未必与样板输出一致（如拆装过的方块），按主键回退解析。
+            AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), key);
+            if (craftable == null) {
                 player.displayClientMessage(
                         Component.translatable("message.extendedae_plus.force_craft.not_craftable"), true);
                 return;
@@ -93,7 +97,7 @@ public class ForceCraftFromWorldC2SPacket implements CustomPacketPayload {
 
             var locator = located.createMenuLocator(player);
             if (locator != null) {
-                CraftAmountMenu.open(player, locator, key, 64);
+                CraftAmountMenu.open(player, locator, craftable, 64);
             }
         });
     }

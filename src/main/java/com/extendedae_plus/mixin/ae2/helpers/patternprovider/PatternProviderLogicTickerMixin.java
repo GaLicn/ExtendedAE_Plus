@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.ae2.helpers.patternprovider;
 
+import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.api.networking.ticking.TickRateModulation;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
@@ -22,8 +23,8 @@ public abstract class PatternProviderLogicTickerMixin {
     private PatternProviderLogic this$0;
 
     @Inject(method = "tickingRequest", at = @At("HEAD"))
-    private void eap$tickHead(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
-                              CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+    private void eap$tickHead(IGridNode node, int ticksSinceLastCall,
+                              CallbackInfoReturnable<TickRateModulation> cir) {
         // 仅在服务端处理延迟初始化
         if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
             return;
@@ -34,8 +35,8 @@ public abstract class PatternProviderLogicTickerMixin {
     }
 
     @Inject(method = "tickingRequest", at = @At("TAIL"), cancellable = true)
-    private void eap$tickTail(appeng.api.networking.IGridNode node, int ticksSinceLastCall,
-                              CallbackInfoReturnable<appeng.api.networking.ticking.TickRateModulation> cir) {
+    private void eap$tickTail(IGridNode node, int ticksSinceLastCall,
+                              CallbackInfoReturnable<TickRateModulation> cir) {
         // 仅在服务端设置慢速 tick
         if (node != null && node.getLevel() != null && node.getLevel().isClientSide) {
             return;

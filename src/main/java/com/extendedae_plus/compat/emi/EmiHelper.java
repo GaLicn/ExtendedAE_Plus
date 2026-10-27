@@ -35,6 +35,21 @@ public final class EmiHelper {
 		}
 	}
 
+	/**
+	 * 严格模式：仅查找 EMI 自有区域（侧边栏、收藏栏、配方槽等）悬浮的物品，
+	 * 不包含背包等标准槽位，供 Ctrl+Q 等快捷键判定使用。
+	 *
+	 * <p>与点击交互一致：{@code includeStandard=false} 可避免快捷键对玩家背包里的
+	 * 物品生效。</p>
+	 */
+	public static ItemStack getSidebarItemStackUnderMouse() {
+		try {
+			return toItemStack(EmiApi.getHoveredStack(false));
+		} catch (Throwable ignored) {
+			return ItemStack.EMPTY;
+		}
+	}
+
 	public static ItemStack getIngredientUnderMouse(double mouseX, double mouseY) {
 		ItemStack item = lookupByCoords(mouseX, mouseY);
 		if (!item.isEmpty()) {

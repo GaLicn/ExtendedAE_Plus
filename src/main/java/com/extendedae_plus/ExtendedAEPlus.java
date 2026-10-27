@@ -17,6 +17,7 @@ import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.SpeedCorePlusBlockEntity;
+import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
@@ -35,6 +36,7 @@ import com.extendedae_plus.util.storage.InfinityStorageManager;
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -114,7 +116,7 @@ public class ExtendedAEPlus {
     }
 
     private static void onLevelTick(LevelTickEvent.Post event) {
-        if (event.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
             SuperAssemblerMatrixCalculator.processScheduledRecalculations(serverLevel);
         }
     }
@@ -154,7 +156,7 @@ public class ExtendedAEPlus {
 
             // 绑定装配矩阵上传核心方块实体类型，避免 blockEntityClass 为 null 的问题
             ModBlocks.ASSEMBLER_MATRIX_UPLOAD_CORE.get().setBlockEntity(
-                com.extendedae_plus.content.matrix.UploadCoreBlockEntity.class,
+                UploadCoreBlockEntity.class,
                 ModBlockEntities.UPLOAD_CORE_BE.get(),
                 null,
                 null

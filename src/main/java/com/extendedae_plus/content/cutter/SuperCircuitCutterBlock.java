@@ -7,6 +7,7 @@ import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -52,7 +53,7 @@ public class SuperCircuitCutterBlock extends AEBaseEntityBlock<SuperCircuitCutte
 
     @Override
     protected @NotNull ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
-            Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
+            Player player, InteractionHand hand, BlockHitResult hitResult) {
         if (player.isShiftKeyDown()) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }

@@ -13,8 +13,10 @@ import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccessor;
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
+import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -133,7 +135,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
         }
 
         try {
-            PacketDistributor.sendToServer(new com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket(
+            PacketDistributor.sendToServer(new UploadInventoryPatternToProviderC2SPacket(
                     playerSlotIndex, eap$currentlyChoicePatterProvider));
         } catch (Throwable ignored) {
             minecraft.player.displayClientMessage(
@@ -182,7 +184,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     @Inject(method = "<init>(Lcom/glodblock/github/extendedae/container/ContainerExPatternTerminal;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;Lappeng/client/gui/style/ScreenStyle;)V", at = @At("TAIL"), remap = false, require = 0)
     private void eap$injectConstructor(
-            com.glodblock.github.extendedae.container.ContainerExPatternTerminal menu,
+            ContainerExPatternTerminal menu,
             Inventory playerInventory, Component title, ScreenStyle style, CallbackInfo ci) {
         try {
             eap$showSlots = ModConfigs.PATTERN_TERMINAL_SHOW_SLOTS_DEFAULT.get();

@@ -7,6 +7,7 @@ import appeng.menu.MenuOpener;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.init.ModMenuTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -52,7 +53,7 @@ public class SuperCrystalAssemblerBlock extends AEBaseEntityBlock<SuperCrystalAs
 
     @Override
     protected @NotNull ItemInteractionResult useItemOn(ItemStack heldItem, BlockState state, Level level, BlockPos pos,
-            Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
+            Player player, InteractionHand hand, BlockHitResult hitResult) {
         var parent = super.useItemOn(heldItem, state, level, pos, player, hand, hitResult);
         if (parent.result() != InteractionResult.PASS) {
             return parent;

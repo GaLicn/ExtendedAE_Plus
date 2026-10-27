@@ -12,6 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class ScaleEncodingPatternC2SPacket implements CustomPacketPayload {
@@ -191,7 +192,7 @@ public class ScaleEncodingPatternC2SPacket implements CustomPacketPayload {
             return;
         }
 
-        var newOutputs = new net.minecraft.world.item.ItemStack[outputSlots.length];
+        var newOutputs = new ItemStack[outputSlots.length];
         for (int i = 0; i < outputSlots.length; i++) {
             newOutputs[i] = outputSlots[i].getItem().copy();
         }

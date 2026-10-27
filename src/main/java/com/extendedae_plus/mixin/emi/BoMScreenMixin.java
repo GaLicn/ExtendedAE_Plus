@@ -1,5 +1,6 @@
 package com.extendedae_plus.mixin.emi;
 
+import com.extendedae_plus.client.event.EmiCtrlQHandler;
 import dev.emi.emi.bom.BoM;
 import dev.emi.emi.screen.BoMScreen;
 import net.minecraft.client.Minecraft;
@@ -79,7 +80,7 @@ public abstract class BoMScreenMixin {
 			return;
 		}
 		if (mouseX >= eapBtnL && mouseX < eapBtnR && mouseY >= eapBtnT && mouseY < eapBtnB) {
-			com.extendedae_plus.client.event.EmiCtrlQHandler.encodeBoMTreeAll(
+			EmiCtrlQHandler.encodeBoMTreeAll(
 					Screen.hasShiftDown(), Screen.hasAltDown());
 			cir.setReturnValue(true);
 		}

@@ -46,7 +46,7 @@ public final class StrictMolecularAssemblerPattern implements IMolecularAssemble
     }
 
     @Override
-    public appeng.api.stacks.AEItemKey getDefinition() {
+    public AEItemKey getDefinition() {
         return this.delegate.getDefinition();
     }
 

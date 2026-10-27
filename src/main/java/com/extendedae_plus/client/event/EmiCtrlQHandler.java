@@ -11,6 +11,10 @@ import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.RecipeFinderUtil;
 import com.extendedae_plus.util.RecipeInfo;
 import com.mojang.blaze3d.platform.InputConstants;
+import dev.emi.emi.bom.BoM;
+import dev.emi.emi.bom.MaterialNode;
+import dev.emi.emi.bom.MaterialTree;
+import dev.emi.emi.screen.BoMScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -55,11 +59,12 @@ public final class EmiCtrlQHandler {
 		boolean isFluidSubstitutes = Screen.hasAltDown();
 
 		// 合成链（配方树/BoM）界面内禁用快捷键编码：批量编码由界面上的 A 按钮承担
-		if (screen instanceof dev.emi.emi.screen.BoMScreen) {
+		if (screen instanceof BoMScreen) {
 			return;
 		}
 
-		ItemStack hovered = EmiHelper.getIngredientUnderMouse();
+		// 严格模式：仅 EMI 自有区域，避免对背包等标准槽位的物品也触发全局快捷键
+		ItemStack hovered = EmiHelper.getSidebarItemStackUnderMouse();
 		if (hovered.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {
@@ -115,7 +120,7 @@ public final class EmiCtrlQHandler {
 	 */
 	public static int encodeBoMTreeAll(boolean isAllowSubstitutes, boolean isFluidSubstitutes) {
 		Minecraft mc = Minecraft.getInstance();
-		dev.emi.emi.bom.MaterialTree tree = dev.emi.emi.bom.BoM.tree;
+		MaterialTree tree = BoM.tree;
 		if (tree == null || tree.goal == null) {
 			if (mc.player != null) {
 				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.no_recipes_found"), true);
@@ -125,12 +130,12 @@ public final class EmiCtrlQHandler {
 
 		Set<ResourceLocation> seen = new HashSet<>();
 		int sent = 0;
-		Deque<dev.emi.emi.bom.MaterialNode> stack = new ArrayDeque<>();
+		Deque<MaterialNode> stack = new ArrayDeque<>();
 		stack.push(tree.goal);
 		while (!stack.isEmpty()) {
-			dev.emi.emi.bom.MaterialNode node = stack.pop();
+			MaterialNode node = stack.pop();
 			if (node.children != null) {
-				for (dev.emi.emi.bom.MaterialNode child : node.children) {
+				for (MaterialNode child : node.children) {
 					stack.push(child);
 				}
 			}

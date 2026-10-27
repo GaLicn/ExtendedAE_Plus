@@ -22,6 +22,7 @@ import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.appflux.accessor.PatternProviderLogicAppfluxAccessor;
 import com.extendedae_plus.util.ExtendedAELogger;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -152,7 +153,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Inject(method = "writeToNBT", at = @At("TAIL"))
-    private void eap$compatWrite(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$compatWrite(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades.writeToNBT(tag, "compat_upgrades", registries);
@@ -164,7 +165,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Inject(method = "readFromNBT", at = @At("HEAD"))
-    private void eap$readLegacyPatternMigration(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$readLegacyPatternMigration(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         try {
             if (this.eap$isExtendedPatternProviderHost()) {
                 this.eap$readLegacyPatternMigrationData(tag, registries);
@@ -175,7 +176,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Inject(method = "readFromNBT", at = @At("TAIL"))
-    private void eap$compatRead(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries, CallbackInfo ci) {
+    private void eap$compatRead(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         try {
             if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
                 this.eap$compatUpgrades.readFromNBT(tag, "compat_upgrades", registries);
@@ -398,7 +399,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Unique
-    private void eap$readLegacyPatternMigrationData(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private void eap$readLegacyPatternMigrationData(CompoundTag tag, HolderLookup.Provider registries) {
         this.eap$legacyPatternOverflow.clear();
         this.eap$legacyUnlockedPatternSlots = 0;
         this.eap$legacyPatternMigrationComplete = false;
@@ -447,7 +448,7 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Unique
-    private void eap$writeLegacyPatternMigration(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private void eap$writeLegacyPatternMigration(CompoundTag tag, HolderLookup.Provider registries) {
         if (!this.eap$legacyPatternMigrationComplete) {
             return;
         }

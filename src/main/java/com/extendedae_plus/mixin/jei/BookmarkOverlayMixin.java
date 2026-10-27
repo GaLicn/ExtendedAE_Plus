@@ -2,8 +2,6 @@ package com.extendedae_plus.mixin.jei;
 
 import com.extendedae_plus.client.jei.JeiNetworkOverlayButton;
 import mezz.jei.gui.elements.IconButton;
-import mezz.jei.common.input.IUserInputHandler;
-import mezz.jei.common.input.handlers.CombinedInputHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Final;
@@ -14,7 +12,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
 @Mixin(targets = "mezz.jei.gui.overlay.bookmarks.BookmarkOverlay", remap = false)
@@ -89,12 +86,4 @@ public abstract class BookmarkOverlayMixin {
         this.eap$networkOverlayButton.drawTooltip(guiGraphics, mouseX, mouseY);
     }
 
-    @Inject(method = "createInputHandler", at = @At("RETURN"), cancellable = true)
-    private void eap$appendNetworkOverlayButtonInput(CallbackInfoReturnable<IUserInputHandler> cir) {
-        cir.setReturnValue(new CombinedInputHandler(
-                "ExtendedAEPlusNetworkOverlayButton",
-                this.eap$networkOverlayButton,
-                cir.getReturnValue()
-        ));
-    }
 }

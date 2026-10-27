@@ -11,6 +11,7 @@ import com.extendedae_plus.config.ModConfigs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -351,7 +352,7 @@ public class LabelNetworkRegistry extends SavedData {
         }
 
         @Override
-        public @Nullable IGridNode getGridNode(@Nullable net.minecraft.core.Direction dir) {
+        public @Nullable IGridNode getGridNode(@Nullable Direction dir) {
             return managedNode == null ? null : managedNode.getNode();
         }
     }

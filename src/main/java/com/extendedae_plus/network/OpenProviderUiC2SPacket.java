@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,7 +22,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public class OpenProviderUiC2SPacket implements CustomPacketPayload {
     public static final Type<OpenProviderUiC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "open_provider_ui"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "open_provider_ui"));
 
     public static final StreamCodec<FriendlyByteBuf, OpenProviderUiC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {

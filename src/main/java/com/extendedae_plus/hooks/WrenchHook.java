@@ -7,6 +7,7 @@ import com.extendedae_plus.client.screen.FrequencyInputScreen;
 import com.extendedae_plus.content.ae2.TagInventoryMEInterfaceBlockEntity;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -49,7 +50,7 @@ public final class WrenchHook {
                 var block = state.getBlock();
 
                 if (!level.isClientSide) {
-                    var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, te, player, stack);
+                    var drops = Block.getDrops(state, (ServerLevel) level, pos, te, player, stack);
                     for (var item : drops) {
                         player.getInventory().placeItemBackInInventory(item);
                     }
@@ -71,7 +72,7 @@ public final class WrenchHook {
                 var block = state.getBlock();
 
                 if (!level.isClientSide) {
-                    var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, be, player, stack);
+                    var drops = Block.getDrops(state, (ServerLevel) level, pos, be, player, stack);
                     for (var item : drops) {
                         player.getInventory().placeItemBackInInventory(item);
                     }
@@ -91,7 +92,7 @@ public final class WrenchHook {
                 BlockState state = level.getBlockState(pos);
                 if (state.getBlock() instanceof CraftingUnitBlock) {
                     if (!level.isClientSide) {
-                        var drops = Block.getDrops(state, (net.minecraft.server.level.ServerLevel) level, pos, level.getBlockEntity(pos), player, stack);
+                        var drops = Block.getDrops(state, (ServerLevel) level, pos, level.getBlockEntity(pos), player, stack);
                         for (var item : drops) {
                             player.getInventory().placeItemBackInInventory(item);
                         }

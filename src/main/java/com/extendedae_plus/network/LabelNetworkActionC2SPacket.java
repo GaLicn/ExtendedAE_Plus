@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -7,6 +8,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -16,7 +18,7 @@ public record LabelNetworkActionC2SPacket(BlockPos pos, String label, Action act
     public enum Action { SET, DELETE, DISCONNECT }
 
     public static final Type<LabelNetworkActionC2SPacket> TYPE = new Type<>(
-            ResourceLocation.fromNamespaceAndPath(com.extendedae_plus.ExtendedAEPlus.MODID, "label_network_action"));
+            ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "label_network_action"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, LabelNetworkActionC2SPacket> STREAM_CODEC = StreamCodec.of(
             (buf, pkt) -> {
@@ -34,7 +36,7 @@ public record LabelNetworkActionC2SPacket(BlockPos pos, String label, Action act
 
     public static void handle(LabelNetworkActionC2SPacket packet, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            if (!(ctx.player() instanceof ServerPlayer player)) return;
             var level = player.serverLevel();
             if (!level.hasChunkAt(packet.pos)) return;
             var be = level.getBlockEntity(packet.pos);

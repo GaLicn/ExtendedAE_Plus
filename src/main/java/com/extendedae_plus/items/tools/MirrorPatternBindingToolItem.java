@@ -10,10 +10,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -230,9 +233,9 @@ public class MirrorPatternBindingToolItem extends Item {
         }
 
         return GlobalPos.of(
-                net.minecraft.resources.ResourceKey.create(
-                        net.minecraft.core.registries.Registries.DIMENSION,
-                        net.minecraft.resources.ResourceLocation.parse(selectedTag.getString(TAG_DIMENSION))),
+                ResourceKey.create(
+                        Registries.DIMENSION,
+                        ResourceLocation.parse(selectedTag.getString(TAG_DIMENSION))),
                 BlockPos.of(selectedTag.getLong(TAG_POS)));
     }
 

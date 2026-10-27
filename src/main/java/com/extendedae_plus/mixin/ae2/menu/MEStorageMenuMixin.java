@@ -3,6 +3,7 @@ package com.extendedae_plus.mixin.ae2.menu;
 import appeng.api.config.Setting;
 import appeng.api.util.IConfigManager;
 import appeng.menu.me.common.MEStorageMenu;
+import appeng.util.ConfigManager;
 import com.extendedae_plus.mixin.ae2.accessor.MEStorageMenuAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -98,7 +99,7 @@ public abstract class MEStorageMenuMixin {
         Setting<T> typedSetting = (Setting<T>) setting;
         T typedValue = (T) value;
         // 仅当具体实现为 ConfigManager 时，才能调用 registerSetting
-        if (client instanceof appeng.util.ConfigManager cm) {
+        if (client instanceof ConfigManager cm) {
             cm.registerSetting(typedSetting, typedValue);
         }
     }

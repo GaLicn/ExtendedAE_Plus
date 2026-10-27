@@ -7,12 +7,12 @@ import appeng.menu.me.crafting.CraftingPlanSummary;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.WidgetContainerAccessor;
 import com.extendedae_plus.network.crafting.ForceCraftStartFlagC2SPacket;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -66,7 +66,9 @@ public class CraftConfirmScreenMixin {
                 selectCpuButton.active = true;
             }
 
-            if (!ModList.get().isLoaded("jei")) {
+            // TMRV 会冒充 modId 为 jei 的 stub，但不提供书签实现类；
+            // 此处后续逻辑会调用 addBookmark，必须用真实 JEI 判断。
+            if (!ModCheckUtils.isRealJeiLoaded()) {
                 return;
             }
 

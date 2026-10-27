@@ -5,6 +5,7 @@ import appeng.helpers.WirelessTerminalMenuHost;
 import appeng.api.storage.ISubMenuHost;
 import appeng.menu.ISubMenu;
 import appeng.menu.locator.ItemMenuHostLocator;
+import java.util.function.BiConsumer;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -15,7 +16,7 @@ public class CuriosWTSubMenuHost2 extends WirelessTerminalMenuHost<WirelessTermi
     public CuriosWTSubMenuHost2(WirelessTerminalItem item,
                                 Player player,
                                 ItemMenuHostLocator locator,
-                                java.util.function.BiConsumer<Player, ISubMenu> returnToMainMenu) {
+                                BiConsumer<Player, ISubMenu> returnToMainMenu) {
         super(item, player, locator, returnToMainMenu);
     }
 }

@@ -4,6 +4,7 @@ import appeng.parts.AEBasePart;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -41,6 +42,7 @@ public abstract class ChannelCardPartLifecycleMixin {
         }
     }
 
+    @Unique
     private void eap$reRegisterController(ChannelCardConnectionController controller) {
         var host = ((AEBasePart) (Object) this).getHost();
         if (host != null) {

@@ -1,6 +1,7 @@
 package com.extendedae_plus.content.matrix;
 
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
+import com.extendedae_plus.init.ModItems;
 import com.glodblock.github.extendedae.common.blocks.matrix.BlockAssemblerMatrixBase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -28,7 +29,7 @@ public class UploadCoreBlock extends BlockAssemblerMatrixBase<UploadCoreBlockEnt
     @Override
     public Item getPresentItem() {
         // 由对应的 BlockItem 注册返回，上传核心不需要特殊的 PresentItem，可返回自身的 BlockItem
-        return com.extendedae_plus.init.ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get();
+        return ModItems.ASSEMBLER_MATRIX_UPLOAD_CORE.get();
     }
 
     @Override

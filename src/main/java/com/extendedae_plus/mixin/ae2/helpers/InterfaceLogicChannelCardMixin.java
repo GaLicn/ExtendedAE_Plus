@@ -8,6 +8,7 @@ import appeng.helpers.InterfaceLogicHost;
 import com.extendedae_plus.ae.wireless.endpoint.InterfaceNodeEndpointImpl;
 import com.extendedae_plus.api.bridge.InterfaceWirelessLinkBridge;
 import com.extendedae_plus.util.wireless.ChannelCardConnectionController;
+import java.util.UUID;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
@@ -72,7 +73,7 @@ public abstract class InterfaceLogicChannelCardMixin implements InterfaceWireles
     }
 
     @Unique
-    private java.util.UUID eap$getFallbackOwner() {
+    private UUID eap$getFallbackOwner() {
         var node = this.mainNode != null ? this.mainNode.getNode() : null;
         return node != null ? node.getOwningPlayerProfileId() : null;
     }

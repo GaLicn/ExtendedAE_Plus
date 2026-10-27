@@ -39,7 +39,7 @@ public class GuiUtil {
         if (details == null) {
             return "";
         }
-        java.util.List<GenericStack> outputs = details.getOutputs();
+        List<GenericStack> outputs = details.getOutputs();
         if (outputs == null || outputs.isEmpty()) {
             return "";
         }

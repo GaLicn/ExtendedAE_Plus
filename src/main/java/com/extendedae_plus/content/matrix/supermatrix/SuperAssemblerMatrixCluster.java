@@ -18,6 +18,7 @@ import com.glodblock.github.extendedae.common.tileentities.matrix.TileAssemblerM
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.util.crafting.StrictMolecularAssemblerPattern;
 import it.unimi.dsi.fastutil.objects.Object2LongLinkedOpenHashMap;
+import java.util.Iterator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
@@ -134,7 +135,7 @@ public class SuperAssemblerMatrixCluster {
         );
     }
 
-    public java.util.Iterator<IGridNode> getGridNodes() {
+    public Iterator<IGridNode> getGridNodes() {
         var nodes = new ArrayList<IGridNode>();
         for (var part : this.parts) {
             if (part instanceof SuperAssemblerMatrixBlockEntity blockEntity) {
