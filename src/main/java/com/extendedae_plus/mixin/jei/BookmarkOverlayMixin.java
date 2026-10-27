@@ -2,14 +2,15 @@ package com.extendedae_plus.mixin.jei;
 
 import com.extendedae_plus.client.jei.JeiNetworkOverlayButton;
 import mezz.jei.api.gui.handlers.IGuiProperties;
+import mezz.jei.common.input.IInputTarget;
+import mezz.jei.common.input.handlers.InputGroup;
 import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.gui.input.IUserInputHandler;
-import mezz.jei.gui.input.handlers.CombinedInputHandler;
-import mezz.jei.gui.overlay.ingredients.IngredientGridWithNavigation;
-import mezz.jei.gui.overlay.ScreenPropertiesCache;
+import mezz.jei.gui.elements.IconButton;
+import mezz.jei.gui.overlay.GuiPropertiesCache;
 import mezz.jei.gui.overlay.bookmarks.BookmarkOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,15 +20,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Set;
+
 @Mixin(value = BookmarkOverlay.class, remap = false)
 public abstract class BookmarkOverlayMixin {
     @Shadow
     @Final
-    private IngredientGridWithNavigation contents;
+    private IconButton historyButton;
 
     @Shadow
     @Final
-    private ScreenPropertiesCache screenPropertiesCache;
+    private GuiPropertiesCache<Screen> guiPropertiesCache;
 
     @Unique
     private JeiNetworkOverlayButton eap$networkOverlayButton;
@@ -38,20 +41,25 @@ public abstract class BookmarkOverlayMixin {
     }
 
     @Inject(method = "updateBounds", at = @At("TAIL"))
-    private void eap$updateNetworkOverlayButtonBounds(IGuiProperties guiProperties, CallbackInfo ci) {
-        int bookmarkButtonX = this.contents.hasRoom() ? this.contents.getBackgroundArea().x() : 6;
-        int buttonY = guiProperties.getScreenHeight() - 26;
-        // 书签与历史按钮各间隔 2px，新按钮继续排列在历史按钮右侧。
-        this.eap$networkOverlayButton.updateBounds(new ImmutableRect2i(bookmarkButtonX + 44, buttonY, 20, 20));
+    private void eap$updateNetworkOverlayButtonBounds(
+            IGuiProperties guiProperties,
+            Set<ImmutableRect2i> guiExclusionAreas,
+            CallbackInfo ci
+    ) {
+        // 跟随 JEI 实际布局，历史按钮没有空间显示时也隐藏新按钮。
+        ImmutableRect2i historyArea = this.historyButton.getArea();
+        this.eap$networkOverlayButton.updateBounds(historyArea.isEmpty()
+                ? ImmutableRect2i.EMPTY
+                : historyArea.moveRight(22));
     }
 
-    @Inject(method = "drawScreen", at = @At("HEAD"))
+    @Inject(method = "drawForeground", at = @At("HEAD"))
     private void eap$beginNetworkOverlayButtonFrame(CallbackInfo ci) {
         // 每帧先清除可见状态，防止按钮在 JEI 不显示的界面响应旧坐标。
         this.eap$networkOverlayButton.beginFrame();
     }
 
-    @Inject(method = "drawScreen", at = @At("TAIL"))
+    @Inject(method = "drawForeground", at = @At("TAIL"))
     private void eap$drawNetworkOverlayButton(
             Minecraft minecraft,
             GuiGraphics guiGraphics,
@@ -60,7 +68,7 @@ public abstract class BookmarkOverlayMixin {
             float partialTicks,
             CallbackInfo ci
     ) {
-        if (this.screenPropertiesCache.hasValidScreen()) {
+        if (this.guiPropertiesCache.hasValidScreen()) {
             this.eap$networkOverlayButton.draw(guiGraphics);
         }
     }
@@ -73,17 +81,30 @@ public abstract class BookmarkOverlayMixin {
             int mouseY,
             CallbackInfo ci
     ) {
-        if (this.screenPropertiesCache.hasValidScreen()) {
+        if (this.guiPropertiesCache.hasValidScreen()) {
             this.eap$networkOverlayButton.drawTooltip(guiGraphics, mouseX, mouseY);
         }
     }
 
     @Inject(method = "createInputHandler", at = @At("RETURN"), cancellable = true)
-    private void eap$appendNetworkOverlayButtonInput(CallbackInfoReturnable<IUserInputHandler> cir) {
-        cir.setReturnValue(new CombinedInputHandler(
+    private void eap$appendNetworkOverlayButtonInput(CallbackInfoReturnable<IInputTarget> cir) {
+        cir.setReturnValue(new InputGroup(
                 "ExtendedAEPlusNetworkOverlayButton",
                 this.eap$networkOverlayButton,
                 cir.getReturnValue()
         ));
+    }
+
+    @Inject(method = "containsMouse", at = @At("RETURN"), cancellable = true)
+    private void eap$includeNetworkOverlayButtonArea(
+            double mouseX,
+            double mouseY,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        // 新版输入路由只向命中的区域分发事件，需要包含新增按钮。
+        if (this.guiPropertiesCache.hasValidScreen()
+                && this.eap$networkOverlayButton.containsMouse(mouseX, mouseY)) {
+            cir.setReturnValue(true);
+        }
     }
 }

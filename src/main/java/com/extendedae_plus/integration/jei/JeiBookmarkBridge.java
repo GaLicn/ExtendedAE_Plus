@@ -7,9 +7,9 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
+import mezz.jei.common.input.MouseUtil;
 import mezz.jei.gui.bookmarks.BookmarkList;
 import mezz.jei.gui.bookmarks.IngredientBookmark;
-import mezz.jei.gui.input.MouseUtil;
 import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * 将所有会引用 JEI GUI 内部类（如 BookmarkList、IngredientBookmark、IElement 等）的逻辑
@@ -253,7 +254,7 @@ public final class JeiBookmarkBridge {
             Object streamObj = owner.getClass()
                 .getMethod("getIngredientUnderMouse", double.class, double.class)
                 .invoke(owner, mouseX, mouseY);
-            if (streamObj instanceof java.util.stream.Stream<?> stream) {
+            if (streamObj instanceof Stream<?> stream) {
                 return Optional.ofNullable(stream.findFirst().orElse(null));
             }
         } catch (Throwable ignored) {

@@ -8,6 +8,9 @@ import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.runtime.IBookmarkOverlay;
 import mezz.jei.api.runtime.IIngredientListOverlay;
 import mezz.jei.api.runtime.IJeiRuntime;
+import mezz.jei.common.Internal;
+import mezz.jei.common.input.MouseUtil;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.ModList;
@@ -82,10 +85,7 @@ public final class JeiRuntimeProxy {
 
     public static Optional<ITypedIngredient<?>> getIngredientUnderMouse() {
         try {
-            Class<?> mouseUtil = Class.forName("mezz.jei.gui.input.MouseUtil");
-            double mouseX = ((Number) mouseUtil.getMethod("getX").invoke(null)).doubleValue();
-            double mouseY = ((Number) mouseUtil.getMethod("getY").invoke(null)).doubleValue();
-            return getIngredientUnderMouse(mouseX, mouseY);
+            return getIngredientUnderMouse(MouseUtil.getX(), MouseUtil.getY());
         } catch (Throwable ignored) {
         }
 
@@ -140,8 +140,7 @@ public final class JeiRuntimeProxy {
      */
     public static boolean isJeiCheatModeEnabled() {
         try {
-            // 使用完全限定名以避免在源码缺失时的编译依赖问题
-            return mezz.jei.common.Internal.getClientToggleState().isCheatItemsEnabled();
+            return Internal.getClientToggleState().isCheatItemsEnabled();
         } catch (Throwable t) {
             return false;
         }
@@ -176,7 +175,7 @@ public final class JeiRuntimeProxy {
             Object display = helper.getDisplayName(typed.getIngredient());
             if (display == null) return "";
             // 新版：net.minecraft.network.chat.Component
-            if (display instanceof net.minecraft.network.chat.Component comp) {
+            if (display instanceof Component comp) {
                 String s = comp.getString();
                 return s == null ? "" : s;
             }
