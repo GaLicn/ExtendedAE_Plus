@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0-f1]
+
+### Changed / 变更
+- 修改NeoEco模组可选依赖的加载时序为NONE
+  - Modify the loading timing of the optional dependencies of the NeoEco module to NONE
+
+
+  
 ## [1.6.4]
 
 ### Added / 新增

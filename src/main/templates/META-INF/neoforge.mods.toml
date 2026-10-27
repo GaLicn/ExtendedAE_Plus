@@ -106,7 +106,7 @@ side = "CLIENT"
 modId = "neoecoae"
 type = "optional"
 versionRange = "[21.2.0-beta1,)"
-ordering = "AFTER"
+ordering = "NONE"
 side = "BOTH"
 
 # FTB Teams is optional; when present, wireless networks are shared per team instead of per player.
