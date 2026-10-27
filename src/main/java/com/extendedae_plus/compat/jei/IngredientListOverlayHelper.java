@@ -10,7 +10,7 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.gui.overlay.elements.IElement;
-import net.minecraft.client.Minecraft;
+import mezz.jei.gui.overlay.ingredients.IngredientListSlot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.ModList;
@@ -22,7 +22,7 @@ public final class IngredientListOverlayHelper {
     private IngredientListOverlayHelper() {
     }
 
-    public static void render(GuiGraphics guiGraphics, List<?> slots) {
+    public static void render(GuiGraphics guiGraphics, List<IngredientListSlot> slots) {
         // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
         if (!NetworkStockOverlay.isEnabled()) {
             return;
@@ -31,20 +31,22 @@ public final class IngredientListOverlayHelper {
         IIngredientType<?> chemicalIngredientType = hasAppliedMekanistics()
                 ? AppliedMekanisticsCompat.getChemicalIngredientType()
                 : null;
-        for (Object rawSlot : slots) {
-            if (!(rawSlot instanceof IngredientListSlotAccessor slot)
-                    || slot.eap$isBlocked()
-                    || slot.eap$getOptionalElement().isEmpty()) {
+        for (IngredientListSlot slot : slots) {
+            if (slot.isBlocked()) {
                 continue;
             }
-            IElement<?> element = slot.eap$getOptionalElement().get();
+            // 当前 JEI 已公开槽位信息，直接读取以避免额外的版本适配 Mixin。
+            IElement<?> element = slot.getOptionalElement().orElse(null);
+            if (element == null) {
+                continue;
+            }
             var typedIngredient = element.getTypedIngredient();
             AEKey key = toKey(typedIngredient, chemicalIngredientType);
             if (key == null) {
                 continue;
             }
-            var area = slot.eap$getArea();
-            int padding = slot.eap$getPadding();
+            var area = slot.getArea();
+            int padding = slot.getPadding();
             NetworkStockOverlay.renderSlot(guiGraphics, key, area.getX() + padding, area.getY() + padding);
         }
     }

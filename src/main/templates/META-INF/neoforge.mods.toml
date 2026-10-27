@@ -89,11 +89,11 @@ versionRange = "*"
 ordering = "AFTER"
 side = "BOTH"
 
-# JEI integration is optional, but requires JEI 19.56.0 or newer when present.
+# JEI integration is optional, but requires JEI 19.70.0.460 or newer when present.
 [[dependencies.${ mod_id }]]
 modId = "jei"
 type = "optional"
-versionRange = "[19.56.0,)"
+versionRange = "[19.70.0.460,)"
 ordering = "AFTER"
 side = "CLIENT"
 

@@ -146,13 +146,10 @@
     "jei.BookmarkOverlayMixin",
     "jei.EncodePatternTransferHandlerMixin",
     "jei.EncodingHelperMixin",
-    "jei.LegacyIngredientListRendererMixin",
-    "jei.ModernIngredientListRendererMixin",
+    "jei.IngredientListRendererMixin",
     "jei.accessor.BookmarkOverlayAccessor",
     "jei.accessor.BookmarkListAccessor",
-    "jei.accessor.RecipeBookmarkAccessor",
-    "jei.accessor.LegacyIngredientListSlotMixin",
-    "jei.accessor.ModernIngredientListSlotMixin"
+    "jei.accessor.RecipeBookmarkAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
