@@ -104,7 +104,8 @@ public class ModNetwork {
         registrar.playToClient(ManualCraftingStatusS2CPacket.TYPE,
                 ManualCraftingStatusS2CPacket.STREAM_CODEC,
                 ManualCraftingStatusS2CPacket::handle);
-        registrar.playToClient(SyncNetworkInventoryS2CPacket.TYPE,
+        // 库存包增加连接状态，使用独立协议版本防止旧端按旧格式解码。
+        registrar.versioned("2").playToClient(SyncNetworkInventoryS2CPacket.TYPE,
                 SyncNetworkInventoryS2CPacket.STREAM_CODEC,
                 SyncNetworkInventoryS2CPacket::handle);
 

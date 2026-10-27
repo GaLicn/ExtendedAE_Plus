@@ -12,11 +12,12 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import java.util.ArrayList;
 import java.util.List;
 
-public record SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entries) implements CustomPacketPayload {
+public record SyncNetworkInventoryS2CPacket(boolean connected, boolean fullUpdate, List<Entry> entries) implements CustomPacketPayload {
     public static final Type<SyncNetworkInventoryS2CPacket> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(ExtendedAEPlus.MODID, "sync_network_inventory"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncNetworkInventoryS2CPacket> STREAM_CODEC = StreamCodec.of(
             (buf, packet) -> {
+                buf.writeBoolean(packet.connected);
                 buf.writeBoolean(packet.fullUpdate);
                 buf.writeVarInt(packet.entries.size());
                 for (Entry entry : packet.entries) {
@@ -30,6 +31,7 @@ public record SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entr
                 }
             },
             buf -> {
+                boolean connected = buf.readBoolean();
                 boolean fullUpdate = buf.readBoolean();
                 int size = buf.readVarInt();
                 List<Entry> entries = new ArrayList<>(size);
@@ -38,7 +40,7 @@ public record SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entr
                     AEKey key = buf.readBoolean() ? AEKey.readKey(buf) : null;
                     entries.add(new Entry(serial, key, buf.readVarLong(), buf.readBoolean()));
                 }
-                return new SyncNetworkInventoryS2CPacket(fullUpdate, entries);
+                return new SyncNetworkInventoryS2CPacket(connected, fullUpdate, entries);
             });
 
     @Override
@@ -47,7 +49,14 @@ public record SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entr
     }
 
     public static void handle(SyncNetworkInventoryS2CPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> NetworkItemCache.INSTANCE.handleUpdate(packet.fullUpdate, packet.entries));
+        context.enqueueWork(() -> {
+            if (packet.connected) {
+                NetworkItemCache.INSTANCE.handleUpdate(packet.fullUpdate, packet.entries);
+            } else {
+                // 断连独立于空库存，避免 Jade 在没有网络时仍显示库存 0。
+                NetworkItemCache.INSTANCE.clear();
+            }
+        });
     }
 
     public record Entry(long serial, AEKey key, long amount, boolean craftable) {

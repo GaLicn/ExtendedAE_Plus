@@ -135,18 +135,19 @@ public final class JeiSyncManager {
     private static void sendEntries(ServerPlayer player, boolean fullUpdate, List<SyncNetworkInventoryS2CPacket.Entry> entries) {
         if (entries.isEmpty()) {
             if (fullUpdate) {
-                sendClear(player);
+                // 空网络仍保持连接，与终端断连的清空通知区分。
+                PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(true, true, List.of()));
             }
             return;
         }
         for (int start = 0; start < entries.size(); start += MAX_ENTRIES_PER_PACKET) {
             int end = Math.min(start + MAX_ENTRIES_PER_PACKET, entries.size());
-            PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(fullUpdate && start == 0, List.copyOf(entries.subList(start, end))));
+            PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(true, fullUpdate && start == 0, List.copyOf(entries.subList(start, end))));
         }
     }
 
     private static void sendClear(ServerPlayer player) {
-        PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(true, List.of()));
+        PacketDistributor.sendToPlayer(player, new SyncNetworkInventoryS2CPacket(false, true, List.of()));
     }
 
     private static final class PlayerSyncState {

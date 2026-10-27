@@ -250,6 +250,7 @@
   "gui.extendedae_plus.tag_inventory_me_interface.hint": "支持 & | ^ ! ( ) 和 * 通配",
   "gui.extendedae_plus.tag_inventory_me_interface.save": "保存",
 
+  "extendedae_plus.jade.ae2_stock": "AE2库存: %s",
   "extendedae_plus.jade.label": "标签: %s",
   "extendedae_plus.jade.owner": "所有者: %s",
   "extendedae_plus.jade.owner.public": "所有者: 公共",
