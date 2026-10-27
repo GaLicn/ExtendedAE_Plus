@@ -1,5 +1,69 @@
 # Changelog
 
+## [1.6.4]
+
+### Added / 新增
+- Jade 提示框新增 AE2 网络库存显示
+  - Added AE2 network stock display to Jade tooltips.
+- EMI 物品列表新增 AE2 网络库存叠加显示与开关按钮
+  - Added AE2 network stock overlays and a toggle button to the EMI ingredient list.
+- 新增世界方块强制下单功能，可通过 Shift+鼠标中键对准方块发起合成请求
+  - Added forced crafting requests for targeted world blocks with Shift+middle-click.
+- 新增 NeoECOAE 样板上传支持，可配置优先上传至装配矩阵或 ECO，优先目标拒绝时自动尝试另一目标
+  - Added NeoECOAE pattern upload support with configurable Matrix/ECO priority and fallback when the preferred target rejects the upload.
+- 样板上传新增目标供应器重复检测，忽略编码作者差异，避免重复上传并回收重复样板
+  - Added duplicate pattern detection for target providers, ignoring encoder differences and returning duplicate patterns instead of uploading them.
+
+### Changed / 变更
+- 将 JEI 最低版本要求调整为 19.70.0.460
+  - Raised the minimum required JEI version to 19.70.0.460.
+- 更新能源核心、量子核心、存储核心、空间核心与吞噬核心的贴图，并调整相关注册
+  - Updated the textures of the Energy, Quantum, Storage, Spatial, and Devouring Cores, along with related registrations.
+- 重构样板上传工具，拆分供应器上传、配方类型映射与装配矩阵上传职责，并清理未使用代码
+  - Refactored pattern upload utilities into provider uploads, recipe-type mappings, and matrix uploads, removing unused code.
+- 重构 AE2、ExtendedAE、AdvancedAE、JEI、拼音搜索与 FTB Teams 等兼容逻辑，以访问器、直接引用或兼容桥接替代运行时反射
+  - Refactored compatibility with AE2, ExtendedAE, AdvancedAE, JEI, pinyin search, and FTB Teams to replace runtime reflection with accessors, direct references, or compatibility bridges.
+- 全局翻倍限制保存失败时不再吞掉异常
+  - Failures when saving global multiplier limits are no longer silently suppressed.
+
+### Fixed / 修复
+- 修复 JEI / EMI 中 Mekanism 化学品无法通过鼠标中键下单的问题，并补齐 JEI 化学品的 Shift+左键交互
+  - Fixed middle-click crafting requests for Mekanism chemicals in JEI / EMI and restored Shift+left-click interactions for chemicals in JEI.
+- 修复 EMI 流体数量换算错误，并改用 AE2 官方转换器处理化学品
+  - Fixed incorrect fluid quantity conversion in EMI and switched chemical handling to AE2's official converters.
+- 修复物品数据组件存在差异时，JEI / EMI 可合成标记缺失及中键下单无响应的问题
+  - Fixed missing craftability indicators and unresponsive middle-click crafting requests in JEI / EMI when item data components differ.
+- 修复 TMRV 环境下误访问 JEI 实现类的兼容问题，并统一可选模组检测逻辑
+  - Fixed compatibility issues caused by accessing JEI implementation classes under TMRV and unified optional-mod detection.
+- 修复 JEI 书签栏按钮的点击处理，以及 EMI 按钮未绘制时仍拦截点击的问题
+  - Fixed click handling for JEI bookmark buttons and EMI buttons intercepting clicks while not rendered.
+- 修复 EMI 中 Ctrl+Q 错误作用于背包槽位物品的问题
+  - Fixed Ctrl+Q incorrectly affecting inventory-slot items in EMI.
+- 修复唯一直传可能将样板上传到错误供应器的问题，并清理命中后的搜索词，避免后续样板误传
+  - Fixed automatic uploads with a unique match targeting the wrong provider and cleared the search after a match to prevent subsequent misdirected uploads.
+- 修复通过超级装配矩阵上传的合成样板无法正确撤回的问题
+  - Fixed undo support for crafting patterns uploaded through the Super Assembler Matrix.
+- 修复配方类型路径同名时映射到错误供应器的问题，发生冲突时使用包含命名空间的完整 ID，并在映射列表中标记冲突
+  - Fixed recipe types with identical paths mapping to the wrong providers; conflicts now use full namespaced IDs and are marked in the mapping list.
+- 修复重新进入世界后虚拟合成卡失效的问题，并完善 ECO 与虚拟合成卡的兼容
+  - Fixed Virtual Crafting Cards becoming inactive after rejoining a world and improved their compatibility with ECO.
+- 修复超级装配矩阵合成任务读档后丢失供应器与智能倍增倍率的问题，兼容 AE2 与 AdvancedAE 合成任务
+  - Fixed Super Assembler Matrix crafting jobs losing providers and smart-scaling multipliers after loading, including AE2 and AdvancedAE jobs.
+- 修复带返还物或输出即输入的样板参与批量发配时可能卡死的问题
+  - Fixed crafting stalls caused by batch dispatching patterns with returned ingredients or outputs that also serve as inputs.
+- 修复超级矩阵样板能量注入在其他模组覆盖合成执行方法时引发的 VerifyError 崩溃
+  - Fixed a VerifyError crash in Super Matrix pattern energy injection when another mod overwrites the crafting execution method.
+- 修复频道卡切换维度时泄漏客户端世界的问题，并修正辅助方法的 Mixin 隔离声明
+  - Fixed Channel Cards retaining client worlds after dimension changes and corrected Mixin isolation for helper methods.
+- 补齐 JEI 网络库存叠加配置、ECO 上传配置的翻译与 ECO 上传成功提示
+  - Added missing translations for JEI network stock overlay settings, ECO upload settings, and ECO upload success messages.
+
+### Removed / 移除
+- 移除实体加速器及其加速卡的全部功能
+  - Removed all Entity Accelerator and Entity Acceleration Card functionality.
+- 移除 AE2CS 自装配式供应器基于类名识别的矩阵直传适配
+  - Removed class-name-based direct matrix upload compatibility for AE2CS self-assembling providers.
+
 ## [1.6.3]
 
 ### Added / 新增
