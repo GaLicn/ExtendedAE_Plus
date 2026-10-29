@@ -136,14 +136,16 @@ public class JeiSyncManager {
         }
 
         if (entries.isEmpty() && fullUpdate) {
-            sendClear(sp);
+            // 空网络仍保持连接，与终端断连的清空通知区分。
+            var packet = new SyncNetworkInventoryS2CPacket(true, true, Collections.emptyList());
+            ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), packet);
         } else if (!entries.isEmpty()) {
             // Send in chunks if too large
             for (int i = 0; i < entries.size(); i += MAX_ENTRIES_PER_PACKET) {
                 int end = Math.min(i + MAX_ENTRIES_PER_PACKET, entries.size());
                 List<SyncNetworkInventoryS2CPacket.Entry> chunk = entries.subList(i, end);
                 boolean isFirst = (i == 0);
-                var packet = new SyncNetworkInventoryS2CPacket(fullUpdate && isFirst, chunk);
+                var packet = new SyncNetworkInventoryS2CPacket(true, fullUpdate && isFirst, chunk);
                 ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), packet);
             }
         }
@@ -158,7 +160,7 @@ public class JeiSyncManager {
     }
 
     private static void sendClear(ServerPlayer sp) {
-        var packet = new SyncNetworkInventoryS2CPacket(true, Collections.emptyList());
+        var packet = new SyncNetworkInventoryS2CPacket(false, true, Collections.emptyList());
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), packet);
     }
 

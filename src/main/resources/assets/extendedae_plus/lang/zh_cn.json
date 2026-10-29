@@ -306,6 +306,7 @@
   "extendedae_plus.jade.unlocked": "未锁定",
   "extendedae_plus.jade.online": "设备在线",
   "extendedae_plus.jade.offline": "设备离线",
+  "extendedae_plus.jade.ae2_stock": "AE2库存: %s",
   "extendedae_plus.jade.label": "标签: %s",
   "extendedae_plus.jade.channels": "频道: %s",
   "extendedae_plus.jade.channels_of": "频道: %s/%s",

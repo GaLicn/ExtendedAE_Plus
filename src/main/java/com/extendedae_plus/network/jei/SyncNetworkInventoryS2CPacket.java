@@ -10,15 +10,18 @@ import java.util.function.Supplier;
 
 public class SyncNetworkInventoryS2CPacket {
 
+    private final boolean connected;
     private final boolean fullUpdate;
     private final List<Entry> entries;
 
-    public SyncNetworkInventoryS2CPacket(boolean fullUpdate, List<Entry> entries) {
+    public SyncNetworkInventoryS2CPacket(boolean connected, boolean fullUpdate, List<Entry> entries) {
+        this.connected = connected;
         this.fullUpdate = fullUpdate;
         this.entries = entries;
     }
 
     public static void encode(SyncNetworkInventoryS2CPacket msg, FriendlyByteBuf buf) {
+        buf.writeBoolean(msg.connected);
         buf.writeBoolean(msg.fullUpdate);
         buf.writeVarInt(msg.entries.size());
         for (var entry : msg.entries) {
@@ -34,6 +37,7 @@ public class SyncNetworkInventoryS2CPacket {
     }
 
     public static SyncNetworkInventoryS2CPacket decode(FriendlyByteBuf buf) {
+        boolean connected = buf.readBoolean();
         boolean fullUpdate = buf.readBoolean();
         int size = buf.readVarInt();
         List<Entry> entries = new ArrayList<>(size);
@@ -47,14 +51,23 @@ public class SyncNetworkInventoryS2CPacket {
             boolean craftable = buf.readBoolean();
             entries.add(new Entry(serial, what, amount, craftable));
         }
-        return new SyncNetworkInventoryS2CPacket(fullUpdate, entries);
+        return new SyncNetworkInventoryS2CPacket(connected, fullUpdate, entries);
     }
 
     public static void handle(SyncNetworkInventoryS2CPacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            com.extendedae_plus.client.jei.NetworkItemCache.INSTANCE.handleUpdate(msg.fullUpdate, msg.entries);
+            if (msg.connected) {
+                com.extendedae_plus.client.jei.NetworkItemCache.INSTANCE.handleUpdate(msg.fullUpdate, msg.entries);
+            } else {
+                // 断连独立于空库存，避免 Jade 在没有网络时仍显示库存 0。
+                com.extendedae_plus.client.jei.NetworkItemCache.INSTANCE.clear();
+            }
         });
         ctx.get().setPacketHandled(true);
+    }
+
+    public boolean isConnected() {
+        return connected;
     }
 
     public boolean isFullUpdate() {

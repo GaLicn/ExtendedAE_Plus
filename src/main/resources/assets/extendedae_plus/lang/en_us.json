@@ -307,6 +307,7 @@
   "extendedae_plus.jade.unlocked": "Unlocked",
   "extendedae_plus.jade.online": "Device Online",
   "extendedae_plus.jade.offline": "Device Offline",
+  "extendedae_plus.jade.ae2_stock": "AE2 Stock: %s",
   "extendedae_plus.jade.label": "Label: %s",
   "extendedae_plus.jade.channels": "Channels: %s",
   "extendedae_plus.jade.channels_of": "Channels: %s/%s",
