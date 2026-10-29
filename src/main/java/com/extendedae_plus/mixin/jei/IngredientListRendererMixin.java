@@ -3,6 +3,8 @@ package com.extendedae_plus.mixin.jei;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.NetworkStockOverlay;
 import mezz.jei.api.constants.VanillaTypes;
@@ -19,9 +21,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
@@ -32,8 +31,10 @@ public class IngredientListRendererMixin {
     @Final
     private List<IngredientListSlot> slots;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo ci) {
+    @WrapMethod(method = "render")
+    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, Operation<Void> original) {
+        // 新版 JEI 在 render 尾部复用 this 的局部变量槽，包装调用可保留有效的实例引用。
+        original.call(guiGraphics);
         // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
         if (!NetworkStockOverlay.isEnabled()) return;
 

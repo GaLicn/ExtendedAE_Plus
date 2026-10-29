@@ -44,7 +44,7 @@ side = "BOTH"
 [[dependencies.extendedae_plus]]
 modId = "jei"
 mandatory = false
-versionRange = "[15.74.0.229,)"
+versionRange = "[15.74.0.232,)"
 ordering = "AFTER"
 side = "CLIENT"
 

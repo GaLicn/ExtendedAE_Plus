@@ -1,6 +1,8 @@
 package com.extendedae_plus.mixin.jei;
 
 import com.extendedae_plus.client.jei.JeiNetworkOverlayButton;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import mezz.jei.api.gui.handlers.IGuiProperties;
 import mezz.jei.common.input.IInputTarget;
 import mezz.jei.common.input.handlers.InputGroup;
@@ -40,12 +42,14 @@ public abstract class BookmarkOverlayMixin {
         this.eap$networkOverlayButton = new JeiNetworkOverlayButton();
     }
 
-    @Inject(method = "updateBounds", at = @At("TAIL"))
+    @WrapMethod(method = "updateBounds")
     private void eap$updateNetworkOverlayButtonBounds(
             IGuiProperties guiProperties,
             Set<ImmutableRect2i> guiExclusionAreas,
-            CallbackInfo ci
+            Operation<Void> original
     ) {
+        // JEI 优化后的布局方法也会复用 this 槽，包装后再访问按钮实例。
+        original.call(guiProperties, guiExclusionAreas);
         // 跟随 JEI 实际布局，历史按钮没有空间显示时也隐藏新按钮。
         ImmutableRect2i historyArea = this.historyButton.getArea();
         this.eap$networkOverlayButton.updateBounds(historyArea.isEmpty()
@@ -53,46 +57,44 @@ public abstract class BookmarkOverlayMixin {
                 : historyArea.moveRight(22));
     }
 
-    @Inject(method = "drawForeground", at = @At("HEAD"))
-    private void eap$beginNetworkOverlayButtonFrame(CallbackInfo ci) {
-        // 每帧先清除可见状态，防止按钮在 JEI 不显示的界面响应旧坐标。
-        this.eap$networkOverlayButton.beginFrame();
-    }
-
-    @Inject(method = "drawForeground", at = @At("TAIL"))
+    @WrapMethod(method = "drawForeground")
     private void eap$drawNetworkOverlayButton(
             Minecraft minecraft,
             GuiGraphics guiGraphics,
             int mouseX,
             int mouseY,
             float partialTicks,
-            CallbackInfo ci
+            Operation<Void> original
     ) {
+        // JEI 在有效界面分支提前返回，包装调用可保证原绘制结束后仍绘制新增按钮。
+        this.eap$networkOverlayButton.beginFrame();
+        original.call(minecraft, guiGraphics, mouseX, mouseY, partialTicks);
         if (this.guiPropertiesCache.hasValidScreen()) {
             this.eap$networkOverlayButton.draw(guiGraphics);
         }
     }
 
-    @Inject(method = "drawTooltips", at = @At("TAIL"))
+    @WrapMethod(method = "drawTooltips")
     private void eap$drawNetworkOverlayButtonTooltip(
             Minecraft minecraft,
             GuiGraphics guiGraphics,
             int mouseX,
             int mouseY,
-            CallbackInfo ci
+            Operation<Void> original
     ) {
+        original.call(minecraft, guiGraphics, mouseX, mouseY);
         if (this.guiPropertiesCache.hasValidScreen()) {
             this.eap$networkOverlayButton.drawTooltip(guiGraphics, mouseX, mouseY);
         }
     }
 
-    @Inject(method = "createInputHandler", at = @At("RETURN"), cancellable = true)
-    private void eap$appendNetworkOverlayButtonInput(CallbackInfoReturnable<IInputTarget> cir) {
-        cir.setReturnValue(new InputGroup(
+    @WrapMethod(method = "createInputHandler")
+    private IInputTarget eap$appendNetworkOverlayButtonInput(Operation<IInputTarget> original) {
+        return new InputGroup(
                 "ExtendedAEPlusNetworkOverlayButton",
                 this.eap$networkOverlayButton,
-                cir.getReturnValue()
-        ));
+                original.call()
+        );
     }
 
     @Inject(method = "containsMouse", at = @At("RETURN"), cancellable = true)

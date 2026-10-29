@@ -37,6 +37,21 @@ import java.util.Optional;
 public class RecipeFinderUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger("ExtendedAE Plus - RecipeFinder");
 
+    /** 根据新版配方书签的准确分类和配方创建布局，保留其实际槽位与数量。 */
+    public static <R> RecipeInfo getRecipeInfo(IRecipeCategory<R> category, R recipe) {
+        IJeiRuntime runtime = JeiRuntimeProxy.get();
+        if (runtime == null || !(recipe instanceof Recipe<?> minecraftRecipe)) return null;
+        try {
+            return runtime.getRecipeManager()
+                    .createRecipeLayoutDrawable(category, recipe, runtime.getJeiHelpers().getFocusFactory().getEmptyFocusGroup())
+                    .map(layout -> extractRecipeInfo(minecraftRecipe, layout, category.getRecipeType().equals(RecipeTypes.CRAFTING)))
+                    .orElse(null);
+        } catch (RuntimeException error) {
+            LOGGER.warn("读取 JEI 书签配方布局失败：{}", minecraftRecipe.getId(), error);
+            return null;
+        }
+    }
+
     /**
      * 根据JEI物品或流体查找相关配方（仅搜索以该物品/流体为输出的配方）
      *
@@ -124,7 +139,7 @@ public class RecipeFinderUtil {
                             }
                         });
                 } catch (Exception e) {
-                    // 某些配方类型可能不支持，静默忽略
+                    LOGGER.debug("读取 JEI 配方分类失败：{}", recipeType.getUid(), e);
                 }
             });
         } catch (Exception e) {

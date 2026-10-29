@@ -40,7 +40,6 @@
     "jei.BookmarkOverlayMixin",
     "jei.EncodingHelperMixin",
     "jei.IngredientListRendererMixin",
-    "jei.accessor.BookmarkOverlayAccessor",
     "minecraft.ModelBakeryMixin",
     "minecraft.PickFromWirelessMixin",
     "minecraft.accessor.AbstractContainerScreenAccessor",
