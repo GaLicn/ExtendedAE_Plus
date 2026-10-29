@@ -8,6 +8,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.gtlcore.gtlcore.integration.ae2.crafting.transfinite.TransfiniteCraftingLogic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
@@ -17,16 +18,19 @@ import org.spongepowered.asm.mixin.injection.At;
         priority = 4000, remap = false)
 public abstract class TransfiniteCraftingSmartDoublingCompatMixin {
 
-    private static final String GET_PROVIDERS =
+    @Unique private static final String GET_PROVIDERS =
             "Lappeng/me/service/CraftingService;getProviders(Lappeng/api/crafting/IPatternDetails;)"
                     + "Ljava/lang/Iterable;";
 
+    /**
+     * 不带描述符，只按方法名匹配：fix6 及更早的签名末尾多一个
+     * CraftingDispatchPerformanceLogger.Metrics 参数，fix7 起该参数被移除，
+     * 写死描述符会让注解处理器在另一个版本上报找不到目标方法。
+     */
+    @Unique private static final String EXECUTE_CRAFTING = "executeCrafting";
+
     @WrapOperation(
-            method = "executeCrafting(JLappeng/me/service/CraftingService;"
-                    + "Lappeng/api/networking/energy/IEnergyService;"
-                    + "Lnet/minecraft/world/level/Level;"
-                    + "Lorg/gtlcore/gtlcore/integration/ae2/crafting/"
-                    + "CraftingDispatchPerformanceLogger$Metrics;)J",
+            method = EXECUTE_CRAFTING,
             at = @At(value = "INVOKE", target = GET_PROVIDERS, remap = false),
             require = 0
     )
