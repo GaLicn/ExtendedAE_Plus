@@ -3,19 +3,16 @@ package com.extendedae_plus.mixin.jei;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
-import appeng.api.stacks.AmountFormat;
-import com.extendedae_plus.client.jei.NetworkItemCache;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
-import com.extendedae_plus.config.ModConfig;
-import com.extendedae_plus.util.GuiUtil;
-import com.extendedae_plus.util.NumberFormatUtil;
+import com.extendedae_plus.compat.NetworkStockOverlay;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.forge.ForgeTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.gui.overlay.elements.IElement;
 import mezz.jei.gui.overlay.ingredients.IngredientListRenderer;
 import mezz.jei.gui.overlay.ingredients.IngredientListSlot;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -24,9 +21,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
@@ -37,11 +31,12 @@ public class IngredientListRendererMixin {
     @Final
     private List<IngredientListSlot> slots;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, CallbackInfo ci) {
+    @WrapMethod(method = "render")
+    private void eap$renderNetworkOverlay(GuiGraphics guiGraphics, Operation<Void> original) {
+        // 新版 JEI 在 render 尾部复用 this 的局部变量槽，包装调用可保留有效的实例引用。
+        original.call(guiGraphics);
         // 关闭显示时不再扫描 JEI 槽位，避免产生无意义的逐帧开销。
-        if (!ModConfig.INSTANCE.jeiNetworkOverlayEnabled
-                || !NetworkItemCache.INSTANCE.isConnected()) return;
+        if (!NetworkStockOverlay.isEnabled()) return;
 
         for (IngredientListSlot slot : this.slots) {
             if (slot.isBlocked()) continue;
@@ -55,24 +50,9 @@ public class IngredientListRendererMixin {
             AEKey key = eap$toKey(typed);
             if (key == null) continue;
 
-            long amount = NetworkItemCache.INSTANCE.getAmount(key);
-            boolean craftable = NetworkItemCache.INSTANCE.isCraftable(key);
-
-            if (amount <= 0 && !craftable) continue;
-
             var area = slot.getArea();
             int padding = slot.getPadding();
-            int x = area.getX() + padding;
-            int y = area.getY() + padding;
-            var font = Minecraft.getInstance().font;
-            if (amount > 0) {
-                GuiUtil.drawAmountText(guiGraphics, font, eap$formatAmount(key, amount), x, y);
-                if (craftable) {
-                    eap$renderCraftableMarker(guiGraphics, x, y);
-                }
-            } else {
-                GuiUtil.drawAmountText(guiGraphics, font, "+", x, y);
-            }
+            NetworkStockOverlay.renderSlot(guiGraphics, key, area.getX() + padding, area.getY() + padding);
         }
     }
 
@@ -96,26 +76,4 @@ public class IngredientListRendererMixin {
         return null;
     }
 
-    @Unique
-    private static String eap$formatAmount(AEKey key, long amount) {
-        if (key.getAmountPerUnit() <= 1) {
-            return NumberFormatUtil.formatNumber(amount);
-        }
-
-        String result = key.formatAmount(amount, AmountFormat.SLOT);
-        String unit = key.getUnitSymbol();
-        return unit == null || unit.isEmpty() ? result : result + unit;
-    }
-
-    @Unique
-    private static void eap$renderCraftableMarker(GuiGraphics guiGraphics, int slotX, int slotY) {
-        var poseStack = guiGraphics.pose();
-        poseStack.pushPose();
-        poseStack.translate(0, 0, 200);
-        float scaleFactor = 0.5f;
-        poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        guiGraphics.drawString(Minecraft.getInstance().font, "+", (int) ((slotX + 1) / scaleFactor),
-                (int) ((slotY + 1) / scaleFactor), 0xFFFFFF, true);
-        poseStack.popPose();
-    }
 }

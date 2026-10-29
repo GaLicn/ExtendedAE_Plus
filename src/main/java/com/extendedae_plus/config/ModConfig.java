@@ -1,6 +1,8 @@
 package com.extendedae_plus.config;
 
 import com.extendedae_plus.ExtendedAEPlus;
+import com.extendedae_plus.util.entitySpeed.ConfigParsingUtils;
+import com.extendedae_plus.util.entitySpeed.PowerUtils;
 import dev.toma.configuration.Configuration;
 import dev.toma.configuration.config.Config;
 import dev.toma.configuration.config.ConfigHolder;
@@ -21,11 +23,15 @@ public final class ModConfig {
             if (INSTANCE == null) {
                 configHolder = Configuration.registerConfig(ModConfig.class, ConfigFormats.yaml());
                 INSTANCE = configHolder.getConfigInstance();
+                // 配置文件加载完成后建立与当前参数一致的实体加速缓存。
+                ConfigParsingUtils.reload();
+                PowerUtils.initializeCaches();
             }
         }
     }
 
     /** Updates and immediately saves a client-only UI preference. */
+    @SuppressWarnings("unchecked")
     public static void setExtendedPatternProviderShowScalingControls(boolean visible) {
         synchronized (lock) {
             if (INSTANCE == null || configHolder == null) {
@@ -34,7 +40,6 @@ public final class ModConfig {
             // 立即反映到内存实例，避免反射失败时字段与 UI 状态不一致。
             INSTANCE.extendedPatternProviderShowScalingControls = visible;
 
-            @SuppressWarnings("unchecked")
             ConfigValue<Boolean> value = (ConfigValue<Boolean>) configHolder.getValueMap()
                     .get("extendedPatternProviderShowScalingControls");
             if (value != null) {
@@ -120,8 +125,8 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
-            "JEI 中是否显示 AE2 网络库存与可合成状态",
-            "可通过 JEI 左下角按钮即时切换"
+            "JEI / EMI 中是否显示 AE2 网络库存与可合成状态",
+            "可通过 JEI / EMI 左下角按钮即时切换"
     })
     public boolean jeiNetworkOverlayEnabled = true;
 
@@ -140,4 +145,35 @@ public final class ModConfig {
     })
     public boolean uniqueProviderAutoUploadEnable = true;
 
-    }
+    @Configurable
+    @Configurable.Comment(value = {
+            "实体加速器能量消耗基础值"
+    })
+    @Configurable.Range(min = 0, max = Integer.MAX_VALUE)
+    @Configurable.Synchronized
+    public int entityTickerCost = 512;
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "是否优先从磁盘提取FE能量（仅当Applied Flux模组存在时生效）",
+            "开启后，将优先尝试从磁盘提取FE能量；反之优先消耗AE网络中的能量"
+    })
+    @Configurable.Synchronized
+    public boolean prioritizeDiskEnergy = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "实体加速器黑名单：匹配的方块将不会被加速。支持通配符/正则（例如：minecraft:*）",
+            "格式：全名或通配符/正则字符串，例如 'minecraft:chest'、'minecraft:*'、'modid:.*_fluid'"
+    })
+    @Configurable.Synchronized
+    public String[] entityTickerBlackList = {};
+
+    @Configurable
+    @Configurable.Comment(value = {
+            "额外消耗倍率配置：为某些方块设置额外能量倍率，格式 'modid:blockid multiplier'，例如 'minecraft:chest 2x'",
+            "支持通配符/正则匹配（例如 'minecraft:* 2x' 会对整个命名空间生效）。"
+    })
+    @Configurable.Synchronized
+    public String[] entityTickerMultipliers = {};
+}

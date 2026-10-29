@@ -5,6 +5,8 @@
   "minVersion": "0.8",
   "client": [
     "emi.BoMScreenMixin",
+    "emi.EmiScreenManagerScreenSpaceMixin",
+    "emi.EmiHeaderButtonMixin",
     "advancedae.client.gui.AdvPatternProviderScreenMixin",
     "advancedae.client.gui.AdvPatternProviderScreenUpgradesMixin",
     "advancedae.client.gui.SmallAdvPatternProviderScreenMixin",
@@ -38,7 +40,6 @@
     "jei.BookmarkOverlayMixin",
     "jei.EncodingHelperMixin",
     "jei.IngredientListRendererMixin",
-    "jei.accessor.BookmarkOverlayAccessor",
     "minecraft.ModelBakeryMixin",
     "minecraft.PickFromWirelessMixin",
     "minecraft.accessor.AbstractContainerScreenAccessor",
@@ -98,7 +99,7 @@
     "ae2.helpers.patternprovider.PatternProviderLogicDoublingMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicSyncVersionMixin",
     "ae2.helpers.patternprovider.PatternProviderLogicTickerMixin",
-    
+    "ae2.items.MemoryCardItemMixin",
     "ae2.crafting.CraftingCpuLogicManualWaitingMixin",
     "ae2.menu.CraftConfirmMenuForceStartMixin",
     "ae2.menu.CraftingCPUMenuManualStatusMixin",

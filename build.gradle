@@ -120,7 +120,10 @@ dependencies {
     modRuntimeOnly "curse.maven:advancedae-1084104:6939473"
 
     // JEI 是可选兼容：仅在开发编译和运行测试环境提供，不作为硬依赖打入模组
-    modCompileOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+    // 完整包已包含内部模块，禁止将传递的注解库作为模组重映射，避免 Forge 扫描 Multi-Release JAR 崩溃。
+    modCompileOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}") {
+        transitive = false
+    }
     // EMI 同为可选兼容：编译期 API + 运行期按 use_Xei 开关注入
     modCompileOnly "dev.emi:emi-forge:${emi_version}"
 
@@ -130,12 +133,25 @@ dependencies {
             modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
             break
         case 'jei':
-            modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+            modRuntimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}") {
+                transitive = false
+            }
+            // Loom 会移除 JEI 的嵌套 JAR，开发运行时显式加载其配置模组。
+            modRuntimeOnly("net.mezzdev.config:mezz_config-${minecraft_version}-forge:0.6.6") {
+                transitive = false
+            }
+            forgeRuntimeLibrary "net.mezzdev:deduplicating-runner:0.1.0"
             break
         case 'emi_jei':
             // EMI + JEI
             modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
-            modRuntimeOnly "mezz.jei:jei-${minecraft_version}-forge:${jei_version}"
+            modRuntimeOnly("mezz.jei:jei-${minecraft_version}-forge:${jei_version}") {
+                transitive = false
+            }
+            modRuntimeOnly("net.mezzdev.config:mezz_config-${minecraft_version}-forge:0.6.6") {
+                transitive = false
+            }
+            forgeRuntimeLibrary "net.mezzdev:deduplicating-runner:0.1.0"
             break
     }
     modImplementation "curse.maven:jade-324717:${jade_version}"

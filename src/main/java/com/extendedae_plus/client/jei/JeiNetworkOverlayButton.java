@@ -3,10 +3,12 @@ package com.extendedae_plus.client.jei;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.config.ModConfig;
 import com.mojang.blaze3d.platform.InputConstants;
+import mezz.jei.common.input.IInputTarget;
 import mezz.jei.common.input.IInternalKeyMappings;
+import mezz.jei.common.input.UserInput;
+import mezz.jei.common.input.interaction.IInputInteraction;
+import mezz.jei.common.input.interaction.InputAction;
 import mezz.jei.common.util.ImmutableRect2i;
-import mezz.jei.gui.input.IUserInputHandler;
-import mezz.jei.gui.input.UserInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,7 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import java.util.Optional;
 import java.util.List;
 
-public final class JeiNetworkOverlayButton implements IUserInputHandler {
+public final class JeiNetworkOverlayButton implements IInputTarget {
     private static final int BUTTON_SIZE = 20;
     private static final ResourceLocation ENABLED_TEXTURE =
             new ResourceLocation(ExtendedAEPlus.MODID, "textures/gui/show_ae2_inventory_on.png");
@@ -68,24 +70,26 @@ public final class JeiNetworkOverlayButton implements IUserInputHandler {
         this.visible = false;
     }
 
+    public boolean containsMouse(double mouseX, double mouseY) {
+        return this.visible && this.area.contains(mouseX, mouseY);
+    }
+
     @Override
-    public Optional<IUserInputHandler> handleUserInput(
+    public Optional<IInputInteraction> beginInput(
             Screen screen,
             UserInput input,
             IInternalKeyMappings keyBindings
     ) {
         if (input.getKey().getType() != InputConstants.Type.MOUSE
                 || input.getKey().getValue() != 0
-                || !this.visible
-                || !this.area.contains(input.getMouseX(), input.getMouseY())) {
+                || !containsMouse(input.getMouseX(), input.getMouseY())) {
             return Optional.empty();
         }
-        if (!input.isSimulate()) {
-            // JEI 会先模拟输入，只有实际点击阶段才切换并播放声音。
+        // 新版 JEI 在松开鼠标时完成交互，移出按钮或关闭界面时不切换。
+        return Optional.of(InputAction.run(() -> {
             ModConfig.INSTANCE.jeiNetworkOverlayEnabled = !ModConfig.INSTANCE.jeiNetworkOverlayEnabled;
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-        }
-        return Optional.of(this);
+        }).within(this::containsMouse));
     }
 }
