@@ -5,14 +5,26 @@ import appeng.api.inventories.InternalInventory;
 import appeng.core.definitions.AEItems;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.energy.IEnergyService;
 import appeng.api.networking.security.IActionHost;
+import appeng.api.stacks.AEItemKey;
+import appeng.api.storage.MEStorage;
+import appeng.api.storage.StorageHelper;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.api.upgrades.IUpgradeableObject;
+import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
+import appeng.me.helpers.PlayerSource;
 import appeng.menu.implementations.PatternAccessTermMenu;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.me.items.PatternEncodingTermMenu;
 import appeng.parts.AEBasePart;
 import appeng.util.inv.filter.IAEItemFilter;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
+import com.extendedae_plus.compat.UpgradeSlotCompat;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
@@ -211,22 +223,24 @@ public final class ProviderUploadUtil {
             return false;
         }
 
-        // 6. 使用AE2的标准样板过滤器进行插入
+        // 6. 使用AE2的标准样板过滤器进行插入；槽满时尝试从网络取扩容卡再写入
         var patternFilter = new ExtendedAEPatternFilter();
-        ItemStack[] before = snapshotInventory(patternInventory);
         ItemStack itemToInsert = playerItem.copy();
-        ItemStack remaining = insertIntoAccessiblePatternSlots(patternContainer, itemToInsert, patternFilter);
+        ExpansionInsertResult result = insertWithExpansion(player, resolveGrid(menu),
+                patternContainer, itemToInsert, patternFilter);
 
-        if (remaining.getCount() < itemToInsert.getCount()) {
+        if (result.remain().getCount() < itemToInsert.getCount()) {
             // 插入成功（部分或全部）
-            int insertedCount = itemToInsert.getCount() - remaining.getCount();
+            int insertedCount = itemToInsert.getCount() - result.remain().getCount();
             playerItem.shrink(insertedCount);
 
             if (playerItem.isEmpty()) {
                 player.getInventory().setItem(playerSlotIndex, ItemStack.EMPTY);
             }
 
-            recordProviderUpload(player, providerId, patternContainer, findLastChangedSlot(patternInventory, before));
+            recordProviderUpload(player, providerId, patternContainer,
+                    findLastChangedSlot(patternContainer.getTerminalPatternInventory(),
+                            result.before(), result.slotLimit()));
 
             String terminalType = PatternTerminalUtil.isExtendedAETerminal(player) ? "扩展样板管理终端" : "样板访问终端";
             sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
@@ -284,6 +298,7 @@ public final class ProviderUploadUtil {
             }
         }
 
+        IGrid grid = resolveGrid(menu);
         // 按顺序逐个尝试插入
         for (Long id : tryIds) {
             PatternContainer c = PatternTerminalUtil.getPatternContainerById(accessMenu, id);
@@ -291,18 +306,19 @@ public final class ProviderUploadUtil {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
 
-            ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
-            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
-            if (remain.getCount() < toInsert.getCount()) {
-                int inserted = toInsert.getCount() - remain.getCount();
+            ExpansionInsertResult result = insertWithExpansion(player, grid, c, toInsert, new ExtendedAEPatternFilter());
+            if (result.remain().getCount() < toInsert.getCount()) {
+                int inserted = toInsert.getCount() - result.remain().getCount();
                 stack.shrink(inserted);
                 if (stack.isEmpty()) {
                     encodedSlot.set(ItemStack.EMPTY);
                 } else {
                     encodedSlot.set(stack);
                 }
-                recordProviderUpload(player, id, c, findLastChangedSlot(inv, before));
+                recordProviderUpload(player, id, c,
+                        findLastChangedSlot(c.getTerminalPatternInventory(),
+                                result.before(), result.slotLimit()));
                 return UploadOutcome.SUCCESS;
             }
         }
@@ -352,14 +368,14 @@ public final class ProviderUploadUtil {
             }
         }
 
+        IGrid grid = resolveGrid(menu);
         for (PatternContainer c : tryList) {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
-            ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
-            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
-            if (remain.getCount() < toInsert.getCount()) {
-                int inserted = toInsert.getCount() - remain.getCount();
+            ExpansionInsertResult result = insertWithExpansion(player, grid, c, toInsert, new ExtendedAEPatternFilter());
+            if (result.remain().getCount() < toInsert.getCount()) {
+                int inserted = toInsert.getCount() - result.remain().getCount();
                 stack.shrink(inserted);
                 if (stack.isEmpty()) {
                     encodedSlot.set(ItemStack.EMPTY);
@@ -368,7 +384,9 @@ public final class ProviderUploadUtil {
                 }
                 int trueIndex = list.indexOf(c);
                 long storedProviderId = trueIndex >= 0 ? -1L - trueIndex : Long.MIN_VALUE;
-                recordProviderUpload(player, storedProviderId, c, findLastChangedSlot(inv, before));
+                recordProviderUpload(player, storedProviderId, c,
+                        findLastChangedSlot(c.getTerminalPatternInventory(),
+                                result.before(), result.slotLimit()));
                 return UploadOutcome.SUCCESS;
             }
         }
@@ -396,9 +414,40 @@ public final class ProviderUploadUtil {
         return null;
     }
 
+    /** 基于编码终端枚举可用供应器。 */
+    public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
+        return listAvailableProvidersFromGrid(resolveGrid(menu));
+    }
+
     /** 基于通用菜单契约枚举可用供应器。 */
     public static List<PatternContainer> listAvailableProvidersFromGrid(IPatternUploadMenu menu) {
-        return PatternTerminalUtil.listAvailableProvidersFromGrid(resolveGrid(menu));
+        return listAvailableProvidersFromGrid(resolveGrid(menu));
+    }
+
+    /**
+     * 基于 AE Grid 遍历，列出终端中可见且还能写入的供应器容器。
+     *
+     * <p>槽满但还能装扩容卡的供应器也列入：上传时会自动从网络取卡扩容。</p>
+     */
+    public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
+        List<PatternContainer> list = new ArrayList<>();
+        if (grid == null) return list;
+        for (var machineClass : grid.getMachineClasses()) {
+            if (PatternContainer.class.isAssignableFrom(machineClass)) {
+                @SuppressWarnings("unchecked")
+                Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                for (var container : grid.getActiveMachines(containerClass)) {
+                    if (container == null || !container.isVisibleInTerminal()) continue;
+                    InternalInventory inv = container.getTerminalPatternInventory();
+                    if (inv == null || inv.size() <= 0) continue;
+                    // 槽满但还能装扩容卡的供应器也列入：上传时会自动取卡扩容
+                    if (getAvailableSlots(container) > 0 || canInstallExpansionCard(container)) {
+                        list.add(container);
+                    }
+                }
+            }
+        }
+        return list;
     }
 
     /**
@@ -434,6 +483,7 @@ public final class ProviderUploadUtil {
         }
         candidates.sort(Comparator.<PatternContainer>comparingInt(ProviderUploadUtil::getAvailableSlots).reversed());
 
+        IGrid grid = resolveGrid(menu);
         for (PatternContainer c : candidates) {
             // 与手动上传一致：目标供应器已含「除编码作者以外完全相同」的样板时不再重复写入。
             // 自动上传没有屏蔽入口，命中即提示并回收为空白样板，不再回退到矩阵/ECO。
@@ -445,14 +495,15 @@ public final class ProviderUploadUtil {
             }
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
-            ItemStack[] before = snapshotInventory(inv);
             ItemStack toInsert = stack.copy();
-            ItemStack remain = insertIntoAccessiblePatternSlots(c, toInsert, new ExtendedAEPatternFilter());
-            int inserted = toInsert.getCount() - remain.getCount();
+            ExpansionInsertResult result = insertWithExpansion(player, grid, c, toInsert, new ExtendedAEPatternFilter());
+            int inserted = toInsert.getCount() - result.remain().getCount();
             if (inserted > 0) {
                 stack.shrink(inserted);
                 encodedSlot.set(stack.isEmpty() ? ItemStack.EMPTY : stack);
-                recordProviderUpload(player, Long.MIN_VALUE, c, findLastChangedSlot(inv, before));
+                recordProviderUpload(player, Long.MIN_VALUE, c,
+                        findLastChangedSlot(c.getTerminalPatternInventory(),
+                                result.before(), result.slotLimit()));
                 player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_provider.success",
                         toDisplayComponent(providerName)));
                 return UploadOutcome.SUCCESS;
@@ -567,8 +618,7 @@ public final class ProviderUploadUtil {
      * 列出玩家无线终端网络中的可用 provider，顺序与负数索引上传保持一致。
      */
     public static List<PatternContainer> listAvailableProvidersFromPlayerNetwork(ServerPlayer player) {
-        IGrid grid = findPlayerGrid(player);
-        return PatternTerminalUtil.listAvailableProvidersFromGrid(grid);
+        return listAvailableProvidersFromGrid(findPlayerGrid(player));
     }
 
     private static ItemStack getPendingCtrlQPattern(ServerPlayer player) {
@@ -603,6 +653,7 @@ public final class ProviderUploadUtil {
         PatternContainer target = providers.get(index);
         if (target == null) return new UploadResult(pattern, null, -1);
 
+        IGrid grid = findPlayerGrid(player);
         ItemStack remain = pattern.copy();
         PatternContainer changedContainer = null;
         int changedSlot = -1;
@@ -610,12 +661,14 @@ public final class ProviderUploadUtil {
             InternalInventory inv = container.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
 
-            ItemStack[] before = snapshotInventory(inv);
-            ItemStack nextRemain = insertIntoAccessiblePatternSlots(container, remain.copy(), new ExtendedAEPatternFilter());
-            if (nextRemain.getCount() < remain.getCount()) {
-                changedSlot = findLastChangedSlot(inv, before);
+            // 槽满时自动从网络取扩容卡装入后重试
+            ItemStack toInsert = remain.copy();
+            ExpansionInsertResult result = insertWithExpansion(player, grid, container, toInsert, new ExtendedAEPatternFilter());
+            if (result.remain().getCount() < remain.getCount()) {
                 changedContainer = container;
-                remain = nextRemain;
+                remain = result.remain();
+                changedSlot = findLastChangedSlot(container.getTerminalPatternInventory(),
+                        result.before(), result.slotLimit());
                 if (remain.isEmpty()) {
                     return new UploadResult(ItemStack.EMPTY, changedContainer, changedSlot);
                 }
@@ -750,7 +803,7 @@ public final class ProviderUploadUtil {
 
         List<PatternContainer> providers;
         if (player.containerMenu instanceof PatternEncodingTermMenu encMenu) {
-            providers = PatternTerminalUtil.listAvailableProvidersFromGrid(encMenu);
+            providers = listAvailableProvidersFromGrid(encMenu);
         } else {
             providers = listAvailableProvidersFromPlayerNetwork(player);
         }
@@ -899,6 +952,217 @@ public final class ProviderUploadUtil {
             remain = inventory.insertItem(i, remain, false);
         }
         return remain;
+    }
+
+    // ------------------------------------------------------------------
+    // 扩容卡：容量不足时从网络取卡自动装入
+    // ------------------------------------------------------------------
+
+    /** 扩展样板供应器最多可装的扩容卡数量，与 UpgradeSlotCompat 的额外页数一致。 */
+    private static final int MAX_EXPANSION_CARDS = UpgradeSlotCompat.getExtendedPatternProviderExtraUpgradeSlots();
+
+    /**
+     * 该供应器是否还能再装一张扩容卡。
+     *
+     * <p>三个条件缺一不可：只有扩展样板供应器注册了这张卡；已装数量未到上限；
+     * 升级槽里还有空位。样板槽是否已满不在判断范围内——调用方决定何时使用。</p>
+     */
+    public static boolean canInstallExpansionCard(PatternContainer container) {
+        IUpgradeInventory upgrades = getEffectiveUpgrades(container);
+        if (upgrades == null) {
+            return false;
+        }
+        int installed = 0;
+        boolean hasEmptySlot = false;
+        for (int i = 0; i < upgrades.size(); i++) {
+            ItemStack stack = upgrades.getStackInSlot(i);
+            if (stack.isEmpty()) {
+                hasEmptySlot = true;
+            } else if (UpgradeSlotCompat.isExtendedPatternProviderExpansionCard(stack)) {
+                installed++;
+            }
+        }
+        return hasEmptySlot && installed < MAX_EXPANSION_CARDS;
+    }
+
+    /**
+     * 取出该供应器实际生效的升级槽。
+     *
+     * <p>必须走 {@link CompatUpgradeProvider#eap$getEffectiveUpgrades()}：appflux 存在时
+     * 生效的是它注入的槽位，往自建槽里装卡机器读不到。</p>
+     */
+    private static IUpgradeInventory getEffectiveUpgrades(PatternContainer container) {
+        if (!(container instanceof PatternProviderLogicHost host)) {
+            return null;
+        }
+        if (!UpgradeSlotCompat.isExtendedPatternProviderHost(host)) {
+            return null;
+        }
+        if (!((Object) host.getLogic() instanceof CompatUpgradeProvider provider)) {
+            return null;
+        }
+        IUpgradeInventory upgrades = provider.eap$getEffectiveUpgrades();
+        if (upgrades == null || upgrades == UpgradeInventories.empty()) {
+            return null;
+        }
+        return upgrades;
+    }
+
+    /**
+     * 该供应器是否还能再装一张扩容卡（按样板访问终端的供应器 ID 查询）。
+     *
+     * <p>列表筛选时样板槽已满但可扩容的供应器也应列出，上传时会自动取卡。</p>
+     */
+    public static boolean canInstallExpansionCard(long providerId, PatternAccessTermMenu menu) {
+        return canInstallExpansionCard(PatternTerminalUtil.getPatternContainerById(menu, providerId));
+    }
+
+    private static int findEmptyUpgradeSlot(IUpgradeInventory upgrades) {
+        for (int i = 0; i < upgrades.size(); i++) {
+            if (upgrades.getStackInSlot(i).isEmpty()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 从 ME 网络抽一张扩容卡装入该供应器的升级槽。
+     *
+     * <p>消耗按玩家计入（{@link PlayerSource}），与手动从网络取卡等价。任何一步失败都会
+     * 把已抽出的卡归还网络，不会吞卡。</p>
+     *
+     * @return 是否成功装入
+     */
+    public static boolean tryInstallExpansionCard(ServerPlayer player, IGrid grid, PatternContainer container) {
+        if (player == null || grid == null || !canInstallExpansionCard(container)) {
+            return false;
+        }
+        IUpgradeInventory upgrades = getEffectiveUpgrades(container);
+        if (upgrades == null) {
+            return false;
+        }
+
+        AEItemKey cardKey = AEItemKey.of(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get());
+        if (cardKey == null) {
+            return false;
+        }
+
+        IEnergyService energy = grid.getEnergyService();
+        MEStorage storage = grid.getStorageService().getInventory();
+        PlayerSource source = new PlayerSource(player);
+        long extracted = StorageHelper.poweredExtraction(energy, storage, cardKey, 1, source);
+        if (extracted <= 0) {
+            return false;
+        }
+
+        int emptySlot = findEmptyUpgradeSlot(upgrades);
+        ItemStack card = cardKey.toStack(1);
+        if (emptySlot < 0 || !upgrades.isItemValid(emptySlot, card)) {
+            StorageHelper.poweredInsert(energy, storage, cardKey, extracted, source);
+            return false;
+        }
+        upgrades.insertItem(emptySlot, card, false);
+
+        // 正常情况下恒为 1，剩余部分属防御性归还。
+        if (extracted > 1) {
+            StorageHelper.poweredInsert(energy, storage, cardKey, extracted - 1, source);
+        }
+
+        // 复用 appflux 原有槽位时，其变更回调不会通知到我们，这里显式走一次统一回调，
+        // 保证 updatePatterns() 与存档标记一定发生。
+        if (container instanceof PatternProviderLogicHost host
+                && (Object) host.getLogic() instanceof PatternProviderLogicUpgradeCompatBridge bridge) {
+            bridge.eap$onCompatUpgradesChangedHook();
+        }
+        return true;
+    }
+
+    /** 可访问的样板槽是否已经全部占用；用于区分「槽满」与「过滤/重复导致插不进」。 */
+    private static boolean isAccessibleSlotsFull(InternalInventory inventory, int slotLimit) {
+        if (inventory == null) {
+            return false;
+        }
+        int limit = Math.max(0, Math.min(inventory.size(), slotLimit));
+        if (limit <= 0) {
+            return false;
+        }
+        for (int i = 0; i < limit; i++) {
+            if (inventory.getStackInSlot(i).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * {@link #insertWithExpansion} 的结果。
+     *
+     * @param remain    未能插入的部分，全部插入时为空
+     * @param before    本次写入前的库存快照，用于定位最后改动的槽位
+     * @param slotLimit 与快照对应的可写槽位上限
+     */
+    public record ExpansionInsertResult(ItemStack remain, ItemStack[] before, int slotLimit) {
+    }
+
+    /** 供应器显示名组件；名称是服务端下发的原始 Component JSON，按客户端语言渲染。 */
+    private static Component getProviderDisplayNameComponent(PatternContainer container) {
+        String name = container == null ? null : PatternProviderDataUtil.getProviderDisplayName(container);
+        return toDisplayComponent(name == null ? "" : name);
+    }
+
+    /**
+     * 向供应器写入样板，槽满时先从网络取一张扩容卡再重试。
+     *
+     * <p>只有在「槽位已满 + 该供应器可扩容」时才动网络；样板因过滤或重复写不进去时
+     * 不会白白消耗一张卡。</p>
+     */
+    public static ExpansionInsertResult insertWithExpansion(ServerPlayer player, IGrid grid,
+                                                            PatternContainer container, ItemStack stack, IAEItemFilter filter) {
+        if (container == null || stack == null || stack.isEmpty()) {
+            return new ExpansionInsertResult(stack == null ? ItemStack.EMPTY : stack, new ItemStack[0], 0);
+        }
+
+        InternalInventory inv = container.getTerminalPatternInventory();
+        int slotLimit = getAccessiblePatternSlotCount(container, inv);
+        ItemStack[] before = snapshotInventory(inv, slotLimit);
+        ItemStack remain = insertIntoAccessiblePatternSlots(inv, slotLimit, stack, filter);
+        if (remain.getCount() < stack.getCount()
+                || !isAccessibleSlotsFull(inv, slotLimit)
+                || !canInstallExpansionCard(container)) {
+            return new ExpansionInsertResult(remain, before, slotLimit);
+        }
+        if (!tryInstallExpansionCard(player, grid, container)) {
+            return new ExpansionInsertResult(remain, before, slotLimit);
+        }
+
+        // 装卡后槽位上限已变，重新取上限与快照再插一次
+        inv = container.getTerminalPatternInventory();
+        slotLimit = getAccessiblePatternSlotCount(container, inv);
+        before = snapshotInventory(inv, slotLimit);
+        remain = insertIntoAccessiblePatternSlots(inv, slotLimit, remain, filter);
+        return new ExpansionInsertResult(remain, before, slotLimit);
+    }
+
+    public static ItemStack[] snapshotInventory(InternalInventory inv, int slotLimit) {
+        int limit = Math.max(0, Math.min(inv.size(), slotLimit));
+        ItemStack[] snapshot = new ItemStack[limit];
+        for (int i = 0; i < limit; i++) {
+            snapshot[i] = inv.getStackInSlot(i).copy();
+        }
+        return snapshot;
+    }
+
+    public static int findLastChangedSlot(InternalInventory inv, ItemStack[] before, int slotLimit) {
+        int changedSlot = -1;
+        int limit = Math.max(0, Math.min(inv.size(), slotLimit));
+        for (int i = 0; i < limit; i++) {
+            ItemStack previous = i < before.length ? before[i] : ItemStack.EMPTY;
+            if (!ItemStack.matches(previous, inv.getStackInSlot(i))) {
+                changedSlot = i;
+            }
+        }
+        return changedSlot;
     }
 
     private static ItemStack[] snapshotInventory(InternalInventory inv) {

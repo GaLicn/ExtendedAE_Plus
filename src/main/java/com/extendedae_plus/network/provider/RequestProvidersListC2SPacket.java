@@ -55,7 +55,8 @@ public class RequestProvidersListC2SPacket {
                     var c = containers.get(i);
                     if (c == null) continue;
                     int empty = ProviderUploadUtil.getAvailableSlots(c);
-                    if (empty <= 0) continue;
+                    // 槽满但还能装扩容卡的供应器也列出：上传时会自动取卡扩容
+                    if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(c)) continue;
                     long encodedId = -1L - i;
                     idxIds.add(encodedId);
                     names.add(PatternProviderDataUtil.getProviderDisplayName(c));
@@ -80,7 +81,8 @@ public class RequestProvidersListC2SPacket {
                     if (!PatternProviderDataUtil.isProviderAvailable(id, accessMenu)) continue;
                     PatternContainer container = PatternTerminalUtil.getPatternContainerById(accessMenu, id);
                     int empty = ProviderUploadUtil.getAvailableSlots(container);
-                    if (empty <= 0) continue; // 只列出有空位的
+                    // 只列出有空位的；槽满但还能装扩容卡的也列出，上传时会自动取卡扩容
+                    if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(id, accessMenu)) continue;
                     filteredIds.add(id);
                     names.add(PatternProviderDataUtil.getProviderDisplayName(id, accessMenu));
                     slots.add(empty);
@@ -99,7 +101,8 @@ public class RequestProvidersListC2SPacket {
                 var c = containers.get(i);
                 if (c == null) continue;
                 int empty = ProviderUploadUtil.getAvailableSlots(c);
-                if (empty <= 0) continue;
+                // 槽满但还能装扩容卡的供应器也列出：上传时会自动取卡扩容
+                if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(c)) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
                 names.add(PatternProviderDataUtil.getProviderDisplayName(c));

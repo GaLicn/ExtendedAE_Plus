@@ -16,7 +16,9 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.inv.AppEngInternalInventory;
 import com.extendedae_plus.ae.wireless.endpoint.GenericNodeEndpointImpl;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
 import com.extendedae_plus.api.bridge.IInterfaceWirelessLinkBridge;
+import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.compat.PatternProviderLogicVirtualCompatBridge;
 import com.extendedae_plus.compat.DynamicSizeInternalInventory;
@@ -50,7 +52,8 @@ import java.util.List;
  */
 @Mixin(value = PatternProviderLogic.class, priority = 500, remap = false)
 public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObject, IInterfaceWirelessLinkBridge,
-        PatternProviderLogicVirtualCompatBridge, PatternProviderPageUnlockBridge {
+        PatternProviderLogicVirtualCompatBridge, PatternProviderPageUnlockBridge, CompatUpgradeProvider,
+        PatternProviderLogicUpgradeCompatBridge {
 
     @Unique
     private static final String EAP$LEGACY_PATTERN_MIGRATION_TAG = "eap_legacy_pattern_migration";
@@ -314,6 +317,27 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
         } else {
             return eap$compatGetEffectiveUpgradeInventory();
         }
+    }
+
+    /**
+     * 当前实际生效的升级槽：未装 Applied Flux 用本模组槽位，装了则用其注入的槽位。
+     */
+    @Override
+    public IUpgradeInventory eap$getCompatUpgrades() {
+        return this.eap$compatUpgrades != null ? this.eap$compatUpgrades : UpgradeInventories.empty();
+    }
+
+    @Override
+    public IUpgradeInventory eap$getEffectiveUpgrades() {
+        return this.eap$compatGetEffectiveUpgradeInventory();
+    }
+
+    /**
+     * 供外部（自动装卡）在改动升级槽后显式触发一次统一回调。
+     */
+    @Override
+    public void eap$onCompatUpgradesChangedHook() {
+        this.eap$compatOnUpgradesChanged();
     }
 
     @Override
