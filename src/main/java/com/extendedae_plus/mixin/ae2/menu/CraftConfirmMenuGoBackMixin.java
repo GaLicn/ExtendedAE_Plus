@@ -6,6 +6,7 @@ import appeng.menu.me.crafting.CraftConfirmMenu;
 import appeng.menu.me.crafting.CraftingPlanSummary;
 import appeng.menu.me.crafting.CraftingPlanSummaryEntry;
 import com.extendedae_plus.integration.jei.JeiRuntimeProxy;
+import com.extendedae_plus.util.ModCheckUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,7 +36,7 @@ public class CraftConfirmMenuGoBackMixin {
                 shiftDown = Screen.hasShiftDown();
             } catch (Throwable ignored) {}
             if (!shiftDown) return;
-            if (!ModList.get().isLoaded("jei")) return;
+            if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) return;
 
             // 获取合成计划摘要
             CraftingPlanSummary plan = self.getPlan();
