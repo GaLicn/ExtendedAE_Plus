@@ -69,6 +69,9 @@ public final class ProviderUploadUtil {
     private static final String LAST_UPLOAD_MATRIX_PLUS_KEY = "eap_last_upload_matrix_plus";
     private static final String LAST_UPLOAD_KIND_PROVIDER = "provider";
     private static final String LAST_UPLOAD_KIND_MATRIX = "matrix";
+    private static final String LAST_EXPANSION_NOTIFY_KEY = "eap_last_expansion_notify";
+    /** 同一装卡失败原因的提示去重窗口（tick）。 */
+    private static final int EXPANSION_NOTIFY_DEDUP_TICKS = 40;
 
     private ProviderUploadUtil() {
     }
@@ -91,6 +94,27 @@ public final class ProviderUploadUtil {
         SUCCESS,
         DUPLICATE,
         FAILED
+    }
+
+    /**
+     * 从网络取扩容卡装入升级槽的结果。
+     *
+     * <p>{@link #NOT_ELIGIBLE} 表示该供应器根本不支持扩容卡，属于正常情况，
+     * 不应当给玩家任何提示；其余失败原因都值得告知玩家，否则表现为「上传没反应」。</p>
+     */
+    public enum ExpansionInstallResult {
+        /** 装入成功。 */
+        SUCCESS,
+        /** 未走到装卡这一步：还有空位，或样板本身插不进（过滤拒收/重复）。 */
+        NOT_ATTEMPTED,
+        /** 该供应器不支持扩容卡（非扩展样板供应器，或没有可用的升级槽实现）。 */
+        NOT_ELIGIBLE,
+        /** 升级槽已满、已被扩容卡占满，或该槽不接受扩容卡。 */
+        NO_UPGRADE_SLOT,
+        /** 无法访问 AE 网络。 */
+        NO_NETWORK,
+        /** 网络里取不到扩容卡（没有该物品，或网络能量不足）。 */
+        NO_CARD_IN_NETWORK
     }
 
     // ------------------------------------------------------------------
@@ -596,20 +620,38 @@ public final class ProviderUploadUtil {
      * <p>消耗按玩家计入（{@link PlayerSource}），与手动从网络取卡等价。任何一步失败都会
      * 把已抽出的卡归还网络，不会吞卡。</p>
      *
-     * @return 是否成功装入
+     * @return 装卡结果；非 {@link ExpansionInstallResult#SUCCESS} 时携带可提示玩家的失败原因
      */
-    public static boolean tryInstallExpansionCard(ServerPlayer player, IGrid grid, PatternContainer container) {
-        if (player == null || grid == null || !canInstallExpansionCard(container)) {
-            return false;
+    public static ExpansionInstallResult tryInstallExpansionCard(ServerPlayer player, IGrid grid, PatternContainer container) {
+        if (player == null || grid == null) {
+            return ExpansionInstallResult.NO_NETWORK;
         }
         IUpgradeInventory upgrades = getEffectiveUpgrades(container);
         if (upgrades == null) {
-            return false;
+            return ExpansionInstallResult.NOT_ELIGIBLE;
+        }
+
+        int installed = 0;
+        for (int i = 0; i < upgrades.size(); i++) {
+            if (UpgradeSlotCompat.isExtendedPatternProviderExpansionCard(upgrades.getStackInSlot(i))) {
+                installed++;
+            }
+        }
+        // 正常调用路径上 insertWithExpansion 已用 canInstallExpansionCard 挡过卡满的情况，
+        // 这里只是 public 方法的防御：卡满即没有能再容纳扩容卡的槽位。
+        if (installed >= MAX_EXPANSION_CARDS) {
+            return ExpansionInstallResult.NO_UPGRADE_SLOT;
         }
 
         AEItemKey cardKey = AEItemKey.of(ModItems.EXTENDED_PATTERN_PROVIDER_EXPANSION_CARD_PLUS.get());
         if (cardKey == null) {
-            return false;
+            return ExpansionInstallResult.NOT_ELIGIBLE;
+        }
+        ItemStack card = cardKey.toStack(1);
+        // 先确认槽位可用再抽卡，避免白抽一次又要归还
+        int emptySlot = findEmptyUpgradeSlot(upgrades);
+        if (emptySlot < 0 || !upgrades.isItemValid(emptySlot, card)) {
+            return ExpansionInstallResult.NO_UPGRADE_SLOT;
         }
 
         IEnergyService energy = grid.getEnergyService();
@@ -617,15 +659,9 @@ public final class ProviderUploadUtil {
         PlayerSource source = new PlayerSource(player);
         long extracted = StorageHelper.poweredExtraction(energy, storage, cardKey, 1, source);
         if (extracted <= 0) {
-            return false;
+            return ExpansionInstallResult.NO_CARD_IN_NETWORK;
         }
 
-        int emptySlot = findEmptyUpgradeSlot(upgrades);
-        ItemStack card = cardKey.toStack(1);
-        if (emptySlot < 0 || !upgrades.isItemValid(emptySlot, card)) {
-            StorageHelper.poweredInsert(energy, storage, cardKey, extracted, source);
-            return false;
-        }
         upgrades.insertItem(emptySlot, card, false);
 
         // 正常情况下恒为 1，剩余部分属防御性归还。
@@ -639,7 +675,7 @@ public final class ProviderUploadUtil {
                 && (Object) host.getLogic() instanceof PatternProviderLogicUpgradeCompatBridge bridge) {
             bridge.eap$onCompatUpgradesChangedHook();
         }
-        return true;
+        return ExpansionInstallResult.SUCCESS;
     }
 
     /** 可访问的样板槽是否已经全部占用；用于区分「槽满」与「过滤/重复导致插不进」。 */
@@ -662,11 +698,62 @@ public final class ProviderUploadUtil {
     /**
      * {@link #insertWithExpansion} 的结果。
      *
-     * @param remain    未能插入的部分，全部插入时为空
-     * @param before    本次写入前的库存快照，用于定位最后改动的槽位
-     * @param slotLimit 与快照对应的可写槽位上限
+     * @param remain        未能插入的部分，全部插入时为空
+     * @param before        本次写入前的库存快照，用于定位最后改动的槽位
+     * @param slotLimit     与快照对应的可写槽位上限
+     * @param installResult 扩容卡装配结果，用于向玩家解释「为什么没写进去」
      */
-    public record ExpansionInsertResult(ItemStack remain, ItemStack[] before, int slotLimit) {
+    public record ExpansionInsertResult(ItemStack remain, ItemStack[] before, int slotLimit,
+                                        ExpansionInstallResult installResult) {
+
+        /**
+         * 是否值得把装卡失败原因告诉玩家。
+         *
+         * <p>「没走到装卡」是正常流程，「该供应器不支持扩容卡」玩家也无从改变，
+         * 两者都静默；其余失败都会让上传表现为「没反应」，必须提示。</p>
+         */
+        public boolean shouldNotifyInstallFailure() {
+            return this.installResult != null
+                    && this.installResult != ExpansionInstallResult.SUCCESS
+                    && this.installResult != ExpansionInstallResult.NOT_ATTEMPTED
+                    && this.installResult != ExpansionInstallResult.NOT_ELIGIBLE;
+        }
+    }
+
+    /**
+     * 把「为什么没写进去」告诉玩家。
+     *
+     * <p>只在整轮上传最终失败时调用；同一原因在短时间内去重，避免一次操作里
+     * 同名供应器与回退候选轮流尝试时刷屏。</p>
+     */
+    public static void notifyExpansionInstallFailure(ServerPlayer player, PatternContainer container,
+                                                     ExpansionInsertResult result) {
+        if (player == null || result == null || !result.shouldNotifyInstallFailure()) {
+            return;
+        }
+        ExpansionInstallResult reason = result.installResult();
+        CompoundTag data = player.getPersistentData();
+        CompoundTag last = data.getCompound(LAST_EXPANSION_NOTIFY_KEY);
+        long now = player.level().getGameTime();
+        if (reason.name().equals(last.getString("reason"))
+                && now - last.getLong("time") <= EXPANSION_NOTIFY_DEDUP_TICKS) {
+            return;
+        }
+        CompoundTag record = new CompoundTag();
+        record.putString("reason", reason.name());
+        record.putLong("time", now);
+        data.put(LAST_EXPANSION_NOTIFY_KEY, record);
+        player.sendSystemMessage(Component.translatable(
+                expansionFailureMessageKey(reason), getProviderDisplayNameComponent(container)));
+    }
+
+    private static String expansionFailureMessageKey(ExpansionInstallResult reason) {
+        return switch (reason) {
+            case NO_UPGRADE_SLOT -> "extendedae_plus.message.provider.expansion.no_upgrade_slot";
+            case NO_NETWORK -> "extendedae_plus.message.provider.expansion.no_network";
+            case NO_CARD_IN_NETWORK -> "extendedae_plus.message.provider.expansion.no_card";
+            default -> "extendedae_plus.message.provider.expansion.failed";
+        };
     }
 
     /**
@@ -679,7 +766,8 @@ public final class ProviderUploadUtil {
     public static ExpansionInsertResult insertWithExpansion(ServerPlayer player, IGrid grid,
                                                             PatternContainer container, ItemStack stack, IAEItemFilter filter) {
         if (container == null || stack == null || stack.isEmpty()) {
-            return new ExpansionInsertResult(stack == null ? ItemStack.EMPTY : stack, new ItemStack[0], 0);
+            return new ExpansionInsertResult(stack == null ? ItemStack.EMPTY : stack, new ItemStack[0], 0,
+                    ExpansionInstallResult.NOT_ATTEMPTED);
         }
 
         InternalInventory inv = container.getTerminalPatternInventory();
@@ -691,10 +779,11 @@ public final class ProviderUploadUtil {
         if (remain.getCount() < stack.getCount()
                 || !isAccessibleSlotsFull(inv, slotLimit)
                 || !canInstallExpansionCard(container)) {
-            return new ExpansionInsertResult(remain, before, slotLimit);
+            return new ExpansionInsertResult(remain, before, slotLimit, ExpansionInstallResult.NOT_ATTEMPTED);
         }
-        if (!tryInstallExpansionCard(player, grid, container)) {
-            return new ExpansionInsertResult(remain, before, slotLimit);
+        ExpansionInstallResult installResult = tryInstallExpansionCard(player, grid, container);
+        if (installResult != ExpansionInstallResult.SUCCESS) {
+            return new ExpansionInsertResult(remain, before, slotLimit, installResult);
         }
 
         // 装卡后槽位上限已变，重新取上限与快照再插一次
@@ -702,7 +791,7 @@ public final class ProviderUploadUtil {
         slotLimit = getAccessiblePatternSlotCount(container, inv);
         before = snapshotInventory(inv, slotLimit);
         remain = insertIntoAccessiblePatternSlots(inv, slotLimit, remain, filter);
-        return new ExpansionInsertResult(remain, before, slotLimit);
+        return new ExpansionInsertResult(remain, before, slotLimit, ExpansionInstallResult.SUCCESS);
     }
 
     public static ItemStack[] snapshotInventory(InternalInventory inv, int slotLimit) {
@@ -922,6 +1011,9 @@ public final class ProviderUploadUtil {
         candidates.sort(Comparator.<PatternContainer>comparingInt(ProviderUploadUtil::getAvailableSlots).reversed());
 
         IGrid grid = resolveGrid(menu);
+        // 整轮都失败时，用最后一个「装卡失败」的供应器向玩家解释原因
+        PatternContainer lastFailedContainer = null;
+        ExpansionInsertResult lastFailedResult = null;
         for (PatternContainer c : candidates) {
             // 与手动上传一致：目标供应器已含「除编码作者以外完全相同」的样板时不再重复写入。
             // 自动上传没有 Ctrl 之类的屏蔽入口，命中即回收样板并终止，不再回退到矩阵/ECO。
@@ -948,7 +1040,13 @@ public final class ProviderUploadUtil {
                 player.sendSystemMessage(Component.translatable("extendedae_plus.upload_to_provider.success", providerName));
                 return UploadOutcome.SUCCESS;
             }
+            if (result.shouldNotifyInstallFailure()) {
+                lastFailedContainer = c;
+                lastFailedResult = result;
+            }
         }
+        // 走到这里说明所有候选都没写进去；若是装卡失败导致，解释原因
+        notifyExpansionInstallFailure(player, lastFailedContainer, lastFailedResult);
         return UploadOutcome.FAILED;
     }
 
@@ -990,6 +1088,9 @@ public final class ProviderUploadUtil {
         }
 
         // 遍历在线的 PatternContainer，寻找第一个可见且有空位的供应器
+        // 整轮都失败时，用最后一个「装卡失败」的供应器向玩家解释原因
+        PatternContainer lastFailedContainer = null;
+        ExpansionInsertResult lastFailedResult = null;
         try {
             for (var machineClass : grid.getMachineClasses()) {
                 if (PatternContainer.class.isAssignableFrom(machineClass)) {
@@ -1029,12 +1130,17 @@ public final class ProviderUploadUtil {
                                             result.before(), result.slotLimit()));
                             return true;
                         }
+                        if (result.shouldNotifyInstallFailure()) {
+                            lastFailedContainer = container;
+                            lastFailedResult = result;
+                        }
                     }
                 }
             }
         } catch (Throwable t) {
             // 忽略异常以避免噪声
         }
+        notifyExpansionInstallFailure(player, lastFailedContainer, lastFailedResult);
         return false;
     }
 
@@ -1087,6 +1193,9 @@ public final class ProviderUploadUtil {
         }
 
         IGrid grid = resolveGrid(menu);
+        // 整轮都失败时，用最后一个「装卡失败」的供应器向玩家解释原因
+        PatternContainer lastFailedContainer = null;
+        ExpansionInsertResult lastFailedResult = null;
         // 按顺序逐个尝试插入
         for (Long id : tryIds) {
             PatternContainer c = getPatternContainerById(accessMenu, id);
@@ -1110,7 +1219,12 @@ public final class ProviderUploadUtil {
                                 result.before(), result.slotLimit()));
                 return UploadOutcome.SUCCESS;
             }
+            if (result.shouldNotifyInstallFailure()) {
+                lastFailedContainer = c;
+                lastFailedResult = result;
+            }
         }
+        notifyExpansionInstallFailure(player, lastFailedContainer, lastFailedResult);
         return UploadOutcome.FAILED;
     }
 
@@ -1159,6 +1273,9 @@ public final class ProviderUploadUtil {
         }
 
         IGrid grid = resolveGrid(menu);
+        // 整轮都失败时，用最后一个「装卡失败」的供应器向玩家解释原因
+        PatternContainer lastFailedContainer = null;
+        ExpansionInsertResult lastFailedResult = null;
         for (PatternContainer c : tryList) {
             InternalInventory inv = c.getTerminalPatternInventory();
             if (inv == null || inv.size() <= 0) continue;
@@ -1178,7 +1295,12 @@ public final class ProviderUploadUtil {
                                 result.before(), result.slotLimit()));
                 return UploadOutcome.SUCCESS;
             }
+            if (result.shouldNotifyInstallFailure()) {
+                lastFailedContainer = c;
+                lastFailedResult = result;
+            }
         }
+        notifyExpansionInstallFailure(player, lastFailedContainer, lastFailedResult);
         return UploadOutcome.FAILED;
     }
 
@@ -1239,6 +1361,7 @@ public final class ProviderUploadUtil {
                             result.before(), result.slotLimit()));
             return true;
         } else {
+            notifyExpansionInstallFailure(player, patternContainer, result);
             return false;
         }
     }

@@ -169,6 +169,9 @@ public final class CtrlQPendingUploadUtil {
 
 		IGrid grid = findPlayerGrid(player);
 		ItemStack remain = pattern.copy();
+		// 整轮都失败时，用最后一个「装卡失败」的供应器向玩家解释原因
+		PatternContainer lastFailedContainer = null;
+		ProviderUploadUtil.ExpansionInsertResult lastFailedResult = null;
 		for (PatternContainer container : buildSameNameTryList(providers, target)) {
 			InternalInventory inv = container.getTerminalPatternInventory();
 			if (inv == null || inv.size() <= 0) continue;
@@ -182,7 +185,13 @@ public final class CtrlQPendingUploadUtil {
 				if (remain.isEmpty()) {
 					return ItemStack.EMPTY;
 				}
+			} else if (result.shouldNotifyInstallFailure()) {
+				lastFailedContainer = container;
+				lastFailedResult = result;
 			}
+		}
+		if (!remain.isEmpty()) {
+			ProviderUploadUtil.notifyExpansionInstallFailure(player, lastFailedContainer, lastFailedResult);
 		}
 		return remain;
 	}
