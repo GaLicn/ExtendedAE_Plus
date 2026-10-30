@@ -349,6 +349,11 @@ public abstract class PatternProviderLogicCompatMixin implements CompatUpgradePr
     }
 
     @Override
+    public IUpgradeInventory eap$getEffectiveUpgrades() {
+        return this.eap$compatGetEffectiveUpgrades();
+    }
+
+    @Override
     public boolean eap$compatIsVirtualCraftingEnabled() {
         // 实时读取升级槽：NBT 加载顺序可能使 appflux 的升级槽晚于本回调恢复，
         // 缓存布尔值会导致重进世界后虚拟合成卡不生效（只能破坏重放才恢复）。

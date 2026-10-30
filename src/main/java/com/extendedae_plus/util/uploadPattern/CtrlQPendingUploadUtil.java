@@ -124,7 +124,9 @@ public final class CtrlQPendingUploadUtil {
 						if (container == null || !container.isVisibleInTerminal()) continue;
 						InternalInventory inv = container.getTerminalPatternInventory();
 						if (inv == null || inv.size() <= 0) continue;
-						if (ProviderUploadUtil.getAvailableSlots(container) > 0) {
+						// 槽满但还能装扩容卡的供应器也列入，上传时会自动取卡扩容
+						if (ProviderUploadUtil.getAvailableSlots(container) > 0
+								|| ProviderUploadUtil.canInstallExpansionCard(container)) {
 							list.add(container);
 						}
 					}
@@ -165,15 +167,18 @@ public final class CtrlQPendingUploadUtil {
 		PatternContainer target = providers.get(index);
 		if (target == null) return pattern;
 
+		IGrid grid = findPlayerGrid(player);
 		ItemStack remain = pattern.copy();
 		for (PatternContainer container : buildSameNameTryList(providers, target)) {
 			InternalInventory inv = container.getTerminalPatternInventory();
 			if (inv == null || inv.size() <= 0) continue;
 
-			ItemStack nextRemain = ProviderUploadUtil.insertIntoAccessiblePatternSlots(
-					container, remain.copy(), new CtrlQPatternFilter());
-			if (nextRemain.getCount() < remain.getCount()) {
-				remain = nextRemain;
+			// 槽满时自动从网络取扩容卡装入后重试
+			ItemStack toInsert = remain.copy();
+			ProviderUploadUtil.ExpansionInsertResult result = ProviderUploadUtil.insertWithExpansion(
+					player, grid, container, toInsert, new CtrlQPatternFilter());
+			if (result.remain().getCount() < remain.getCount()) {
+				remain = result.remain();
 				if (remain.isEmpty()) {
 					return ItemStack.EMPTY;
 				}

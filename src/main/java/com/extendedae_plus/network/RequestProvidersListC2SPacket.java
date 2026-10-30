@@ -53,7 +53,8 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     var c = containers.get(i);
                     if (c == null) continue;
                     int empty = ProviderUploadUtil.getAvailableSlots(c);
-                    if (empty <= 0) continue;
+                    // 槽满但还能装扩容卡的也列出：上传时会自动从网络取卡扩容
+                    if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(c)) continue;
                     long encodedId = -1L - i;
                     idxIds.add(encodedId);
                     names.add(ProviderUploadUtil.getProviderDisplayNameComponent(c));
@@ -77,7 +78,8 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                     if (id == null) continue;
                     if (!ProviderUploadUtil.isProviderAvailable(id, accessMenu)) continue;
                     int empty = ProviderUploadUtil.getAvailableSlots(id, accessMenu);
-                    if (empty <= 0) continue; // 只列出有空位的
+                    // 槽满但还能装扩容卡的也列出：上传时会自动从网络取卡扩容
+                    if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(id, accessMenu)) continue;
                     filteredIds.add(id);
                     names.add(ProviderUploadUtil.getProviderDisplayNameComponent(id, accessMenu));
                     slots.add(empty);
@@ -96,7 +98,8 @@ public class RequestProvidersListC2SPacket implements CustomPacketPayload {
                 var c = containers.get(i);
                 if (c == null) continue;
                 int empty = ProviderUploadUtil.getAvailableSlots(c);
-                if (empty <= 0) continue;
+                // 槽满但还能装扩容卡的也列出：上传时会自动从网络取卡扩容
+                if (empty <= 0 && !ProviderUploadUtil.canInstallExpansionCard(c)) continue;
                 long encodedId = -1L - i; // 约定：负数代表按索引
                 idxIds.add(encodedId);
                 names.add(ProviderUploadUtil.getProviderDisplayNameComponent(c));
