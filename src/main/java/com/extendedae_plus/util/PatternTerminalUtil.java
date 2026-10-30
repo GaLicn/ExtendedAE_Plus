@@ -1,11 +1,7 @@
 package com.extendedae_plus.util;
 
-import appeng.api.inventories.InternalInventory;
-import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridNode;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.menu.implementations.PatternAccessTermMenu;
-import appeng.menu.me.items.PatternEncodingTermMenu;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.lang.reflect.Field;
@@ -152,48 +148,4 @@ public final class PatternTerminalUtil {
         }
         return result;
     }
-
-    /**
-     * 基于编码终端菜单的 AE Grid 遍历，列出“可在终端中可见且有空位”的供应器容器。
-     * 返回顺序稳定：按 grid 的 machineClasses 顺序，再按 activeMachines 迭代顺序。
-     */
-    public static List<PatternContainer> listAvailableProvidersFromGrid(PatternEncodingTermMenu menu) {
-        if (menu == null) return new ArrayList<>();
-        try {
-            IGridNode node = menu.getNetworkNode();
-            if (node == null) return new ArrayList<>();
-            return listAvailableProvidersFromGrid(node.getGrid());
-        } catch (Throwable ignored) {
-            return new ArrayList<>();
-        }
-    }
-
-    public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
-        List<PatternContainer> list = new ArrayList<>();
-        if (grid == null) return list;
-        try {
-            for (var machineClass : grid.getMachineClasses()) {
-                if (PatternContainer.class.isAssignableFrom(machineClass)) {
-                    @SuppressWarnings("unchecked")
-                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                    for (var container : grid.getActiveMachines(containerClass)) {
-                        if (container == null || !container.isVisibleInTerminal()) continue;
-                        InternalInventory inv = container.getTerminalPatternInventory();
-                        if (inv == null || inv.size() <= 0) continue;
-                        boolean hasEmpty = false;
-                        for (int i = 0; i < inv.size(); i++) {
-                            if (inv.getStackInSlot(i).isEmpty()) {
-                                hasEmpty = true;
-                                break;
-                            }
-                        }
-                        if (hasEmpty) list.add(container);
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return list;
-    }
-
 }

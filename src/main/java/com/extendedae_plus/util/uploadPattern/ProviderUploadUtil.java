@@ -270,8 +270,12 @@ public final class ProviderUploadUtil {
             sendMessage(player, "ExtendedAE Plus: 通过" + terminalType + "成功上传 " + insertedCount + " 个样板");
             return true;
         } else {
+            // 装卡失败已由 notifyExpansionInstallFailure 解释；只有「没走到装卡」才用通用提示
+            boolean notified = result.shouldNotifyInstallFailure();
             notifyExpansionInstallFailure(player, patternContainer, result);
-            sendMessage(player, "ExtendedAE Plus: 上传失败 - 样板供应器已满或样板无效");
+            if (!notified) {
+                sendMessage(player, "ExtendedAE Plus: 上传失败 - 样板供应器已满或样板无效");
+            }
             return false;
         }
     }
@@ -473,20 +477,23 @@ public final class ProviderUploadUtil {
     public static List<PatternContainer> listAvailableProvidersFromGrid(IGrid grid) {
         List<PatternContainer> list = new ArrayList<>();
         if (grid == null) return list;
-        for (var machineClass : grid.getMachineClasses()) {
-            if (PatternContainer.class.isAssignableFrom(machineClass)) {
-                @SuppressWarnings("unchecked")
-                Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-                for (var container : grid.getActiveMachines(containerClass)) {
-                    if (container == null || !container.isVisibleInTerminal()) continue;
-                    InternalInventory inv = container.getTerminalPatternInventory();
-                    if (inv == null || inv.size() <= 0) continue;
-                    // 槽满但还能装扩容卡的供应器也列入：上传时会自动取卡扩容
-                    if (getAvailableSlots(container) > 0 || canInstallExpansionCard(container)) {
-                        list.add(container);
+        try {
+            for (var machineClass : grid.getMachineClasses()) {
+                if (PatternContainer.class.isAssignableFrom(machineClass)) {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
+                    for (var container : grid.getActiveMachines(containerClass)) {
+                        if (container == null || !container.isVisibleInTerminal()) continue;
+                        InternalInventory inv = container.getTerminalPatternInventory();
+                        if (inv == null || inv.size() <= 0) continue;
+                        // 槽满但还能装扩容卡的供应器也列入：上传时会自动取卡扩容
+                        if (getAvailableSlots(container) > 0 || canInstallExpansionCard(container)) {
+                            list.add(container);
+                        }
                     }
                 }
             }
+        } catch (Throwable ignored) {
         }
         return list;
     }
@@ -1282,26 +1289,6 @@ public final class ProviderUploadUtil {
         for (int i = 0; i < limit; i++) {
             ItemStack previous = i < before.length ? before[i] : ItemStack.EMPTY;
             if (!ItemStack.matches(previous, inv.getStackInSlot(i))) {
-                changedSlot = i;
-            }
-        }
-        return changedSlot;
-    }
-
-    private static ItemStack[] snapshotInventory(InternalInventory inv) {
-        ItemStack[] snapshot = new ItemStack[inv.size()];
-        for (int i = 0; i < inv.size(); i++) {
-            snapshot[i] = inv.getStackInSlot(i).copy();
-        }
-        return snapshot;
-    }
-
-    private static int findLastChangedSlot(InternalInventory inv, ItemStack[] before) {
-        int changedSlot = -1;
-        for (int i = 0; i < inv.size(); i++) {
-            ItemStack previous = i < before.length ? before[i] : ItemStack.EMPTY;
-            ItemStack current = inv.getStackInSlot(i);
-            if (!ItemStack.matches(previous, current)) {
                 changedSlot = i;
             }
         }
