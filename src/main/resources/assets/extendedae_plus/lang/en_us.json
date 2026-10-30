@@ -113,6 +113,10 @@
   "extendedae_plus.upload_to_matrix.fail_full": "The assembly matrix pattern inventory is full or cannot insert",
   "extendedae_plus.upload_to_matrix.repetition": "The Assembly Matrix already contains the same pattern. Upload skipped and blank pattern returned.",
   "extendedae_plus.message.provider.duplicate": "The pattern provider \"%s\" already contains the same pattern. Upload skipped and blank pattern returned.",
+  "extendedae_plus.message.provider.expansion.no_upgrade_slot": "Pattern provider %s has no free upgrade slot, so an expansion card cannot be installed.",
+  "extendedae_plus.message.provider.expansion.no_network": "Cannot access the AE network, so the expansion card for pattern provider %s could not be installed automatically.",
+  "extendedae_plus.message.provider.expansion.no_card": "No Super Extended Pattern Provider Expansion Card is available in the ME network (or there is not enough power), so pattern provider %s cannot be expanded.",
+  "extendedae_plus.message.provider.expansion.failed": "Failed to install an expansion card in pattern provider %s; the pattern was not written.",
 
   "chat.extendedae_plus.terminal.pos": "The crafting plan's corresponding provider is now highlighted at: %s, Dimension: %s (%s blocks away)",
 
