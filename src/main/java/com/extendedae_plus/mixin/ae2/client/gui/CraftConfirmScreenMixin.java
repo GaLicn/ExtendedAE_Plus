@@ -16,7 +16,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraftforge.fml.ModList;
+import com.extendedae_plus.util.ModCheckUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -103,7 +103,7 @@ public abstract class CraftConfirmScreenMixin extends AEBaseScreen<CraftConfirmM
                 selectCpuButton.active = true;
             }
 
-            if (!ModList.get().isLoaded("jei")) {
+            if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
                 return;
             }
 

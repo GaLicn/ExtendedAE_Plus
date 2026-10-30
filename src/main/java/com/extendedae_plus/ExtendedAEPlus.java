@@ -6,24 +6,34 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
+import com.extendedae_plus.client.InputEvents;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.UltimateSuperAssemblerMatrixPreviewRenderer;
+import com.extendedae_plus.client.event.CtrlQPatternKeyHandler;
+import com.extendedae_plus.client.event.EmiCtrlQHandler;
 import com.extendedae_plus.client.model.MatrixFrameModel;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
-import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
-import com.glodblock.github.glodium.util.GlodUtil;
 import com.extendedae_plus.content.matrix.CrafterCorePlusBlockEntity;
 import com.extendedae_plus.content.matrix.HybridCoreBlockEntity;
 import com.extendedae_plus.content.matrix.PatternCorePlusBlockEntity;
-import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixCalculator;
+import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixFrameBlockEntity;
 import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBlockEntity;
-import com.extendedae_plus.init.*;
+import com.extendedae_plus.init.ModBlockEntities;
+import com.extendedae_plus.init.ModBlocks;
+import com.extendedae_plus.init.ModCreativeTabs;
+import com.extendedae_plus.init.ModItems;
+import com.extendedae_plus.init.ModMenuTypes;
+import com.extendedae_plus.init.ModNetwork;
+import com.extendedae_plus.init.UpgradeCards;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.server.JeiSyncManager;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
+import com.glodblock.github.extendedae.common.tileentities.TileCircuitCutter;
+import com.glodblock.github.glodium.util.GlodUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
@@ -38,7 +48,6 @@ import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -241,15 +250,15 @@ public class ExtendedAEPlus {
                 // 世界方块强制下单不依赖任何查看器模组，须无条件注册。
                 MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.event.ForceCraftKeyHandler.class);
 
-                // EMI 或 JEI 任一存在即注册对应输入监听；InputEvents 内部按查看器来源自守卫，
-                // 未安装对应查看器时相关分支不会被触发，避免触碰缺失模组的类导致类加载失败。
-                if (ModList.get().isLoaded("jei")) {
-                    MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.InputEvents.class);
-                    MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.event.CtrlQPatternKeyHandler.class);
+                // EMI 或 JEI 任一存在即注册对应输入监听。查看器模组判定在此入口完成，
+                // 下游的 InputEvents / CtrlQPatternKeyHandler / EmiCtrlQHandler 不再各自探测。
+                if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
+                    MinecraftForge.EVENT_BUS.register(InputEvents.class);
+                    MinecraftForge.EVENT_BUS.register(CtrlQPatternKeyHandler.class);
                 }
-                if (ModList.get().isLoaded("emi")) {
-                    MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.InputEvents.class);
-                    MinecraftForge.EVENT_BUS.register(com.extendedae_plus.client.event.EmiCtrlQHandler.class);
+                if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
+                    MinecraftForge.EVENT_BUS.register(InputEvents.class);
+                    MinecraftForge.EVENT_BUS.register(EmiCtrlQHandler.class);
                 }
             });
         }
