@@ -110,8 +110,8 @@ public abstract class AdvPatternProviderLogicChannelCardMixin
                 || IInterfaceWirelessLinkBridge.super.eap$shouldKeepTicking();
     }
 
-    @Unique
-    private IUpgradeInventory eap$getEffectiveUpgrades() {
+    @Override
+    public IUpgradeInventory eap$getEffectiveUpgrades() {
         if (UpgradeSlotCompat.usesAppfluxUpgradeSlots() && (Object) this instanceof IUpgradeableObject upgradeable) {
             return upgradeable.getUpgrades();
         }
