@@ -6,7 +6,6 @@ import appeng.api.config.YesNo;
 import appeng.api.crafting.IPatternDetails;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.stacks.AEKey;
-import appeng.api.stacks.GenericStack;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.patternprovider.PatternProviderLogic;
@@ -14,6 +13,7 @@ import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.helpers.patternprovider.PatternProviderTarget;
 import appeng.util.ConfigManager;
 import com.extendedae_plus.api.config.EAPSettings;
+import com.extendedae_plus.util.pattern.SmartBlockingMatcher;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.HolderLookup;
@@ -26,7 +26,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
 import java.util.Set;
 
 @Mixin(value = PatternProviderLogic.class, remap = false)
@@ -78,20 +77,8 @@ public class PatternProviderLogicAdvancedMixin {
 
     @Unique
     private boolean eap$targetFullyMatchesPatternInputs(PatternProviderTarget adapter, IPatternDetails patternDetails) {
-        for (IPatternDetails.IInput in : patternDetails.getInputs()) {
-            boolean slotMatched = false;
-            for (GenericStack candidate : in.getPossibleInputs()) {
-                AEKey key = candidate.what().dropSecondary();
-                if (adapter.containsPatternInput(Collections.singleton(key))) {
-                    slotMatched = true;
-                    break;
-                }
-            }
-            if (!slotMatched) {
-                return false; // 任一输入槽未匹配则失败
-            }
-        }
-        return true; // 每个输入槽都至少匹配了一个候选输入
+        // 只遍历一次目标库存，避免每个输入槽、每个候选都重复扫描导致的卡顿
+        return SmartBlockingMatcher.matchesAllInputs(adapter, patternDetails);
     }
 
     @Inject(method = "configChanged", at = @At("HEAD"))
