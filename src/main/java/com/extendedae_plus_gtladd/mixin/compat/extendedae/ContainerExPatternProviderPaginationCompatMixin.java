@@ -16,8 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 /**
- * Makes the EAEP container use the number of slots actually created in the
- * menu when GTLCore is installed.
+ * Limits the EAEP container to the GTLCore-scaled slot count.
+ *
+ * <p>The backing inventory holds the largest multiple so cards can be added
+ * or removed at any time; the usable slot count is
+ * {@code gtlcore * (1 + cards)}.</p>
  */
 @Mixin(value = ContainerExPatternProvider.class, priority = 4000, remap = false)
 public abstract class ContainerExPatternProviderPaginationCompatMixin {
@@ -34,23 +37,12 @@ public abstract class ContainerExPatternProviderPaginationCompatMixin {
             require = 0
     )
     private void eap$preferGtlcoreMenuPageCount(CallbackInfoReturnable<Integer> cir) {
-        if (!ExtendedAePatternCapacityCompat.isGtlcoreLoaded()
-                || !(this instanceof PatternProviderMenuAccessor accessor)) {
+        int usableSlots = eap$getUsablePatternSlots(this);
+        if (usableSlots < 0) {
             return;
         }
 
-        ContainerExPatternProvider container = (ContainerExPatternProvider) (Object) this;
-        int slotCount = container.getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        int cardUnlockedSlots = ExtendedAePatternCapacityCompat.getCardUnlockedPatternSlots(accessor.eap$logic());
-        if (cardUnlockedSlots < 0) {
-            return;
-        }
-
-        if (ExtendedAePatternCapacityCompat.shouldUseGtlcoreCapacity(accessor.eap$logic())) {
-            cir.setReturnValue(Math.max(1, (slotCount + 35) / 36));
-        } else {
-            cir.setReturnValue(Math.max(1, (Math.min(slotCount, cardUnlockedSlots) + 35) / 36));
-        }
+        cir.setReturnValue(Math.max(1, (usableSlots + 35) / 36));
     }
 
     @TargetHandler(
@@ -65,25 +57,17 @@ public abstract class ContainerExPatternProviderPaginationCompatMixin {
             require = 0
     )
     private void eap$limitEaepPageCount(CallbackInfoReturnable<Integer> cir) {
-        if (!ExtendedAePatternCapacityCompat.isGtlcoreLoaded()
-                || !(this instanceof PatternProviderMenuAccessor accessor)
-                || ExtendedAePatternCapacityCompat.shouldUseGtlcoreCapacity(accessor.eap$logic())) {
+        int usableSlots = eap$getUsablePatternSlots(this);
+        if (usableSlots < 0) {
             return;
         }
 
-        int cardUnlockedSlots = ExtendedAePatternCapacityCompat.getCardUnlockedPatternSlots(accessor.eap$logic());
-        if (cardUnlockedSlots < 0) {
-            return;
-        }
-
-        ContainerExPatternProvider container = (ContainerExPatternProvider) (Object) this;
-        int slotCount = container.getSlots(SlotSemantics.ENCODED_PATTERN).size();
-        cir.setReturnValue(Math.max(1, (Math.min(slotCount, cardUnlockedSlots) + 35) / 36));
+        cir.setReturnValue(Math.max(1, (usableSlots + 35) / 36));
     }
 
     /**
      * EAEP's page method normally applies this state. Reapply the card limit
-     * after it so a legacy unlock value cannot leave GTLCore-only slots active.
+     * after it so a legacy unlock value cannot leave extra slots active.
      */
     @TargetHandler(
             mixin = "com.extendedae_plus.mixin.extendedae.container.ContainerExPatternProviderMixin",
@@ -109,24 +93,32 @@ public abstract class ContainerExPatternProviderPaginationCompatMixin {
         eap$applyCardPatternSlotLimit();
     }
 
-    private void eap$applyCardPatternSlotLimit() {
-        if (!ExtendedAePatternCapacityCompat.isGtlcoreLoaded()
-                || !(this instanceof PatternProviderMenuAccessor accessor)
-                || ExtendedAePatternCapacityCompat.shouldUseGtlcoreCapacity(accessor.eap$logic())) {
-            return;
+    private static int eap$getUsablePatternSlots(Object container) {
+        if (!(container instanceof PatternProviderMenuAccessor accessor)) {
+            return -1;
         }
 
-        int cardUnlockedSlots = ExtendedAePatternCapacityCompat.getCardUnlockedPatternSlots(accessor.eap$logic());
-        if (cardUnlockedSlots < 0) {
+        int unlockedSlots = ExtendedAePatternCapacityCompat.getCardUnlockedPatternSlots(accessor.eap$logic());
+        if (unlockedSlots < 0) {
+            return -1;
+        }
+
+        ContainerExPatternProvider self = (ContainerExPatternProvider) container;
+        return Math.min(self.getSlots(SlotSemantics.ENCODED_PATTERN).size(), unlockedSlots);
+    }
+
+    private void eap$applyCardPatternSlotLimit() {
+        int unlockedSlots = eap$getUsablePatternSlots(this);
+        if (unlockedSlots < 0) {
             return;
         }
 
         ContainerExPatternProvider container = (ContainerExPatternProvider) (Object) this;
         List<Slot> patternSlots = container.getSlots(SlotSemantics.ENCODED_PATTERN);
-        int unlockedSlots = Math.min(patternSlots.size(), cardUnlockedSlots);
+        int usableSlots = Math.min(patternSlots.size(), unlockedSlots);
         for (int i = 0; i < patternSlots.size(); i++) {
             if (patternSlots.get(i) instanceof AppEngSlot slot) {
-                boolean enabled = i < unlockedSlots;
+                boolean enabled = i < usableSlots;
                 slot.setSlotEnabled(enabled);
                 if (!enabled) {
                     slot.setActive(false);
