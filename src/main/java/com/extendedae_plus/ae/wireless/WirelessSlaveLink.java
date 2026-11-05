@@ -96,7 +96,9 @@ public class WirelessSlaveLink {
                                 return; // 连接已正确
                             }
                             // 否则先断开，再重建
-                            current.destroy();
+                            try {
+                                current.destroy();
+                            } catch (Throwable ignored) {}
                             connection = new ConnectionWrapper(null);
                         }
                         connection = new ConnectionWrapper(GridHelper.createConnection(a, b));
@@ -123,7 +125,10 @@ public class WirelessSlaveLink {
     private void destroyConnection() {
         var current = connection.getConnection();
         if (current != null) {
-            current.destroy();
+            // Same AE2 energy-extract race as LabelLink: unload must not abort chunk save.
+            try {
+                current.destroy();
+            } catch (Throwable ignored) {}
             connection.setConnection(null);
         }
         connection = new ConnectionWrapper(null);
