@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 超级电路切片机的输入、输出和升级卡菜单。 */
+/** 超级电路切片器的输入、输出和升级卡菜单。 */
 public class SuperCircuitCutterMenu extends UpgradeableMenu<SuperCircuitCutterBlockEntity>
         implements IProgressProvider, IActionHolder {
     @GuiSync(3)

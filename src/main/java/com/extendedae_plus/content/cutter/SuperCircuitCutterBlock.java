@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 
-/** 单方块超级电路切片机。 */
+/** 单方块超级电路切片器。 */
 public class SuperCircuitCutterBlock extends AEBaseEntityBlock<SuperCircuitCutterBlockEntity> {
     public static final BooleanProperty WORKING = BooleanProperty.create("working");
 

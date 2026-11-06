@@ -242,7 +242,7 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         if (level == null || configManager.getSetting(Settings.AUTO_EXPORT) != YesNo.YES || output.getStackInSlot(0).isEmpty()) {
             return false;
         }
-        // 只向被选中的输出面推送，且跳过同为超级电路切片机的方块，避免互相灌料。
+        // 只向被选中的输出面推送，且跳过同为超级电路切片器的方块，避免互相灌料。
         return FCUtil.ejectInv(level, worldPosition, output, outputSides,
                 te -> te instanceof SuperCircuitCutterBlockEntity);
     }
