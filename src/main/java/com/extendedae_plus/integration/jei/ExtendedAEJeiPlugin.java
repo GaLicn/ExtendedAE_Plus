@@ -6,7 +6,7 @@ import com.extendedae_plus.client.screen.SuperCrystalAssemblerScreen;
 import com.extendedae_plus.compat.jei.JeiRuntimeCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
-import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
+import com.glodblock.github.extendedae.xmod.jei.recipe.CrystalAssemblerCategory;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.gui.handlers.IGuiClickableArea;
@@ -39,7 +39,7 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {
-        registration.addRecipeCategories(new SuperCrystalAssemblerCategory(registration.getJeiHelpers().getGuiHelper()));
+        // 超级水晶装配器复用 ExtendedAE 原机的 JEI 分类，不再单独建分类（同 Mekanism 多机器共用一个分类）。
         registration.addRecipeCategories(new SuperCircuitCutterCategory(registration.getJeiHelpers().getGuiHelper()));
     }
 
@@ -47,8 +47,8 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
     public void registerRecipes(@NotNull IRecipeRegistration registration) {
         var level = Minecraft.getInstance().level;
         if (level != null) {
-            registration.addRecipes(SuperCrystalAssemblerCategory.TYPE,
-                    SuperCrystalAssemblerRecipeManager.getAllRecipes(level));
+            // 超级水晶装配器直接复用 ExtendedAE 的配方，这些配方已由 ExtendedAE 的插件
+            // 注册进同一个分类，此处只需补充催化剂，不重复注册配方。
             registration.addRecipes(SuperCircuitCutterCategory.TYPE,
                     SuperCircuitCutterRecipeManager.getAllRecipes(level));
         }
@@ -56,7 +56,7 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addRecipeCatalyst(ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), SuperCrystalAssemblerCategory.TYPE);
+        registration.addRecipeCatalyst(ModItems.CRYSTAL_ASSEMBLER_PLUS.get(), CrystalAssemblerCategory.RECIPE_TYPE);
         registration.addRecipeCatalyst(ModItems.CIRCUIT_CUTTER_PLUS.get(), SuperCircuitCutterCategory.TYPE);
     }
 
@@ -67,7 +67,7 @@ public class ExtendedAEJeiPlugin implements IModPlugin {
                     @Override
                     public @NotNull Collection<IGuiClickableArea> getGuiClickableAreas(
                             @NotNull SuperCrystalAssemblerScreen screen, double mouseX, double mouseY) {
-                        return List.of(IGuiClickableArea.createBasic(81, 42, 40, 12, SuperCrystalAssemblerCategory.TYPE));
+                        return List.of(IGuiClickableArea.createBasic(81, 42, 40, 12, CrystalAssemblerCategory.RECIPE_TYPE));
                     }
                 });
         registration.addGenericGuiContainerHandler(SuperCircuitCutterScreen.class,
