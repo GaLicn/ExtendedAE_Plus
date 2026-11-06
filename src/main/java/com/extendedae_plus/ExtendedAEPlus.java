@@ -28,7 +28,6 @@ import com.extendedae_plus.init.ModCreativeTabs;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.init.ModMenuTypes;
 import com.extendedae_plus.init.ModNetwork;
-import com.extendedae_plus.init.ModRecipeSerializers;
 import com.extendedae_plus.init.UpgradeCards;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.server.JeiSyncManager;
@@ -76,7 +75,6 @@ public class ExtendedAEPlus {
         ModBlockEntities.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModCreativeTabs.TABS.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
-        ModRecipeSerializers.SERIALIZERS.register(modEventBus);
 
         EAPComponents.DR.register(modEventBus);
         NeoForge.EVENT_BUS.register(this);
