@@ -1,7 +1,7 @@
 ---
 navigation:
   parent: introduction/index.md
-  title: 超级电路切片机
+  title: 超级电路切片器
   position: 9
   icon: extendedae_plus:circuit_cutter_plus
 categories:
@@ -10,11 +10,11 @@ item_ids:
   - extendedae_plus:circuit_cutter_plus
 ---
 
-# 超级电路切片机
+# 超级电路切片器
 
 <BlockImage id="extendedae_plus:circuit_cutter_plus" scale="5" />
 
-**超级电路切片机**可在单个处理周期内并行执行同一切片机配方最多 **8 次**。
+**超级电路切片器**可在单个处理周期内并行执行同一切片机配方最多 **8 次**。
 
 ## 工作方式
 
