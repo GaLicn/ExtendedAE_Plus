@@ -1,7 +1,6 @@
 package com.extendedae_plus.init;
 
 import com.extendedae_plus.ExtendedAEPlus;
-import com.extendedae_plus.recipe.SuperCircuitCutterRecipeSerializer;
 import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeSerializer;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -13,8 +12,6 @@ public final class ModRecipeSerializers {
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, ExtendedAEPlus.MODID);
     public static final DeferredHolder<RecipeSerializer<?>, SuperCrystalAssemblerRecipeSerializer> SUPER_CRYSTAL_ASSEMBLER =
             SERIALIZERS.register("crystal_assembler_plus", SuperCrystalAssemblerRecipeSerializer::new);
-    public static final DeferredHolder<RecipeSerializer<?>, SuperCircuitCutterRecipeSerializer> SUPER_CIRCUIT_CUTTER =
-            SERIALIZERS.register("circuit_cutter_plus", SuperCircuitCutterRecipeSerializer::new);
 
     private ModRecipeSerializers() {
     }
