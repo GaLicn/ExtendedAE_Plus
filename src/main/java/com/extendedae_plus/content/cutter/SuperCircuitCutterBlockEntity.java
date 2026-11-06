@@ -30,9 +30,8 @@ import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.recipe.SuperCircuitCutterRecipe;
-import com.extendedae_plus.recipe.SuperCircuitCutterRecipeManager;
 import com.glodblock.github.extendedae.common.EAESingletons;
+import com.glodblock.github.extendedae.recipe.CircuitCutterRecipe;
 import com.glodblock.github.extendedae.util.FCUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -165,11 +164,11 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         return TickRateModulation.URGENT;
     }
 
-    private @Nullable RecipeHolder<SuperCircuitCutterRecipe> findRecipe() {
+    private @Nullable RecipeHolder<CircuitCutterRecipe> findRecipe() {
         if (level == null) {
             return null;
         }
-        for (var recipe : SuperCircuitCutterRecipeManager.getAllRecipes(level)) {
+        for (var recipe : level.getRecipeManager().getAllRecipesFor(CircuitCutterRecipe.TYPE)) {
             if (canRun(recipe.value())) {
                 return recipe;
             }
@@ -177,18 +176,18 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         return null;
     }
 
-    private boolean canRun(SuperCircuitCutterRecipe recipe) {
+    private boolean canRun(CircuitCutterRecipe recipe) {
         return getParallelOperations(recipe) > 0;
     }
 
-    private int getParallelOperations(SuperCircuitCutterRecipe recipe) {
-        int operations = Math.min(MAX_PARALLEL_RECIPES, getOutputCapacity(recipe.output()));
+    private int getParallelOperations(CircuitCutterRecipe recipe) {
+        int operations = Math.min(MAX_PARALLEL_RECIPES, getOutputCapacity(recipe.output));
         if (operations == 0) {
             return 0;
         }
         var stack = input.getStackInSlot(0).copy();
         for (int operation = 0; operation < operations; operation++) {
-            var sample = recipe.input().sample();
+            var sample = recipe.getInput().sample();
             if (!sample.checkType(stack)) {
                 return operation;
             }
@@ -210,16 +209,16 @@ public class SuperCircuitCutterBlockEntity extends AENetworkedPoweredBlockEntity
         return remainingSpace / recipeOutput.getCount();
     }
 
-    private void consumeInputs(SuperCircuitCutterRecipe recipe, int operations) {
+    private void consumeInputs(CircuitCutterRecipe recipe, int operations) {
         var stack = input.getStackInSlot(0);
         for (int operation = 0; operation < operations; operation++) {
-            recipe.input().sample().consume(stack);
+            recipe.getInput().sample().consume(stack);
         }
         input.setItemDirect(0, stack);
     }
 
-    private ItemStack createOutput(SuperCircuitCutterRecipe recipe, int operations) {
-        var outputStack = recipe.output().copy();
+    private ItemStack createOutput(CircuitCutterRecipe recipe, int operations) {
+        var outputStack = recipe.output.copy();
         outputStack.setCount(outputStack.getCount() * operations);
         return outputStack;
     }
