@@ -34,10 +34,9 @@ import appeng.util.inv.FilteredInternalInventory;
 import appeng.util.inv.filter.AEItemFilters;
 import com.extendedae_plus.init.ModBlockEntities;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipe;
-import com.extendedae_plus.recipe.SuperCrystalAssemblerRecipeManager;
 import com.glodblock.github.extendedae.api.caps.IGenericInvHost;
 import com.glodblock.github.extendedae.common.EAESingletons;
+import com.glodblock.github.extendedae.recipe.CrystalAssemblerRecipe;
 import com.glodblock.github.extendedae.util.FCUtil;
 import com.glodblock.github.glodium.recipe.stack.IngredientStack;
 import net.minecraft.core.BlockPos;
@@ -197,11 +196,12 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return TickRateModulation.URGENT;
     }
 
-    private @Nullable RecipeHolder<SuperCrystalAssemblerRecipe> findRecipe() {
+    private @Nullable RecipeHolder<CrystalAssemblerRecipe> findRecipe() {
         if (this.level == null) {
             return null;
         }
-        for (var recipe : SuperCrystalAssemblerRecipeManager.getAllRecipes(this.level)) {
+        // 与 EAE 原机共用同一份配方表。
+        for (var recipe : this.level.getRecipeManager().getAllRecipesFor(CrystalAssemblerRecipe.TYPE)) {
             if (this.canRun(recipe.value())) {
                 return recipe;
             }
@@ -209,12 +209,12 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return null;
     }
 
-    private boolean canRun(SuperCrystalAssemblerRecipe recipe) {
+    private boolean canRun(CrystalAssemblerRecipe recipe) {
         return this.getParallelOperations(recipe) > 0;
     }
 
-    private int getParallelOperations(SuperCrystalAssemblerRecipe recipe) {
-        int operations = Math.min(MAX_PARALLEL_RECIPES, this.getOutputCapacity(recipe.output()));
+    private int getParallelOperations(CrystalAssemblerRecipe recipe) {
+        int operations = Math.min(MAX_PARALLEL_RECIPES, this.getOutputCapacity(recipe.output));
         if (operations == 0) {
             return 0;
         }
@@ -248,20 +248,23 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return remainingSpace / recipeOutput.getCount();
     }
 
-    private ItemStack createOutput(SuperCrystalAssemblerRecipe recipe, int operations) {
-        var outputStack = recipe.output().copy();
+    private ItemStack createOutput(CrystalAssemblerRecipe recipe, int operations) {
+        var outputStack = recipe.output.copy();
         outputStack.setCount(outputStack.getCount() * operations);
         return outputStack;
     }
 
-    private List<IngredientStack<?, ?>> requirements(SuperCrystalAssemblerRecipe recipe) {
+    private List<IngredientStack<?, ?>> requirements(CrystalAssemblerRecipe recipe) {
         var requirements = new ArrayList<IngredientStack<?, ?>>();
-        for (var inputStack : recipe.inputItems()) {
+        for (var inputStack : recipe.getInputs()) {
             if (!inputStack.isEmpty()) {
                 requirements.add(inputStack.sample());
             }
         }
-        recipe.inputFluid().ifPresent(fluid -> requirements.add(fluid.sample()));
+        var fluid = recipe.getFluid();
+        if (fluid != null) {
+            requirements.add(fluid.sample());
+        }
         return requirements;
     }
 
@@ -279,7 +282,7 @@ public class SuperCrystalAssemblerBlockEntity extends AENetworkedPoweredBlockEnt
         return copied;
     }
 
-    private void consumeInputs(SuperCrystalAssemblerRecipe recipe, int operations) {
+    private void consumeInputs(CrystalAssemblerRecipe recipe, int operations) {
         FluidStack fluidStack = null;
         var storedFluid = tank.getStack(0);
         if (storedFluid != null && storedFluid.what() instanceof AEFluidKey fluidKey) {
