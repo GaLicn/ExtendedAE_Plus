@@ -5,20 +5,21 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.AmountFormat;
 import com.extendedae_plus.client.jei.NetworkItemCache;
-import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.util.GuiUtil;
 import com.extendedae_plus.util.NumberFormatUtil;
-import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.ingredients.ITypedIngredient;
+import mezz.jei.gui.overlay.elements.IElement;
 import mezz.jei.gui.overlay.ingredients.IngredientListRenderer;
 import mezz.jei.gui.overlay.ingredients.IngredientListSlot;
-import mezz.jei.gui.overlay.elements.IElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fml.ModList;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -86,8 +87,9 @@ public class IngredientListRendererMixin {
             FluidStack fluidStack = (FluidStack) typed.getIngredient();
             return fluidStack.isEmpty() ? null : AEFluidKey.of(fluidStack);
         }
-
-        if (AppliedMekanisticsCompat.isChemicalType(typed.getType())) {
+        
+        if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")
+                && AppliedMekanisticsCompat.isChemicalType(typed.getType())) {
             return AppliedMekanisticsCompat.toKey(typed.getIngredient());
         }
 

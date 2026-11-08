@@ -5,28 +5,27 @@ import me.ramidzkh.mekae2.ae2.MekanismKey;
 import mekanism.api.IMekanismAccess;
 import mekanism.api.chemical.ChemicalStack;
 import mezz.jei.api.ingredients.IIngredientType;
-import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
 
 /**
- * Runtime-only bridge for Applied Mekanistics.
+ * Applied Mekanistics（appmek）兼容层。
  *
- * <p>All Applied Mekanistics references live in this compat boundary. The
- * feature remains optional at runtime because callers first check the loaded
- * mod list and this bridge handles unavailable JEI setup gracefully.</p>
+ * <p>本类直接引用 appmek 与 Mekanism 的类型，JVM 在链接本类时即须解析这些类型，
+ * 因此调用方必须先经 {@code ModList.get().isLoaded("appmek")} 与
+ * {@code ModList.get().isLoaded("mekanism")} 判定两个模组均已加载，再调用本类方法。
+ * 缺少该判定的调用会在守卫位置抛出 {@link NoClassDefFoundError}。</p>
+ *
+ * <p>约束：判定必须写在调用方且使用 {@code ModList}。不得由本类提供 isLoaded 之类的
+ * 方法供调用方判定——调用本类的任何方法都会触发类链接，使守卫失效。</p>
  */
 public final class AppliedMekanisticsCompat {
 
     private AppliedMekanisticsCompat() {
     }
 
-    public static boolean isLoaded() {
-        return ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism");
-    }
-
     public static boolean isChemicalType(@Nullable IIngredientType<?> type) {
-        if (!isLoaded() || type == null) {
+        if (type == null) {
             return false;
         }
 
@@ -46,7 +45,7 @@ public final class AppliedMekanisticsCompat {
 
     @Nullable
     public static AEKey toKey(@Nullable Object ingredient) {
-        if (!(ingredient instanceof ChemicalStack<?> chemicalStack) || !isLoaded()) {
+        if (!(ingredient instanceof ChemicalStack<?> chemicalStack)) {
             return null;
         }
 
