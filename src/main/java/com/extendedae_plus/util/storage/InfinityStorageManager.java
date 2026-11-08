@@ -1,5 +1,8 @@
 package com.extendedae_plus.util.storage;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.MinecraftServer;
@@ -7,23 +10,23 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
 
-/**
- * This code is inspired by AE2Things[](https://github.com/Technici4n/AE2Things-Forge), licensed under the MIT License.<p>
- * Original copyright (c) Technici4n<p>
- */
+/** Persistent storage manager for all infinity disks in the current world. */
 public class InfinityStorageManager extends SavedData {
-
-    // 存储所有磁盘的Map，键为UUID，值为DataStorage对象
-    private final Map<UUID, InfinityDataStorage> cells;
+    private final Object2ObjectMap<UUID, InfinityDataStorage> cells;
+    // Changes only when a cell object is added, replaced, or removed. Inventory
+    // instances use this to invalidate their object cache without map lookups.
+    private long storageRevision;
 
     public InfinityStorageManager() {
-        cells = new HashMap<>();
+        this.cells = new Object2ObjectOpenHashMap<>();
         this.setDirty();
     }
 
-    private InfinityStorageManager(Map<UUID, InfinityDataStorage> cells) {
+    private InfinityStorageManager(Object2ObjectMap<UUID, InfinityDataStorage> cells) {
         this.cells = cells;
         this.setDirty();
     }
@@ -31,7 +34,7 @@ public class InfinityStorageManager extends SavedData {
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag nbt) {
         ListTag cellList = new ListTag();
-        for (Map.Entry<UUID, InfinityDataStorage> entry : cells.entrySet()) {
+        for (var entry : Object2ObjectMaps.fastIterable(this.cells)) {
             CompoundTag cell = new CompoundTag();
             cell.putUUID(InfinityConstants.INFINITY_CELL_UUID, entry.getKey());
             cell.put(InfinityConstants.INFINITY_CELL_DATA, entry.getValue().serializeNBT());
@@ -43,12 +46,9 @@ public class InfinityStorageManager extends SavedData {
     }
 
     public static InfinityStorageManager readNbt(CompoundTag nbt) {
-        int version = nbt.contains(InfinityConstants.FORMAT_VERSION_FIELD) ?
-                nbt.getInt(InfinityConstants.FORMAT_VERSION_FIELD) :
-                1;
-
-        Map<UUID, InfinityDataStorage> cells = new HashMap<>();
         ListTag cellList = nbt.getList(InfinityConstants.INFINITY_CELL_LIST, CompoundTag.TAG_COMPOUND);
+        Object2ObjectMap<UUID, InfinityDataStorage> cells =
+                new Object2ObjectOpenHashMap<>(Math.max(2, cellList.size()));
         for (int i = 0; i < cellList.size(); i++) {
             CompoundTag cell = cellList.getCompound(i);
             cells.put(
@@ -60,28 +60,45 @@ public class InfinityStorageManager extends SavedData {
     }
 
     public Set<UUID> getAllLoadedUUIDs() {
-        return Collections.unmodifiableSet(cells.keySet());
+        return Collections.unmodifiableSet(this.cells.keySet());
     }
 
-    public void updateCell(UUID uuid, InfinityDataStorage infinityDataStorage) {
-        cells.put(uuid, infinityDataStorage);
-        setDirty();
+    public void updateCell(UUID uuid, InfinityDataStorage storage) {
+        InfinityDataStorage previous = this.cells.put(uuid, storage);
+        if (previous != storage) {
+            this.storageRevision++;
+        }
+        this.setDirty();
     }
 
     public void removeCell(UUID uuid) {
-        cells.remove(uuid);
-        setDirty();
+        if (this.cells.remove(uuid) != null) {
+            this.storageRevision++;
+            this.setDirty();
+        }
     }
 
     public boolean hasUUID(UUID uuid) {
-        return cells.containsKey(uuid);
+        return this.cells.containsKey(uuid);
+    }
+
+    public InfinityDataStorage getCell(UUID uuid) {
+        return this.cells.get(uuid);
+    }
+
+    public long getStorageRevision() {
+        return this.storageRevision;
     }
 
     public InfinityDataStorage getOrCreateCell(UUID uuid) {
-        if (!cells.containsKey(uuid)) {
-            updateCell(uuid, new InfinityDataStorage());
+        InfinityDataStorage cell = this.cells.get(uuid);
+        if (cell == null) {
+            cell = new InfinityDataStorage();
+            this.cells.put(uuid, cell);
+            this.storageRevision++;
+            this.setDirty();
         }
-        return cells.get(uuid);
+        return cell;
     }
 
     public static InfinityStorageManager getInstance(MinecraftServer server) {
