@@ -11,6 +11,7 @@ import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.UltimateSuperAssemblerMatrixPreviewRenderer;
 import com.extendedae_plus.client.event.CtrlQPatternKeyHandler;
 import com.extendedae_plus.client.event.EmiCtrlQHandler;
+import com.extendedae_plus.client.event.ForceCraftKeyHandler;
 import com.extendedae_plus.client.model.MatrixFrameModel;
 import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.content.ae2.MirrorPatternProviderBlockEntity;
@@ -247,6 +248,10 @@ public class ExtendedAEPlus {
             ClientRegistrar.registerMenuScreens();
 
             event.enqueueWork(() -> {
+// 世界方块强制下单不依赖任何查看器模组，须无条件注册。
+                // 世界方块强制下单不依赖任何查看器模组，须无条件注册。
+                MinecraftForge.EVENT_BUS.register(ForceCraftKeyHandler.class);
+
                 // EMI 或 JEI 任一存在即注册对应输入监听。查看器模组判定在此入口完成，
                 // 下游的 InputEvents / CtrlQPatternKeyHandler / EmiCtrlQHandler 不再各自探测。
                 if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
