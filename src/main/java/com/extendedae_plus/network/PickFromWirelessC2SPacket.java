@@ -3,10 +3,12 @@ package com.extendedae_plus.network;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.energy.IEnergyService;
 import appeng.api.stacks.AEItemKey;
+import appeng.api.stacks.AEKey;
 import appeng.api.storage.MEStorage;
 import appeng.api.storage.StorageHelper;
 import appeng.me.helpers.PlayerSource;
 import appeng.menu.me.crafting.CraftAmountMenu;
+import com.extendedae_plus.util.crafting.CraftableKeyResolver;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator.LocatedTerminal;
 import net.minecraft.core.BlockPos;
@@ -126,12 +128,12 @@ public class PickFromWirelessC2SPacket {
                 boolean handIsDifferentItem = !handIsEmpty && !AEItemKey.of(mainHandItem).equals(targetKey);
 
                 if (handIsEmpty || handIsDifferentItem) {
-                    var craftingService = grid.getCraftingService();
-                    if (craftingService.isCraftable(targetKey)) {
+                    AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), targetKey);
+                    if (craftable != null) {
                         // 主手为空一组
                         var locator = located.createMenuLocator(player);
                         if (locator != null) {
-                            CraftAmountMenu.open(player, locator, targetKey, 64);
+                            CraftAmountMenu.open(player, locator, craftable, 64);
                         }
                         return; // 打开界面后直接结束，不执行后面的放物品逻辑
                     }
