@@ -108,7 +108,7 @@ public class RequestProvidersListC2SPacket {
             }
 
             // 回退：基于编码终端所在网络枚举供应器，用“负数ID编码索引”：encodedId = -1 - index
-            List<PatternContainer> containers = PatternTerminalUtil.listAvailableProvidersFromGrid(encMenu);
+            List<PatternContainer> containers = ProviderUploadUtil.listAvailableProvidersFromGrid(encMenu);
             List<Long> idxIds = new ArrayList<>();
             List<String> names = new ArrayList<>();
             List<Integer> slots = new ArrayList<>();
