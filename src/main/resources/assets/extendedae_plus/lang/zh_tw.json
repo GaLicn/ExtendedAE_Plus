@@ -92,6 +92,10 @@
   "extendedae_plus.upload_to_matrix.fail_full": "裝配矩陣的樣板倉已滿或無法插入",
   "extendedae_plus.upload_to_matrix.repetition": "裝配矩陣已存在相同樣板，已跳過上傳並返還空白樣板",
   "extendedae_plus.message.provider.duplicate": "樣板供應器「%s」已存在相同樣板，已跳過上傳並返還空白樣板",
+  "extendedae_plus.message.provider.expansion.no_upgrade_slot": "樣板供應器「%s」沒有空的升級槽，無法裝入擴容卡。",
+  "extendedae_plus.message.provider.expansion.no_network": "無法存取 AE 網路，樣板供應器「%s」的擴容卡無法自動裝入。",
+  "extendedae_plus.message.provider.expansion.no_card": "ME 網路中沒有可用的超級擴充樣板供應器擴容卡（或網路能量不足），樣板供應器「%s」無法擴容。",
+  "extendedae_plus.message.provider.expansion.failed": "樣板供應器「%s」的擴容卡安裝失敗，樣板未能寫入。",
 
   "chat.extendedae_plus.terminal.pos": "合成計劃對應供應器現在突出顯示在：%s，維度：%s (%s個方塊外)",
 
