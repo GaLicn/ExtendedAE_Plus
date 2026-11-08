@@ -4,6 +4,7 @@ import com.extendedae_plus.content.wireless.WirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlock;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
+import net.minecraft.world.level.block.Block;
 import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaCommonRegistration;
 import snownee.jade.api.IWailaPlugin;
@@ -21,6 +22,9 @@ public class WirelessTransceiverJadePlugin implements IWailaPlugin {
 
 	@Override
 	public void registerClient(IWailaClientRegistration registration) {
+		// 库存已由无线终端同步，所有方块共用客户端提示行。
+		registration.registerBlockComponent(NetworkStockProvider.INSTANCE, Block.class);
+		registration.markAsClientFeature(NetworkStockProvider.INSTANCE.getUid());
 		// 遍历组件常量，逐一注册
 		for (var component : WirelessTransceiverJadePluginComponents.values()) {
 			registration.registerBlockComponent(component, WirelessTransceiverBlock.class);

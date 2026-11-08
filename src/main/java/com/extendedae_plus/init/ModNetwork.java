@@ -21,7 +21,8 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String PROTOCOL_VERSION = "1";
+    // 库存包增加连接状态，拒绝按旧格式解码的客户端或服务端。
+    private static final String PROTOCOL_VERSION = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder
             .named(new ResourceLocation(ExtendedAEPlus.MODID, "main"))
             .networkProtocolVersion(() -> PROTOCOL_VERSION)
