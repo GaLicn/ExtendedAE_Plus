@@ -1,0 +1,6 @@
+{
+  "parent": "ae2:block/drive/drive_cell",
+  "textures": {
+    "cell": "extendedae_plus:block/drive/cells/infinity_biginteger_cell"
+  }
+}
