@@ -1,5 +1,6 @@
 package com.extendedae_plus.network.provider;
 
+import com.extendedae_plus.client.ProviderListCache;
 import com.extendedae_plus.client.screen.ProviderSelectScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -18,20 +19,30 @@ public class ProvidersListS2CPacket {
     private final List<Long> ids;
     private final List<String> names;
     private final List<Integer> emptySlots;
+    /** 静默模式：仅回填客户端缓存，不打开选择弹窗。 */
+    private final boolean silent;
+    /** 打开弹窗时作为初始搜索词的服务端关键字，可为空。 */
     private final String searchKey;
 
     public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots) {
-        this(ids, names, emptySlots, null);
+        this(ids, names, emptySlots, false, null);
     }
 
-    public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots, String searchKey) {
+    public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots, boolean silent) {
+        this(ids, names, emptySlots, silent, null);
+    }
+
+    public ProvidersListS2CPacket(List<Long> ids, List<String> names, List<Integer> emptySlots,
+                                  boolean silent, String searchKey) {
         this.ids = ids;
         this.names = names;
         this.emptySlots = emptySlots;
+        this.silent = silent;
         this.searchKey = searchKey;
     }
 
     public static void encode(ProvidersListS2CPacket msg, FriendlyByteBuf buf) {
+        buf.writeBoolean(msg.silent);
         buf.writeVarInt(msg.ids.size());
         for (int i = 0; i < msg.ids.size(); i++) {
             buf.writeLong(msg.ids.get(i));
@@ -45,6 +56,7 @@ public class ProvidersListS2CPacket {
     }
 
     public static ProvidersListS2CPacket decode(FriendlyByteBuf buf) {
+        boolean silent = buf.readBoolean();
         int size = buf.readVarInt();
         List<Long> ids = new ArrayList<>(size);
         List<String> names = new ArrayList<>(size);
@@ -55,7 +67,7 @@ public class ProvidersListS2CPacket {
             slots.add(buf.readVarInt());
         }
         String searchKey = buf.readBoolean() ? buf.readUtf(256) : null;
-        return new ProvidersListS2CPacket(ids, names, slots, searchKey);
+        return new ProvidersListS2CPacket(ids, names, slots, silent, searchKey);
     }
 
     public static void handle(ProvidersListS2CPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -68,6 +80,11 @@ public class ProvidersListS2CPacket {
     private static void handleClient(ProvidersListS2CPacket msg) {
         var mc = Minecraft.getInstance();
         if (mc == null) return;
+        if (msg.silent) {
+            // 静默回填：供客户端在编码时做「唯一匹配」本地判定使用。
+            ProviderListCache.update(msg.names, msg.emptySlots);
+            return;
+        }
         var current = mc.screen;
         mc.setScreen(new ProviderSelectScreen(current, msg.ids, msg.names, msg.emptySlots, msg.searchKey));
     }

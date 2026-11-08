@@ -6,6 +6,9 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.WidgetStyle;
 import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.IconButton;
+import com.extendedae_plus.api.upload.IPatternEncodeRequestSync.EncodeRequest;
+import com.extendedae_plus.client.ProviderListCache;
+import com.extendedae_plus.config.ModConfig;
 import com.extendedae_plus.init.ModNetwork;
 import com.extendedae_plus.mixin.ae2.accessor.AEBaseScreenAccessor;
 import com.extendedae_plus.mixin.minecraft.accessor.AbstractContainerScreenAccessor;
@@ -15,6 +18,7 @@ import com.extendedae_plus.network.provider.ReturnLastPatternC2SPacket;
 import com.extendedae_plus.network.upload.EncodeWithShiftFlagC2SPacket;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -40,14 +44,18 @@ public abstract class PatternEncodingTermScreenMixin {
 
     /**
      * GTOCore 魔改版 AE2 将编码按钮保存为字段，不再稳定保留 encodeBtn 局部变量。
-     * 在点击入口补发 Shift 状态，避免依赖构造器局部变量表。
+     * 在点击入口补发编码请求（Shift 与唯一匹配判定），避免依赖构造器局部变量表。
      */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void eap$encodeWithShift(double mouseX, double mouseY, int button,
                                      CallbackInfoReturnable<Boolean> cir) {
         var encodeButton = eap$getEncodeButton();
         if (button == 0 && encodeButton != null && encodeButton.isMouseOver(mouseX, mouseY)) {
-            ModNetwork.CHANNEL.sendToServer(new EncodeWithShiftFlagC2SPacket(Screen.hasShiftDown()));
+            boolean shiftDown = Screen.hasShiftDown();
+            ModNetwork.CHANNEL.sendToServer(new EncodeWithShiftFlagC2SPacket(
+                    new EncodeRequest(shiftDown, eap$findUniqueProvider(shiftDown))));
+            // 静默刷新缓存，供下一次连续编码使用。
+            ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(true));
             var screen = (PatternEncodingTermScreen<?>) (Object) this;
             screen.getMenu().encode();
             cir.setReturnValue(true);
@@ -74,9 +82,35 @@ public abstract class PatternEncodingTermScreenMixin {
         return null;
     }
 
+    /**
+     * 本地判定唯一匹配的供应器：名称与搜索词同处客户端、同一语言环境，不受专用服务器语言影响。
+     *
+     * <p>命中即消费搜索词：它只属于触发它的那次 JEI/EMI 转移，避免之后手动摆放的配方被传到同一供应器。</p>
+     */
+    @Unique
+    private static String eap$findUniqueProvider(boolean shiftDown) {
+        if (shiftDown) {
+            return null;
+        }
+        try {
+            if (!ModConfig.INSTANCE.uniqueProviderAutoUploadEnable) {
+                return null;
+            }
+            String provider = ProviderListCache.findUniqueMatch(RecipeTypeNameConfig.peekLastProviderSearchKey());
+            if (provider != null) {
+                RecipeTypeNameConfig.consumeLastProviderSearchKey();
+            }
+            return provider;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     // 只创建按钮
     @Inject(method = "<init>", at = @At("TAIL"))
     private void eap$createUploadButton(CallbackInfo ci) {
+        // 预取供应器列表：编码时本地唯一匹配判定需要（静默，不打开弹窗）。
+        ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(true));
         if (eap$uploadBtn == null) {
             eap$uploadBtn = createUploadButton();
         }
@@ -105,7 +139,7 @@ public abstract class PatternEncodingTermScreenMixin {
                 if (searchKey == null || searchKey.isBlank()) {
                     searchKey = eap$getMenuSearchKey();
                 }
-                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(searchKey));
+                ModNetwork.CHANNEL.sendToServer(new RequestProvidersListC2SPacket(false, searchKey));
             }
         }) {
             private final float eap$scale = 0.75f;
@@ -143,7 +177,7 @@ public abstract class PatternEncodingTermScreenMixin {
                     pose.pushPose();
                     // Rotate around the center of the 16x16 icon
                     pose.translate(8.0f, 8.0f, 0.0f);
-                    pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(180.0f));
+                    pose.mulPose(Axis.ZP.rotationDegrees(180.0f));
                     pose.translate(-8.0f, -8.0f, 0.0f);
                     blitter.dest(0, 0).blit(guiGraphics);
                     pose.popPose();
