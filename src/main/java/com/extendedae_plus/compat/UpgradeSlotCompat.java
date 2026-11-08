@@ -84,6 +84,10 @@ public final class UpgradeSlotCompat {
         return host instanceof TileExPatternProvider || host instanceof PartExPatternProvider;
     }
 
+    public static int getExtendedPatternProviderExtraUpgradeSlots() {
+        return EXTENDED_PATTERN_PROVIDER_EXTRA_UPGRADE_SLOTS;
+    }
+
     public static int getExtendedPatternProviderPatternCapacity() {
         return getExtendedPatternProviderTotalPages() * EXTENDED_PATTERN_PROVIDER_SLOTS_PER_PAGE;
     }
