@@ -80,7 +80,12 @@ public class RecipeTypeMappingScreen extends Screen {
         for (int index = start; index < end; index++) {
             RecipeTypeNameConfig.RecipeTypeMapping mapping = this.filteredMappings.get(index);
             String prefix = mapping.key().equals(this.selectedKey) ? "▶ " : "";
-            String label = prefix + mapping.key() + "  →  " + mapping.value();
+            // 纯 path 且被多个模组共用时追加冲突标记，提示该别名不会生效、需改用完整 ID。
+            String conflict = mapping.key().indexOf(':') < 0
+                    && RecipeTypeNameConfig.isAmbiguousPath(mapping.key())
+                    ? Component.translatable("extendedae_plus.screen.mapping_management.conflict").getString()
+                    : "";
+            String label = prefix + mapping.key() + "  →  " + mapping.value() + conflict;
             addRenderableWidget(Button.builder(Component.literal(label), button -> selectMapping(mapping))
                     .bounds(innerX, rowsY + (index - start) * ROW_HEIGHT, innerWidth, 20)
                     .build());
