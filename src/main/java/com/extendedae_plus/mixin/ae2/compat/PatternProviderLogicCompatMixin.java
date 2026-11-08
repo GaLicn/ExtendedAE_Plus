@@ -89,9 +89,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Shadow
     private AppEngInternalInventory patternInventory;
 
-    @Unique
-    private boolean eap$compatVirtualCraftingEnabled = false;
-
     // 旧倍率页升级后，保留前四页的可用状态，并将超额样板安全暂存到独立 NBT。
     @Unique
     private boolean eap$legacyPatternMigrationComplete;
@@ -130,7 +127,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     private void eap$compatOnUpgradesChanged() {
         try {
             this.eap$compatNotifyHostChanged();
-            eap$compatSyncVirtualCraftingState();
             this.updatePatterns();
             this.eap$getChannelCardController().onUpgradesChanged();
         } catch (Exception e) {
@@ -139,23 +135,24 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     }
 
     @Unique
-    private void eap$compatSyncVirtualCraftingState() {
-        boolean hasCard = false;
+    private boolean eap$compatHasVirtualCraftingCard() {
+        // 实时读取升级槽：NBT 加载顺序可能使 appflux 的升级槽晚于本回调恢复，
+        // 缓存布尔值会导致重进世界后虚拟合成卡不生效（只能破坏重放才恢复）。
         var inventory = eap$compatGetEffectiveUpgradeInventory();
-        if (inventory != null) {
-            for (ItemStack stack : inventory) {
-                if (!stack.isEmpty() && stack.getItem() == ModItems.VIRTUAL_CRAFTING_CARD.get()) {
-                    hasCard = true;
-                    break;
-                }
+        if (inventory == null) {
+            return false;
+        }
+        for (ItemStack stack : inventory) {
+            if (!stack.isEmpty() && stack.getItem() == ModItems.VIRTUAL_CRAFTING_CARD.get()) {
+                return true;
             }
         }
-        eap$compatVirtualCraftingEnabled = hasCard;
+        return false;
     }
 
     @Unique
     private void eap$compatTryVirtualCompletion(IPatternDetails patternDetails) {
-        if (!eap$compatVirtualCraftingEnabled) {
+        if (!eap$compatHasVirtualCraftingCard()) {
             return;
         }
 
@@ -202,7 +199,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
     @Unique
     private void eap$compatOnExternalUpgradesChanged() {
         try {
-            eap$compatSyncVirtualCraftingState();
             this.updatePatterns();
             this.eap$getChannelCardController().onUpgradesChanged();
         } catch (Exception e) {
@@ -275,7 +271,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             }
 
             this.eap$getChannelCardController().onLoaded();
-            eap$compatSyncVirtualCraftingState();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级加载失败", e);
         }
@@ -309,9 +304,6 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
             }
             this.eap$legacyPatternOverflow.clear();
             this.eap$legacyUnlockedPatternSlots = 0;
-            if (UpgradeSlotCompat.shouldEnableChannelCard()) {
-                eap$compatVirtualCraftingEnabled = false;
-            }
             this.eap$getChannelCardController().onUnloaded();
         } catch (Exception e) {
             Logger.EAP$LOGGER.error("兼容性升级清理失败", e);
@@ -350,7 +342,7 @@ public abstract class PatternProviderLogicCompatMixin implements IUpgradeableObj
 
     @Override
     public boolean eap$compatIsVirtualCraftingEnabled() {
-        return this.eap$compatVirtualCraftingEnabled;
+        return eap$compatHasVirtualCraftingCard();
     }
 
     @Override
