@@ -8,39 +8,18 @@ import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
-import net.minecraftforge.fml.loading.LoadingModList;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import com.extendedae_plus.compat.AdvancedAEScaledPatternBridge;
+import com.extendedae_plus.util.ModCheckUtils;
 
 public final class PatternScaler {
-    private static final boolean advAvailable;
-    private static final Constructor<?> advCtor;
-    private static final Class<?> advIfaceClass;
-
-    static {
-        boolean available = false;
-        Constructor<?> ctor = null;
-        Class<?> iface = null;
-
-        try {
-            // 尝试加载扩展类
-            Class<?> clazz = Class.forName("com.extendedae_plus.api.crafting.ScaledProcessingPatternAdv");
-            ctor = clazz.getConstructor(AEProcessingPattern.class, long.class);
-
-            // 加载接口
-            iface = Class.forName("net.pedroksl.advanced_ae.common.patterns.AdvPatternDetails");
-
-            // 检查是否安装 Advanced AE
-            if (LoadingModList.get() != null && LoadingModList.get().getModFileById("advanced_ae") != null) {
-                available = true;
-            }
-        } catch (Throwable ignored) {}
-
-        advAvailable = available;
-        advCtor = ctor;
-        advIfaceClass = iface;
-    }
+    /**
+     * AdvancedAE 扩展样板是否可用。
+     *
+     * <p>AAE 专有的类型只在 {@link AdvancedAEScaledPatternBridge} 中出现，本类不引用其中任何一个。
+     * 探测在类初始化时做一次，{@link #createScaled} 之后走普通 Java 调用，不再经过反射。</p>
+     */
+    private static final boolean ADV_AVAILABLE =
+            ModCheckUtils.isAAELoading() && AdvancedAEScaledPatternBridge.isAvailable();
 
     private PatternScaler() {}
 
@@ -49,15 +28,11 @@ public final class PatternScaler {
      * 自动支持原版 AE 和可选 AAE 的 AdvProcessingPattern。
      */
     public static ScaledProcessingPattern createScaled(AEProcessingPattern base, long multiplier) {
-        // 尝试 Advanced AE 扩展
-        if (advAvailable && advIfaceClass != null && advCtor != null) {
-            try {
-                if (advIfaceClass.isInstance(base)) {
-                    // 通过反射创建可选扩展样板，避免未安装 Advanced AE 时触发类链接错误。
-                    return (ScaledProcessingPattern) advCtor.newInstance(base, multiplier);
-                }
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException ignored) {
-                // 出错退回普通逻辑
+        // Advanced AE 扩展：桥接类返回 null 表示不是 AAE 样板，落到下面的普通样板。
+        if (ADV_AVAILABLE) {
+            ScaledProcessingPattern advPattern = AdvancedAEScaledPatternBridge.tryCreate(base, multiplier);
+            if (advPattern != null) {
+                return advPattern;
             }
         }
 
@@ -105,12 +80,7 @@ public final class PatternScaler {
         if (key instanceof AEItemKey) return 1L;
         if (key instanceof AEFluidKey) return 1000L;
 
-        // 支持 Mekanism Chemical 等（反射安全）
-        try {
-            if ("me.ramidzkh.mekae2.ae2.MekanismKey".equals(key.getClass().getName())) {
-                return 1000L;
-            }
-        } catch (Exception ignored) {}
-        return 1L;
+        // Mekanism Chemical 以 mB 计量，与流体一致；按类名判断，不加载可选模组的类型。
+        return "me.ramidzkh.mekae2.ae2.MekanismKey".equals(key.getClass().getName()) ? 1000L : 1L;
     }
 }
