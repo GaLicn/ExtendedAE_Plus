@@ -8,6 +8,8 @@ import appeng.api.upgrades.UpgradeInventories;
 import appeng.helpers.patternprovider.PatternProviderLogic;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.util.inv.AppEngInternalInventory;
+import com.extendedae_plus.api.bridge.CompatUpgradeProvider;
+import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.api.bridge.PatternProviderPageUnlockBridge;
 import com.extendedae_plus.compat.DynamicSizeInternalInventory;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
@@ -27,7 +29,8 @@ import java.util.List;
 /** GTOCore 覆盖原兼容层时，恢复扩展供应器的升级库存与动态页数。 */
 @Mixin(value = PatternProviderLogic.class, priority = 400, remap = false)
 public abstract class GtoCorePatternProviderUpgradeMixin
-        implements IUpgradeableObject, PatternProviderPageUnlockBridge {
+        implements IUpgradeableObject, PatternProviderPageUnlockBridge, CompatUpgradeProvider,
+        PatternProviderLogicUpgradeCompatBridge {
 
     @Shadow @Final private PatternProviderLogicHost host;
     @Shadow @Final private AppEngInternalInventory patternInventory;
@@ -96,6 +99,32 @@ public abstract class GtoCorePatternProviderUpgradeMixin
     @Override
     public IUpgradeInventory getUpgrades() {
         return this.eap$upgrades;
+    }
+
+    /**
+     * 自动装卡（{@code ProviderUploadUtil#canInstallExpansionCard}）读取的升级槽。
+     *
+     * <p>GTO 下 {@code PatternProviderLogicCompatMixin} 被条件加载插件禁用，本类是该环境的唯一实现，
+     * 缺了这两个接口会让 {@code eap$getEffectiveUpgrades()} 永远拿不到槽位，自动取卡扩容静默失效。</p>
+     */
+    @Override
+    public IUpgradeInventory eap$getCompatUpgrades() {
+        return this.eap$upgrades;
+    }
+
+    @Override
+    public IUpgradeInventory eap$getEffectiveUpgrades() {
+        if (UpgradeSlotCompat.shouldManageLocalUpgradeInventory()) {
+            return this.eap$upgrades;
+        }
+        // appflux 存在时生效的是其注入的槽位，往自建槽装卡机器读不到。
+        IUpgradeInventory appfluxUpgrades = UpgradeSlotCompat.getPatternProviderAppfluxUpgrades(this);
+        return appfluxUpgrades != null ? appfluxUpgrades : this.eap$upgrades;
+    }
+
+    @Override
+    public void eap$onCompatUpgradesChangedHook() {
+        this.eap$onUpgradesChanged();
     }
 
     @Unique
