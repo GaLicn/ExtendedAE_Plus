@@ -46,7 +46,10 @@ public abstract class PatternEncodingTermScreenMixin {
      * GTOCore 魔改版 AE2 将编码按钮保存为字段，不再稳定保留 encodeBtn 局部变量。
      * 在点击入口补发编码请求（Shift 与唯一匹配判定），避免依赖构造器局部变量表。
      */
-    @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
+    // mouseClicked 是 Minecraft 覆写方法：GTO 所用 AE2 分支以 SRG 名发布（只有 m_6375_），
+    // 而 remap = false 不走 refmap，只写 official 名会静默注入失败，导致编码请求包永远不发。
+    // 两个名字都声明，命中哪个都行（require 保持 0 以兼容两套命名环境）。
+    @Inject(method = {"mouseClicked", "m_6375_"}, at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void eap$encodeWithShift(double mouseX, double mouseY, int button,
                                      CallbackInfoReturnable<Boolean> cir) {
         var encodeButton = eap$getEncodeButton();

@@ -26,7 +26,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = BlockAssemblerMatrixBase.class, remap = false)
 public abstract class BlockAssemblerMatrixBaseMixin {
 
-    @Inject(method = "use", at = @At("HEAD"), cancellable = true, require = 0)
+    // ExtendedAE 以 SRG 名发布（remap = false 不会做名称映射），运行时只能命中 m_6227_；
+    // 保留 official 名以兼容开发环境与将来重新混淆的构建。
+    @Inject(method = {"use", "m_6227_"}, at = @At("HEAD"), cancellable = true)
     private void eap$openGlassSuperMatrixMenu(BlockState state, Level level, BlockPos pos, Player player,
             InteractionHand hand, BlockHitResult hit, CallbackInfoReturnable<InteractionResult> cir) {
         if (!((Object) this instanceof BlockAssemblerMatrixGlass)
@@ -47,7 +49,7 @@ public abstract class BlockAssemblerMatrixBaseMixin {
     }
 
     // GTOCore 对扩展样板供应器使用 m_6861_ 覆盖邻居回调，两个名称都允许命中。
-    @Inject(method = {"neighborChanged", "m_6861_"}, at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = {"neighborChanged", "m_6861_"}, at = @At("HEAD"), cancellable = true)
     private void eap$handleSuperMatrixNeighborChange(BlockState state, Level level, BlockPos pos, Block block,
             BlockPos fromPos, boolean isMoving, CallbackInfo ci) {
         if (!(level instanceof ServerLevel serverLevel)
@@ -62,7 +64,7 @@ public abstract class BlockAssemblerMatrixBaseMixin {
         }
     }
 
-    @Inject(method = "onRemove", at = @At("HEAD"))
+    @Inject(method = {"onRemove", "m_6810_"}, at = @At("HEAD"))
     private void eap$breakSuperMatrix(BlockState state, Level level, BlockPos pos, BlockState newState,
             boolean isMoving, CallbackInfo ci) {
         if (newState.getBlock() != state.getBlock()

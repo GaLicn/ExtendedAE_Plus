@@ -2,7 +2,6 @@ package com.extendedae_plus.client;
 
 import appeng.api.stacks.GenericStack;
 import appeng.client.gui.me.common.MEStorageScreen;
-import appeng.integration.modules.jei.GenericEntryStackHelper;
 import com.extendedae_plus.compat.AppliedMekanisticsCompat;
 import com.extendedae_plus.compat.emi.EmiHelper;
 import com.extendedae_plus.init.ModNetwork;
@@ -13,6 +12,9 @@ import com.extendedae_plus.network.PullFromJeiOrCraftC2SPacket;
 import com.extendedae_plus.network.crafting.OpenCraftFromJeiC2SPacket;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
+import mezz.jei.api.constants.VanillaTypes;
+import mezz.jei.api.forge.ForgeTypes;
+import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -21,9 +23,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.ModList;
 import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 public final class InputEvents {
@@ -195,20 +199,46 @@ public final class InputEvents {
     /**
      * JEI 条目 → AE2 {@link GenericStack}。
      *
-     * <p>AE2 原生的 {@link GenericEntryStackHelper#ingredientToStack} 只识别物品与流体，
-     * Mekanism 化学品条目在其内部返回 null，导致中键与 Shift+左键在化学品上无任何响应。
-     * 因此原生转换失败后，再由 AppMek 桥接层补一次化学品转换。</p>
+     * <p>物品与流体直接经 {@link GenericStack#fromItemStack} / {@link GenericStack#fromFluidStack}
+     * 构造。不使用 AE2 的 {@code appeng.integration.modules.jei.GenericEntryStackHelper}：
+     * 该助手在 GTO 使用的 AE2 分支（15.267.x）中已被移除，直接调用会在 JEI 路径上抛
+     * {@link NoClassDefFoundError}。</p>
      *
-     * <p>守卫必须位于调用桥接层之前且使用 {@code ModList}：桥接类直接引用 mekanism 与
-     * appmek 的类型，任一缺失时触碰该类都会在链接阶段抛 {@link NoClassDefFoundError}。</p>
+     * <p>Mekanism 化学品条目需由 AppMek 桥接层转换。守卫必须位于调用桥接层之前且使用
+     * {@code ModList}：桥接类直接引用 mekanism 与 appmek 的类型，任一缺失时触碰该类都会在
+     * 链接阶段抛 {@link NoClassDefFoundError}。</p>
      */
     private static GenericStack toGenericStack(ITypedIngredient<?> typed) {
-        GenericStack nativeStack = GenericEntryStackHelper.ingredientToStack(typed);
+        GenericStack nativeStack = toVanillaGenericStack(typed);
         if (nativeStack != null) {
             return nativeStack;
         }
         if (ModList.get().isLoaded("appmek") && ModList.get().isLoaded("mekanism")) {
             return AppliedMekanisticsCompat.fromJeiIngredient(typed.getIngredient());
+        }
+        return null;
+    }
+
+    /**
+     * 原版 JEI 条目（物品 / 流体）→ AE2 {@link GenericStack}。
+     *
+     * <p>AE2 原生的 {@code GenericEntryStackHelper} 内部还遍历
+     * {@code appeng.api.integrations.jei.IngredientConverters} 扩展点，可覆盖附属模组注册的
+     * 自定义键类型。本模组不引用该扩展点，因为 GTO 所用的 AE2 分支（15.267.x）已将助手类整体移除；
+     * 附属模组的自定义类型改由各自的桥接层补齐（Mekanism 化学品走 AppMek）。</p>
+     *
+     * @return 物品或流体对应的 GenericStack；其它类型返回 null，交由调用方继续尝试桥接层
+     */
+    @Nullable
+    private static GenericStack toVanillaGenericStack(ITypedIngredient<?> typed) {
+        IIngredientType<?> type = typed.getType();
+        Object ingredient = typed.getIngredient();
+        if (type == VanillaTypes.ITEM_STACK && ingredient instanceof ItemStack stack) {
+            return GenericStack.fromItemStack(stack);
+        }
+        // Forge 平台的流体条目类型由 JEI 的 ForgeTypes 提供（VanillaTypes 中没有 FLUID_STACK）。
+        if (type == ForgeTypes.FLUID_STACK && ingredient instanceof FluidStack stack) {
+            return GenericStack.fromFluidStack(stack);
         }
         return null;
     }

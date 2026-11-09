@@ -13,6 +13,7 @@ import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
 import appeng.core.definitions.AEItems;
+import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.helpers.patternprovider.PatternContainer;
 import appeng.helpers.patternprovider.PatternProviderLogicHost;
 import appeng.me.helpers.PlayerSource;
@@ -168,14 +169,18 @@ public final class ProviderUploadUtil {
         if (count > 0) {
             ItemStack blanks = AEItems.BLANK_PATTERN.stack(count);
             boolean placed = false;
-            if (menu instanceof PatternEncodingTermMenu encMenu) {
-                var blankSlot = ((PatternEncodingTermMenuAccessor) encMenu).eap$getBlankPatternSlot();
-                if (blankSlot != null && blankSlot.mayPlace(blanks)) {
-                    ItemStack remain = blankSlot.safeInsert(blanks);
+            // GTO 所用 AE2 分支（15.267.x）已删除 PatternEncodingTermMenu#blankPatternSlot 字段，
+            // 空白样板库存改挂在终端宿主逻辑上；这里与 MatrixUploadUtil#refundBlankPattern 走同一条路径。
+            if (menu instanceof PatternEncodingTermMenu encMenu
+                    && encMenu.getTarget() instanceof IPatternTerminalMenuHost host) {
+                try {
+                    ItemStack remain = host.getLogic().getBlankPatternInv().addItems(blanks);
                     if (!remain.isEmpty() && player != null) {
                         player.getInventory().placeItemBackInInventory(remain, false);
                     }
                     placed = true;
+                } catch (Throwable ignored) {
+                    // 宿主逻辑不可用时退回玩家背包，避免回收流程中断。
                 }
             }
             if (!placed && player != null) {
