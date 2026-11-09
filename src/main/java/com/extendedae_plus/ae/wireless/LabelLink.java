@@ -13,6 +13,10 @@ import org.jetbrains.annotations.Nullable;
  * 标签无线收发器的连接器。
  * - 将 BE 的 in-world 节点连接到标签网络的虚拟节点。
  * - 不负责注册/反注册标签，只负责维持物理连接。
+ * <p>
+ * 连接销毁一律推迟到下一个 tick 边界（与 AE2 对网格拓扑变更的处理方式一致），避免落在
+ * AE2 {@code EnergyService} 的抽电调用栈内触发 provider 守卫。推迟期间不新建连接，
+ * 与 AE2 的 {@code pendingUpdate} 语义相同。
  */
 public class LabelLink {
     private final IWirelessEndpoint host;
@@ -20,6 +24,11 @@ public class LabelLink {
 
     @Nullable
     private LabelNetworkRegistry.LabelNetwork target;
+
+    /**
+     * 有连接销毁被排队时置位：在此期间既不新建连接，也不重复销毁。
+     */
+    private boolean teardownPending = false;
 
     public LabelLink(IWirelessEndpoint host) {
         this.host = host;
@@ -35,7 +44,7 @@ public class LabelLink {
     }
 
     public boolean isConnected() {
-        return connection.getConnection() != null;
+        return !teardownPending && connection.getConnection() != null;
     }
 
     /**
@@ -64,6 +73,11 @@ public class LabelLink {
             return;
         }
 
+        // 上一次销毁还在排队：等它执行完再决定是否重连
+        if (teardownPending) {
+            return;
+        }
+
         IGridNode hostNode = host.getGridNode();
         IGridNode targetNode = target.node();
         if (hostNode == null || targetNode == null) {
@@ -71,80 +85,71 @@ public class LabelLink {
             return;
         }
 
-        try {
-            var current = connection.getConnection();
-            if (current != null) {
-                var a = current.a();
-                var b = current.b();
-                if ((a == hostNode || b == hostNode) && (a == targetNode || b == targetNode)) {
-                    return; // 已经正确连接
-                }
-                current.destroy();
-                connection.setConnection(null);
+        var current = connection.getConnection();
+        if (current != null) {
+            if (DeferredGridWork.connects(current, hostNode, targetNode)) {
+                return; // 已经正确连接
             }
-            connection.setConnection(GridHelper.createConnection(hostNode, targetNode));
-        } catch (IllegalStateException ignore) {
+            // 目标变了：先断开，断开完成后下一 tick 再重建
             destroyConnection();
+            return;
         }
+
+        // 没有记录中的连接，但可能残留一条（例如上次在记录清除后才建好）
+        IGridConnection existing = DeferredGridWork.findExistingConnection(hostNode, targetNode);
+        if (existing != null) {
+            connection.setConnection(existing);
+            return;
+        }
+
+        connection.setConnection(GridHelper.createConnection(hostNode, targetNode));
     }
 
     public void onUnloadOrRemove() {
-        this.target = null;
+        // 先排队拆连接再清 target：残留清理分支需要 target 才能定位对端节点
         destroyConnection();
+        this.target = null;
     }
 
+    /**
+     * 把当前连接排进下一个 tick 边界销毁。排队期间 {@link #isConnected()} 返回 false，
+     * {@link #updateStatus()} 不会新建连接。
+     */
     private void destroyConnection() {
-        var current = connection.getConnection();
+        if (teardownPending) {
+            return;
+        }
+
+        final ServerLevel level = host.getServerLevel();
+        IGridConnection current = connection.getConnection();
         if (current != null) {
-            var a = current.a();
-            var b = current.b();
-            current.destroy();
-            try {
-                if (a != null && a.getGrid() != null) {
-                    a.getGrid().getTickManager().wakeDevice(a);
-                }
-            } catch (Throwable ignored) {}
-            try {
-                if (b != null && b.getGrid() != null) {
-                    b.getGrid().getTickManager().wakeDevice(b);
-                }
-            } catch (Throwable ignored) {}
             connection.setConnection(null);
-        } else {
-            try {
-                IGridNode hostNode = this.host.getGridNode();
-                IGridNode targetNode = this.target == null ? null : this.target.node();
-                if (hostNode != null && targetNode != null) {
-                    IGridConnection existing = this.findExistingConnection(hostNode, targetNode);
-                    if (existing != null) {
-                        existing.destroy();
-                        try {
-                            if (hostNode.getGrid() != null) {
-                                hostNode.getGrid().getTickManager().wakeDevice(hostNode);
-                            }
-                        } catch (Throwable ignored) {}
-                        try {
-                            if (targetNode.getGrid() != null) {
-                                targetNode.getGrid().getTickManager().wakeDevice(targetNode);
-                            }
-                        } catch (Throwable ignored) {}
-                    }
-                }
-            } catch (Throwable ignored) {}
+            scheduleDestroy(level, current);
+            return;
+        }
+
+        // 没有记录中的连接：清理可能残留的、本应属于本端的连接
+        IGridNode hostNode = host.getGridNode();
+        IGridNode targetNode = this.target == null ? null : this.target.node();
+        IGridConnection stale = DeferredGridWork.findExistingConnection(hostNode, targetNode);
+        if (stale != null) {
+            scheduleDestroy(level, stale);
         }
     }
 
-    @Nullable
-    private IGridConnection findExistingConnection(IGridNode a, IGridNode b) {
-        try {
-            for (IGridConnection gc : a.getConnections()) {
-                var ga = gc.a();
-                var gb = gc.b();
-                if ((ga == a || gb == a) && (ga == b || gb == b)) {
-                    return gc;
-                }
+    private void scheduleDestroy(@Nullable ServerLevel level, IGridConnection connection) {
+        teardownPending = true;
+        DeferredGridWork.schedule(level, () -> {
+            try {
+                IGridNode a = connection.a();
+                IGridNode b = connection.b();
+                connection.destroy();
+                DeferredGridWork.wakeDevice(a);
+                DeferredGridWork.wakeDevice(b);
+            } finally {
+                // 无论结果如何都要放开，避免链路被永久卡在 pending 状态
+                teardownPending = false;
             }
-        } catch (Throwable ignored) {}
-        return null;
+        });
     }
 }

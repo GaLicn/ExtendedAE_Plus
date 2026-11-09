@@ -3,6 +3,7 @@ package com.extendedae_plus.content.wireless;
 import appeng.api.networking.*;
 import appeng.api.util.AECableType;
 import appeng.blockentity.AEBaseBlockEntity;
+import com.extendedae_plus.ae.wireless.DeferredGridWork;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.WirelessMasterLink;
 import com.extendedae_plus.ae.wireless.WirelessSlaveLink;
@@ -203,7 +204,8 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
             slaveLink.onUnloadOrRemove();
         }
         if (managedNode != null) {
-            managedNode.destroy();
+            // 与 AE2 对网格拓扑变更的处理一致：节点销毁排到 tick 边界，避免落在 EnergyService 的抽电调用栈内
+            DeferredGridWork.schedule(getServerLevel(), managedNode::destroy);
         }
     }
 
