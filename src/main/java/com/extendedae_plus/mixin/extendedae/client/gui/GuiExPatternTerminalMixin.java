@@ -14,13 +14,17 @@ import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalAccesso
 import com.extendedae_plus.mixin.extendedae.accessor.GuiExPatternTerminalGroupHeaderRowAccessor;
 import com.extendedae_plus.network.OpenProviderUiC2SPacket;
 import com.extendedae_plus.network.UploadInventoryPatternToProviderC2SPacket;
+import com.extendedae_plus.util.GuiUtil;
 import com.glodblock.github.extendedae.client.button.HighlightButton;
 import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.container.ContainerExPatternTerminal;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -52,6 +56,7 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
     @Shadow(remap = false) @Final private static int GUI_HEADER_HEIGHT;
     @Shadow(remap = false) @Final private static int ROW_HEIGHT;
     @Shadow(remap = false) @Final private static int TEXT_MAX_WIDTH;
+    @Shadow(remap = false) @Final private static Rect2i HIGHLIGHT_BBOX;
 
     @Unique
     private IconButton eap$toggleSlotsButton;
@@ -275,6 +280,21 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
             highlightButtons.putAll(rebuiltButtons);
             terminal.eap$resetScrollbar();
         } catch (Throwable ignored) {
+        }
+    }
+
+    @WrapOperation(
+            method = "drawFG",
+            at = @At(value = "INVOKE", target = "Lcom/glodblock/github/extendedae/client/gui/GuiExPatternTerminal;blit(Lnet/minecraft/client/gui/GuiGraphics;IILnet/minecraft/client/renderer/Rect2i;)V"),
+            remap = false,
+            require = 1,
+            allow = 1)
+    private void eap$renderSearchHighlight(GuiExPatternTerminal<?> terminal, GuiGraphics guiGraphics,
+                                         int x, int y, Rect2i texture, Operation<Void> original) {
+        if (texture == HIGHLIGHT_BBOX) {
+            GuiUtil.drawSlotRainbowHighlight(guiGraphics, x + 1, y + 1);
+        } else {
+            original.call(terminal, guiGraphics, x, y, texture);
         }
     }
 
