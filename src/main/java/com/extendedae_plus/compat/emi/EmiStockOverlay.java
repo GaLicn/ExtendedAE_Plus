@@ -3,6 +3,7 @@ package com.extendedae_plus.compat.emi;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.GenericStack;
 import com.extendedae_plus.compat.NetworkStockOverlay;
+import com.extendedae_plus.client.jei.NetworkItemCache;
 import dev.emi.emi.api.stack.EmiIngredient;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.runtime.EmiFavorite;
@@ -18,6 +19,7 @@ public final class EmiStockOverlay {
     // 按条目身份缓存转换结果，避免逐帧分配；达到上限后清空以限制内存占用。
     private static final int MAX_CACHED_KEYS = 4096;
     private static final Map<EmiIngredient, AEKey> KEY_CACHE = new IdentityHashMap<>();
+    private static EmiIngredient renderingEntry;
 
     private EmiStockOverlay() {
     }
@@ -48,8 +50,7 @@ public final class EmiStockOverlay {
     }
 
     private static AEKey toKey(EmiIngredient ingredient) {
-        if (ingredient.isEmpty() || ingredient instanceof EmiFavorite favorite && favorite.getRecipe() != null) {
-            // 配方收藏自带右下角批量数与右上角配方角标，再叠库存会互相遮挡。
+        if (ingredient.isEmpty() || ingredient instanceof EmiFavorite.Synthetic) {
             return null;
         }
         AEKey cached = KEY_CACHE.get(ingredient);
@@ -70,5 +71,20 @@ public final class EmiStockOverlay {
         }
         KEY_CACHE.put(ingredient, genericStack.what());
         return genericStack.what();
+    }
+
+    public static EmiIngredient setRenderingEntry(EmiIngredient ingredient) {
+        EmiIngredient previous = renderingEntry;
+        renderingEntry = ingredient;
+        return previous;
+    }
+
+    public static boolean shouldReplaceRecipeAmount(EmiFavorite favorite) {
+        if (favorite != renderingEntry || favorite.getRecipe() == null || !NetworkStockOverlay.isEnabled()) {
+            return false;
+        }
+        AEKey key = toKey(favorite);
+        return key != null && (NetworkItemCache.INSTANCE.getAmount(key) > 0
+                || NetworkItemCache.INSTANCE.isCraftable(key));
     }
 }
