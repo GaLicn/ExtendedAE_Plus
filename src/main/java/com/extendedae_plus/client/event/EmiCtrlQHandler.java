@@ -61,10 +61,6 @@ public final class EmiCtrlQHandler {
 
 		ItemStack hovered = EmiHelper.getSidebarItemStackUnderMouse();
 		if (hovered.isEmpty()) {
-			Minecraft mc = Minecraft.getInstance();
-			if (mc.player != null) {
-				mc.player.displayClientMessage(Component.translatable("message.extendedae_plus.hover_item_first"), true);
-			}
 			return;
 		}
 
