@@ -8,7 +8,6 @@ import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.widgets.AETextField;
 import appeng.client.gui.widgets.SettingToggleButton;
 import appeng.menu.implementations.PatternProviderMenu;
-import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.api.advancedBlocking.IPatternProviderMenuAdvancedSync;
 import com.extendedae_plus.api.smartDoubling.IPatternProviderMenuDoublingSync;
@@ -17,7 +16,6 @@ import com.extendedae_plus.network.provider.SetPerProviderScalingLimitC2SPacket;
 import com.extendedae_plus.network.provider.ToggleAdvancedBlockingC2SPacket;
 import com.extendedae_plus.network.provider.ToggleSmartDoublingC2SPacket;
 import com.extendedae_plus.util.GuiUtil;
-import com.glodblock.github.extendedae.client.gui.GuiExPatternProvider;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -134,7 +132,6 @@ public abstract class PatternProviderSmartFeaturesMixin<C extends PatternProvide
         // 每帧刷新按钮和输入框状态
         eap$updateToggles();
         eap$updateLimitInput();
-        eap$updateExGuiLayout();
     }
 
     /* ---------------------------- 刷新逻辑 ---------------------------- */
@@ -201,20 +198,6 @@ public abstract class PatternProviderSmartFeaturesMixin<C extends PatternProvide
             this.eap$PerProviderLimitInput.setTooltipMessage(Collections.singletonList(Component.translatable("extendedae_plus.gui.per_provider_limit.tooltip", cur)));
         } else {
             this.removeWidget(this.eap$PerProviderLimitInput);
-        }
-    }
-
-    /**
-     * 如果是扩展 GUI，刷新扩展按钮布局
-     */
-    @Unique
-    private void eap$updateExGuiLayout() {
-        if ((Object) this instanceof GuiExPatternProvider) {
-            try {
-                ((IExPatternButton) this).eap$updateButtonsLayout();
-            } catch (Throwable t) {
-                EAP$LOGGER.debug("[EAP] updateButtonsLayout skipped: {}", t.toString());
-            }
         }
     }
 
