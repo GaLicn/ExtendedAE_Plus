@@ -5,6 +5,7 @@
   "minVersion": "0.8",
   "client": [
     "emi.BoMScreenMixin",
+    "emi.EmiFavoriteMixin",
     "emi.EmiScreenManagerScreenSpaceMixin",
     "emi.EmiHeaderButtonMixin",
     "advancedae.client.gui.AdvPatternProviderScreenMixin",
