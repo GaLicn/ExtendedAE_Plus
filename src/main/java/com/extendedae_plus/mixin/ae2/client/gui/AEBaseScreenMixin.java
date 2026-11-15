@@ -11,6 +11,7 @@ import appeng.client.gui.style.PaletteColor;
 import appeng.client.gui.style.ScreenStyle;
 import appeng.client.gui.style.Text;
 import appeng.menu.slot.AppEngSlot;
+import com.extendedae_plus.api.IExPatternButton;
 import com.extendedae_plus.api.IExPatternPage;
 import com.extendedae_plus.api.IInputBackgroundRenderer;
 import com.extendedae_plus.api.upload.IGuiExPatternTerminalUploadAccessor;
@@ -43,6 +44,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AEBaseScreen.class)
 public abstract class AEBaseScreenMixin {
+
+    // 升级槽坐标由组件更新，按钮必须在该更新完成后计算布局。
+    @Inject(method = "render", at = @At(value = "INVOKE",
+            target = "Lappeng/client/gui/WidgetContainer;updateBeforeRender()V", shift = At.Shift.AFTER, remap = false))
+    private void eap$updateExPatternButtons(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks,
+            CallbackInfo ci) {
+        if ((Object) this instanceof IExPatternButton screen) {
+            screen.eap$updateButtonsLayout();
+        }
+    }
 
     /**
      * 在 AEBaseScreen 的 mouseClicked 入口拦截 CraftingCPUScreen 的 Shift+点击操作。

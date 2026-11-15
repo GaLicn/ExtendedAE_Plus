@@ -105,7 +105,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
         this.scaleButtons = List.of(
                 allScaleButtons.get(0), allScaleButtons.get(1),
                 allScaleButtons.get(2), allScaleButtons.get(3));
-        this.scaleButtons.forEach(this::addRenderableWidget);
         this.eap$patternScalingControlsVisible = ModConfig.INSTANCE.extendedPatternProviderShowScalingControls;
         this.eap$applyPatternScalingControlsVisibility();
     }
@@ -132,32 +131,6 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.prevPage.setVisibility(showPageButtons);
         }
 
-        if (this.scaleButtons != null) {
-            for (ActionEPPButton button : this.scaleButtons) {
-                if (button != null) {
-                    button.setVisibility(this.eap$patternScalingControlsVisible);
-                    if (!this.renderables.contains(button)) {
-                        this.addRenderableWidget(button);
-                    }
-                }
-            }
-        }
-
-        this.eap$applyPatternScalingControlsVisibility();
-
-        if (this.width != this.eap$lastScreenWidth || this.height != this.eap$lastScreenHeight) {
-            this.eap$lastScreenWidth = this.width;
-            this.eap$lastScreenHeight = this.height;
-            if (this.scaleButtons != null) {
-                for (ActionEPPButton button : this.scaleButtons) {
-                    if (button != null) {
-                        this.removeWidget(button);
-                        this.addRenderableWidget(button);
-                    }
-                }
-            }
-        }
-
         if (this.scaleButtons != null && this.scaleButtons.size() >= 4) {
             var firstUpgradeSlot = this.menu.getSlots(SlotSemantics.UPGRADE).get(0);
             int buttonX = this.leftPos + firstUpgradeSlot.x + 24;
@@ -170,6 +143,30 @@ public abstract class GuiExPatternProviderMixin extends PatternProviderScreen<Co
             this.scaleButtons.get(2).setY(buttonY + 44);
             this.scaleButtons.get(3).setX(buttonX);
             this.scaleButtons.get(3).setY(buttonY + 66);
+        }
+
+        this.eap$applyPatternScalingControlsVisibility();
+
+        // 首次注册前设置坐标，确保首帧渲染采用当前布局位置。
+        if (this.scaleButtons != null) {
+            for (ActionEPPButton button : this.scaleButtons) {
+                if (button != null && !this.renderables.contains(button)) {
+                    this.addRenderableWidget(button);
+                }
+            }
+        }
+
+        if (this.width != this.eap$lastScreenWidth || this.height != this.eap$lastScreenHeight) {
+            this.eap$lastScreenWidth = this.width;
+            this.eap$lastScreenHeight = this.height;
+            if (this.scaleButtons != null) {
+                for (ActionEPPButton button : this.scaleButtons) {
+                    if (button != null) {
+                        this.removeWidget(button);
+                        this.addRenderableWidget(button);
+                    }
+                }
+            }
         }
     }
 
