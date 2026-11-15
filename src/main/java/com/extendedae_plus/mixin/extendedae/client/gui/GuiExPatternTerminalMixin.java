@@ -2,6 +2,7 @@ package com.extendedae_plus.mixin.extendedae.client.gui;
 
 import appeng.api.crafting.PatternDetailsHelper;
 import appeng.api.implementations.blockentities.PatternContainerGroup;
+import appeng.api.stacks.AEKey;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.me.patternaccess.PatternContainerRecord;
@@ -21,6 +22,8 @@ import com.glodblock.github.extendedae.client.gui.GuiExPatternTerminal;
 import com.glodblock.github.extendedae.network.EPPNetworkHandler;
 import com.glodblock.github.glodium.network.packet.CGenericPacket;
 import com.google.common.collect.HashMultimap;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -90,6 +93,15 @@ public abstract class GuiExPatternTerminalMixin extends AEBaseScreen<AEBaseMenu>
 
     public GuiExPatternTerminalMixin(AEBaseMenu menu, Inventory playerInventory, Component title, ScreenStyle style) {
         super(menu, playerInventory, title, style);
+    }
+
+    @WrapOperation(method = "getOrComputePatternSearchData",
+            at = @At(value = "INVOKE", target = "Lappeng/api/stacks/AEKey;getDisplayName()Lnet/minecraft/network/chat/Component;", remap = false),
+            remap = false)
+    private Component eap$matchPatternModId(AEKey key, Operation<Component> original) {
+        Component name = original.call(key);
+        String modId = key.getModId();
+        return modId == null ? name : Component.literal(name.getString() + " @" + modId);
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.extendedae_plus.integration.jei;
 
+import appeng.api.stacks.AEFluidKey;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import mezz.jei.api.recipe.IRecipeManager;
@@ -84,6 +85,22 @@ public final class JeiRuntimeProxy {
         if (current == null || ingredient == null) return "";
         return current.getIngredientManager().getIngredientHelper(ingredient.getType())
                 .getDisplayName(ingredient.getIngredient());
+    }
+
+    public static <T> String getTypedIngredientSearchText(ITypedIngredient<T> typed, boolean namespaceOnly) {
+        IJeiRuntime rt = runtime;
+        if (rt == null || typed == null) return "";
+        if (namespaceOnly) {
+            var helper = rt.getIngredientManager().getIngredientHelper(typed.getType());
+            return "@" + helper.getResourceLocation(typed.getIngredient()).getNamespace();
+        }
+        if (typed.getIngredient() instanceof FluidStack fluid) {
+            AEFluidKey key = AEFluidKey.of(fluid);
+            if (key != null) {
+                return key.getDisplayName().getString();
+            }
+        }
+        return getTypedIngredientDisplayName(typed);
     }
 
     public static List<? extends ITypedIngredient<?>> getBookmarkList() {
