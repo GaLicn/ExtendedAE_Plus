@@ -33,7 +33,7 @@ import java.util.Optional;
 public final class InputEvents {
     private InputEvents() {}
 
-    /** EMI 路径：按下阶段已处理过动作键时，跳过松开阶段的重复发送。 */
+    /** EMI 路径：按下阶段已处理过中键动作时，跳过松开阶段的重复发送。 */
     private static boolean emiActionPressHandled;
 
     @SubscribeEvent
@@ -56,12 +56,9 @@ public final class InputEvents {
             return;
         }
 
-        // EMI 对侧边栏栈的"按下"会在 GLFW 层消费掉（本监听器收不到），
-        // 但无绑定的按键会放行"松开"；因此中键下单 / Shift+左键拉取在此补一次处理。
-        // 按下阶段若已发送（非 EMI 区域），由标志位跳过。
+        // EMI 的侧边栏点击可能在 GLFW 阶段被消费；中键下单在释放阶段补充处理。
         boolean isMiddle = event.getButton() == GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
-        boolean isShiftLeft = event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown();
-        if (!isMiddle && !isShiftLeft) return;
+        if (!isMiddle) return;
         if (emiActionPressHandled) {
             emiActionPressHandled = false;
             return;
@@ -91,18 +88,6 @@ public final class InputEvents {
     // ---- EMI 路径（仅在 emi 已加载时调用） ----
 
     private static void onMouseEmi(ScreenEvent.MouseButtonPressed.Pre event) {
-        // Shift + 左键：拉取或下单。严格查找（仅 EMI 侧边栏/provider 区域），
-        // 避免劫持背包等普通槽位的点击；侧边栏栈上该操作由 EMI 原生占用（craftAll），自动让位。
-        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT && Screen.hasShiftDown()) {
-            GenericStack stack = EmiHelper.getSidebarGenericStackUnderMouse(event.getMouseX(), event.getMouseY());
-            if (stack != null) {
-                emiActionPressHandled = true;
-                ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
-                event.setCanceled(true);
-                return;
-            }
-        }
-
         // 中键：打开 AE 下单界面。EMI 源码中不存在中键绑定，接管零冲突；
         // 默认 cheatMode=CREATIVE 不做检查，避免创造模式误判跳过。
         // 经 EmiStack 转换而非物品栈：Mekanism 化学品等自定义键无法表示为物品，

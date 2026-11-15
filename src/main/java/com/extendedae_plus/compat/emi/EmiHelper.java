@@ -48,13 +48,21 @@ public final class EmiHelper {
 	}
 
 	/**
-	 * 严格模式：仅查找 EMI 自有区域的悬浮栈，保留化学品等非物品、非流体的栈。
+	 * 严格模式：仅查找 EMI 自有区域的悬浮栈，并对内部屏幕管理器的鼠标坐标进行回退。
 	 * 物品路径无法表达这些栈，点击类交互必须使用本方法。
 	 */
 	@Nullable
 	public static EmiStack getSidebarStackUnderMouse(double mouseX, double mouseY) {
 		try {
-			return toEmiStack(EmiApi.getHoveredStack((int) mouseX, (int) mouseY, false));
+			EmiStackInteraction interaction = EmiApi.getHoveredStack((int) mouseX, (int) mouseY, false);
+			if (interaction == null || interaction.isEmpty()) {
+				interaction = EmiScreenManager.getHoveredStack((int) mouseX, (int) mouseY, false);
+			}
+			if (interaction == null || interaction.isEmpty()) {
+				interaction = EmiScreenManager.getHoveredStack(
+						EmiScreenManager.lastMouseX, EmiScreenManager.lastMouseY, false);
+			}
+			return toEmiStack(interaction);
 		} catch (Throwable ignored) {
 			return null;
 		}
