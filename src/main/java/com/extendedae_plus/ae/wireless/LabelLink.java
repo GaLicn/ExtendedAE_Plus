@@ -14,9 +14,8 @@ import org.jetbrains.annotations.Nullable;
  * - 将 BE 的 in-world 节点连接到标签网络的虚拟节点。
  * - 不负责注册/反注册标签，只负责维持物理连接。
  * <p>
- * 连接销毁一律推迟到下一个 tick 边界（与 AE2 对网格拓扑变更的处理方式一致），避免落在
- * AE2 {@code EnergyService} 的抽电调用栈内触发 provider 守卫。推迟期间不新建连接，
- * 与 AE2 的 {@code pendingUpdate} 语义相同。
+ * 连接创建与销毁均推迟到下一个 tick 边界，避免在 AE2 {@code EnergyService} 的抽/注电调用栈内
+ * 修改网格拓扑。待处理期间不重复建立或拆除连接。
  */
 public class LabelLink {
     private final IWirelessEndpoint host;
@@ -29,6 +28,13 @@ public class LabelLink {
      * 有连接销毁被排队时置位：在此期间既不新建连接，也不重复销毁。
      */
     private boolean teardownPending = false;
+    private boolean connectionPending = false;
+
+    /** 最近建立的端点节点，用于目标变化后清理失去包装器引用的旧连接。 */
+    @Nullable
+    private IGridNode linkedHostNode;
+    @Nullable
+    private IGridNode linkedTargetNode;
 
     public LabelLink(IWirelessEndpoint host) {
         this.host = host;
@@ -73,8 +79,8 @@ public class LabelLink {
             return;
         }
 
-        // 上一次销毁还在排队：等它执行完再决定是否重连
-        if (teardownPending) {
+        // 前一次销毁尚未执行时，延迟判断是否重连。
+        if (teardownPending || connectionPending) {
             return;
         }
 
@@ -87,32 +93,43 @@ public class LabelLink {
 
         var current = connection.getConnection();
         if (current != null) {
-            if (DeferredGridWork.connects(current, hostNode, targetNode)) {
+            if (DeferredGridWork.connects(current, hostNode, targetNode)
+                    && DeferredGridWork.findExistingConnection(hostNode, targetNode) == current) {
+                linkedHostNode = hostNode;
+                linkedTargetNode = targetNode;
                 return; // 已经正确连接
             }
-            // 目标变了：先断开，断开完成后下一 tick 再重建
+            // 目标节点发生变化时，应先完成旧连接拆除，再创建新连接。
             destroyConnection();
             return;
         }
 
-        // 没有记录中的连接，但可能残留一条（例如上次在记录清除后才建好）
-        IGridConnection existing = DeferredGridWork.findExistingConnection(hostNode, targetNode);
-        if (existing != null) {
-            connection.setConnection(existing);
+        if (hasDifferentLinkedNodes(hostNode, targetNode)) {
+            destroyConnection();
             return;
         }
 
-        connection.setConnection(GridHelper.createConnection(hostNode, targetNode));
+        // 未记录连接时仍可能存在残留连接，例如连接在记录清除后才建立。
+        IGridConnection existing = DeferredGridWork.findExistingConnection(hostNode, targetNode);
+        if (existing != null) {
+            connection.setConnection(existing);
+            linkedHostNode = hostNode;
+            linkedTargetNode = targetNode;
+            return;
+        }
+
+        clearLinkedNodes(hostNode, targetNode);
+        scheduleConnection(hostLevel, target, hostNode, targetNode);
     }
 
     public void onUnloadOrRemove() {
-        // 先排队拆连接再清 target：残留清理分支需要 target 才能定位对端节点
+        // 须在清除 target 前排队拆除连接，以便残留连接清理逻辑定位对端节点。
         destroyConnection();
         this.target = null;
     }
 
     /**
-     * 把当前连接排进下一个 tick 边界销毁。排队期间 {@link #isConnected()} 返回 false，
+     * 将当前连接的销毁操作排入下一个 tick 边界。排队期间 {@link #isConnected()} 返回 false，
      * {@link #updateStatus()} 不会新建连接。
      */
     private void destroyConnection() {
@@ -121,35 +138,104 @@ public class LabelLink {
         }
 
         final ServerLevel level = host.getServerLevel();
+        if (level == null) {
+            return;
+        }
         IGridConnection current = connection.getConnection();
         if (current != null) {
+            IGridNode a = current.a();
+            IGridNode b = current.b();
             connection.setConnection(null);
-            scheduleDestroy(level, current);
+            IGridConnection existing = DeferredGridWork.findExistingConnection(a, b);
+            if (existing != null) {
+                scheduleDestroy(level, existing);
+            } else {
+                clearLinkedNodes(a, b);
+            }
             return;
         }
 
-        // 没有记录中的连接：清理可能残留的、本应属于本端的连接
-        IGridNode hostNode = host.getGridNode();
-        IGridNode targetNode = this.target == null ? null : this.target.node();
+        IGridNode hostNode = linkedHostNode;
+        IGridNode targetNode = linkedTargetNode;
+        if (hostNode == null || targetNode == null) {
+            hostNode = host.getGridNode();
+            targetNode = this.target == null ? null : this.target.node();
+        }
         IGridConnection stale = DeferredGridWork.findExistingConnection(hostNode, targetNode);
         if (stale != null) {
             scheduleDestroy(level, stale);
+        } else {
+            clearLinkedNodes(hostNode, targetNode);
         }
     }
 
-    private void scheduleDestroy(@Nullable ServerLevel level, IGridConnection connection) {
-        teardownPending = true;
+    private void scheduleConnection(ServerLevel level, LabelNetworkRegistry.LabelNetwork target,
+                                    IGridNode hostNode, IGridNode targetNode) {
+        connectionPending = true;
         DeferredGridWork.schedule(level, () -> {
             try {
-                IGridNode a = connection.a();
-                IGridNode b = connection.b();
+                if (host.isEndpointRemoved() || this.target != target || host.getServerLevel() != level
+                        || host.getGridNode() != hostNode || target.node() != targetNode
+                        || (target.dim() != null && target.dim() != level.dimension())
+                        || connection.getConnection() != null) {
+                    return;
+                }
+
+                IGridConnection existing = DeferredGridWork.findExistingConnection(hostNode, targetNode);
+                if (existing != null) {
+                    connection.setConnection(existing);
+                } else {
+                    try {
+                        connection.setConnection(GridHelper.createConnection(hostNode, targetNode));
+                    } catch (IllegalStateException failure) {
+                        IGridConnection raced = DeferredGridWork.findExistingConnection(hostNode, targetNode);
+                        if (raced != null) {
+                            connection.setConnection(raced);
+                        } else {
+                            throw failure;
+                        }
+                    }
+                }
+
+                if (connection.getConnection() != null) {
+                    linkedHostNode = hostNode;
+                    linkedTargetNode = targetNode;
+                }
+            } finally {
+                connectionPending = false;
+            }
+        });
+    }
+
+    private void scheduleDestroy(ServerLevel level, IGridConnection connection) {
+        teardownPending = true;
+        DeferredGridWork.schedule(level, () -> {
+            IGridNode a = null;
+            IGridNode b = null;
+            try {
+                a = connection.a();
+                b = connection.b();
                 connection.destroy();
+                clearLinkedNodes(a, b);
                 DeferredGridWork.wakeDevice(a);
                 DeferredGridWork.wakeDevice(b);
             } finally {
-                // 无论结果如何都要放开，避免链路被永久卡在 pending 状态
+                // 无论执行结果如何均清除标志，避免链路永久处于 pending 状态。
                 teardownPending = false;
             }
         });
+    }
+
+    private boolean hasDifferentLinkedNodes(IGridNode hostNode, IGridNode targetNode) {
+        return linkedHostNode != null && linkedTargetNode != null
+                && (linkedHostNode != hostNode || linkedTargetNode != targetNode);
+    }
+
+    private void clearLinkedNodes(@Nullable IGridNode a, @Nullable IGridNode b) {
+        if ((linkedHostNode == a && linkedTargetNode == b)
+                || (linkedHostNode == b && linkedTargetNode == a)) {
+            linkedHostNode = null;
+            linkedTargetNode = null;
+        }
     }
 }

@@ -8,6 +8,7 @@ import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.api.networking.IManagedGridNode;
 import com.extendedae_plus.ExtendedAEPlus;
 import com.extendedae_plus.config.ModConfig;
+import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.util.wireless.WirelessTeamUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -136,7 +137,7 @@ public class LabelNetworkRegistry extends SavedData {
         Key key = new Key(dimKey, label, owner);
         LabelNetwork net = networks.remove(key);
         if (net != null) {
-            net.destroyVirtualNode();
+            net.destroyVirtualNode(level);
             setDirty();
             return true;
         }
@@ -260,15 +261,16 @@ public class LabelNetworkRegistry extends SavedData {
             this.managedNode.setFlags(GridFlags.DENSE_CAPACITY);
             this.managedNode.setIdlePowerUsage(0.0);
             this.managedNode.setInWorldNode(false);
-            this.managedNode.setVisualRepresentation(com.extendedae_plus.init.ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
+            this.managedNode.setVisualRepresentation(ModItems.LABELED_WIRELESS_TRANSCEIVER.get().getDefaultInstance());
             this.managedNode.setTagName("label_net_" + label);
             this.managedNode.create(hostLevel, null);
             return true;
         }
 
-        public void destroyVirtualNode() {
-            if (managedNode != null) {
-                managedNode.destroy();
+        public void destroyVirtualNode(ServerLevel level) {
+            IManagedGridNode node = managedNode;
+            if (node != null) {
+                DeferredGridWork.schedule(level, node::destroy);
             }
             managedNode = null;
             virtualHost = null;

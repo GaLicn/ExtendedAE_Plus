@@ -1,5 +1,6 @@
 package com.extendedae_plus.network;
 
+import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
 import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -54,11 +55,11 @@ public class LabelNetworkActionC2SPacket {
                 case SET -> te.applyLabel(packet.label);
                 case DELETE -> {
                     String target = packet.label == null || packet.label.isEmpty() ? te.getLabelForDisplay() : packet.label;
+                    te.clearLabel();
                     if (target != null && !target.isEmpty()) {
-                        com.extendedae_plus.ae.wireless.LabelNetworkRegistry.get(level)
+                        LabelNetworkRegistry.get(level)
                                 .removeNetwork(level, target, te.getPlacerId());
                     }
-                    te.clearLabel();
                 }
                 case DISCONNECT -> te.clearLabel();
             }

@@ -17,8 +17,8 @@ import java.util.UUID;
  * - 校验距离（<= ModConfigs.WIRELESS_MAX_RANGE）；
  * - 动态创建/销毁 AE2 连接（GridConnection），实现"一主多从"。
  * <p>
- * 连接销毁一律推迟到下一个 tick 边界（与 AE2 对网格拓扑变更的处理方式一致），避免落在
- * AE2 {@code EnergyService} 的抽电调用栈内触发 provider 守卫。推迟期间不新建连接。
+ * 连接创建与销毁均推迟到下一个 tick 边界，避免在 AE2 {@code EnergyService} 的抽/注电调用栈内
+ * 修改网格拓扑。待处理期间不重复建立或拆除连接。
  */
 public class WirelessSlaveLink {
     private final IWirelessEndpoint host;
@@ -34,6 +34,13 @@ public class WirelessSlaveLink {
      * 有连接销毁被排队时置位：在此期间既不新建连接，也不重复销毁。
      */
     private boolean teardownPending = false;
+    private boolean connectionPending = false;
+
+    /** 最近建立的端点节点，用于目标变化后清理失去包装器引用的旧连接。 */
+    @Nullable
+    private IGridNode linkedHostNode;
+    @Nullable
+    private IGridNode linkedMasterNode;
 
     public WirelessSlaveLink(IWirelessEndpoint host) {
         this.host = Objects.requireNonNull(host);
@@ -77,8 +84,8 @@ public class WirelessSlaveLink {
             return;
         }
 
-        // 上一次销毁还在排队：等它执行完再决定是否重连
-        if (teardownPending) {
+        // 前一次销毁尚未执行时，延迟判断是否重连。
+        if (teardownPending || connectionPending) {
             return;
         }
 
@@ -105,10 +112,18 @@ public class WirelessSlaveLink {
 
                 var current = connection.getConnection();
                 if (current != null) {
-                    if (DeferredGridWork.connects(current, a, b)) {
+                    if (DeferredGridWork.connects(current, a, b)
+                            && DeferredGridWork.findExistingConnection(a, b) == current) {
+                        linkedHostNode = a;
+                        linkedMasterNode = b;
                         return; // 连接已正确
                     }
-                    // 目标变了：先断开，断开完成后下一 tick 再重建
+                    // 目标节点发生变化时，应先完成旧连接拆除，再创建新连接。
+                    destroyConnection();
+                    return;
+                }
+
+                if (hasDifferentLinkedNodes(a, b)) {
                     destroyConnection();
                     return;
                 }
@@ -116,10 +131,13 @@ public class WirelessSlaveLink {
                 IGridConnection existing = DeferredGridWork.findExistingConnection(a, b);
                 if (existing != null) {
                     connection = new ConnectionWrapper(existing);
+                    linkedHostNode = a;
+                    linkedMasterNode = b;
                     return;
                 }
 
-                connection = new ConnectionWrapper(GridHelper.createConnection(a, b));
+                clearLinkedNodes(a, b);
+                scheduleConnection(level, master, frequency, placerId, a, b);
                 return;
             } else {
                 shutdown = true; // 超出范围
@@ -133,11 +151,12 @@ public class WirelessSlaveLink {
     }
 
     public void onUnloadOrRemove() {
+        shutdown = true;
         destroyConnection();
     }
 
     /**
-     * 把当前连接排进下一个 tick 边界销毁。排队期间 {@link #isConnected()} 返回 false，
+     * 将当前连接的销毁操作排入下一个 tick 边界。排队期间 {@link #isConnected()} 返回 false，
      * {@link #updateStatus()} 不会新建连接。
      */
     private void destroyConnection() {
@@ -146,41 +165,124 @@ public class WirelessSlaveLink {
         }
 
         final ServerLevel level = host.getServerLevel();
+        if (level == null) {
+            return;
+        }
         IGridConnection current = connection.getConnection();
         if (current != null) {
+            IGridNode a = current.a();
+            IGridNode b = current.b();
             connection.setConnection(null);
-            scheduleDestroy(level, current);
+            IGridConnection existing = DeferredGridWork.findExistingConnection(a, b);
+            if (existing != null) {
+                scheduleDestroy(level, existing);
+            } else {
+                clearLinkedNodes(a, b);
+            }
             return;
         }
 
-        // 没有记录中的连接：清理可能残留的、本应属于本端的连接
-        IGridNode hostNode = host.getGridNode();
-        if (hostNode == null || level == null) {
-            return;
+        IGridNode hostNode = linkedHostNode;
+        IGridNode masterNode = linkedMasterNode;
+        if (hostNode == null || masterNode == null) {
+            hostNode = host.getGridNode();
+            IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency, placerId);
+            masterNode = master == null ? null : master.getGridNode();
         }
-        IWirelessEndpoint master = WirelessMasterRegistry.get(level, frequency, placerId);
-        if (master == null) {
-            return;
-        }
-        IGridConnection stale = DeferredGridWork.findExistingConnection(hostNode, master.getGridNode());
+        IGridConnection stale = DeferredGridWork.findExistingConnection(hostNode, masterNode);
         if (stale != null) {
             scheduleDestroy(level, stale);
+        } else {
+            clearLinkedNodes(hostNode, masterNode);
         }
     }
 
-    private void scheduleDestroy(@Nullable ServerLevel level, IGridConnection connection) {
-        teardownPending = true;
+    private void scheduleConnection(ServerLevel level, IWirelessEndpoint master, long expectedFrequency,
+                                    @Nullable UUID expectedPlacerId, IGridNode hostNode, IGridNode masterNode) {
+        connectionPending = true;
         DeferredGridWork.schedule(level, () -> {
             try {
-                IGridNode a = connection.a();
-                IGridNode b = connection.b();
+                if (!isStillDesired(level, master, expectedFrequency, expectedPlacerId, hostNode, masterNode)
+                        || connection.getConnection() != null) {
+                    return;
+                }
+
+                IGridConnection existing = DeferredGridWork.findExistingConnection(hostNode, masterNode);
+                if (existing != null) {
+                    connection = new ConnectionWrapper(existing);
+                } else {
+                    try {
+                        connection = new ConnectionWrapper(GridHelper.createConnection(hostNode, masterNode));
+                    } catch (IllegalStateException failure) {
+                        IGridConnection raced = DeferredGridWork.findExistingConnection(hostNode, masterNode);
+                        if (raced != null) {
+                            connection = new ConnectionWrapper(raced);
+                        } else {
+                            throw failure;
+                        }
+                    }
+                }
+
+                if (connection.getConnection() != null) {
+                    linkedHostNode = hostNode;
+                    linkedMasterNode = masterNode;
+                }
+            } finally {
+                connectionPending = false;
+            }
+        });
+    }
+
+    private boolean isStillDesired(ServerLevel level, IWirelessEndpoint master, long expectedFrequency,
+                                   @Nullable UUID expectedPlacerId, IGridNode hostNode, IGridNode masterNode) {
+        if (shutdown || host.isEndpointRemoved() || host.getServerLevel() != level || frequency != expectedFrequency
+                || !Objects.equals(placerId, expectedPlacerId) || host.getGridNode() != hostNode
+                || master.isEndpointRemoved() || master.getGridNode() != masterNode
+                || WirelessMasterRegistry.get(level, expectedFrequency, expectedPlacerId) != master) {
+            return false;
+        }
+
+        if (!ModConfig.INSTANCE.wirelessCrossDimEnable) {
+            if (master.getServerLevel() != level) {
+                return false;
+            }
+            double currentDistance = Math.sqrt(master.getBlockPos().distSqr(host.getBlockPos()));
+            if (currentDistance > ModConfig.INSTANCE.wirelessMaxRange) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void scheduleDestroy(ServerLevel level, IGridConnection connection) {
+        teardownPending = true;
+        DeferredGridWork.schedule(level, () -> {
+            IGridNode a = null;
+            IGridNode b = null;
+            try {
+                a = connection.a();
+                b = connection.b();
                 connection.destroy();
+                clearLinkedNodes(a, b);
                 DeferredGridWork.wakeDevice(a);
                 DeferredGridWork.wakeDevice(b);
             } finally {
-                // 无论结果如何都要放开，避免链路被永久卡在 pending 状态
+                // 无论执行结果如何均清除标志，避免链路永久处于 pending 状态。
                 teardownPending = false;
             }
         });
+    }
+
+    private boolean hasDifferentLinkedNodes(IGridNode hostNode, IGridNode masterNode) {
+        return linkedHostNode != null && linkedMasterNode != null
+                && (linkedHostNode != hostNode || linkedMasterNode != masterNode);
+    }
+
+    private void clearLinkedNodes(@Nullable IGridNode a, @Nullable IGridNode b) {
+        if ((linkedHostNode == a && linkedMasterNode == b)
+                || (linkedHostNode == b && linkedMasterNode == a)) {
+            linkedHostNode = null;
+            linkedMasterNode = null;
+        }
     }
 }

@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 把 AE2 网格拓扑变更推迟到 tick 边界执行，做法与 AE2 自身一致。
+ * 将 AE2 网格拓扑变更延迟至 tick 边界执行，与 AE2 的处理方式一致。
  * <p>
  * {@link TickHandler#addCallable} 的回调在 {@code LevelTickEvent.START} 处理，位于上一次 tick 的
  * {@code ServerTickEvent.END}（AE2 在那里结算抽电）之后、本 tick 任何方块实体与网格服务 tick 之前，
@@ -17,14 +17,14 @@ import org.jetbrains.annotations.Nullable;
  * {@code ongoingInjectOperation} 标志禁止增删 energy provider（{@code Preconditions.checkState}）。
  * 而 {@code IGridConnection.destroy()} / {@code IGridNode.destroy()} 会触发网格拆分与节点迁移，
  * 进而调用 {@code removeProvider} / {@code addProvider}。只要拆除动作发生在抽电回调的调用栈内
- * （例如某个 {@code IAEPowerStorage.extractAEPower} 里破坏了方块、或区块卸载恰好嵌在抽电里），
+ * （例如 {@code IAEPowerStorage.extractAEPower} 调用期间破坏方块，或区块卸载嵌入抽电调用），
  * 就会抛出 {@code IllegalStateException} 打断存档。
  * <p>
- * AE2 自己从不捕获这个守卫（它是用来抓第三方越界行为的 fail-fast），也从不重试；它只规定
- * “网格拓扑变更要排队到 tick 边界再做”（参见 {@code MEP2PTunnelPart}、{@code CapabilityP2PTunnelPart}、
- * {@code CableBusContainer} 中对 {@code addCallable} 的用法）。这里沿用同一策略：
- * 无条件延后、只执行一次、不 catch、不重试。若延后执行时仍然抛出，异常会由 AE2 的
- * {@code TickHandler.processQueue} 记录并吞掉，不会中断存档流程。
+ * AE2 对该状态守卫采用快速失败策略，不捕获异常或重试；网格拓扑变更通过队列延迟至 tick 边界
+ * （参见 {@code MEP2PTunnelPart}、{@code CapabilityP2PTunnelPart}、
+ * {@code CableBusContainer} 中对 {@code addCallable} 的用法）。此处沿用该策略：
+ * 无条件延迟、仅执行一次，不捕获异常或重试。若延迟执行时仍发生异常，AE2 的
+ * {@code TickHandler.processQueue} 会记录并处理该异常，不会中断存档流程。
  */
 public final class DeferredGridWork {
     private DeferredGridWork() {
@@ -33,7 +33,7 @@ public final class DeferredGridWork {
     /**
      * 在下一个 tick 边界执行 {@code action}。
      * <p>
-     * {@code level} 为 null 时排进 AE2 的全局 server 队列（{@code ServerTickEvent.END} 排空），
+     * {@code level} 为 null 时加入 AE2 的全局 server 队列（{@code ServerTickEvent.END} 排空），
      * 同样不会落在抽电调用栈内。
      */
     public static void schedule(@Nullable ServerLevel level, Runnable action) {

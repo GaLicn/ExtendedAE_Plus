@@ -212,7 +212,7 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
         if (sl != null) {
             LabelNetworkRegistry.get(sl).unregister(this);
         }
-        if (this.managedNode != null) {
+        if (this.managedNode != null && sl != null) {
             // 与 AE2 对网格拓扑变更的处理一致：节点销毁排到 tick 边界，避免落在 EnergyService 的抽电调用栈内
             DeferredGridWork.schedule(sl, this.managedNode::destroy);
         }

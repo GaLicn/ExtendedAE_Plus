@@ -198,6 +198,10 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
     public void onRemoved() {
         // 标记正在被移除，避免在 AE2 回调期间触发状态刷新把方块重新放回世界中
         this.beingRemoved = true;
+        ServerLevel level = getServerLevel();
+        if (level == null) {
+            return;
+        }
         if (this.masterMode) {
             masterLink.onUnloadOrRemove();
         } else {
@@ -205,7 +209,7 @@ public class WirelessTransceiverBlockEntity extends AEBaseBlockEntity implements
         }
         if (managedNode != null) {
             // 与 AE2 对网格拓扑变更的处理一致：节点销毁排到 tick 边界，避免落在 EnergyService 的抽电调用栈内
-            DeferredGridWork.schedule(getServerLevel(), managedNode::destroy);
+            DeferredGridWork.schedule(level, managedNode::destroy);
         }
     }
 
