@@ -12,6 +12,7 @@ import appeng.api.storage.StorageHelper;
 import appeng.api.upgrades.IUpgradeInventory;
 import appeng.api.upgrades.IUpgradeableObject;
 import appeng.api.upgrades.UpgradeInventories;
+import appeng.crafting.pattern.ProcessingPatternItem;
 import appeng.core.definitions.AEItems;
 import appeng.helpers.IPatternTerminalMenuHost;
 import appeng.helpers.patternprovider.PatternContainer;
@@ -29,6 +30,7 @@ import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
 import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.PatternProviderDataUtil;
 import com.extendedae_plus.util.PatternTerminalUtil;
 import com.extendedae_plus.util.wireless.WirelessTerminalLocator;
@@ -117,24 +119,27 @@ public final class ProviderUploadUtil {
     }
 
     /**
-     * 复制样板并剔除编码作者标记（{@code encodePlayer}）。
+     * 复制样板并剔除编码者标记，保留配方定义数据。
      *
-     * <p>「除编码作者以外完全相同」的比对语义统一以此为准：不同玩家编码的同一配方样板
-     * 剔除作者后应当视为相同。</p>
+     * <p>判重忽略本模组的 {@code encodePlayer}，并在 GTOCore 处理样板中忽略编码者 {@code uuid}；
+     * GTOCore 写入的 {@code recipe} 用于区分 GT 配方，仍参与判定。</p>
      */
-    private static ItemStack stripEncodePlayer(ItemStack stack) {
+    private static ItemStack stripPatternEncoderMetadata(ItemStack stack) {
         if (stack == null || stack.isEmpty()) {
             return ItemStack.EMPTY;
         }
         ItemStack copy = stack.copy();
         if (copy.getTag() != null) {
             copy.getTag().remove("encodePlayer");
+            if (ModCheckUtils.isLoaded("gtocore") && copy.getItem() instanceof ProcessingPatternItem) {
+                copy.getTag().remove("uuid");
+            }
         }
         return copy;
     }
 
     /**
-     * 目标供应器的样板库存中是否已存在与给定样板「除编码作者以外完全相同」的样板。
+     * 目标供应器的样板库存中是否已存在与给定样板除编码者标记外完全相同的样板。
      *
      * <p>仅检查传入容器本身，不扩展到同名组或整个网络（issue #140 的检测范围约定）。</p>
      */
@@ -146,13 +151,13 @@ public final class ProviderUploadUtil {
         if (inv == null) {
             return false;
         }
-        ItemStack target = stripEncodePlayer(pattern);
+        ItemStack target = stripPatternEncoderMetadata(pattern);
         for (int i = 0; i < inv.size(); i++) {
             ItemStack s = inv.getStackInSlot(i);
             if (s.isEmpty()) {
                 continue;
             }
-            if (ItemStack.isSameItemSameTags(stripEncodePlayer(s), target)) {
+            if (ItemStack.isSameItemSameTags(stripPatternEncoderMetadata(s), target)) {
                 return true;
             }
         }
@@ -295,7 +300,7 @@ public final class ProviderUploadUtil {
     /**
      * 通过通用菜单契约上传，兼容第三方编码终端。
      *
-     * <p>若用户选定的目标供应器已含「除编码作者以外完全相同」的样板，直接返回
+     * <p>若用户选定的目标供应器已含除编码者标记外完全相同的样板，直接返回
      * {@link UploadOutcome#DUPLICATE}，不写入任何槽位（样板留在终端，由调用方回收为空白样板）。
      * 检测只针对用户选定的那一个供应器，不扩展到同名回退项。</p>
      */
@@ -378,7 +383,7 @@ public final class ProviderUploadUtil {
     /**
      * 通过通用菜单契约按网络顺序上传。
      *
-     * <p>index 指定的目标供应器已含「除编码作者以外完全相同」的样板时返回
+     * <p>index 指定的目标供应器已含除编码者标记外完全相同的样板时返回
      * {@link UploadOutcome#DUPLICATE}，不写入也不做同名回退（由调用方回收为空白样板）。</p>
      */
     public static UploadOutcome uploadFromEncodingMenuToProviderByIndex(ServerPlayer player, IPatternUploadMenu menu, int index) {
@@ -510,7 +515,7 @@ public final class ProviderUploadUtil {
      * 原始名称（Component JSON，保留翻译键），比较与语言无关；同名供应器按空位从多到少依次尝试。
      * 按当前网络实时定位而不是沿用客户端缓存的下标，供应器被填满导致列表变化时也不会传错目标。</p>
      *
-     * <p>同名候选供应器中若已含「除编码作者以外完全相同」的样板，命中即提示并回收为空白样板，
+     * <p>同名候选供应器中若已含除编码者标记外完全相同的样板，命中即提示并回收为空白样板，
      * 返回 {@link UploadOutcome#DUPLICATE}，不再回退到矩阵。</p>
      *
      * @param providerName 客户端判定唯一匹配的供应器原始名称
@@ -541,7 +546,7 @@ public final class ProviderUploadUtil {
         PatternContainer lastFailedContainer = null;
         ExpansionInsertResult lastFailedResult = null;
         for (PatternContainer c : candidates) {
-            // 与手动上传一致：目标供应器已含「除编码作者以外完全相同」的样板时不再重复写入。
+            // 与手动上传一致：目标供应器已含除编码者标记外完全相同的样板时不再重复写入。
             // 自动上传没有屏蔽入口，命中即提示并回收为空白样板，不再回退到矩阵/ECO。
             if (providerContainsPattern(c, stack)) {
                 player.sendSystemMessage(Component.translatable(
@@ -617,7 +622,7 @@ public final class ProviderUploadUtil {
     /**
      * 将 pending Ctrl+Q 样板上传到玩家网络中的目标 provider（负数索引 ID）。
      *
-     * <p>目标 provider 已含「除编码作者以外完全相同」的样板时返回
+     * <p>目标 provider 已含除编码者标记外完全相同的样板时返回
      * {@link UploadOutcome#DUPLICATE}，不写入也不做同名回退（样板由调用方退回背包）。</p>
      */
     public static UploadOutcome uploadPendingCtrlQPattern(ServerPlayer player, long providerId) {
