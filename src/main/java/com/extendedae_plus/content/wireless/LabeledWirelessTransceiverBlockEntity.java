@@ -8,6 +8,7 @@ import appeng.api.networking.IInWorldGridNodeHost;
 import appeng.api.networking.IManagedGridNode;
 import appeng.api.util.AECableType;
 import appeng.blockentity.AEBaseBlockEntity;
+import com.extendedae_plus.ae.wireless.DeferredGridWork;
 import com.extendedae_plus.ae.wireless.IWirelessEndpoint;
 import com.extendedae_plus.ae.wireless.LabelLink;
 import com.extendedae_plus.ae.wireless.LabelNetworkRegistry;
@@ -212,7 +213,8 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
             LabelNetworkRegistry.get(sl).unregister(this);
         }
         if (this.managedNode != null) {
-            this.managedNode.destroy();
+            // 与 AE2 对网格拓扑变更的处理一致：节点销毁排到 tick 边界，避免落在 EnergyService 的抽电调用栈内
+            DeferredGridWork.schedule(sl, this.managedNode::destroy);
         }
     }
 
