@@ -59,7 +59,7 @@ public final class EmiCtrlQHandler {
 			return;
 		}
 
-		ItemStack hovered = EmiHelper.getIngredientUnderMouse();
+		ItemStack hovered = EmiHelper.getSidebarItemStackUnderMouse();
 		if (hovered.isEmpty()) {
 			Minecraft mc = Minecraft.getInstance();
 			if (mc.player != null) {

@@ -39,6 +39,15 @@ public final class EmiHelper {
 		}
 	}
 
+	/** 获取鼠标悬浮的 EMI 物品，标准槽位中的物品不计入结果。 */
+	public static ItemStack getSidebarItemStackUnderMouse() {
+		try {
+			return toItemStack(EmiApi.getHoveredStack(false));
+		} catch (Throwable ignored) {
+			return ItemStack.EMPTY;
+		}
+	}
+
 	public static ItemStack getIngredientUnderMouse(double mouseX, double mouseY) {
 		ItemStack item = lookupByCoords(mouseX, mouseY);
 		if (!item.isEmpty()) {
