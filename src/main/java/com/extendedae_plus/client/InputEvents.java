@@ -18,8 +18,6 @@ import mezz.jei.api.ingredients.IIngredientType;
 import mezz.jei.api.ingredients.ITypedIngredient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -102,12 +100,12 @@ public final class InputEvents {
     }
 
     private static void onKeyEmi(ScreenEvent.KeyPressed.Pre event, Screen screen) {
-        ItemStack hovered = EmiHelper.getIngredientUnderMouse();
-        if (hovered.isEmpty()) return;
-        fillSearch(screen, buildSearchText(hovered), event);
+        String searchText = EmiHelper.getIngredientSearchTextUnderMouse(Screen.hasAltDown());
+        if (searchText.isEmpty()) return;
+        fillSearch(screen, searchText, event);
     }
 
-    // ---- JEI 路径（仅在 jei 已加载时调用，保留原有行为） ----
+    // ---- JEI 路径（仅在 jei 已加载时调用） ----
 
     private static void onMouseJei(ScreenEvent.MouseButtonPressed.Pre event) {
         // 优先处理：Shift + 左键（拉取或下单）
@@ -162,21 +160,18 @@ public final class InputEvents {
     }
 
     private static void onKeyJei(ScreenEvent.KeyPressed.Pre event, Screen screen) {
-        try {
-            // 坐标查询覆盖 JEI 位于物品列表侧或书签侧的历史记录。
-            var minecraft = Minecraft.getInstance();
-            double mouseX = minecraft.mouseHandler.xpos() * minecraft.getWindow().getGuiScaledWidth() / minecraft.getWindow().getScreenWidth();
-            double mouseY = minecraft.mouseHandler.ypos() * minecraft.getWindow().getGuiScaledHeight() / minecraft.getWindow().getScreenHeight();
-            Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
-            if (hovered.isEmpty()) {
-                hovered = JeiRuntimeProxy.getIngredientUnderMouse();
-            }
-            if (hovered.isEmpty()) return;
-
-            String name = JeiRuntimeProxy.getTypedIngredientDisplayName(hovered.get());
-            fillSearch(screen, name, event);
-        } catch (Throwable ignored) {
+        // 坐标查询覆盖 JEI 位于物品列表侧或书签侧的历史记录。
+        var minecraft = Minecraft.getInstance();
+        double mouseX = minecraft.mouseHandler.xpos() * minecraft.getWindow().getGuiScaledWidth() / minecraft.getWindow().getScreenWidth();
+        double mouseY = minecraft.mouseHandler.ypos() * minecraft.getWindow().getGuiScaledHeight() / minecraft.getWindow().getScreenHeight();
+        Optional<ITypedIngredient<?>> hovered = JeiRuntimeProxy.getIngredientUnderMouse(mouseX, mouseY);
+        if (hovered.isEmpty()) {
+            hovered = JeiRuntimeProxy.getIngredientUnderMouse();
         }
+        if (hovered.isEmpty()) return;
+
+        String searchText = JeiRuntimeProxy.getTypedIngredientSearchText(hovered.get(), Screen.hasAltDown());
+        fillSearch(screen, searchText, event);
     }
 
     // ---- 共享逻辑 ----
@@ -235,18 +230,6 @@ public final class InputEvents {
         } else {
             ModNetwork.CHANNEL.sendToServer(new PullFromJeiOrCraftC2SPacket(stack));
         }
-    }
-
-    /**
-     * Alt+F：填充 "@modid"（按模组过滤，对齐 EmiLink 与 AE2 原生 @ 搜索语法）；
-     * 普通 F：填充物品显示名。
-     */
-    private static String buildSearchText(ItemStack stack) {
-        if (Screen.hasAltDown()) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-            return "@" + id.getNamespace();
-        }
-        return stack.getHoverName().getString();
     }
 
     private static void fillSearch(Screen screen, String name, ScreenEvent.KeyPressed.Pre event) {

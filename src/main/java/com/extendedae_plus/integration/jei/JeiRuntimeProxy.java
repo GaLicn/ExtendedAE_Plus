@@ -1,5 +1,6 @@
 package com.extendedae_plus.integration.jei;
 
+import appeng.api.stacks.AEFluidKey;
 import com.extendedae_plus.util.uploadPattern.RecipeTypeNameConfig;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.ingredients.ITypedIngredient;
@@ -161,6 +162,22 @@ public final class JeiRuntimeProxy {
         }
     }
 
+    public static <T> String getTypedIngredientSearchText(ITypedIngredient<T> typed, boolean namespaceOnly) {
+        IJeiRuntime rt = RUNTIME;
+        if (rt == null || typed == null) return "";
+        if (namespaceOnly) {
+            var helper = rt.getIngredientManager().getIngredientHelper(typed.getType());
+            return "@" + helper.getResourceLocation(typed.getIngredient()).getNamespace();
+        }
+        if (typed.getIngredient() instanceof FluidStack fluid) {
+            AEFluidKey key = AEFluidKey.of(fluid);
+            if (key != null) {
+                return key.getDisplayName().getString();
+            }
+        }
+        return getTypedIngredientDisplayName(typed);
+    }
+
     /**
      * 通用获取 JEI 悬浮配料的本地化显示名称（适配物品/流体等）。
      * 若无法安全获取，则返回空字符串。
@@ -168,23 +185,8 @@ public final class JeiRuntimeProxy {
     public static <T> String getTypedIngredientDisplayName(ITypedIngredient<T> typed) {
         IJeiRuntime rt = RUNTIME;
         if (rt == null || typed == null) return "";
-        try {
-            var manager = rt.getIngredientManager();
-            var helper = manager.getIngredientHelper(typed.getType());
-            // JEI 的 IIngredientHelper#getDisplayName 返回 Component（新版本）或 String（旧版本）
-            // 统一转为字符串，使用 toString() 兜底
-            Object display = helper.getDisplayName(typed.getIngredient());
-            if (display == null) return "";
-            // 新版：net.minecraft.network.chat.Component
-            if (display instanceof net.minecraft.network.chat.Component comp) {
-                String s = comp.getString();
-                return s == null ? "" : s;
-            }
-            String s = display.toString();
-            return s == null ? "" : s;
-        } catch (Throwable ignored) {
-        }
-        return "";
+        var helper = rt.getIngredientManager().getIngredientHelper(typed.getType());
+        return helper.getDisplayName(typed.getIngredient());
     }
 
     /**

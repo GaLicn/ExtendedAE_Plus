@@ -1,5 +1,6 @@
 package com.extendedae_plus.compat.emi;
 
+import appeng.api.stacks.AEFluidKey;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.stack.EmiStack;
 import dev.emi.emi.api.stack.EmiStackInteraction;
@@ -7,6 +8,7 @@ import appeng.api.stacks.GenericStack;
 import dev.emi.emi.screen.EmiScreenManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
 
 import javax.annotation.Nullable;
 
@@ -37,6 +39,23 @@ public final class EmiHelper {
 		} catch (Throwable ignored) {
 			return ItemStack.EMPTY;
 		}
+	}
+
+	public static String getIngredientSearchTextUnderMouse(boolean namespaceOnly) {
+		EmiStack stack = toEmiStack(EmiApi.getHoveredStack(true));
+		if (stack == null) {
+			stack = toEmiStack(EmiApi.getHoveredStack((int) getGuiMouseX(), (int) getGuiMouseY(), true));
+		}
+		if (stack == null) {
+			return "";
+		}
+		if (namespaceOnly) {
+			return "@" + stack.getId().getNamespace();
+		}
+		if (stack.getKey() instanceof Fluid fluid) {
+			return AEFluidKey.of(fluid, stack.getNbt()).getDisplayName().getString();
+		}
+		return stack.getName().getString();
 	}
 
 	/** 获取鼠标悬浮的 EMI 物品，标准槽位中的物品不计入结果。 */
