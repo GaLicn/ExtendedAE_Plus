@@ -14,11 +14,7 @@ public class NetworkItemCache {
 
     private final Long2ObjectOpenHashMap<CacheEntry> bySerial = new Long2ObjectOpenHashMap<>();
     private final Map<AEKey, Long> keyToSerial = new HashMap<>();
-    /**
-     * 主键（物品 / 流体）→ 该主键下精确 key 到条目的映射。
-     * <p>样板输出的 key 可能带有 JEI 条目所没有的数据组件（如拆装过的方块物品），
-     * 此时精确查找会落空，需要按主键回退到同物品的其它变体。</p>
-     */
+    /** 同一主键的缓存条目索引，仅用于数据差异下的可合成状态查询。 */
     private final Map<Object, Map<AEKey, CacheEntry>> byPrimaryKey = new HashMap<>();
     private volatile boolean connected = false;
 
@@ -58,13 +54,21 @@ public class NetworkItemCache {
     }
 
     public long getAmount(AEKey key) {
-        CacheEntry entry = find(key);
+        Long serial = keyToSerial.get(key);
+        CacheEntry entry = serial == null ? null : bySerial.get(serial.longValue());
         return entry != null ? entry.amount : 0;
     }
 
     public boolean isCraftable(AEKey key) {
-        CacheEntry entry = find(key);
-        return entry != null && entry.craftable;
+        Long serial = keyToSerial.get(key);
+        CacheEntry entry = serial == null ? null : bySerial.get(serial.longValue());
+        if (entry != null && entry.craftable) return true;
+        Map<AEKey, CacheEntry> variants = byPrimaryKey.get(key.getPrimaryKey());
+        if (variants == null) return false;
+        for (CacheEntry variant : variants.values()) {
+            if (variant.craftable) return true;
+        }
+        return false;
     }
 
     public boolean isConnected() {
@@ -76,34 +80,6 @@ public class NetworkItemCache {
         keyToSerial.clear();
         byPrimaryKey.clear();
         connected = false;
-    }
-
-    /**
-     * 先按精确 key 查找；未命中时回退到同一主键下的变体，可合成的变体优先。
-     */
-    private CacheEntry find(AEKey key) {
-        Long serial = keyToSerial.get(key);
-        if (serial != null) {
-            CacheEntry entry = bySerial.get(serial.longValue());
-            if (entry != null) {
-                return entry;
-            }
-        }
-
-        Map<AEKey, CacheEntry> variants = byPrimaryKey.get(key.getPrimaryKey());
-        if (variants == null || variants.isEmpty()) {
-            return null;
-        }
-        CacheEntry first = null;
-        for (CacheEntry variant : variants.values()) {
-            if (variant.craftable) {
-                return variant;
-            }
-            if (first == null) {
-                first = variant;
-            }
-        }
-        return first;
     }
 
     private void removeByPrimaryKey(CacheEntry entry) {

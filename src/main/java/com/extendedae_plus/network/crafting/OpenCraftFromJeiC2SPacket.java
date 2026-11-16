@@ -51,7 +51,6 @@ public class OpenCraftFromJeiC2SPacket {
             var grid = WirelessTerminalLocator.getConnectedGrid(player, located);
             if (grid == null) return;
 
-            // JEI 条目转出的 key 与样板输出的 key 可能只差数据组件，按主键回退解析。
             AEKey craftable = CraftableKeyResolver.resolve(grid.getCraftingService(), what);
             if (craftable == null) {
                 String name = what.getDisplayName().getString();
