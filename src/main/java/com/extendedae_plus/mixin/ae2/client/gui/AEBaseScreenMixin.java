@@ -45,13 +45,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AEBaseScreen.class)
 public abstract class AEBaseScreenMixin {
 
-    // 升级槽坐标由组件更新，按钮必须在该更新完成后计算布局。
+    // 升级槽与工具栏坐标由组件更新，相关控件布局必须在该更新完成后计算。
     @Inject(method = "render", at = @At(value = "INVOKE",
             target = "Lappeng/client/gui/WidgetContainer;updateBeforeRender()V", shift = At.Shift.AFTER, remap = false))
-    private void eap$updateExPatternButtons(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks,
+    private void eap$updateDependentLayouts(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks,
             CallbackInfo ci) {
         if ((Object) this instanceof IExPatternButton screen) {
             screen.eap$updateButtonsLayout();
+        }
+        if ((Object) this instanceof IInputBackgroundRenderer renderer) {
+            renderer.eap$updateInputLayout();
         }
     }
 

@@ -115,7 +115,6 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
             this.eap$PerProviderScalingLimit = limit;
             ModNetwork.CHANNEL.sendToServer(new SetPerProviderScalingLimitC2SPacket(limit));
         });
-        this.addRenderableWidget(this.eap$PerProviderLimitInput);
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -128,9 +127,8 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
     /** 每帧刷新：从服务端同步状态并更新 UI */
     @Inject(method = "updateBeforeRender", at = @At("HEAD"), remap = false)
     private void eap$updateBeforeRender(CallbackInfo ci) {
-        // 每帧刷新按钮和输入框状态
+        // 每帧刷新按钮状态
         eap$updateToggles();
-        eap$updateLimitInput();
     }
 
     /* ---------------------------- 刷新逻辑 ---------------------------- */
@@ -152,8 +150,8 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
     /**
      * 刷新输入框的内容和可见性
      */
-    @Unique
-    private void eap$updateLimitInput() {
+    @Override
+    public void eap$updateInputLayout() {
         if (this.eap$PerProviderLimitInput == null) return;
 
         int remoteLimit = this.eap$PerProviderScalingLimit;
@@ -170,9 +168,6 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
         }
 
         if (this.eap$SmartDoublingEnabled) {
-            if (!this.renderables.contains(this.eap$PerProviderLimitInput)) {
-                this.addRenderableWidget(this.eap$PerProviderLimitInput);
-            }
             if (!focused && this.eap$PerProviderLimitInput.getValue().trim().isEmpty()) {
                 this.eap$PerProviderLimitInput.setValue("0");
             }
@@ -190,6 +185,9 @@ public abstract class AdvPatternProviderScreenMixin extends AEBaseScreen<AdvPatt
                 this.eap$inputBgY = ey;
                 this.eap$inputBgW = visualWidth + padding * 2;
                 this.eap$inputBgH = visualHeight + padding * 2;
+            }
+            if (!this.renderables.contains(this.eap$PerProviderLimitInput)) {
+                this.addRenderableWidget(this.eap$PerProviderLimitInput);
             }
 
             String cur = this.eap$PerProviderLimitInput.getValue();
