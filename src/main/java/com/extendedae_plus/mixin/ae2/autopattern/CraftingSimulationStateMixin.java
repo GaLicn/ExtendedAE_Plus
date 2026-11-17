@@ -52,14 +52,19 @@ public abstract class CraftingSimulationStateMixin {
             }
 
             boolean allowScaling = aware.eap$allowScaling();
-            long perCraftLimit = details instanceof StrictMolecularAssemblerPattern
-                    ? getSuperMatrixDispatchSize(totalAmount)
-                    : aware.eap$getMultiplierLimit();
-
             if (!allowScaling || totalAmount <= 1) {
                 finalCrafts.put(details, totalAmount);
                 continue;
             }
+
+            if (PatternScaler.hasInputOutputOverlap(details)) {
+                finalCrafts.put(details, totalAmount);
+                continue;
+            }
+
+            long perCraftLimit = details instanceof StrictMolecularAssemblerPattern
+                    ? getSuperMatrixDispatchSize(totalAmount)
+                    : aware.eap$getMultiplierLimit();
 
             if (perCraftLimit <= 0 && ModConfig.INSTANCE.smartScalingMaxMultiplier > 0) {
                 perCraftLimit = ModConfig.INSTANCE.smartScalingMaxMultiplier;

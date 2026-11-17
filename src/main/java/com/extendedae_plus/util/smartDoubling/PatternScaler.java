@@ -4,12 +4,14 @@ import appeng.api.crafting.IPatternDetails;
 import appeng.api.stacks.AEFluidKey;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
+import appeng.api.stacks.GenericStack;
 import appeng.blockentity.crafting.IMolecularAssemblerSupportedPattern;
 import appeng.crafting.pattern.AEProcessingPattern;
 import com.extendedae_plus.api.crafting.ScaledMolecularAssemblerPattern;
 import com.extendedae_plus.api.crafting.ScaledProcessingPattern;
 import com.extendedae_plus.compat.AdvancedAEScaledPatternBridge;
 import com.extendedae_plus.util.ModCheckUtils;
+import org.jetbrains.annotations.Nullable;
 
 public final class PatternScaler {
     /**
@@ -48,6 +50,30 @@ public final class PatternScaler {
             return new ScaledMolecularAssemblerPattern(molecularPattern, multiplier);
         }
         return base;
+    }
+
+    /** 判断样板输入候选与产物是否存在回流键。 */
+    public static boolean hasInputOutputOverlap(IPatternDetails pattern) {
+        var inputs = pattern.getInputs();
+        var outputs = pattern.getOutputs();
+        if (inputs == null || outputs == null || outputs.isEmpty()) {
+            return false;
+        }
+
+        for (var input : inputs) {
+            if (input == null) continue;
+            var candidates = input.getPossibleInputs();
+            if (candidates == null) continue;
+            for (var candidate : candidates) {
+                if (candidate == null) continue;
+                for (var output : outputs) {
+                    if (output != null && output.what().matches(candidate)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**
