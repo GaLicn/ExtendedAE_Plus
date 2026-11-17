@@ -56,7 +56,7 @@ public final class PatternScaler {
     public static boolean hasInputOutputOverlap(IPatternDetails pattern) {
         var inputs = pattern.getInputs();
         var outputs = pattern.getOutputs();
-        if (inputs == null || outputs == null || outputs.isEmpty()) {
+        if (inputs == null || outputs == null || outputs.length == 0) {
             return false;
         }
 
@@ -68,6 +68,38 @@ public final class PatternScaler {
                 if (candidate == null) continue;
                 for (var output : outputs) {
                     if (output != null && output.what().matches(candidate)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** 判断回流键是否与当前合成请求的最终产物相同。 */
+    public static boolean hasFinalOutputFeedback(IPatternDetails pattern, @Nullable AEKey finalOutput) {
+        if (finalOutput == null) {
+            return false;
+        }
+
+        var inputs = pattern.getInputs();
+        var outputs = pattern.getOutputs();
+        if (inputs == null || outputs == null || outputs.length == 0) {
+            return false;
+        }
+
+        GenericStack requestedOutput = new GenericStack(finalOutput, 1);
+        for (var input : inputs) {
+            if (input == null || input.getPossibleInputs() == null) {
+                continue;
+            }
+            for (var candidate : input.getPossibleInputs()) {
+                if (candidate == null) {
+                    continue;
+                }
+                for (var output : outputs) {
+                    if (output != null && output.what().matches(candidate)
+                            && output.what().matches(requestedOutput)) {
                         return true;
                     }
                 }

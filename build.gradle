@@ -255,3 +255,13 @@ publishing {
         // retrieving dependencies.
     }
 }
+
+tasks.register('adaptiveBatchReservationBenchmark', JavaExec) {
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.extendedae_plus.util.smartDoubling.AdaptiveBatchInventoryCacheBenchmark'
+}
+
+tasks.named('test') {
+    dependsOn tasks.named('adaptiveBatchReservationBenchmark')
+}
