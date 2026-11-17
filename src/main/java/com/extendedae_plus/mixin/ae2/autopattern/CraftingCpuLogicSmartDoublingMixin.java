@@ -66,6 +66,9 @@ public abstract class CraftingCpuLogicSmartDoublingMixin {
                 || !(details instanceof ISmartDoublingAwarePattern aware) || !aware.eap$allowScaling()) {
             return oneCraftInputs;
         }
+        if (!ModConfig.INSTANCE.smartScalingCycleBatchingEnable) {
+            return oneCraftInputs;
+        }
         var jobAccessor = (ExecutingCraftingJobAccessor) (Object) this.job;
         var progress = jobAccessor.extendedae_plus$getTasks().get(details);
         if (progress == null || progress.extendedae_plus$getValue() <= 1L) return oneCraftInputs;

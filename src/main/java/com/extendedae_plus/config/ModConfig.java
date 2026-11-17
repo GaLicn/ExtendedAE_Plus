@@ -104,6 +104,15 @@ public final class ModConfig {
 
     @Configurable
     @Configurable.Comment(value = {
+            "是否启用循环配方的 CPU 库存动态批量派发",
+            "关闭后循环样板仍保留原始任务次数，并由 CPU 逐次派发",
+            "默认: true"
+    })
+    @Configurable.Synchronized
+    public boolean smartScalingCycleBatchingEnable = true;
+
+    @Configurable
+    @Configurable.Comment(value = {
             "是否显示样板编码玩家",
             "开启后将在样板 HoverText 上添加样板的编码玩家"
     })

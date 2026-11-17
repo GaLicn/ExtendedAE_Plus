@@ -61,7 +61,8 @@ public abstract class AdvCraftingCPULogicSmartDoublingMixin {
 
         KeyCounter[] oneCraftInputs = original.call(details, inventory, level, expectedOutputs, expectedContainerItems);
         if (oneCraftInputs == null || !(details instanceof ISmartDoublingAwarePattern aware)
-                || !aware.eap$allowScaling()) {
+                || !aware.eap$allowScaling()
+                || !ModConfig.INSTANCE.smartScalingCycleBatchingEnable) {
             return oneCraftInputs;
         }
 
