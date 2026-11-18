@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.4.2]
+
+### Changed / 变更
+- 将 JEI 最低版本要求调整为 19.64.0.455
+  - Raised the minimum required JEI version to 19.64.0.455
+
 ## [1.6.0-f1]
 
 ### Changed / 变更

@@ -224,7 +224,7 @@ dependencies {
             runtimeOnly "curse.maven:cloth-config-348521:5424576"
             break
         case 'jei':
-            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.70.0.460"
+            runtimeOnly "mezz.jei:jei-1.21.1-neoforge:19.64.0.455"
             runtimeOnly "curse.maven:ae2-jei-integration-1074338:5748513"
             break
     }
