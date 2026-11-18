@@ -28,7 +28,6 @@ import com.extendedae_plus.api.bridge.PatternProviderLogicUpgradeCompatBridge;
 import com.extendedae_plus.api.upload.IPatternUploadMenu;
 import com.extendedae_plus.compat.UpgradeSlotCompat;
 import com.extendedae_plus.init.ModItems;
-import com.extendedae_plus.mixin.ae2.accessor.PatternProviderLogicAccessor;
 import com.extendedae_plus.mixin.ae2.accessor.PatternEncodingTermMenuAccessor;
 import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.PatternProviderDataUtil;
@@ -68,6 +67,7 @@ public final class ProviderUploadUtil {
     private static final String LAST_UPLOAD_POS_KEY = "eap_last_upload_pos";
     private static final String LAST_UPLOAD_SIDE_KEY = "eap_last_upload_side";
     private static final String LAST_UPLOAD_DIM_KEY = "eap_last_upload_dim";
+    private static final String LAST_UPLOAD_PATTERN_KEY = "eap_last_upload_pattern";
     private static final String LAST_UPLOAD_MATRIX_PLUS_KEY = "eap_last_upload_matrix_plus";
     private static final String LAST_UPLOAD_KIND_PROVIDER = "provider";
     private static final String LAST_UPLOAD_KIND_MATRIX = "matrix";
@@ -77,7 +77,8 @@ public final class ProviderUploadUtil {
 
     private ProviderUploadUtil() {}
 
-    public record LastUploadRecord(String kind, long providerId, int slot, long pos, String side, String dimension, boolean matrixPlus) {
+    public record LastUploadRecord(String kind, long providerId, int slot, long pos, String side, String dimension,
+                                   boolean matrixPlus, ItemStack pattern) {
         public boolean isMatrix() {
             return LAST_UPLOAD_KIND_MATRIX.equals(this.kind);
         }
@@ -784,7 +785,8 @@ public final class ProviderUploadUtil {
         }
 
         if (record.pos() == Long.MIN_VALUE) {
-            return findProviderContainerByLegacyId(player, record.providerId());
+            // 旧记录缺少稳定位置，供应器索引和临时 ID 无法可靠定位上传目标。
+            return null;
         }
 
         IGrid grid = null;
@@ -793,6 +795,9 @@ public final class ProviderUploadUtil {
             if (node != null) {
                 grid = node.getGrid();
             }
+        }
+        if (grid == null && player.containerMenu instanceof IPatternUploadMenu) {
+            grid = resolveGrid(player.containerMenu);
         }
         if (grid == null) {
             grid = findPlayerGrid(player);
@@ -805,7 +810,17 @@ public final class ProviderUploadUtil {
     }
 
     public static void recordProviderUpload(ServerPlayer player, long providerId, PatternContainer container, int slot) {
-        if (player == null || container == null || slot < 0) {
+        if (player == null) {
+            return;
+        }
+        InternalInventory inventory = container == null ? null : container.getTerminalPatternInventory();
+        if (inventory == null || slot < 0 || slot >= inventory.size()) {
+            clearLastUploadRecord(player);
+            return;
+        }
+        ItemStack pattern = inventory.getStackInSlot(slot);
+        if (pattern.isEmpty() || !PatternDetailsHelper.isEncodedPattern(pattern)) {
+            clearLastUploadRecord(player);
             return;
         }
 
@@ -817,6 +832,7 @@ public final class ProviderUploadUtil {
         data.putLong(LAST_UPLOAD_POS_KEY, locator != null ? locator.pos() : Long.MIN_VALUE);
         data.putString(LAST_UPLOAD_SIDE_KEY, locator != null ? locator.side() : "");
         data.putString(LAST_UPLOAD_DIM_KEY, locator != null ? locator.dimension() : "");
+        data.put(LAST_UPLOAD_PATTERN_KEY, pattern.save(new CompoundTag()));
         data.remove(LAST_UPLOAD_MATRIX_PLUS_KEY);
     }
 
@@ -833,6 +849,7 @@ public final class ProviderUploadUtil {
         data.putString(LAST_UPLOAD_SIDE_KEY, "");
         data.putString(LAST_UPLOAD_DIM_KEY, dimension == null ? "" : dimension);
         data.putBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY, isPlus);
+        data.remove(LAST_UPLOAD_PATTERN_KEY);
     }
 
     public static LastUploadRecord getLastUploadRecord(ServerPlayer player) {
@@ -852,8 +869,24 @@ public final class ProviderUploadUtil {
                 data.getLong(LAST_UPLOAD_POS_KEY),
                 data.getString(LAST_UPLOAD_SIDE_KEY),
                 data.getString(LAST_UPLOAD_DIM_KEY),
-                data.getBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY)
+                data.getBoolean(LAST_UPLOAD_MATRIX_PLUS_KEY),
+                data.contains(LAST_UPLOAD_PATTERN_KEY) ? ItemStack.of(data.getCompound(LAST_UPLOAD_PATTERN_KEY)) : ItemStack.EMPTY
         );
+    }
+
+    public static void clearLastUploadRecord(ServerPlayer player) {
+        if (player == null) {
+            return;
+        }
+        CompoundTag data = player.getPersistentData();
+        data.remove(LAST_UPLOAD_KIND_KEY);
+        data.remove(LAST_UPLOADED_PROVIDER_KEY);
+        data.remove(LAST_UPLOAD_SLOT_KEY);
+        data.remove(LAST_UPLOAD_POS_KEY);
+        data.remove(LAST_UPLOAD_SIDE_KEY);
+        data.remove(LAST_UPLOAD_DIM_KEY);
+        data.remove(LAST_UPLOAD_MATRIX_PLUS_KEY);
+        data.remove(LAST_UPLOAD_PATTERN_KEY);
     }
 
     public static long getLastUploadedProviderId(ServerPlayer player) {
@@ -863,26 +896,6 @@ public final class ProviderUploadUtil {
             return data.getLong(LAST_UPLOADED_PROVIDER_KEY);
         }
         return Long.MIN_VALUE;
-    }
-
-    private static PatternContainer findProviderContainerByLegacyId(ServerPlayer player, long providerId) {
-        if (providerId >= 0) {
-            PatternAccessTermMenu accessMenu = PatternTerminalUtil.getPatternAccessMenu(player);
-            return accessMenu != null ? PatternTerminalUtil.getPatternContainerById(accessMenu, providerId) : null;
-        }
-
-        int index = decodeProviderIndex(providerId);
-        if (index < 0) {
-            return null;
-        }
-
-        List<PatternContainer> providers;
-        if (player.containerMenu instanceof PatternEncodingTermMenu encMenu) {
-            providers = listAvailableProvidersFromGrid(encMenu);
-        } else {
-            providers = listAvailableProvidersFromPlayerNetwork(player);
-        }
-        return index < providers.size() ? providers.get(index) : null;
     }
 
     private static PatternContainer findProviderContainerByLocation(IGrid grid, long pos, String side, String dimension) {
@@ -896,11 +909,6 @@ public final class ProviderUploadUtil {
             }
             @SuppressWarnings("unchecked")
             Class<? extends PatternContainer> containerClass = (Class<? extends PatternContainer>) machineClass;
-            for (PatternContainer container : grid.getMachines(containerClass)) {
-                if (container != null && matchesContainer(container, pos, side, dimension)) {
-                    return container;
-                }
-            }
             for (PatternContainer container : grid.getActiveMachines(containerClass)) {
                 if (container != null && matchesContainer(container, pos, side, dimension)) {
                     return container;
@@ -919,27 +927,25 @@ public final class ProviderUploadUtil {
     }
 
     private static HostLocator getHostLocator(PatternContainer container) {
-        if (!(container instanceof PatternProviderLogicAccessor accessor)) {
-            return null;
-        }
-
-        PatternProviderLogicHost host = accessor.eap$host();
-        if (host == null) {
-            return null;
-        }
-
-        BlockEntity blockEntity = host.getBlockEntity();
-        if (blockEntity == null) {
-            return null;
-        }
-
+        BlockEntity blockEntity;
         String side = "";
-        if (host instanceof AEBasePart part) {
+        if (container instanceof AEBasePart part) {
+            if (part.getSide() == null) {
+                return null;
+            }
+            blockEntity = part.getBlockEntity();
             side = part.getSide().getSerializedName();
+        } else if (container instanceof BlockEntity entity) {
+            blockEntity = entity;
+        } else if (container instanceof PatternProviderLogicHost host) {
+            blockEntity = host.getBlockEntity();
+        } else {
+            return null;
         }
-        String dimension = blockEntity.getLevel() != null
-                ? blockEntity.getLevel().dimension().location().toString()
-                : "";
+        if (blockEntity == null || blockEntity.getLevel() == null) {
+            return null;
+        }
+        String dimension = blockEntity.getLevel().dimension().location().toString();
         return new HostLocator(blockEntity.getBlockPos().asLong(), side, dimension);
     }
 
