@@ -43,11 +43,14 @@ public class ReturnLastPatternC2SPacket {
             if (record.isMatrix()) {
                 InternalInventory inv = findMatrixInventory(player, record);
                 if (inv != null) {
-                    returnPatternFromSlot(player, inv, record.slot());
+                    returnPatternFromSlot(player, inv, record.slot(), ItemStack.EMPTY);
                 }
                 return;
             }
 
+            if (record.pattern().isEmpty()) {
+                return;
+            }
             PatternContainer targetContainer = ProviderUploadUtil.findProviderContainer(player, record);
             if (targetContainer == null
                     || !targetContainer.isVisibleInTerminal()
@@ -56,8 +59,8 @@ public class ReturnLastPatternC2SPacket {
             }
 
             InternalInventory inv = targetContainer.getTerminalPatternInventory();
-            if (inv != null) {
-                returnPatternFromSlot(player, inv, record.slot());
+            if (inv != null && returnPatternFromSlot(player, inv, record.slot(), record.pattern())) {
+                ProviderUploadUtil.clearLastUploadRecord(player);
             }
         });
         ctx.setPacketHandled(true);
@@ -89,13 +92,14 @@ public class ReturnLastPatternC2SPacket {
         return null;
     }
 
-    private static boolean returnPatternFromSlot(ServerPlayer player, InternalInventory inv, int slot) {
+    private static boolean returnPatternFromSlot(ServerPlayer player, InternalInventory inv, int slot, ItemStack expectedPattern) {
         if (slot < 0 || slot >= inv.size()) {
             return false;
         }
 
         ItemStack stack = inv.getStackInSlot(slot);
-        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)) {
+        if (stack.isEmpty() || !PatternDetailsHelper.isEncodedPattern(stack)
+                || (!expectedPattern.isEmpty() && !ItemStack.isSameItemSameTags(stack, expectedPattern))) {
             return false;
         }
 
