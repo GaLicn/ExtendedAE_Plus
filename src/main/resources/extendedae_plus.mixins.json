@@ -18,6 +18,8 @@
     "ae2.accessor.PatternAccessTermScreenSlotsRowAccessor",
     "ae2.accessor.WidgetContainerAccessor",
     "ae2.client.gui.AEBaseScreenMixin",
+    "ae2.client.gui.MEStorageScreenFreezeMixin",
+    "ae2.client.gui.RepoUpdateFreezeMixin",
     "ae2.client.gui.CraftConfirmScreenMixin",
     "ae2.client.gui.CraftingStatusTableRendererMixin",
     "ae2.client.gui.InterfaceScreenMixin",
