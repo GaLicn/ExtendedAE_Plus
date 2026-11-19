@@ -13,6 +13,7 @@ import com.extendedae_plus.content.wireless.LabeledWirelessTransceiverBlockEntit
 import com.extendedae_plus.content.wireless.WirelessTransceiverBlockEntity;
 import com.extendedae_plus.content.matrix.UploadCoreBlockEntity;
 import com.extendedae_plus.content.controller.NetworkPatternControllerBlockEntity;
+import com.extendedae_plus.content.decor.DollBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
@@ -24,6 +25,12 @@ public final class ModBlockEntities {
 
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
             DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, ExtendedAEPlus.MODID);
+
+    public static final RegistryObject<BlockEntityType<DollBlockEntity>> DOLL_BOUNCE_BE =
+            BLOCK_ENTITY_TYPES.register("doll_bounce",
+                    () -> BlockEntityType.Builder.of(DollBlockEntity::new,
+                            ModBlocks.C_H716.get(), ModBlocks.FISH_DAN.get(), ModBlocks._LENG.get(), ModBlocks.XBAI.get())
+                            .build(null));
 
     public static final RegistryObject<BlockEntityType<WirelessTransceiverBlockEntity>> WIRELESS_TRANSCEIVER_BE =
             BLOCK_ENTITY_TYPES.register("wireless_transceiver",

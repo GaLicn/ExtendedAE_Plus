@@ -6,6 +6,7 @@ import appeng.block.AEBaseEntityBlock;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
 import com.extendedae_plus.client.ClientRegistrar;
+import com.extendedae_plus.client.DollBounceRenderer;
 import com.extendedae_plus.client.InputEvents;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.UltimateSuperAssemblerMatrixPreviewRenderer;
@@ -37,6 +38,7 @@ import com.glodblock.github.glodium.util.GlodUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -231,6 +233,11 @@ public class ExtendedAEPlus {
             value = Dist.CLIENT
     )
     public static class ClientModEvents {
+        @SubscribeEvent
+        public static void onRegisterEntityRenderers(final EntityRenderersEvent.RegisterRenderers event) {
+            event.registerBlockEntityRenderer(ModBlockEntities.DOLL_BOUNCE_BE.get(), DollBounceRenderer::new);
+        }
+
         @SubscribeEvent
         public static void onClientSetup(final FMLClientSetupEvent event) {
             // 显式绑定预览渲染事件，确保 Forge 客户端加载搭建器预览。
