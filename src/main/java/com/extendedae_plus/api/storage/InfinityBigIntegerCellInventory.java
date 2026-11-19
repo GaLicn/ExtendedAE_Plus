@@ -6,6 +6,7 @@ import appeng.api.config.IncludeExclude;
 import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
+import appeng.api.stacks.AEKeyType;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.cells.CellState;
 import appeng.api.storage.cells.ISaveProvider;
@@ -155,6 +156,15 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     @Override
     public double getIdleDrain() {
         return 512;
+    }
+
+    // GTO AE2 运行时扩展了 MEStorage；基础编译 API 未声明这两个方法。
+    public int operationTime() {
+        return 0;
+    }
+
+    public boolean supportsKeyType(AEKeyType keyType) {
+        return true;
     }
 
     @Override
