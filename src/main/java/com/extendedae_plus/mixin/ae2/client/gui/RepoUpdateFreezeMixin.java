@@ -2,6 +2,8 @@ package com.extendedae_plus.mixin.ae2.client.gui;
 
 import appeng.api.stacks.AEKey;
 import appeng.client.gui.me.common.Repo;
+import appeng.client.gui.widgets.IScrollSource;
+import appeng.client.gui.widgets.ISortSource;
 import appeng.menu.me.common.GridInventoryEntry;
 import com.extendedae_plus.api.client.IRepoUpdateFreezeAccess;
 import com.google.common.collect.BiMap;
@@ -36,10 +38,24 @@ public abstract class RepoUpdateFreezeMixin implements IRepoUpdateFreezeAccess {
     private boolean eap$updatesFrozen;
 
     @Unique
+    private static boolean eap$updatesFrozenPreference;
+
+    @Unique
     private final Set<AEKey> eap$visibleKeysAtFreezeStart = new HashSet<>();
 
     @Unique
     private final Set<AEKey> eap$sortedKeysDuringFreeze = new HashSet<>();
+
+    @Inject(method = "<init>", at = @At("TAIL"), remap = false)
+    private void eap$restoreFreezePreference(IScrollSource src, ISortSource sortSrc, CallbackInfo ci) {
+        if (!eap$updatesFrozenPreference) {
+            return;
+        }
+
+        this.eap$updatesFrozen = true;
+        this.eap$visibleKeysAtFreezeStart.addAll(this.eap$getVisibleKeys());
+        ((Repo) (Object) this).setPaused(true);
+    }
 
     @Override
     @Unique
@@ -55,6 +71,7 @@ public abstract class RepoUpdateFreezeMixin implements IRepoUpdateFreezeAccess {
         }
 
         this.eap$updatesFrozen = frozen;
+        eap$updatesFrozenPreference = frozen;
         if (frozen) {
             this.eap$visibleKeysAtFreezeStart.clear();
             this.eap$visibleKeysAtFreezeStart.addAll(this.eap$getVisibleKeys());
