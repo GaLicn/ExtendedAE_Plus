@@ -341,5 +341,7 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "Ultimate Super Assembler Matrix built",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 network inventory display: Enabled",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 network inventory display: Disabled",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "When carrying a usable AE2 wireless terminal, the current AE2 stock of each item is shown in bookmarks",
+  "advancements.extendedae_plus.walking_event_horizon.title": "Walking Event Horizon",
+  "advancements.extendedae_plus.walking_event_horizon.description": "Gravity bends your horizon. The gravitational singularity above your head turns in silence, reflecting a second abyss in the depths of the night sky. Its very existence is a silent mockery of the universe's law of increasing entropy."
 }

@@ -250,5 +250,7 @@
   "message.extendedae_plus.force_craft.not_craftable": "該方塊沒有可用的合成樣板",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 網路庫存顯示：開啟",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 網路庫存顯示：關閉",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "當身上有可用的 AE2 無線終端時，會在書籤中顯示目前 AE2 中該物品庫存"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "當身上有可用的 AE2 無線終端時，會在書籤中顯示目前 AE2 中該物品庫存",
+  "advancements.extendedae_plus.walking_event_horizon.title": "行走的事件視界",
+  "advancements.extendedae_plus.walking_event_horizon.description": "引力扭曲了你的視界。頭頂的引力奇點靜默運轉，甚至在深邃的夜空中映照出第二個深淵。其存在本身，便是對宇宙熵增定律的一次無聲嘲弄。"
 }

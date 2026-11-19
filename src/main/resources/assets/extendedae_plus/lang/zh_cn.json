@@ -340,5 +340,7 @@
   "item.extendedae_plus.ultimate_super_assembler_matrix_builder.placed": "终极超级装配矩阵已搭建",
   "tooltip.extendedae_plus.jei_network_overlay.enabled": "AE2 网络库存显示：开启",
   "tooltip.extendedae_plus.jei_network_overlay.disabled": "AE2 网络库存显示：关闭",
-  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存"
+  "tooltip.extendedae_plus.jei_network_overlay.description": "当身上有可用的 AE2 无线终端时，会在书签中显示当前 AE2 中该物品库存",
+  "advancements.extendedae_plus.walking_event_horizon.title": "行走的事件视界",
+  "advancements.extendedae_plus.walking_event_horizon.description": "引力扭曲了你的视界。头顶的引力奇点静默运转，甚至在深邃的夜空中倒映出第二个深渊。其存在本身，便是对宇宙熵增定律的一次无声嘲弄。"
 }

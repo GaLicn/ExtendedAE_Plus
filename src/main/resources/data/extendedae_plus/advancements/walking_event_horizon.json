@@ -1,0 +1,37 @@
+{
+  "parent": "minecraft:story/root",
+  "display": {
+    "icon": {
+      "item": "extendedae_plus:infinity_core"
+    },
+    "title": {
+      "translate": "advancements.extendedae_plus.walking_event_horizon.title"
+    },
+    "description": {
+      "translate": "advancements.extendedae_plus.walking_event_horizon.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "has_infinity_core": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "extendedae_plus:infinity_core"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_infinity_core"
+    ]
+  ],
+  "sends_telemetry_event": false
+}
