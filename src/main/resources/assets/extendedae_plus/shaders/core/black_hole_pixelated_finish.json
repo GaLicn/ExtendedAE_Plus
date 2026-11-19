@@ -1,0 +1,23 @@
+{
+  "vertex": "extendedae_plus:black_hole_pixelated_finish",
+  "fragment": "extendedae_plus:black_hole_pixelated_finish",
+  "attributes": ["Position"],
+  "samplers": [
+    {"name": "uSpriteTex"}
+  ],
+  "uniforms": [
+    {
+      "name": "ModelViewMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    },
+    {
+      "name": "ProjMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    },
+    {"name": "uSpriteTexels", "type": "float", "count": 2, "values": [140.0, 80.0]}
+  ]
+}

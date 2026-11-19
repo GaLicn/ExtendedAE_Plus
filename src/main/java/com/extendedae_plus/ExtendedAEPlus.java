@@ -5,6 +5,7 @@ import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.client.BlackHoleShaderReloadListener;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.client.ModKeybindings;
 import com.extendedae_plus.client.UltimateSuperAssemblerMatrixPreviewRenderer;
@@ -28,6 +29,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -266,6 +268,11 @@ public class ExtendedAEPlus {
         @SubscribeEvent
         public static void onRegisterKeyMappings(final RegisterKeyMappingsEvent event) {
             ModKeybindings.register(event);
+        }
+
+        @SubscribeEvent
+        public static void onRegisterShaders(final RegisterShadersEvent event) {
+            BlackHoleShaderReloadListener.onRegisterShaders(event);
         }
     }
 
