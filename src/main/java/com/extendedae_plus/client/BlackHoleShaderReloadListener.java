@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 import static com.extendedae_plus.util.Logger.EAP$LOGGER;
 
-/** 加载黑洞天空着色器，并在读取时对本模组的着色器源码做 ASCII 过滤。 */
+/** 加载黑洞着色器，并在读取时对本模组的着色器源码做 ASCII 过滤。 */
 public final class BlackHoleShaderReloadListener {
 
     private BlackHoleShaderReloadListener() {
@@ -28,6 +28,7 @@ public final class BlackHoleShaderReloadListener {
         BlackHoleSkyRenderer.setPixelatedShader(null);
         BlackHolePixelSprite.setSpriteShader(null);
         BlackHolePixelSprite.setFinishShader(null);
+        BlackHoleLensRenderer.setShader(null);
 
         // 平滑风格为单遍绘制。像素风格下故障会临时切换到平滑风格，故两种风格都需要它。
         register(event, "black_hole", DefaultVertexFormat.POSITION_TEX, BlackHoleSkyRenderer::setSmoothShader);
@@ -42,6 +43,9 @@ public final class BlackHoleShaderReloadListener {
                     BlackHoleSkyRenderer::setPixelatedShader);
         }
 
+        // 屏幕空间透镜通道。其顶点仅含裁剪空间位置，故使用 POSITION 格式；采样源在绘制时
+        // 以自定义 sampler 名绑定，不能写进 JSON 的固定采样槽。
+        register(event, "black_hole_lens", DefaultVertexFormat.POSITION, BlackHoleLensRenderer::setShader);
     }
 
     private static void register(RegisterShadersEvent event, String name, VertexFormat format,

@@ -5,6 +5,7 @@ import appeng.api.storage.StorageCells;
 import appeng.block.AEBaseEntityBlock;
 import appeng.menu.locator.MenuLocators;
 import com.extendedae_plus.api.storage.InfinityBigIntegerCellHandler;
+import com.extendedae_plus.client.BlackHoleHeadRenderer;
 import com.extendedae_plus.client.BlackHoleShaderReloadListener;
 import com.extendedae_plus.client.ClientRegistrar;
 import com.extendedae_plus.client.ModKeybindings;
@@ -23,6 +24,7 @@ import com.extendedae_plus.content.matrix.supermatrix.SuperAssemblerMatrixWallBl
 import com.extendedae_plus.init.*;
 import com.extendedae_plus.menu.locator.CuriosItemLocator;
 import com.extendedae_plus.server.JeiSyncManager;
+import com.extendedae_plus.util.ModCheckUtils;
 import com.extendedae_plus.util.command.InfinityDiskGiveCommand;
 import com.extendedae_plus.util.storage.InfinityStorageManager;
 import net.minecraft.resources.ResourceLocation;
@@ -238,6 +240,12 @@ public class ExtendedAEPlus {
 
             // 菜单 -> 屏幕 绑定
             ClientRegistrar.registerMenuScreens();
+
+            // Curios 为可选前置：头部黑洞渲染器实现了 Curios 的接口，未安装时链接该类会抛出
+            // NoClassDefFoundError，故仅在其已加载时登记。
+            if (ModCheckUtils.isLoaded(ModCheckUtils.MODID_CURIOS)) {
+                BlackHoleHeadRenderer.registerRenderers();
+            }
 
             event.enqueueWork(() -> {
                 // 世界方块强制下单不依赖任何查看器模组，须无条件注册。
