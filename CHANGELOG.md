@@ -1,6 +1,44 @@
 # Changelog
 
 
+## [Unreleased] / 未发布
+
+### Added / 新增
+- EMI 支持 F 键流体搜索
+  - Added F-key fluid search support in EMI.
+- JEI 新增 Alt+F 按模组 ID 筛选
+  - Added Alt+F mod ID filtering in JEI.
+- 供应器槽位已满时，样板上传可自动取用扩容卡继续写入
+  - Pattern uploads can now use an expansion card automatically when provider slots are full.
+- 添加玩偶右键单次弹跳功能
+  - Added the doll's single-bounce right-click behavior.
+- ME 存储终端新增冻结排序功能，固定物品顺序时仍实时更新数量
+  - Added freeze sorting to ME storage terminals while keeping item quantities up to date.
+
+### Changed / 变更
+- 输入输出重叠样板现支持在 AE2 与 AdvancedAE 合成 CPU 上按 CPU 库存动态批量派发；配置项关闭后仍按原计划次数逐次派发。例如，样板为 3A -> 1B + 1A，下单 10B 净消耗 20A；一次派发 10 轮需预先有 30A。若初始有 21A，则首批 7 轮消耗 21A、产出 7B + 7A；第二批 2 轮消耗 6A、产出 2B + 2A；最后 1 轮消耗 3A、产出 1B + 1A，最终剩余 1A
+  - Patterns whose outputs overlap their inputs now support inventory-based dynamic batch dispatch on AE2 and AdvancedAE crafting CPUs; when disabled in the config, they retain their planned counts and dispatch one at a time. For example, with a pattern of 3A -> 1B + 1A, crafting 10B consumes 20A net; dispatching all 10 crafts in one batch requires 30A up front. Starting with 21A, the first batch runs 7 crafts, consuming 21A and producing 7B + 7A; the second runs 2, consuming 6A and producing 2B + 2A; the last runs 1, consuming 3A and producing 1B + 1A, leaving 1A.
+- 优化智能阻挡的目标库存匹配，单次遍历即可完成全槽匹配
+  - Optimized smart blocking to match all slots in the target inventory with a single pass.
+- 更新超级电路切片机的名称为超级电路切片器
+  - Renamed the Super Circuit Slicer machine.
+- Ctrl+Q 快捷样板操作在未悬浮物品时改为静默取消，不再显示提示
+  - Quick-pattern Ctrl+Q now cancels silently without a hovered item instead of displaying a prompt.
+- 优化 Jade 中 AE2 与 AdvancedAE 片状样板供应器的名称提示，显示部件自定义名称
+  - Improved Jade name tooltips for AE2 and AdvancedAE pattern provider parts to show their custom names.
+
+### Fixed / 修复
+- 修复 EMI 兼容逻辑误处理 JEI 书签的问题，EMI 现优先处理并跳过 JEI 书签逻辑
+  - Fixed EMI compatibility handling of JEI bookmarks; EMI now takes priority and skips JEI bookmark logic.
+- 修复上传样板后无法取回样板的问题
+  - Fixed pattern retrieval failing after an upload.
+- 修复供应器界面的倍率上限输入框错位及倍率按钮首帧位置异常
+  - Fixed multiplier-limit input alignment and first-frame multiplier-button positioning in provider screens.
+- 修复 JEI 库存显示未按完整物品键区分物品的问题
+  - Fixed JEI stock displays failing to distinguish items by their complete item keys.
+- 修复 EMI 配方收藏未显示库存的问题
+  - Fixed stock quantities not appearing in EMI recipe favorites.
+
 ## [1.6.4]
 
 ### Added / 新增
