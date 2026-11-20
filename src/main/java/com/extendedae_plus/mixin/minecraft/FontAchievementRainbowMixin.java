@@ -28,6 +28,11 @@ public abstract class FontAchievementRainbowMixin {
     @Unique
     private static final String EAP$DESCRIPTION_KEY = "advancements.extendedae_plus.walking_event_horizon.description";
     @Unique
+    private static final String[] EAP$INFINITY_DISK_DESCRIPTION_KEYS = {
+            "tooltip.extendedae_plus.infinity_biginteger_cell.line.1",
+            "tooltip.extendedae_plus.infinity_biginteger_cell.line.2"
+    };
+    @Unique
     private static long EAP$DESCRIPTION_ANIMATION_START_TIME_MS = -1L;
     @Unique
     private static long EAP$LAST_DESCRIPTION_RENDER_TIME_MS = -1L;
@@ -45,20 +50,57 @@ public abstract class FontAchievementRainbowMixin {
             return eap$withColor(text, EAP$TITLE_GOLD);
         }
 
-        String description = Language.getInstance().getOrDefault(EAP$DESCRIPTION_KEY);
+        FormattedCharSequence achievementDescription = eap$rainbowDescription(
+                text, renderedText, Language.getInstance().getOrDefault(EAP$DESCRIPTION_KEY));
+        if (achievementDescription != null) {
+            return achievementDescription;
+        }
+
+        String[] diskDescriptionLines = new String[EAP$INFINITY_DISK_DESCRIPTION_KEYS.length];
+        int diskDescriptionGlyphCount = 0;
+        for (int index = 0; index < EAP$INFINITY_DISK_DESCRIPTION_KEYS.length; index++) {
+            diskDescriptionLines[index] = eap$stripFormattingCodes(
+                    Language.getInstance().getOrDefault(EAP$INFINITY_DISK_DESCRIPTION_KEYS[index]));
+            diskDescriptionGlyphCount += diskDescriptionLines[index].codePointCount(
+                    0, diskDescriptionLines[index].length());
+        }
+
+        int lineOffset = 0;
+        for (String descriptionLine : diskDescriptionLines) {
+            FormattedCharSequence diskDescription = eap$rainbowDescription(
+                    text, renderedText, descriptionLine, lineOffset, diskDescriptionGlyphCount);
+            if (diskDescription != null) {
+                return diskDescription;
+            }
+            lineOffset += descriptionLine.codePointCount(0, descriptionLine.length());
+        }
+        return text;
+    }
+
+    @Unique
+    private FormattedCharSequence eap$rainbowDescription(FormattedCharSequence text, String renderedText,
+                                                         String description) {
+        String sanitizedDescription = eap$stripFormattingCodes(description);
+        int descriptionGlyphCount = sanitizedDescription.codePointCount(0, sanitizedDescription.length());
+        return eap$rainbowDescription(text, renderedText, sanitizedDescription, 0, descriptionGlyphCount);
+    }
+
+    @Unique
+    private FormattedCharSequence eap$rainbowDescription(FormattedCharSequence text, String renderedText,
+                                                         String description, int descriptionBaseOffset,
+                                                         int descriptionGlyphCount) {
         String normalizedDescription = eap$removeWhitespace(description);
-        String normalizedRenderedText = eap$removeWhitespace(renderedText);
+        String normalizedRenderedText = eap$removeWhitespace(eap$stripFormattingCodes(renderedText));
         if (normalizedRenderedText.isEmpty()) {
-            return text;
+            return null;
         }
 
         int normalizedOffset = normalizedDescription.indexOf(normalizedRenderedText);
         if (normalizedOffset < 0) {
-            return text;
+            return null;
         }
 
-        int descriptionOffset = eap$codePointOffset(description, normalizedOffset);
-        int descriptionGlyphCount = description.codePointCount(0, description.length());
+        int descriptionOffset = descriptionBaseOffset + eap$codePointOffset(description, normalizedOffset);
         long animationStartTimeMillis = eap$descriptionAnimationStartTimeMillis();
         return eap$rainbow(text, descriptionOffset, descriptionGlyphCount, animationStartTimeMillis);
     }
@@ -88,6 +130,20 @@ public abstract class FontAchievementRainbowMixin {
                 result.appendCodePoint(codePoint);
             }
             index += Character.charCount(codePoint);
+        }
+        return result.toString();
+    }
+
+    @Unique
+    private String eap$stripFormattingCodes(String text) {
+        StringBuilder result = new StringBuilder(text.length());
+        for (int index = 0; index < text.length(); index++) {
+            char current = text.charAt(index);
+            if (current == '\u00A7' && index + 1 < text.length()) {
+                index++;
+            } else {
+                result.append(current);
+            }
         }
         return result.toString();
     }

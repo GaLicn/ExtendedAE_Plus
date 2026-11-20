@@ -63,7 +63,8 @@
   "tooltip.extendedae_plus.basic_core.evolving_to": "定向演化：%s",
   "tooltip.extendedae_plus.basic_core.progress": "构建进度：",
   "tooltip.extendedae_plus.basic_core.ready_to_craft": "核心构建完成，等待最终合成",
-  "tooltip.extendedae_plus.infinity_biginteger_cell": "§7——§b绝对存储的现实投影，§e\"有限\"§6已被定义为§c非法\n§b其存在本身，即是对§d熵增§b的终极否定",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.line.1": "§7——§b绝对存储的现实投影，§e\"有限\"§6已被定义为§c非法",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.line.2": "§b其存在本身，即是对§d熵增§b的终极否定",
   
   "extendedae_plus.tooltip.swap_processing_outputs": "主副切换",
   "extendedae_plus.tooltip.restore_processing_ratio": "恢复比例",

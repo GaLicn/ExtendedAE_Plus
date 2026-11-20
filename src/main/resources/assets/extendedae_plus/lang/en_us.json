@@ -65,7 +65,8 @@
   "tooltip.extendedae_plus.basic_core.evolving_to": "Directed Evolution: %s",
   "tooltip.extendedae_plus.basic_core.progress": "Construction Progress: ",
   "tooltip.extendedae_plus.basic_core.ready_to_craft": "Core construction complete. Awaiting final synthesis",
-  "tooltip.extendedae_plus.infinity_biginteger_cell": "§7—§bThe tangible projection of absolute storage§r, §ewhere '§6The Finite§e' §chas been deemed illegal§r\n§bIts very existence§r §bis the ultimate negation of §dentropy§r",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.line.1": "§7—§bThe tangible projection of absolute storage§r, §ewhere '§6The Finite§e' §chas been deemed illegal§r",
+  "tooltip.extendedae_plus.infinity_biginteger_cell.line.2": "§bIts very existence§r §bis the ultimate negation of §dentropy§r",
   
   "extendedae_plus.tooltip.swap_processing_outputs": "Swap Primary/Secondary Outputs",
   "extendedae_plus.tooltip.restore_processing_ratio": "Restore Simplified Ratio",
