@@ -103,7 +103,8 @@ public abstract class CraftConfirmScreenMixin extends AEBaseScreen<CraftConfirmM
                 selectCpuButton.active = true;
             }
 
-            if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)) {
+            if (!ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)
+                    || ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI)) {
                 return;
             }
 

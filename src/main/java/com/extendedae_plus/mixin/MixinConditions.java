@@ -53,7 +53,8 @@ public class MixinConditions implements IMixinConfigPlugin {
 
             // === JEI 兼容 ===
             if (mixinClassName.startsWith("com.extendedae_plus.mixin.jei.")) {
-                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI);
+                return ModCheckUtils.isLoaded(ModCheckUtils.MODID_JEI)
+                        && !ModCheckUtils.isLoaded(ModCheckUtils.MODID_EMI);
             }
 
             // === GuideME 版本兼容 ===
