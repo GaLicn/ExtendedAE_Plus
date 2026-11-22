@@ -100,7 +100,8 @@
     "neoecoae.accessor.ECOCraftingCPULogicAccessor",
     "neoecoae.accessor.ECOExecutingCraftingJobAccessor",
     "neoecoae.accessor.ECOTaskProgressAccessor",
-    "neoecoae.compat.PatternProviderLogicVirtualCompletionMixin"
+    "neoecoae.compat.PatternProviderLogicVirtualCompletionMixin",
+    "neoecoae.storage.InfinityBigIntegerCellListingMixin"
   ],
   "client": [
     "accessor.AbstractContainerScreenAccessor",

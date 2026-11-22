@@ -14,6 +14,8 @@ import net.minecraft.nbt.ListTag;
 
 import javax.annotation.Nullable;
 import java.math.BigInteger;
+import java.util.function.Consumer;
+import java.util.function.ObjLongConsumer;
 
 public class InfinityDataStorage {
     // 用于默认或占位场景
@@ -21,6 +23,9 @@ public class InfinityDataStorage {
 
     private static final BigInteger BI_LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
     private static final int LONG_MAX_BIT_LENGTH = Long.SIZE - 1;
+    // 环形变更日志容量（必须为 2 的幂），用于向外部缓存提供增量变更通知
+    private static final int DELTA_CAPACITY = 2048;
+    private static final int DELTA_MASK = DELTA_CAPACITY - 1;
 
     // 普通数量使用原生 long 保存，避免高频存取时反复创建 BigInteger
     public final Object2LongMap<AEKey> longAmounts;
@@ -34,6 +39,9 @@ public class InfinityDataStorage {
     // 大数基值和 long 增量合并后的读取缓存，下一次数量变更时失效
     @Nullable
     private BigInteger cachedItemCount;
+    // 每次库存实际变化递增的版本号，配合环形日志避免网络缓存每 tick 全量扫描
+    private long listingVersion = 0L;
+    private final AEKey[] deltaKeys = new AEKey[DELTA_CAPACITY];
 
     public InfinityDataStorage() {
         this(new Object2LongOpenHashMap<>(), new Object2ObjectOpenHashMap<>(), BigInteger.ZERO);
@@ -80,6 +88,57 @@ public class InfinityDataStorage {
         return this.longAmounts.size() + this.bigAmounts.size();
     }
 
+    public long getListingVersion() {
+        return this.listingVersion;
+    }
+
+    public long getListedAmount(AEKey key) {
+        if (key == null) {
+            return 0L;
+        }
+        BigInteger big = this.bigAmounts.get(key);
+        if (big != null && big.signum() > 0) {
+            return Long.MAX_VALUE;
+        }
+        long amount = this.longAmounts.getLong(key);
+        return Math.max(0L, amount);
+    }
+
+    public boolean visitListingChanges(long since, long current, ObjLongConsumer<AEKey> visitor) {
+        if (since < 0L || current < since || current != this.listingVersion) {
+            return false;
+        }
+        if (since == current) {
+            return true;
+        }
+        if (current - since > DELTA_CAPACITY) {
+            return false;
+        }
+        for (long v = since + 1L; v <= current; v++) {
+            if (this.deltaKeys[(int) (v & DELTA_MASK)] == null) {
+                return false;
+            }
+        }
+        for (long v = since + 1L; v <= current; v++) {
+            AEKey key = this.deltaKeys[(int) (v & DELTA_MASK)];
+            visitor.accept(key, this.getListedAmount(key));
+        }
+        return true;
+    }
+
+    public boolean visitListingChanges(long since, long current, Consumer<AEKey> changed) {
+        return this.visitListingChanges(since, current, (key, amount) -> changed.accept(key));
+    }
+
+    private void recordListingChange(AEKey key) {
+        long next = this.listingVersion + 1L;
+        if (next < 0L) {
+            next = 0L;
+        }
+        this.listingVersion = next;
+        this.deltaKeys[(int) (next & DELTA_MASK)] = key;
+    }
+
     // 增加物品数量。普通数量和总数未溢出时完全使用 long 快速路径
     public void insert(AEKey key, long amount) {
         if (amount <= 0) {
@@ -104,6 +163,7 @@ public class InfinityDataStorage {
         }
 
         this.addToItemCount(amount);
+        this.recordListingChange(key);
     }
 
     // 模拟提取只读取一个数量 Map，不进行 BigInteger 运算或库存状态更新。
@@ -140,6 +200,7 @@ public class InfinityDataStorage {
                 this.longAmounts.put(key, currentAmount - extractedAmount);
             }
             this.subtractFromItemCount(extractedAmount);
+            this.recordListingChange(key);
             return extractedAmount;
         }
 
@@ -163,6 +224,7 @@ public class InfinityDataStorage {
             this.bigAmounts.put(key, remainingAmount);
         }
         this.subtractFromItemCount(amount);
+        this.recordListingChange(key);
         return amount;
     }
 

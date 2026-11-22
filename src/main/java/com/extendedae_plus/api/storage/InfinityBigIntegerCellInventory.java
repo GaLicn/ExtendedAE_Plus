@@ -33,6 +33,8 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.ObjLongConsumer;
 
 public class InfinityBigIntegerCellInventory implements StorageCell {
     private static final BigInteger BI_LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
@@ -385,5 +387,36 @@ public class InfinityBigIntegerCellInventory implements StorageCell {
     @Override
     public Component getDescription() {
         return this.self.getHoverName();
+    }
+
+    public Object getListingIdentity() {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        return cellStorage == null ? InfinityDataStorage.EMPTY : cellStorage;
+    }
+
+    public long getListingVersion() {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        return cellStorage == null ? 0L : cellStorage.getListingVersion();
+    }
+
+    public long getListedAmount(AEKey key) {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        return cellStorage == null ? 0L : cellStorage.getListedAmount(key);
+    }
+
+    public boolean visitListingChanges(long since, long current, ObjLongConsumer<AEKey> visitor) {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        if (cellStorage == null) {
+            return since == 0L && current == 0L;
+        }
+        return cellStorage.visitListingChanges(since, current, visitor);
+    }
+
+    public boolean visitListingChanges(long since, long current, Consumer<AEKey> changed) {
+        InfinityDataStorage cellStorage = this.getExistingCellStorage();
+        if (cellStorage == null) {
+            return since == 0L && current == 0L;
+        }
+        return cellStorage.visitListingChanges(since, current, changed);
     }
 }
