@@ -212,7 +212,9 @@ public class LabeledWirelessTransceiverBlockEntity extends AEBaseBlockEntity imp
             LabelNetworkRegistry.get(sl).unregister(this);
         }
         if (this.managedNode != null) {
-            this.managedNode.destroy();
+            try {
+                this.managedNode.destroy();
+            } catch (Throwable ignored) {}
         }
     }
 

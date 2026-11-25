@@ -79,7 +79,9 @@ public class LabelLink {
                 if ((a == hostNode || b == hostNode) && (a == targetNode || b == targetNode)) {
                     return; // 已经正确连接
                 }
-                current.destroy();
+                try {
+                    current.destroy();
+                } catch (Throwable ignored) {}
                 connection.setConnection(null);
             }
             connection.setConnection(GridHelper.createConnection(hostNode, targetNode));
@@ -98,7 +100,11 @@ public class LabelLink {
         if (current != null) {
             var a = current.a();
             var b = current.b();
-            current.destroy();
+            // AE2 EnergyService forbids removeProvider while energy is being extracted.
+            // Unload/shutdown can hit that race; swallow so chunk save can continue.
+            try {
+                current.destroy();
+            } catch (Throwable ignored) {}
             try {
                 if (a != null && a.getGrid() != null) {
                     a.getGrid().getTickManager().wakeDevice(a);
@@ -117,7 +123,9 @@ public class LabelLink {
                 if (hostNode != null && targetNode != null) {
                     IGridConnection existing = this.findExistingConnection(hostNode, targetNode);
                     if (existing != null) {
-                        existing.destroy();
+                        try {
+                            existing.destroy();
+                        } catch (Throwable ignored) {}
                         try {
                             if (hostNode.getGrid() != null) {
                                 hostNode.getGrid().getTickManager().wakeDevice(hostNode);
