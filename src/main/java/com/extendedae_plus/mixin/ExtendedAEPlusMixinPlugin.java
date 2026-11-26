@@ -20,6 +20,8 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 			MIXIN_PACKAGE + "ae2.autopattern.PatternProviderLogicContainsRedirectMixin";
 	private static final String ADV_PATTERN_PROVIDER_LOGIC_CONTAINS_REDIRECT_MIXIN =
 			MIXIN_PACKAGE + "ae2.autopattern.AdvPatternProviderLogicContainsRedirectMixin";
+	private static final String INFINITY_CELL_NEOECO_LISTING_MIXIN =
+			MIXIN_PACKAGE + "neoecoae.storage.InfinityBigIntegerCellListingMixin";
 
 	/**
 	 * 类探测结果缓存。shouldApplyMixin 对每个 mixin 条目都会调用，NeoForge 上还可能并行；
@@ -101,6 +103,9 @@ public class ExtendedAEPlusMixinPlugin implements IMixinConfigPlugin {
 		}
 		if (mixinClassName.startsWith(MIXIN_PACKAGE + "advancedae.") && !isAdvancedAePresent()) {
 			return false;
+		}
+		if (mixinClassName.equals(INFINITY_CELL_NEOECO_LISTING_MIXIN)) {
+			return isClassPresent("cn.dancingsnow.neoecoae.storage.StorageListingDelta");
 		}
 		if (mixinClassName.startsWith(MIXIN_PACKAGE + "neoecoae.")) {
 			// 新版 ECO 在自己的投料事务中处理虚拟卡记账，旧 api.me 实现类和 getLogic 已迁移。
